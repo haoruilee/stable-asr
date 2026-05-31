@@ -79,7 +79,12 @@ from stable_asr.paper.suites import (
     validate_benchmark_suite,
 )
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results, paper_table
-from stable_asr.references import asr_collections_markdown, load_asr_collections, validate_asr_collections
+from stable_asr.references import (
+    asr_collections_markdown,
+    audit_asr_collection_coverage,
+    load_asr_collections,
+    validate_asr_collections,
+)
 from stable_asr.scenarios.voice_world import evaluate_voice_world
 from stable_asr.scenarios.synthetic_turn import generate_synthetic_turn_records, write_synthetic_turn_manifest
 from stable_asr.scenarios.suites import (
@@ -324,6 +329,15 @@ def build_parser() -> argparse.ArgumentParser:
     asr_collections_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     asr_collections_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     asr_collections_parser.add_argument("--validate-only", action="store_true")
+    asr_collections_parser.add_argument("--audit-coverage", action="store_true")
+    asr_collections_parser.add_argument("--adapter-registry", type=Path, help="Adapter registry used by --audit-coverage.")
+    asr_collections_parser.add_argument(
+        "--require-priority",
+        action="append",
+        default=None,
+        choices=["p0", "p1", "p2"],
+        help="Reference priority required by --audit-coverage. Defaults to p0.",
+    )
 
     prepare_asr_parser = subparsers.add_parser(
         "prepare-asr-manifest",
@@ -956,6 +970,18 @@ def main(argv: list[str] | None = None) -> int:
             if not validation.ok:
                 print(validation.to_text(), file=sys.stderr)
                 return 1
+            if args.audit_coverage:
+                coverage = audit_asr_collection_coverage(
+                    registry,
+                    load_adapter_registry(args.adapter_registry),
+                    required_priorities=tuple(args.require_priority or ["p0"]),
+                )
+                text = json.dumps(coverage.to_dict(), ensure_ascii=False, indent=2) if args.json else coverage.to_markdown()
+                if args.output:
+                    args.output.parent.mkdir(parents=True, exist_ok=True)
+                    args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+                print(text)
+                return 0 if coverage.ok else 1
             if args.validate_only:
                 print(f"OK: {registry['id']} ({len(registry['entries'])} reference(s))")
                 return 0

@@ -41,6 +41,7 @@ stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir r
 stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
 stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
+stable-asr asr-collections --audit-coverage
 stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only
 stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output runs/asr_manifest.jsonl --audio-root examples/data --sample-rate 16000
 stable-asr validate-asr-manifest runs/asr_manifest.jsonl

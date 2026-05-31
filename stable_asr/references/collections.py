@@ -27,6 +27,80 @@ class ASRCollectionsValidation:
         return "asr_collections: FAILED\n" + "\n".join(f"- {error}" for error in self.errors)
 
 
+@dataclass(frozen=True)
+class ASRCollectionCoverageCheck:
+    reference_id: str
+    name: str
+    category: str
+    priority: str
+    covered: bool
+    required: bool
+    evidence: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "reference_id": self.reference_id,
+            "name": self.name,
+            "category": self.category,
+            "priority": self.priority,
+            "covered": self.covered,
+            "required": self.required,
+            "evidence": self.evidence,
+        }
+
+
+@dataclass(frozen=True)
+class ASRCollectionCoverageReport:
+    ok: bool
+    required_priorities: tuple[str, ...]
+    checks: list[ASRCollectionCoverageCheck]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "required_priorities": list(self.required_priorities),
+            "checks": [check.to_dict() for check in self.checks],
+        }
+
+    def to_markdown(self) -> str:
+        rows = [
+            {
+                "reference": check.reference_id,
+                "priority": check.priority,
+                "required": "yes" if check.required else "no",
+                "covered": "yes" if check.covered else "no",
+                "evidence": ", ".join(check.evidence),
+            }
+            for check in self.checks
+        ]
+        missing = [check for check in self.checks if check.required and not check.covered]
+        lines = [
+            "# ASR Collection Coverage",
+            "",
+            f"- status: `{'OK' if self.ok else 'FAILED'}`",
+            f"- required_priorities: `{', '.join(self.required_priorities)}`",
+            f"- missing_required: `{len(missing)}`",
+            "",
+            dict_table(rows),
+        ]
+        if missing:
+            lines.extend(["", "## Missing Required References", ""])
+            lines.extend(f"- `{check.reference_id}` ({check.name})" for check in missing)
+        return "\n".join(lines)
+
+    def to_text(self) -> str:
+        lines = [
+            f"asr_collection_coverage: {'OK' if self.ok else 'FAILED'}",
+            f"required_priorities: {', '.join(self.required_priorities)}",
+        ]
+        for check in self.checks:
+            marker = "OK" if check.covered else "MISSING"
+            required = "required" if check.required else "optional"
+            evidence = ", ".join(check.evidence) if check.evidence else "none"
+            lines.append(f"- {marker} {check.reference_id} ({required}; evidence: {evidence})")
+        return "\n".join(lines)
+
+
 def load_asr_collections(path: str | Path | None = None) -> dict[str, Any]:
     registry_path = Path(path) if path else DEFAULT_ASR_COLLECTIONS_PATH
     with registry_path.open("r", encoding="utf-8") as handle:
@@ -88,6 +162,40 @@ def validate_asr_collections(registry: dict[str, Any]) -> ASRCollectionsValidati
     return ASRCollectionsValidation(ok=not errors, errors=errors)
 
 
+def audit_asr_collection_coverage(
+    collections: dict[str, Any],
+    adapter_registry: dict[str, Any],
+    *,
+    required_priorities: tuple[str, ...] = ("p0",),
+) -> ASRCollectionCoverageReport:
+    validation = validate_asr_collections(collections)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    adapters = adapter_registry.get("adapters", [])
+    if not isinstance(adapters, list):
+        raise ValueError("adapter registry adapters must be a list")
+
+    checks: list[ASRCollectionCoverageCheck] = []
+    for entry in collections["entries"]:
+        evidence = _coverage_evidence(entry, adapters)
+        priority = str(entry.get("priority", ""))
+        required = priority in required_priorities
+        checks.append(
+            ASRCollectionCoverageCheck(
+                reference_id=str(entry["id"]),
+                name=str(entry["name"]),
+                category=str(entry["category"]),
+                priority=priority,
+                covered=bool(evidence),
+                required=required,
+                evidence=evidence,
+            )
+        )
+    ok = all(check.covered for check in checks if check.required)
+    return ASRCollectionCoverageReport(ok=ok, required_priorities=required_priorities, checks=checks)
+
+
 def asr_collections_markdown(registry: dict[str, Any]) -> str:
     rows = []
     entries = registry.get("entries", [])
@@ -126,3 +234,39 @@ def asr_collections_markdown(registry: dict[str, Any]) -> str:
         "This collection is for attribution, adapter planning, benchmark planning, and design review. Stable-ASR should not vendor upstream code unless the license is compatible and the copied scope is explicitly documented.",
     ]
     return "\n".join(lines)
+
+
+def _coverage_evidence(entry: dict[str, Any], adapters: list[Any]) -> list[str]:
+    evidence: list[str] = []
+    variants = _reference_variants(entry)
+    for adapter in adapters:
+        if not isinstance(adapter, dict):
+            continue
+        related = adapter.get("related_references", [])
+        if isinstance(related, list) and any(str(item) in variants for item in related):
+            evidence.append(f"adapter:{adapter.get('id', '')}")
+            continue
+        text = _normalize_reference_text(
+            " ".join(
+                str(adapter.get(key, ""))
+                for key in ("id", "title", "entrypoint", "notes")
+            )
+        )
+        if any(variant and variant in text for variant in variants):
+            evidence.append(f"adapter:{adapter.get('id', '')}")
+    return evidence
+
+
+def _reference_variants(entry: dict[str, Any]) -> set[str]:
+    reference_id = str(entry.get("id", ""))
+    name = str(entry.get("name", ""))
+    variants = {
+        _normalize_reference_text(reference_id),
+        _normalize_reference_text(reference_id.replace("_", "-")),
+        _normalize_reference_text(name),
+    }
+    return {variant for variant in variants if variant}
+
+
+def _normalize_reference_text(value: str) -> str:
+    return value.lower().replace("-", "_").replace(" ", "_")

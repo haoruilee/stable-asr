@@ -1,4 +1,10 @@
-from stable_asr.references import asr_collections_markdown, load_asr_collections, validate_asr_collections
+from stable_asr.models.adapters import load_adapter_registry
+from stable_asr.references import (
+    asr_collections_markdown,
+    audit_asr_collection_coverage,
+    load_asr_collections,
+    validate_asr_collections,
+)
 
 
 def test_asr_collections_registry_validates() -> None:
@@ -18,3 +24,24 @@ def test_asr_collections_markdown_mentions_core_projects() -> None:
     assert "Kaldi" in markdown
     assert "FunASR" in markdown
     assert "sherpa-onnx" in markdown
+
+
+def test_asr_collection_coverage_requires_p0_references() -> None:
+    report = audit_asr_collection_coverage(load_asr_collections(), load_adapter_registry())
+
+    assert report.ok
+    required = {check.reference_id: check for check in report.checks if check.required}
+    assert {"funasr", "lhotse", "sherpa_onnx", "wenet", "whisper"}.issubset(required)
+    assert all(check.covered for check in required.values())
+
+
+def test_asr_collection_coverage_can_surface_missing_p1() -> None:
+    report = audit_asr_collection_coverage(
+        load_asr_collections(),
+        load_adapter_registry(),
+        required_priorities=("p0", "p1"),
+    )
+
+    assert not report.ok
+    missing = {check.reference_id for check in report.checks if check.required and not check.covered}
+    assert "espnet" in missing

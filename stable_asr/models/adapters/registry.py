@@ -163,6 +163,34 @@ DEFAULT_ADAPTER_REGISTRY: dict[str, Any] = {
             "notes": "Template for evaluating WeNet systems without vendoring WeNet.",
         },
         {
+            "id": "sherpa_onnx_command_template",
+            "title": "sherpa-onnx Command Template",
+            "task": "streaming_asr_eval",
+            "modality": "external_command",
+            "status": "template",
+            "interface": "CommandStreamingASRAdapter",
+            "entrypoint": "stable-asr eval-asr-command --command '<sherpa-onnx export script> --output {output}'",
+            "input_schema": "local audio or manifest handled by external script",
+            "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+            "license": "depends_on_external_system",
+            "related_references": ["sherpa_onnx"],
+            "notes": "Template for evaluating sherpa-onnx runtime exports, including CPU and embedded deployment reports.",
+        },
+        {
+            "id": "lhotse_manifest_bridge_template",
+            "title": "Lhotse Manifest Bridge Template",
+            "task": "data_preparation",
+            "modality": "manifest",
+            "status": "template",
+            "interface": "ASRManifestBridge",
+            "entrypoint": "planned: lhotse cuts/supervisions to Stable-ASR ASR/turn manifests",
+            "input_schema": "Lhotse recording/cut/supervision manifests",
+            "output_schema": "Stable-ASR ASRManifestRecord or TurnManifestRecord JSONL",
+            "license": "depends_on_input_data",
+            "related_references": ["lhotse"],
+            "notes": "Planning template for interoperating with Lhotse instead of duplicating mature corpus recipes.",
+        },
+        {
             "id": "smart_turn_prediction",
             "title": "SmartTurn Prediction Converter",
             "task": "turn_taking",
@@ -274,6 +302,11 @@ def validate_adapter_registry(registry: dict[str, Any]) -> AdapterRegistryValida
         for key in required:
             if key not in adapter:
                 errors.append(f"adapter {adapter_id or index} missing {key}")
+        related = adapter.get("related_references", [])
+        if related is not None and (
+            not isinstance(related, list) or not all(isinstance(item, str) and item for item in related)
+        ):
+            errors.append(f"adapter {adapter_id or index} related_references must be a string list")
     return AdapterRegistryValidation(ok=not errors, errors=errors)
 
 
@@ -305,6 +338,7 @@ def _adapter_rows(registry: dict[str, Any]) -> list[dict[str, object]]:
             "modality": adapter["modality"],
             "status": adapter["status"],
             "interface": adapter["interface"],
+            "references": ", ".join(adapter.get("related_references", [])),
             "entrypoint": adapter["entrypoint"],
         }
         for adapter in registry["adapters"]

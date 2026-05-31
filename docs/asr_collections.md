@@ -7,6 +7,7 @@ ASR ecosystem projects. The curated registry lives at
 ```bash
 stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
 stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
+stable-asr asr-collections --audit-coverage --output runs/ASR_COLLECTION_COVERAGE.md
 ```
 
 The registry is not a vendoring list. It records what each upstream project is
@@ -28,3 +29,9 @@ Every substantial adapter, benchmark, data recipe, or deployment feature should
 either link to an entry in this registry or add a new entry first. That keeps
 Stable-ASR grounded in the existing ASR ecosystem instead of becoming an
 isolated toolkit.
+
+`asr-collections --audit-coverage` checks whether required reference priorities
+have evidence in the adapter registry. By default it requires P0 references such
+as FunASR, WeNet, Lhotse, sherpa-onnx, and Whisper to have at least an
+implemented converter, command template, or bridge template. Add
+`--require-priority p1` when reviewing the broader research-toolkit roadmap.

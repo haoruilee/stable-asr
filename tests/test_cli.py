@@ -205,6 +205,17 @@ def test_asr_collections_cli_writes_markdown(tmp_path, capsys) -> None:
     assert "OpenAI Whisper" in output.read_text(encoding="utf-8")
 
 
+def test_asr_collections_cli_audits_p0_coverage(tmp_path, capsys) -> None:
+    output = tmp_path / "ASR_COLLECTION_COVERAGE.md"
+    code = main(["asr-collections", "--audit-coverage", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "ASR Collection Coverage" in captured.out
+    assert "missing_required: `0`" in captured.out
+    assert output.exists()
+
+
 def test_audit_audio_cli_with_generated_turn_wavs(tmp_path, capsys) -> None:
     manifest = tmp_path / "turn.jsonl"
     code = main(["make-synthetic-turn-data", "--output", str(manifest), "--episodes", "2", "--write-audio"])
