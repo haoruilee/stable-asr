@@ -48,5 +48,9 @@ def test_final_evidence_matrix_maps_archive_next_to_explicit_artifacts_dir(tmp_p
     report = final_evidence_matrix(artifacts_dir=artifact_root)
     reproducibility = next(experiment for experiment in report.experiments if experiment.id == "final_reproducibility_bundle")
     archive = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "artifacts.tar.gz")
+    model_card = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "MODEL_CARD.md")
+    latex = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "paper.tex")
 
     assert archive.path == str(tmp_path / "artifacts.tar.gz")
+    assert model_card.path == str(tmp_path / "MODEL_CARD.md")
+    assert latex.path == str(tmp_path / "paper.tex")

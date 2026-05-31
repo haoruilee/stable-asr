@@ -271,6 +271,17 @@ def _artifact_path(
     root: Path,
     artifact_root: Path | None,
 ) -> Path | None:
+    run_root_artifacts = {
+        "DATASET_CARD.md",
+        "EXPERIMENT_CARD.md",
+        "MODEL_CARD.md",
+        "paper.tex",
+        "PAPER_DRAFT.md",
+        "artifacts.tar.gz",
+        "artifacts.tar.gz.sha256",
+    }
+    if artifact_root is not None and name in run_root_artifacts:
+        return artifact_root.parent / name
     artifact_map = {
         "DATASET_CARD.md": config["artifacts"].get("dataset_card"),
         "EXPERIMENT_CARD.md": config["artifacts"].get("experiment_card"),
@@ -280,8 +291,6 @@ def _artifact_path(
         "artifacts.tar.gz": config["artifacts"].get("artifact_archive"),
         "artifacts.tar.gz.sha256": _archive_sha256_path(config["artifacts"].get("artifact_archive")),
     }
-    if artifact_root is not None and name in {"artifacts.tar.gz", "artifacts.tar.gz.sha256"}:
-        return artifact_root.parent / name
     if name in artifact_map and artifact_map[name]:
         return _resolve(str(artifact_map[name]), root=root)
     if artifact_root is not None:
