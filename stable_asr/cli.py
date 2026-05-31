@@ -1375,7 +1375,7 @@ def build_parser() -> argparse.ArgumentParser:
     paper_release_smoke_parser.add_argument(
         "--require-final-ready",
         action="store_true",
-        help="Exit nonzero unless final-scale inputs and paper parity are READY.",
+        help="Exit nonzero unless the release audit, final inputs, and final-scale paper parity are READY.",
     )
     paper_release_smoke_parser.add_argument("--json", action="store_true", help="Print smoke result as JSON.")
 
@@ -3372,7 +3372,7 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
         else:
             print(result.to_text())
-        if args.require_final_ready and not result.final_ready:
+        if args.require_final_ready and (not result.ok or not result.final_ready):
             return 1
         return 0 if result.ok or not args.strict else 1
 

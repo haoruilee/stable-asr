@@ -76,4 +76,5 @@ Use `--skip-train` for a faster structural run. Use `doctor
 --check-release-env` before `--strict`; strict smoke requires both the optional
 Lance data backend and NanoTurn training dependencies.
 Use `paper-release-smoke --require-final-ready` for a final gate that must fail
-until real corpora, external predictions, and final artifacts are present.
+until the release audit is READY and real corpora, external predictions, and
+final artifacts are present.

@@ -3350,6 +3350,28 @@ def test_paper_release_smoke_default_trains_nanoturn_when_torch_available(tmp_pa
         assert "data/lance_data_layer" in failed
 
 
+def test_paper_release_smoke_require_final_ready_requires_release_audit(monkeypatch, capsys) -> None:
+    import stable_asr.cli as cli
+
+    class Result:
+        ok = False
+        final_ready = True
+
+        def to_text(self) -> str:
+            return "paper_release_smoke: NOT_READY\nfinal_scale_ready: YES"
+
+        def to_dict(self) -> dict[str, object]:
+            return {"ok": self.ok, "final_ready": self.final_ready}
+
+    monkeypatch.setattr(cli, "run_paper_release_smoke", lambda **kwargs: Result())
+
+    code = cli.main(["paper-release-smoke", "--require-final-ready"])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "paper_release_smoke: NOT_READY" in captured.out
+
+
 def test_make_card_cli(tmp_path, capsys) -> None:
     output = tmp_path / "DATASET_CARD.md"
     code = main(

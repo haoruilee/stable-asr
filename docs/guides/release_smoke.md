@@ -40,8 +40,8 @@ stable-asr paper-archive-verify --archive runs/paper/release_smoke/artifacts.tar
 Use `--skip-train` for fast structural checks. Use `--strict` in final
 environments where missing Lance rows, NanoTurn checkpoints, or final-scale
 inputs should fail CI. Use `--require-final-ready` when a job must fail until
-real paper-scale corpora, external predictions, and final artifact evidence are
-present. Use `paper-archive-verify` after moving the generated archive or
+the release audit is READY and real paper-scale corpora, external predictions,
+and final artifact evidence are present. Use `paper-archive-verify` after moving the generated archive or
 before attaching it to a release.
 
 The command prints both `final_inputs_ready` and `final_assignment_ready`.
