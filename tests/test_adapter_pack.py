@@ -25,13 +25,22 @@ def test_build_adapter_pack_writes_external_asr_starter_files(tmp_path: Path) ->
     assert (output_dir / "configs" / "asr_collections.json").exists()
     assert (output_dir / "configs" / "ASR_COLLECTION_LICENSE_REVIEW.md").exists()
     assert (output_dir / "configs" / "asr_collection_license_review.json").exists()
+    assert (output_dir / "collections" / "LICENSE_REVIEW_INDEX.md").exists()
+    assert (output_dir / "collections" / "funasr" / "LICENSE_REVIEW.md").exists()
     assert (output_dir / "configs" / "asr_command_compare.json").exists()
     assert (output_dir / "data" / "asr_eval_manifest.jsonl").exists()
     assert (output_dir / "scripts" / "export_streaming_template.py").exists()
     assert "stable-asr compare-asr-commands" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "--audit-licenses" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
+    assert "find collections -name LICENSE_REVIEW.md" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "link_or_command_adapter_until_reviewed" in (
         output_dir / "configs" / "ASR_COLLECTION_LICENSE_REVIEW.md"
+    ).read_text(encoding="utf-8")
+    assert "Confirm upstream repository license" in (
+        output_dir / "collections" / "funasr" / "LICENSE_REVIEW.md"
+    ).read_text(encoding="utf-8")
+    assert "collections/funasr/LICENSE_REVIEW.md" in (
+        output_dir / "collections" / "LICENSE_REVIEW_INDEX.md"
     ).read_text(encoding="utf-8")
 
 

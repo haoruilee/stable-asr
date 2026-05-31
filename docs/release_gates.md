@@ -79,7 +79,7 @@ ready.
 - artifact integrity JSON/Markdown files are included and pass sha256 verification
 - provenance JSON/Markdown files record git, version, result hash, and config hashes
 - benchmark suite JSON/Markdown files are included in the artifact bundle
-- benchmark, external ASR adapter, VoiceWorld scenario, final-run, final-input acquisition, and unified contributor starter packs are included in the artifact bundle; the adapter pack carries ASR license-review artifacts for upstream reuse decisions
+- benchmark, external ASR adapter, VoiceWorld scenario, final-run, final-input acquisition, and unified contributor starter packs are included in the artifact bundle; the adapter pack carries ASR license-review artifacts and fillable per-reference review templates for upstream reuse decisions
 - data source registry JSON/Markdown files are included in the artifact bundle
 - adapter registry JSON/Markdown files are included in the artifact bundle
 - model registry JSON/Markdown and NanoTurn model card JSON/Markdown files are included in the artifact bundle

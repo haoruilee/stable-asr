@@ -170,6 +170,22 @@ def build_adapter_pack(
         output_dir / "configs" / "ASR_COLLECTION_LICENSE_REVIEW.md",
         license_review.to_markdown(),
     )
+    license_template_paths: list[str] = []
+    entries_by_id = {str(entry.get("id", "")): entry for entry in asr_collections.get("entries", []) if isinstance(entry, dict)}
+    for row in license_review.rows:
+        if not row.review_required:
+            continue
+        entry = entries_by_id.get(row.reference_id, {})
+        template_path = output_dir / "collections" / row.reference_id / "LICENSE_REVIEW.md"
+        files[f"asr_license_review_template:{row.reference_id}"] = _write_text(
+            template_path,
+            _license_review_template(row, entry),
+        )
+        license_template_paths.append(str(template_path))
+    files["asr_license_review_index"] = _write_text(
+        output_dir / "collections" / "LICENSE_REVIEW_INDEX.md",
+        _license_review_index(license_template_paths),
+    )
     files["schema_registry_json"] = write_schema_registry_json(
         output_dir / "configs" / "schema_registry.json",
         schema_registry,
@@ -284,6 +300,7 @@ def _adapter_commands() -> list[str]:
         "stable-asr adapter-registry --registry configs/adapter_registry.json --validate-only",
         "stable-asr asr-collections --registry configs/asr_collections.json --audit-coverage --require-priority p0 --require-priority p1",
         "stable-asr asr-collections --registry configs/asr_collections.json --audit-licenses --output reports/ASR_COLLECTION_LICENSE_REVIEW.md",
+        "find collections -name LICENSE_REVIEW.md -print",
         "stable-asr compare-asr-commands --config configs/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2 --repo-root .",
         "stable-asr compare-asr-commands --config configs/asr_command_compare.json --report reports/asr_command_compare.md --json-output reports/asr_command_compare.json",
         "stable-asr streaming-submission --input runs/asr_adapter_pack/balanced_template.jsonl --system balanced_template --slice adapter --output-dir submissions/balanced_template",
@@ -313,6 +330,64 @@ def _asr_manifest_rows() -> list[dict[str, object]]:
             "split": "adapter_demo",
         },
     ]
+
+
+def _license_review_template(row: Any, entry: dict[str, Any]) -> str:
+    source_url = str(entry.get("source_url", ""))
+    docs_url = str(entry.get("docs_url", ""))
+    focus = str(entry.get("focus", ""))
+    reference_use = str(entry.get("reference_use", ""))
+    actions = entry.get("stable_asr_actions", [])
+    action_text = ", ".join(str(action) for action in actions) if isinstance(actions, list) else ""
+    return "\n".join(
+        [
+            f"# License Review: {row.name}",
+            "",
+            f"- reference_id: `{row.reference_id}`",
+            f"- priority: `{row.priority}`",
+            f"- declared_license: `{row.license}`",
+            f"- default_policy: `{row.policy}`",
+            f"- source_url: `{source_url}`",
+            f"- docs_url: `{docs_url}`",
+            f"- focus: {focus}",
+            f"- intended_stable_asr_use: {reference_use}",
+            f"- planned_actions: {action_text}",
+            "",
+            "## Review Checklist",
+            "",
+            "- [ ] Confirm upstream repository license and model/data license are compatible with the intended use.",
+            "- [ ] Record whether Stable-ASR will use link-only attribution, command adapters, copied code, copied configs, generated fixtures, or model weights.",
+            "- [ ] Record any required notices, attribution text, redistribution limits, model-card requirements, or commercial-use limits.",
+            "- [ ] Confirm no upstream code, weights, generated outputs, or long snippets are committed before this review is complete.",
+            "",
+            "## Decision",
+            "",
+            "- status: pending",
+            "- reviewer:",
+            "- reviewed_at:",
+            "- approved_uses:",
+            "- prohibited_uses:",
+            "- required_notices:",
+            "- notes:",
+            "",
+        ]
+    )
+
+
+def _license_review_index(paths: list[str]) -> str:
+    lines = [
+        "# ASR License Review Templates",
+        "",
+        "Fill these files before copying upstream code, weights, generated fixtures, or long snippets into Stable-ASR artifacts.",
+        "Command adapters and link-only references can proceed while the template remains pending, but vendoring or redistribution should not.",
+        "",
+    ]
+    if not paths:
+        lines.append("No references currently require manual license review.")
+    else:
+        lines.extend(f"- `{path}`" for path in paths)
+    lines.append("")
+    return "\n".join(lines)
 
 
 def _export_streaming_template() -> str:
