@@ -71,6 +71,7 @@ stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output 
 stable-asr validate-asr-manifest /tmp/stable-asr-asr-manifest.jsonl
 stable-asr inspect-asr-manifest /tmp/stable-asr-asr-manifest.jsonl
 stable-asr asr-to-turn --input /tmp/stable-asr-asr-manifest.jsonl --output /tmp/stable-asr-asr-turn.jsonl --include-incomplete
+stable-asr bootstrap-turn-data --input examples/data/asr_metadata.tsv --output-dir /tmp/stable-asr-bootstrap --audio-root examples/data --sample-rate 16000 --include-incomplete
 stable-asr audit-audio --kind turn --manifest /tmp/stable-asr-synth.jsonl
 stable-asr benchmark-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --warmup 0 --repeat 3 --report /tmp/stable-asr-turn-benchmark.md
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-nanoturn --epochs 20
@@ -174,6 +175,7 @@ Current M0 functionality:
 - utterance-level ASR manifest schema and metadata-table recipe via `prepare-asr-manifest`
 - `validate-asr-manifest` and `inspect-asr-manifest` for public ASR corpus manifests
 - `asr-to-turn` for weakly labeled complete/incomplete turn windows from ASR utterance manifests
+- `bootstrap-turn-data` for one-command ASR metadata to weak turn manifest and train/dev/test splits
 - `audit-audio` for turn/ASR manifest file existence, WAV sample-rate, and WAV duration checks
 - `benchmark-turn` for latency, throughput, RTF, and artifact-size reports
 - optional NanoTurnPico/NanoTurnNano PyTorch models

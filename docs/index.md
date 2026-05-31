@@ -47,6 +47,7 @@ stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output 
 stable-asr validate-asr-manifest runs/asr_manifest.jsonl
 stable-asr inspect-asr-manifest runs/asr_manifest.jsonl
 stable-asr asr-to-turn --input runs/asr_manifest.jsonl --output runs/asr_turn.jsonl --include-incomplete
+stable-asr bootstrap-turn-data --input examples/data/asr_metadata.tsv --output-dir runs/bootstrap_turn --audio-root examples/data --sample-rate 16000 --include-incomplete
 stable-asr audit-audio --kind asr --manifest runs/asr_manifest.jsonl
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause

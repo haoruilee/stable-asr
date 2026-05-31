@@ -10,6 +10,7 @@ from pathlib import Path
 from stable_asr import __version__
 from stable_asr.data.asr_manifest import load_asr_manifest, summarize_asr_records, validate_asr_manifest
 from stable_asr.data.audio_audit import audit_audio_records
+from stable_asr.data.bootstrap import BootstrapTurnDataConfig, bootstrap_turn_data
 from stable_asr.data.manifest import load_manifest, validate_manifest
 from stable_asr.data.benchmark import benchmark_data_formats
 from stable_asr.data.converters import (
@@ -393,6 +394,33 @@ def build_parser() -> argparse.ArgumentParser:
         help="Keep full reference text on weak incomplete windows. Default drops it to avoid text-label leakage.",
     )
     asr_to_turn_parser.add_argument("--json", action="store_true")
+
+    bootstrap_turn_parser = subparsers.add_parser(
+        "bootstrap-turn-data",
+        help="Prepare ASR metadata, derive weak turn windows, and write train/dev/test splits.",
+    )
+    bootstrap_turn_parser.add_argument("--input", type=Path, required=True, help="Input ASR metadata TSV/CSV/JSONL.")
+    bootstrap_turn_parser.add_argument("--output-dir", type=Path, required=True)
+    bootstrap_turn_parser.add_argument("--audio-root", type=Path)
+    bootstrap_turn_parser.add_argument("--sample-rate", type=int, default=16000)
+    bootstrap_turn_parser.add_argument("--language", default="unknown")
+    bootstrap_turn_parser.add_argument("--source", default="asr_manifest")
+    bootstrap_turn_parser.add_argument("--split")
+    bootstrap_turn_parser.add_argument("--id-field")
+    bootstrap_turn_parser.add_argument("--audio-field")
+    bootstrap_turn_parser.add_argument("--text-field")
+    bootstrap_turn_parser.add_argument("--duration-field")
+    bootstrap_turn_parser.add_argument("--speaker-field")
+    bootstrap_turn_parser.add_argument("--turn-format", choices=TURN_FORMATS.names(), default="jsonl")
+    bootstrap_turn_parser.add_argument("--window-sec", type=float, default=2.0)
+    bootstrap_turn_parser.add_argument("--include-incomplete", action="store_true")
+    bootstrap_turn_parser.add_argument("--incomplete-ratio", type=float, default=0.65)
+    bootstrap_turn_parser.add_argument("--train-ratio", type=float, default=0.8)
+    bootstrap_turn_parser.add_argument("--dev-ratio", type=float, default=0.1)
+    bootstrap_turn_parser.add_argument("--test-ratio", type=float, default=0.1)
+    bootstrap_turn_parser.add_argument("--seed", type=int, default=0)
+    bootstrap_turn_parser.add_argument("--split-prefix", default="turn")
+    bootstrap_turn_parser.add_argument("--json", action="store_true")
 
     audit_audio_parser = subparsers.add_parser(
         "audit-audio",
@@ -1101,6 +1129,47 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(result.to_text())
             print(f"output: {args.output}")
+        return 0
+
+    if args.command == "bootstrap-turn-data":
+        try:
+            result = bootstrap_turn_data(
+                args.input,
+                config=BootstrapTurnDataConfig(
+                    output_dir=args.output_dir,
+                    turn_format=args.turn_format,
+                    split_prefix=args.split_prefix,
+                ),
+                audio_root=args.audio_root,
+                default_sample_rate=args.sample_rate,
+                default_language=args.language,
+                default_source=args.source,
+                default_split=args.split,
+                id_field=args.id_field,
+                audio_field=args.audio_field,
+                text_field=args.text_field,
+                duration_field=args.duration_field,
+                speaker_field=args.speaker_field,
+                asr_to_turn_config=ASRToTurnConfig(
+                    window_sec=args.window_sec,
+                    include_incomplete=args.include_incomplete,
+                    incomplete_ratio=args.incomplete_ratio,
+                ),
+                split_config=TurnSplitConfig(
+                    train_ratio=args.train_ratio,
+                    dev_ratio=args.dev_ratio,
+                    test_ratio=args.test_ratio,
+                    seed=args.seed,
+                    stratify_by=("turn_label",),
+                ),
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(result.to_text())
         return 0
 
     if args.command == "audit-audio":

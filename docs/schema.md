@@ -196,6 +196,22 @@ and `scenario=asr_weak_complete` or `asr_weak_incomplete`. They are useful for
 bootstrapping endpointing baselines, not a substitute for real interruption,
 backchannel, or wait annotations.
 
+For the common case, `bootstrap-turn-data` runs metadata preparation,
+ASR-to-turn conversion, and train/dev/test splitting in one command:
+
+```bash
+stable-asr bootstrap-turn-data \
+  --input examples/data/asr_metadata.tsv \
+  --output-dir runs/bootstrap_turn \
+  --audio-root examples/data \
+  --sample-rate 16000 \
+  --include-incomplete
+```
+
+It writes `asr_manifest.jsonl`, `turn_manifest.jsonl`, split manifests under
+`splits/`, `bootstrap_summary.json`, and `BOOTSTRAP_TURN_DATA.md` with next
+commands for validation and NanoTurn training.
+
 ## Audio Audit
 
 Field validation does not prove the referenced audio exists. Use `audit-audio`
