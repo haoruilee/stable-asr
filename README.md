@@ -186,7 +186,8 @@ dataset/experiment/model cards, `artifacts.tar.gz`, and
 The smoke path can be `READY` while final paper-scale evidence is still
 `NOT_READY`; `paper-release-smoke` prints `final_scale_ready`, and
 `--require-final-ready` fails until real corpora, external predictions, and
-final artifacts are present. Final-ready gates also require assignment
+final artifacts are present. It also prints `final_inputs_ready` and
+`final_assignment_ready` separately. Final-ready gates require assignment
 readiness evidence plus a filled `runs/final/FINAL_INPUT_HANDOFF.json` that
 passes `final-handoff-audit`.
 

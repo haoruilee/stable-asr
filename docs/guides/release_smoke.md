@@ -44,6 +44,11 @@ real paper-scale corpora, external predictions, and final artifact evidence are
 present. Use `paper-archive-verify` after moving the generated archive or
 before attaching it to a release.
 
+The command prints both `final_inputs_ready` and `final_assignment_ready`.
+Final scale remains `NO` until the data paths exist, the assignment tracker has
+owners and due dates with no release blockers, and the strict
+`FINAL_ASSIGNMENT_AUDIT.md` evidence file is present.
+
 ## READY Smoke Environment
 
 The paper-facing smoke path can only reach `READY` when both optional pieces are

@@ -50,10 +50,15 @@ class PaperReleaseSmokeResult:
     def final_ready(self) -> bool:
         return self.paper_status.final_ready
 
+    @property
+    def final_assignment_ready(self) -> bool:
+        return self.paper_status.final_assignment_ready
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "ok": self.ok,
             "final_ready": self.final_ready,
+            "final_assignment_ready": self.final_assignment_ready,
             "output_dir": self.output_dir,
             "results_path": self.results_path,
             "artifacts_dir": self.artifacts_dir,
@@ -95,6 +100,7 @@ class PaperReleaseSmokeResult:
             f"release_audit_markdown: {self.release_audit_markdown}",
             f"paper_status_markdown: {self.paper_status_markdown}",
             f"final_inputs_ready: {'YES' if self.paper_status.final_inputs_ready else 'NO'}",
+            f"final_assignment_ready: {'YES' if self.final_assignment_ready else 'NO'}",
             f"missing_gates: {len(missing)}",
         ]
         lines.extend(f"- archive_verification/{error}" for error in self.archive_verification.errors)

@@ -3239,6 +3239,7 @@ def test_paper_release_smoke_cli(tmp_path, capsys) -> None:
     assert "paper_release_smoke: NOT_READY" in captured.out
     assert "final_scale_ready: NO" in captured.out
     assert "final_inputs_ready: NO" in captured.out
+    assert "final_assignment_ready: NO" in captured.out
     assert "release_audit_json:" in captured.out
     assert "paper_status_markdown:" in captured.out
     assert "artifact_archive:" in captured.out
@@ -3290,6 +3291,7 @@ def test_paper_release_smoke_default_trains_nanoturn_when_torch_available(tmp_pa
     expected_status = "READY" if _has_working_lance() else "NOT_READY"
     assert f"paper_release_smoke: {expected_status}" in captured.out
     assert "final_scale_ready: NO" in captured.out
+    assert "final_assignment_ready: NO" in captured.out
     audit = json.loads((tmp_path / "release_smoke_train" / "release_audit.json").read_text(encoding="utf-8"))
     failed = {f"{check['gate']}/{check['name']}" for check in audit["checks"] if not check["ok"]}
     assert "baseline/nanoturn_release_baseline" not in failed
