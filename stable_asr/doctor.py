@@ -16,6 +16,7 @@ from stable_asr.paper.final_config import audit_final_run_files, load_final_run_
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
 from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_parity_checklist
 from stable_asr.paper.suites import load_benchmark_suite, validate_benchmark_suite
+from stable_asr.references import load_asr_collections, validate_asr_collections
 from stable_asr.roadmap import load_roadmap, validate_roadmap
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
 
@@ -152,6 +153,12 @@ def _config_checks(repo_root: Path) -> list[DoctorCheck]:
             "adapter_registry",
             repo_root / "configs" / "adapters" / "stable_asr_adapters.json",
             lambda path: validate_adapter_registry(load_adapter_registry(path)).to_text(),
+        ),
+        _schema_check(
+            "config",
+            "asr_collections",
+            repo_root / "configs" / "references" / "asr_collections.json",
+            lambda path: validate_asr_collections(load_asr_collections(path)).to_text(),
         ),
         _schema_check(
             "config",

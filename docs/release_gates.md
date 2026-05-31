@@ -27,6 +27,8 @@ ready.
 - benchmark suite task/system/metric coverage is verified against leaderboard rows
 - data source registry JSON exists in `configs/datasets/stable_asr_sources.json`
 - adapter registry JSON exists in `configs/adapters/stable_asr_adapters.json`
+- ASR reference collection JSON exists in `configs/references/asr_collections.json`
+- required P0 ASR references have adapter or bridge coverage evidence
 - VoiceWorld scenario suite JSON exists in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - ASR manifest schema and metadata-table recipe exist
 - data benchmark sections exist

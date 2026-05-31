@@ -61,4 +61,6 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "paper/paper_parity_schema" in text
     assert "paper/final_experiments_schema" in text
     assert "paper/final_run_config_schema" in text
+    assert "reference/asr_collections_schema" in text
+    assert "OK reference/asr_collections_coverage" in text
     assert "OK scenario/scenario_suite_coverage" in text

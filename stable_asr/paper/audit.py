@@ -15,6 +15,7 @@ from stable_asr.paper.figures import PAPER_FIGURES
 from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_parity_checklist
 from stable_asr.paper.suites import audit_benchmark_suite_coverage, load_benchmark_suite, validate_benchmark_suite
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results
+from stable_asr.references import audit_asr_collection_coverage, load_asr_collections, validate_asr_collections
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
 
 
@@ -217,6 +218,7 @@ def audit_paper_release(
         except (OSError, ValueError) as exc:
             checks.append(_release_check("data", "data_source_registry", False, str(exc)))
 
+    adapter_registry: dict[str, Any] | None = None
     adapter_registry_path = repo_root / "configs" / "adapters" / "stable_asr_adapters.json"
     if adapter_registry_path.exists():
         try:
@@ -234,6 +236,37 @@ def audit_paper_release(
             )
         except (OSError, ValueError) as exc:
             checks.append(_release_check("adapter", "adapter_registry_schema", False, str(exc)))
+
+    asr_collections: dict[str, Any] | None = None
+    asr_collections_path = repo_root / "configs" / "references" / "asr_collections.json"
+    if asr_collections_path.exists():
+        try:
+            asr_collections = load_asr_collections(asr_collections_path)
+            collections_validation = validate_asr_collections(asr_collections)
+            checks.append(
+                _release_check(
+                    "reference",
+                    "asr_collections_schema",
+                    collections_validation.ok,
+                    f"{len(asr_collections.get('entries', []))} reference(s)"
+                    if collections_validation.ok
+                    else "; ".join(collections_validation.errors[:3]),
+                )
+            )
+            if collections_validation.ok and adapter_registry is not None:
+                coverage = audit_asr_collection_coverage(asr_collections, adapter_registry)
+                required = [check for check in coverage.checks if check.required]
+                covered = [check for check in required if check.covered]
+                checks.append(
+                    _release_check(
+                        "reference",
+                        "asr_collections_coverage",
+                        coverage.ok,
+                        f"{len(covered)}/{len(required)} required reference(s) covered",
+                    )
+                )
+        except (OSError, ValueError) as exc:
+            checks.append(_release_check("reference", "asr_collections_schema", False, str(exc)))
 
     scenario_suite_path = repo_root / "configs" / "scenarios" / "stable_asr_voiceworld_v0.json"
     if scenario_suite_path.exists():
@@ -453,6 +486,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
         "benchmark_suite": repo_root / "configs" / "benchmarks" / "stable_asr_v0.json",
         "data_sources": repo_root / "configs" / "datasets" / "stable_asr_sources.json",
         "adapter_registry": repo_root / "configs" / "adapters" / "stable_asr_adapters.json",
+        "asr_collections": repo_root / "configs" / "references" / "asr_collections.json",
         "scenario_suite": repo_root / "configs" / "scenarios" / "stable_asr_voiceworld_v0.json",
         "asr_manifest_schema": repo_root / "stable_asr" / "data" / "asr_manifest.py",
         "asr_manifest_recipe": repo_root / "stable_asr" / "data" / "recipes" / "asr_folder.py",
