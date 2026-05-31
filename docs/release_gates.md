@@ -103,8 +103,9 @@ ready.
 The release audit is expected to remain `NOT_READY` for runs that skip
 NanoTurn training, omit the optional Lance data benchmark, or do not provide a
 filled final handoff. A paper-facing run should install `stable-asr[lance]`,
-include a checkpoint-backed NanoTurn row, stage real final inputs with handoff
-evidence, and then scale the smoke fixtures into the final benchmark suite.
+include a checkpoint-backed NanoTurn row, stage real final inputs with
+assignment and handoff evidence, and then scale the smoke fixtures into the
+final benchmark suite.
 
 Use `doctor --check-release-env` to fail early when the local environment cannot
 produce a READY smoke audit:

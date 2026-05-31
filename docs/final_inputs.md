@@ -57,10 +57,11 @@ stable-asr paper-status --repo-root .
 plan. It writes a TSV/JSON staging checklist, owner assignment tracker, license
 and consent review sheet, VoiceWorld recording checklist, and structured
 handoff template so real corpora and external model outputs can be collected
-without inventing placeholder evidence. Use `final-handoff-audit` on a filled
-handoff JSON before treating the staged inputs as final release evidence.
-`paper-release-audit --require-final-ready` now checks that this filled handoff
-exists and audits cleanly.
+without inventing placeholder evidence. Use `final-assignment-audit` before
+handoff, then use `final-handoff-audit` on a filled handoff JSON before treating
+the staged inputs as final release evidence. `paper-release-audit
+--require-final-ready` now checks that assignment and handoff evidence exist
+and audit cleanly.
 
 Before handoff, use `final-assignment-audit` on the generated
 `acquisition/assignments.json` file. The default audit reports unassigned

@@ -182,7 +182,7 @@ def _tracks_markdown() -> str:
             "track": "Final input acquisition",
             "pack": "packs/final_acquisition_pack",
             "github_template": "final_data_acquisition.yml",
-            "first_command": "stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack",
+            "first_command": "stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack && stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json",
         },
     ]
     return "\n".join(

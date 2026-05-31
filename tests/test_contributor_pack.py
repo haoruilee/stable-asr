@@ -34,6 +34,7 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     assert "Benchmark submission" in tracks
     assert "External ASR adapter" in tracks
     assert "Final input acquisition" in tracks
+    assert "final-assignment-audit" in tracks
 
     commands = (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "packs/benchmark_pack" in commands
