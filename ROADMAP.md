@@ -1580,7 +1580,7 @@ v0.4 commands:
 
 ```bash
 stable-asr eval-streaming-asr --adapter funasr --dataset data/streaming_eval.jsonl
-stable-asr compare-asr --config configs/eval/streaming_compare.yaml
+stable-asr compare-streaming-asr --input funasr=data/funasr_streaming.jsonl --input whisper=data/whisper_streaming.jsonl
 ```
 
 paper commands:
