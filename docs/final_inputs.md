@@ -35,7 +35,7 @@ Expected P0 collection groups:
 - LibriSpeech dev-clean and AISHELL-1 dev corpus directories.
 - Leakage-audited turn train/dev/test splits derived from prepared ASR manifests.
 - Real VoiceWorld annotations and audio.
-- SmartTurn and EasyTurn raw prediction exports.
+- SmartTurn, EasyTurn, and VAP raw prediction exports.
 - Command-backed ASR output reports for external ASR systems.
 - NanoTurn final checkpoint, metrics, ONNX export, and model card.
 - Filled `FINAL_ASSIGNMENT_AUDIT.md`, `FINAL_INPUT_HANDOFF.json`, and

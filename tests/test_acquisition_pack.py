@@ -49,7 +49,7 @@ def test_build_final_acquisition_pack_writes_staging_checklists(tmp_path: Path) 
 
     acquisition = (output_dir / "acquisition" / "DATA_ACQUISITION.md").read_text(encoding="utf-8")
     assert "Stable-ASR Final Data Acquisition" in acquisition
-    assert "SmartTurn and EasyTurn raw prediction exports" in acquisition
+    assert "SmartTurn, EasyTurn, and VAP raw prediction exports" in acquisition
 
     license_review = (output_dir / "acquisition" / "LICENSE_REVIEW.md").read_text(encoding="utf-8")
     assert "project_or_recording_consent" in license_review

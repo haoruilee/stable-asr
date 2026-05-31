@@ -30,6 +30,10 @@ def test_default_final_run_config_matches_config() -> None:
     assert validate_final_run_config(file_config).ok
     assert config["id"] == "stable_asr_final_run_v0"
     assert [item["id"] for item in config["public_corpora"]] == [item["id"] for item in file_config["public_corpora"]]
+    assert [item["id"] for item in config["external_turn_predictions"]] == [
+        item["id"] for item in file_config["external_turn_predictions"]
+    ]
+    assert "vap" in {item["schema"] for item in config["external_turn_predictions"]}
     assert config["artifacts"]["assignment_audit"] == file_config["artifacts"]["assignment_audit"]
 
 

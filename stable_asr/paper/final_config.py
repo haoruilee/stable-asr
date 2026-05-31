@@ -109,6 +109,12 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
             "raw": "runs/final/external/easyturn_raw.jsonl",
             "converted": "runs/final/external/easyturn_predictions.jsonl",
         },
+        {
+            "id": "vap",
+            "schema": "vap",
+            "raw": "runs/final/external/vap_raw.jsonl",
+            "converted": "runs/final/external/vap_predictions.jsonl",
+        },
     ],
     "asr_command_config": "configs/final/asr_command_compare.json",
     "nanoturn": {
@@ -152,6 +158,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
         "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions",
+        "stable-asr convert-predictions --schema vap --input runs/final/external/vap_raw.jsonl --output runs/final/external/vap_predictions.jsonl",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-voiceworld-real",
         "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
@@ -2010,7 +2017,7 @@ def _external_predictions_action(
         blockers=blockers,
         commands=commands,
         artifacts=artifacts,
-        detail="Run SmartTurn/EasyTurn-style systems outside Stable-ASR, then normalize and coverage-check their prediction manifests.",
+        detail="Run SmartTurn/EasyTurn/VAP-style systems outside Stable-ASR, then normalize and coverage-check their prediction manifests.",
     )
 
 

@@ -43,6 +43,7 @@ def test_external_turn_commands_match_final_config_prediction_paths() -> None:
     for prediction in config["external_turn_predictions"]:
         assert prediction["raw"] in commands
         assert prediction["converted"] in commands
+    assert "convert-predictions --schema vap" in commands
     assert "runs/final/smartturn_raw.jsonl" not in commands
     assert "runs/final/easyturn_raw.jsonl" not in commands
 

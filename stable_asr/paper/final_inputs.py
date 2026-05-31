@@ -131,7 +131,7 @@ DEFAULT_FINAL_INPUT_COLLECTIONS: dict[str, Any] = {
         },
         {
             "id": "external_turn_predictions",
-            "title": "SmartTurn and EasyTurn raw prediction exports",
+            "title": "SmartTurn, EasyTurn, and VAP raw prediction exports",
             "category": "external_turn_baselines",
             "priority": "p0",
             "required": True,
@@ -139,23 +139,27 @@ DEFAULT_FINAL_INPUT_COLLECTIONS: dict[str, Any] = {
             "source_urls": [
                 "https://github.com/pipecat-ai/smart-turn",
                 "https://huggingface.co/ASLP-lab/Easy-Turn",
+                "https://github.com/ErikEkstedt/VoiceActivityProjection",
             ],
             "required_paths": [
                 "runs/final/external/smartturn_raw.jsonl",
                 "runs/final/external/easyturn_raw.jsonl",
+                "runs/final/external/vap_raw.jsonl",
             ],
             "generated_paths": [
                 "runs/final/external/smartturn_predictions.jsonl",
                 "runs/final/external/easyturn_predictions.jsonl",
+                "runs/final/external/vap_predictions.jsonl",
                 "runs/final/reports/baselines.json",
             ],
             "commands": [
                 "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions --require-all-predictions",
-                "stable-asr compare-turn --dataset runs/final/turn_test.jsonl --baseline rule_endpoint --baseline vad_pause --baseline text_turn --predictions smart_turn=runs/final/external/smartturn_predictions.jsonl --predictions easy_turn=runs/final/external/easyturn_predictions.jsonl --checkpoint nanoturn=runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/baselines.json",
+                "stable-asr compare-turn --dataset runs/final/turn_test.jsonl --baseline rule_endpoint --baseline vad_pause --baseline text_turn --predictions smart_turn=runs/final/external/smartturn_predictions.jsonl --predictions easy_turn=runs/final/external/easyturn_predictions.jsonl --predictions vap=runs/final/external/vap_predictions.jsonl --checkpoint nanoturn=runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/baselines.json",
             ],
             "verification": [
                 "stable-asr validate-turn-predictions --dataset runs/final/turn_test.jsonl --predictions runs/final/external/smartturn_predictions.jsonl",
                 "stable-asr validate-turn-predictions --dataset runs/final/turn_test.jsonl --predictions runs/final/external/easyturn_predictions.jsonl",
+                "stable-asr validate-turn-predictions --dataset runs/final/turn_test.jsonl --predictions runs/final/external/vap_predictions.jsonl",
             ],
             "notes": "External systems should be run outside Stable-ASR, then normalized and coverage-checked here.",
         },

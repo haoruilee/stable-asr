@@ -280,6 +280,7 @@ def turn_collections_acquisition_markdown(registry: dict[str, Any]) -> str:
             "stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md",
             "stable-asr convert-predictions --schema smart_turn --input runs/final/external/smartturn_raw.jsonl --output runs/final/external/smartturn_predictions.jsonl",
             "stable-asr convert-predictions --schema easyturn --input runs/final/external/easyturn_raw.jsonl --output runs/final/external/easyturn_predictions.jsonl",
+            "stable-asr convert-predictions --schema vap --input runs/final/external/vap_raw.jsonl --output runs/final/external/vap_predictions.jsonl",
             "stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/scenarios.json",
             "```",
             "",

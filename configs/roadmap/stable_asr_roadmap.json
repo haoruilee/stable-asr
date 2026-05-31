@@ -211,6 +211,7 @@
         {"path": "runs/final/turn_test.jsonl", "required_now": false},
         {"path": "runs/final/external/smartturn_predictions.jsonl", "required_now": false},
         {"path": "runs/final/external/easyturn_predictions.jsonl", "required_now": false},
+        {"path": "runs/final/external/vap_predictions.jsonl", "required_now": false},
         {"path": "runs/final/asr_commands/whisper_streaming.jsonl", "required_now": false},
         {"path": "runs/final/asr_commands/funasr_streaming.jsonl", "required_now": false},
         {"path": "runs/final/reports/asr_transcript_conversions.json", "required_now": false},

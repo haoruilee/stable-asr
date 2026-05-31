@@ -892,7 +892,7 @@ Deliverables:
 - `RuleEndpointBaseline` implemented
 - `TextTurnBaseline` implemented
 - external turn prediction JSONL adapter implemented through `eval-turn --predictions`
-- external prediction conversion implemented for generic, SmartTurn-style, and EasyTurn-style JSONL
+- external prediction conversion implemented for generic, SmartTurn-style, EasyTurn-style, and VAP-style JSONL
 - turn dataset loader with windowing
 - four-class turn training implemented for metadata-feature v0
 - audio-feature training implemented for synthetic WAV manifests
@@ -1095,7 +1095,7 @@ Deliverables:
 - EasyTurn-style JSONL converter implemented
 - Full-Duplex-Bench-style JSONL converter implemented
 - SmartTurn-style JSONL converter implemented
-- prediction converters for generic, SmartTurn-style, and EasyTurn-style JSONL implemented
+- prediction converters for generic, SmartTurn-style, EasyTurn-style, and VAP-style JSONL implemented
 - data benchmark scripts with random sampling rows
 
 Experiments:

@@ -37,6 +37,8 @@ def test_turn_collections_acquisition_markdown_maps_evidence_targets() -> None:
     assert "runs/final/external/smartturn_predictions.jsonl" in markdown
     assert "runs/final/external/easyturn_raw.jsonl" in markdown
     assert "runs/final/external/easyturn_predictions.jsonl" in markdown
+    assert "runs/final/external/vap_raw.jsonl" in markdown
+    assert "runs/final/external/vap_predictions.jsonl" in markdown
     assert "runs/collections/full_duplex_bench/SCENARIO_BRIDGE.md" in markdown
     assert "Registry presence alone is not evidence" in markdown
     assert "runs/final/smartturn_raw.jsonl" not in markdown
