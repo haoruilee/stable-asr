@@ -3,7 +3,12 @@ import json
 from pathlib import Path
 
 from stable_asr.paper.experiments import run_paper_smoke
-from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_rows, load_paper_results
+from stable_asr.paper.leaderboard import (
+    export_leaderboard,
+    leaderboard_rows,
+    load_paper_results,
+    validate_leaderboard_jsonl,
+)
 
 
 def test_leaderboard_rows_cover_major_tasks(tmp_path: Path) -> None:
@@ -44,3 +49,39 @@ def test_export_leaderboard_jsonl_and_csv(tmp_path: Path) -> None:
         rows = list(csv.DictReader(handle))
     assert rows
     assert "task" in rows[0]
+
+
+def test_validate_leaderboard_jsonl_accepts_exported_rows(tmp_path: Path) -> None:
+    result = run_paper_smoke(tmp_path / "paper", episodes=9, seed=2, train_model=False)
+    jsonl = Path(export_leaderboard(result.results_path, tmp_path / "leaderboard.jsonl", format="jsonl"))
+
+    report = validate_leaderboard_jsonl(jsonl)
+
+    assert report.ok
+    assert report.rows > 0
+    assert "turn_quality" in report.tasks
+    assert "leaderboard_validation: OK" in report.to_text()
+
+
+def test_validate_leaderboard_jsonl_rejects_bad_unit_and_duplicates(tmp_path: Path) -> None:
+    path = tmp_path / "bad_leaderboard.jsonl"
+    row = {
+        "suite": "stable_asr_v0",
+        "task": "turn_quality",
+        "system": "rule_endpoint",
+        "slice": "overall",
+        "metric": "macro_f1",
+        "value": 0.5,
+        "unit": "ms",
+        "higher_is_better": False,
+        "source": "unit",
+    }
+    path.write_text(json.dumps(row) + "\n" + json.dumps(row) + "\n", encoding="utf-8")
+
+    report = validate_leaderboard_jsonl(path)
+
+    assert not report.ok
+    text = report.to_text()
+    assert "unit" in text
+    assert "higher_is_better" in text
+    assert "duplicate" in text

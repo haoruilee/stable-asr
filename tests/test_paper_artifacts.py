@@ -15,6 +15,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert set(bundle.tables) == set(PAPER_TABLES)
     assert set(bundle.figures) == set(PAPER_FIGURES)
     assert set(bundle.leaderboards) == {"jsonl", "csv"}
+    assert set(bundle.leaderboard_validation) == {"json", "markdown"}
     assert set(bundle.benchmark_suite) == {"json", "markdown"}
     assert set(bundle.data_sources) == {"json", "markdown"}
     assert set(bundle.adapter_registry) == {"json", "markdown"}
@@ -42,6 +43,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR Platform Architecture" in Path(bundle.figures["architecture"]).read_text(encoding="utf-8")
     assert "Baseline Macro F1" in Path(bundle.figures["baselines"]).read_text(encoding="utf-8")
     assert "turn_quality" in Path(bundle.leaderboards["jsonl"]).read_text(encoding="utf-8")
+    assert "Stable-ASR Leaderboard Validation" in Path(bundle.leaderboard_validation["markdown"]).read_text(encoding="utf-8")
+    assert "status: `OK`" in Path(bundle.leaderboard_validation["markdown"]).read_text(encoding="utf-8")
     assert "asr_transcript_conversion" in Path(bundle.benchmark_suite["markdown"]).read_text(encoding="utf-8")
     assert "synthetic_voiceworld" in Path(bundle.data_sources["markdown"]).read_text(encoding="utf-8")
     assert "command_streaming_asr" in Path(bundle.adapter_registry["markdown"]).read_text(encoding="utf-8")

@@ -916,6 +916,8 @@ def _artifact_checks(artifacts_dir: Path) -> list[PaperAuditCheck]:
         checks.append(_exists_check(f"figure:{figure}", artifacts_dir / "figures" / f"{figure}.svg"))
     checks.append(_exists_check("leaderboard:jsonl", artifacts_dir / "leaderboard.jsonl"))
     checks.append(_exists_check("leaderboard:csv", artifacts_dir / "leaderboard.csv"))
+    checks.append(_exists_check("leaderboard_validation:json", artifacts_dir / "leaderboard_validation.json"))
+    checks.append(_exists_check("leaderboard_validation:markdown", artifacts_dir / "LEADERBOARD_VALIDATION.md"))
     checks.append(_exists_check("benchmark_suite:json", artifacts_dir / "benchmark_suite.json"))
     checks.append(_exists_check("benchmark_suite:markdown", artifacts_dir / "BENCHMARK_SUITE.md"))
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))

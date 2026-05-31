@@ -17,6 +17,7 @@ from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.final_config import FinalRunActionPlan, build_final_run_action_plan
 from stable_asr.paper.final_results import FinalResultsAssemblyReport, assemble_final_paper_results
 from stable_asr.paper.latex import paper_latex
+from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
 from stable_asr.paper.release_smoke import PaperReleaseSmokeResult, run_paper_release_smoke
 from stable_asr.paper.suites import (
     DEFAULT_BENCHMARK_SUITE,
@@ -54,6 +55,7 @@ __all__ = [
     "build_final_run_action_plan",
     "dataset_card",
     "experiment_card",
+    "export_leaderboard",
     "audit_benchmark_suite_coverage",
     "benchmark_suite_markdown",
     "load_benchmark_suite",
@@ -66,5 +68,6 @@ __all__ = [
     "run_paper_release_smoke",
     "run_paper_smoke",
     "validate_benchmark_suite",
+    "validate_leaderboard_jsonl",
     "write_benchmark_suite_json",
 ]

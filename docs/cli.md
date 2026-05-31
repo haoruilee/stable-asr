@@ -71,6 +71,8 @@ stable-asr final-config --config configs/final/paper_final.json --plan-missing -
 stable-asr paper-evidence-matrix --output runs/final/FINAL_EVIDENCE_MATRIX.md
 stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/scenarios.json
 stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
+stable-asr leaderboard-export --results runs/final/paper_results.json --output runs/final/leaderboard.jsonl
+stable-asr leaderboard-validate --input runs/final/leaderboard.jsonl --require-complete-suite --output runs/final/LEADERBOARD_VALIDATION.md
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 ```

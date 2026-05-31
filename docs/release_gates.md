@@ -54,6 +54,7 @@ ready.
 - paper bundle, Markdown draft, and LaTeX draft exist
 - dataset and experiment cards are provided
 - leaderboard-ready JSONL/CSV exports are included in the artifact bundle
+- leaderboard validation JSON/Markdown files are included in the artifact bundle
 - benchmark suite JSON/Markdown files are included in the artifact bundle
 - data source registry JSON/Markdown files are included in the artifact bundle
 - adapter registry JSON/Markdown files are included in the artifact bundle

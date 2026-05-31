@@ -1562,6 +1562,55 @@ def test_leaderboard_export_cli(tmp_path, capsys) -> None:
     assert "turn_quality" in output.read_text(encoding="utf-8")
 
 
+def test_leaderboard_validate_cli(tmp_path, capsys) -> None:
+    main(
+        [
+            "reproduce-paper",
+            "--output-dir",
+            str(tmp_path / "paper"),
+            "--episodes",
+            "9",
+            "--skip-train",
+        ]
+    )
+    output = tmp_path / "leaderboard.jsonl"
+    main(
+        [
+            "leaderboard-export",
+            "--results",
+            str(tmp_path / "paper" / "paper_results.json"),
+            "--output",
+            str(output),
+        ]
+    )
+    report = tmp_path / "LEADERBOARD_VALIDATION.md"
+    code = main(["leaderboard-validate", "--input", str(output), "--output", str(report)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Leaderboard Validation" in captured.out
+    assert "status: `OK`" in captured.out
+    assert report.exists()
+
+
+def test_leaderboard_validate_cli_rejects_bad_submission(tmp_path, capsys) -> None:
+    bad = tmp_path / "bad.jsonl"
+    bad.write_text(
+        (
+            '{"suite":"bad","task":"turn_quality","system":"x","slice":"overall",'
+            '"metric":"macro_f1","value":"nan","unit":"rate","higher_is_better":true,"source":"unit"}\n'
+        ),
+        encoding="utf-8",
+    )
+
+    code = main(["leaderboard-validate", "--input", str(bad)])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "FAILED" in captured.out
+    assert "expected stable_asr_v0" in captured.out
+
+
 def test_paper_case_studies_cli(tmp_path, capsys) -> None:
     main(
         [
@@ -2246,6 +2295,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert "artifact_index:" in captured.out
     assert "benchmark_suite:" in captured.out
     assert "data_sources:" in captured.out
+    assert "leaderboard_validation:" in captured.out
     assert "asr_collections:" in captured.out
     assert "scenario_suite:" in captured.out
     assert "case_studies:" in captured.out
@@ -2255,6 +2305,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert (output_dir / "ARTIFACT_INDEX.md").exists()
     assert (output_dir / "tables" / "baselines.md").exists()
     assert (output_dir / "figures" / "baselines.svg").exists()
+    assert (output_dir / "LEADERBOARD_VALIDATION.md").exists()
     assert (output_dir / "BENCHMARK_SUITE.md").exists()
     assert (output_dir / "SCENARIO_SUITE.md").exists()
     assert (output_dir / "CASE_STUDIES.md").exists()

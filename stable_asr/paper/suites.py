@@ -70,6 +70,7 @@ DEFAULT_BENCHMARK_SUITE: dict[str, Any] = {
                 {"name": "write_seconds", "unit": "s", "higher_is_better": False},
                 {"name": "read_seconds", "unit": "s", "higher_is_better": False},
                 {"name": "size_bytes", "unit": "bytes", "higher_is_better": False},
+                {"name": "sample_seconds", "unit": "s", "higher_is_better": False},
                 {"name": "samples_per_second", "unit": "samples/s", "higher_is_better": True},
             ],
         },

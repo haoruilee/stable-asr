@@ -23,7 +23,7 @@ from stable_asr.paper.final_config import (
     write_final_run_config_json,
 )
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
-from stable_asr.paper.leaderboard import export_leaderboard
+from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
 from stable_asr.paper.parity import audit_paper_parity, load_paper_parity_checklist, paper_parity_markdown
 from stable_asr.paper.status import paper_status, write_paper_status_json, write_paper_status_markdown
 from stable_asr.paper.suites import benchmark_suite_markdown, load_benchmark_suite, write_benchmark_suite_json
@@ -54,6 +54,7 @@ class PaperArtifactBundle:
     tables: dict[str, str]
     figures: dict[str, str]
     leaderboards: dict[str, str]
+    leaderboard_validation: dict[str, str]
     benchmark_suite: dict[str, str]
     data_sources: dict[str, str]
     adapter_registry: dict[str, str]
@@ -78,6 +79,7 @@ class PaperArtifactBundle:
             "tables": self.tables,
             "figures": self.figures,
             "leaderboards": self.leaderboards,
+            "leaderboard_validation": self.leaderboard_validation,
             "benchmark_suite": self.benchmark_suite,
             "data_sources": self.data_sources,
             "adapter_registry": self.adapter_registry,
@@ -121,6 +123,19 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "jsonl": export_leaderboard(results_path, output_dir / "leaderboard.jsonl", format="jsonl"),
         "csv": export_leaderboard(results_path, output_dir / "leaderboard.csv", format="csv"),
     }
+    leaderboard_validation_report = validate_leaderboard_jsonl(leaderboards["jsonl"], require_complete_suite=True)
+    leaderboard_validation = {
+        "json": str(output_dir / "leaderboard_validation.json"),
+        "markdown": str(output_dir / "LEADERBOARD_VALIDATION.md"),
+    }
+    Path(leaderboard_validation["json"]).write_text(
+        json.dumps(leaderboard_validation_report.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(leaderboard_validation["markdown"]).write_text(
+        leaderboard_validation_report.to_markdown(),
+        encoding="utf-8",
+    )
     suite = load_benchmark_suite()
     benchmark_suite = {
         "json": write_benchmark_suite_json(output_dir / "benchmark_suite.json", suite),
@@ -273,6 +288,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         tables=tables,
         figures=figures,
         leaderboards=leaderboards,
+        leaderboard_validation=leaderboard_validation,
         benchmark_suite=benchmark_suite,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
@@ -301,6 +317,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         tables=tables,
         figures=figures,
         leaderboards=leaderboards,
+        leaderboard_validation=leaderboard_validation,
         benchmark_suite=benchmark_suite,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
@@ -338,6 +355,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Leaderboards", ""])
     for name, path in bundle.leaderboards.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Leaderboard Validation", ""])
+    for name, path in bundle.leaderboard_validation.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Benchmark Suite", ""])
     for name, path in bundle.benchmark_suite.items():

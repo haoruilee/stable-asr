@@ -25,6 +25,7 @@ streaming ASR and voice-agent control:
 - final-run file audit for missing real paper inputs
 - final-run action plan for the remaining data-staging and experiment commands
 - final evidence matrix linking final experiments to blockers and expected artifacts
+- leaderboard validation for external JSONL benchmark submissions
 - machine-readable roadmap status for milestone evidence and planned final-scale work
 - repository doctor for environment, config, and final-input readiness checks
 - paper tables, figures, bundles, audits, and drafts
@@ -77,6 +78,7 @@ stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause
 stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/scenarios.json
 stable-asr reproduce-paper --config configs/paper/paper_smoke.json
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
+stable-asr leaderboard-validate --input runs/paper/smoke/artifacts/leaderboard.jsonl --output runs/paper/smoke/artifacts/LEADERBOARD_VALIDATION.md
 stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 stable-asr paper-case-studies --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output-dir runs/paper/smoke/artifacts

@@ -69,6 +69,7 @@ stable-asr final-config --config configs/final/paper_final.json --plan-missing -
 stable-asr paper-evidence-matrix --output runs/final/FINAL_EVIDENCE_MATRIX.md
 stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
 stable-asr leaderboard-export --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/leaderboard.jsonl
+stable-asr leaderboard-validate --input runs/paper/smoke/leaderboard.jsonl --output runs/paper/smoke/LEADERBOARD_VALIDATION.md
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only
 stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
@@ -81,6 +82,7 @@ data registry, VoiceWorld timelines, policy state transitions, baseline quality,
 latency, ASR manifest recipe summaries, failure-case taxonomy, streaming metrics,
 streaming failure taxonomy, external ASR transcript conversion, scenario
 robustness, policy search, leaderboard-ready JSONL/CSV metric rows, a
+leaderboard validation report,
 machine-readable benchmark suite definition, a data source registry, a
 baseline/adapter registry, ASR reference collection, paper-reference, BibTeX, and coverage artifacts, a VoiceWorld scenario suite definition, and
 case-study JSON/Markdown artifacts that link failure examples back to source

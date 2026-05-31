@@ -289,6 +289,7 @@ is provided in `mkdocs.yaml`.
 - `final-results` for assembling audited final-scale JSON outputs into `runs/final/paper_results.json`
 - `--json-output` on core evaluators so final runbooks can write machine-readable result inputs without shell redirection
 - `leaderboard-export` for JSONL/CSV metric rows
+- `leaderboard-validate` for checking external leaderboard JSONL submissions against the benchmark suite schema
 - machine-readable benchmark suite definition in `configs/benchmarks/stable_asr_v0.json`
 - `benchmark-suite` for validating and rendering benchmark suite definitions
 - `paper-audit` checks for paper result sections and bundled table/figure artifacts

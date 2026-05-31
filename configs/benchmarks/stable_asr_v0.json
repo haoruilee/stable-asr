@@ -50,6 +50,7 @@
         {"name": "write_seconds", "unit": "s", "higher_is_better": false},
         {"name": "read_seconds", "unit": "s", "higher_is_better": false},
         {"name": "size_bytes", "unit": "bytes", "higher_is_better": false},
+        {"name": "sample_seconds", "unit": "s", "higher_is_better": false},
         {"name": "samples_per_second", "unit": "samples/s", "higher_is_better": true}
       ]
     },
