@@ -26,6 +26,7 @@ from stable_asr.models.adapters.turn_prediction import (
     TurnPredictionManifestAdapter,
     TurnPredictionRow,
     convert_turn_prediction_jsonl,
+    export_turn_predictions_jsonl,
     load_turn_prediction_jsonl,
 )
 
@@ -42,6 +43,7 @@ __all__ = [
     "adapter_registry_markdown",
     "convert_turn_prediction_jsonl",
     "command_streaming_asr_adapter",
+    "export_turn_predictions_jsonl",
     "load_adapter_registry",
     "load_streaming_transcript_jsonl",
     "load_turn_prediction_jsonl",

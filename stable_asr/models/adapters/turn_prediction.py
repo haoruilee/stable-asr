@@ -86,6 +86,27 @@ def load_turn_prediction_jsonl(path: str | Path) -> TurnPredictionManifestAdapte
     return TurnPredictionManifestAdapter.from_jsonl(path)
 
 
+def export_turn_predictions_jsonl(
+    records: list[TurnManifestRecord],
+    predictor: Any,
+    output_path: str | Path,
+) -> list[TurnPredictionRow]:
+    """Run a turn predictor and write Stable-ASR prediction JSONL rows."""
+
+    rows: list[TurnPredictionRow] = []
+    for record in records:
+        prediction = predictor.predict(record)
+        rows.append(
+            TurnPredictionRow(
+                id=record.id,
+                probs=dict(prediction.probs),
+                timestamp=prediction.timestamp,
+            )
+        )
+    write_jsonl(output_path, [row.to_dict() for row in rows])
+    return rows
+
+
 def convert_turn_prediction_jsonl(
     input_path: str | Path,
     output_path: str | Path,

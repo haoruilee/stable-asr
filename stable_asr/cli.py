@@ -43,6 +43,7 @@ from stable_asr.models.adapters import (
     TurnPredictionManifestAdapter,
     adapter_registry_markdown,
     convert_turn_prediction_jsonl,
+    export_turn_predictions_jsonl,
     load_adapter_registry,
     load_streaming_transcript_jsonl,
     validate_adapter_registry,
@@ -183,6 +184,23 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print the evaluation report as JSON.",
     )
+
+    predict_turn_parser = subparsers.add_parser(
+        "predict-turn",
+        help="Run a turn baseline or NanoTurn checkpoint and write prediction JSONL.",
+    )
+    predict_turn_parser.add_argument("--dataset", type=Path, required=True, help="Path to a turn manifest.")
+    predict_turn_parser.add_argument("--output", type=Path, required=True, help="Output prediction JSONL path.")
+    predict_turn_parser.add_argument(
+        "--baseline",
+        choices=["rule_endpoint", "vad_pause", "text_turn"],
+        default="vad_pause",
+        help="Built-in baseline to run when --checkpoint is omitted.",
+    )
+    predict_turn_parser.add_argument("--checkpoint", type=Path, help="Optional NanoTurn checkpoint.")
+    predict_turn_parser.add_argument("--audio-root", type=Path)
+    predict_turn_parser.add_argument("--complete-pause-ms", type=int, default=700)
+    predict_turn_parser.add_argument("--json", action="store_true")
 
     compare_turn_parser = subparsers.add_parser(
         "compare-turn",
@@ -872,6 +890,22 @@ def main(argv: list[str] | None = None) -> int:
             )
             if args.report:
                 print(f"report: {args.report}")
+        return 0
+
+    if args.command == "predict-turn":
+        try:
+            records = load_manifest(args.dataset)
+            predictor = _build_turn_predictor(args, dataset_parent=args.dataset.parent)
+            rows = export_turn_predictions_jsonl(records, predictor, args.output)
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        payload = {"dataset": str(args.dataset), "output": str(args.output), "records": len(rows)}
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            print(f"predictions: {args.output}")
+            print(f"records: {len(rows)}")
         return 0
 
     if args.command == "compare-turn":

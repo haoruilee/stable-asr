@@ -53,6 +53,7 @@ stable-asr bootstrap-turn-data --input examples/data/asr_metadata.tsv --output-d
 stable-asr audit-audio --kind asr --manifest runs/asr_manifest.jsonl
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause
+stable-asr predict-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --output runs/text_turn_predictions.jsonl
 stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl --report runs/turn_compare.md
 stable-asr compare-turn-splits --train runs/splits/turn_train.jsonl --dev runs/splits/turn_dev.jsonl --test runs/splits/turn_test.jsonl --baseline vad_pause --baseline text_turn --report runs/turn_split_compare.md
 stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl

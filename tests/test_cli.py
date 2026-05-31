@@ -112,6 +112,31 @@ def test_eval_turn_cli_external_predictions(capsys) -> None:
     assert "accuracy: 1.0000" in captured.out
 
 
+def test_predict_turn_cli_writes_prediction_manifest(tmp_path, capsys) -> None:
+    output = tmp_path / "text_turn_predictions.jsonl"
+    code = main(
+        [
+            "predict-turn",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--baseline",
+            "text_turn",
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "records: 4" in captured.out
+    assert output.exists()
+
+    eval_code = main(["eval-turn", "--dataset", "examples/data/turn_demo.jsonl", "--predictions", str(output)])
+    eval_output = capsys.readouterr()
+    assert eval_code == 0
+    assert "accuracy: 1.0000" in eval_output.out
+
+
 def test_compare_turn_cli_with_baselines_and_predictions(tmp_path, capsys) -> None:
     report = tmp_path / "turn_compare.md"
     code = main(
