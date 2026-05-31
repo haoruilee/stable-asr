@@ -71,6 +71,7 @@ stable-asr final-config --config configs/final/paper_final.json --prepare-asr-tr
 # Expected to report NOT_READY until final corpora, splits, external predictions, real VoiceWorld, and raw ASR exports exist.
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md
+stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md
 stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json
 stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md
 stable-asr final-inputs --registry configs/final/input_collections.json --output runs/final/FINAL_INPUT_COLLECTIONS.md
@@ -108,7 +109,8 @@ parity audit, a final-scale experiment runbook, a final-run
 configuration template, a final-run file audit/action plan, a final evidence matrix, a roadmap status report, and a claim evidence matrix
 that links platform-paper claims to files, result keys, artifacts, and
 reproduction commands. `PAPER_STATUS.md` summarizes these signals in one page.
-For final-scale release gates, fill `runs/final/FINAL_INPUT_HANDOFF.json` with
+For final-scale release gates, fill and audit the acquisition assignment
+tracker before handoff, then fill `runs/final/FINAL_INPUT_HANDOFF.json` with
 real owner, license/consent, verification, staged path, and checksum evidence
 before running `final-handoff-audit`.
 

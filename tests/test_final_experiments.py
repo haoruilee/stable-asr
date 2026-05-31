@@ -17,6 +17,8 @@ def test_default_final_experiments_match_config() -> None:
     assert validate_final_experiments(config_registry).ok
     assert registry["id"] == "stable_asr_final_experiments_v0"
     assert [item["id"] for item in registry["experiments"]] == [item["id"] for item in config_registry["experiments"]]
+    reproducibility = next(item for item in registry["experiments"] if item["id"] == "final_reproducibility_bundle")
+    assert "FINAL_ASSIGNMENT_AUDIT.md" in reproducibility["expected_artifacts"]
 
 
 def test_final_experiments_markdown_and_json_roundtrip(tmp_path: Path) -> None:
@@ -29,6 +31,7 @@ def test_final_experiments_markdown_and_json_roundtrip(tmp_path: Path) -> None:
     assert "real_data_layer_benchmark" in markdown
     assert "real_streaming_asr_systems" in markdown
     assert "stable-asr benchmark-data" in markdown
+    assert "final-assignment-audit" in markdown
 
 
 def test_external_turn_commands_match_final_config_prediction_paths() -> None:

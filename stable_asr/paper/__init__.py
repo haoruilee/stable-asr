@@ -17,7 +17,12 @@ from stable_asr.paper.audit import (
     audit_paper_artifacts,
     audit_paper_release,
 )
-from stable_asr.paper.acquisition_pack import FinalAcquisitionPackReport, build_final_acquisition_pack
+from stable_asr.paper.acquisition_pack import (
+    FinalAcquisitionPackReport,
+    FinalAssignmentAuditReport,
+    audit_acquisition_assignments,
+    build_final_acquisition_pack,
+)
 from stable_asr.paper.adapter_pack import AdapterPackReport, build_adapter_pack
 from stable_asr.paper.benchmark_pack import BenchmarkPackReport, build_benchmark_pack
 from stable_asr.paper.cards import dataset_card, experiment_card, model_card, model_card_payload, write_model_card_json
@@ -114,6 +119,7 @@ __all__ = [
     "FinalResultsAssemblyReport",
     "FinalRunActionPlan",
     "FinalAcquisitionPackReport",
+    "FinalAssignmentAuditReport",
     "FinalInputCollectionReport",
     "FinalEvidenceMatrixReport",
     "FinalHandoffAuditReport",
@@ -126,6 +132,7 @@ __all__ = [
     "ProvenanceFile",
     "assemble_final_paper_results",
     "artifact_integrity_manifest",
+    "audit_acquisition_assignments",
     "audit_final_handoff",
     "audit_paper_artifacts",
     "audit_paper_release",

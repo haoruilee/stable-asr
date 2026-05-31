@@ -38,8 +38,9 @@ Expected P0 collection groups:
 - SmartTurn and EasyTurn raw prediction exports.
 - Command-backed ASR output reports for external ASR systems.
 - NanoTurn final checkpoint, metrics, ONNX export, and model card.
-- Filled `FINAL_INPUT_HANDOFF.json` plus `FINAL_HANDOFF_AUDIT.md` proving
-  owner, license/consent, verification, staged paths, and checksum evidence.
+- Filled `FINAL_ASSIGNMENT_AUDIT.md`, `FINAL_INPUT_HANDOFF.json`, and
+  `FINAL_HANDOFF_AUDIT.md` proving owner, due-date, release-blocker,
+  license/consent, verification, staged path, and checksum evidence.
 - Final `paper_results.json`, artifact bundle, archive, and release gates.
 
 Use this together with:

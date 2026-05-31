@@ -30,6 +30,7 @@ def test_default_final_run_config_matches_config() -> None:
     assert validate_final_run_config(file_config).ok
     assert config["id"] == "stable_asr_final_run_v0"
     assert [item["id"] for item in config["public_corpora"]] == [item["id"] for item in file_config["public_corpora"]]
+    assert config["artifacts"]["assignment_audit"] == file_config["artifacts"]["assignment_audit"]
 
 
 def test_final_run_config_markdown_and_json_roundtrip(tmp_path: Path) -> None:
@@ -73,6 +74,7 @@ def test_final_run_action_plan_maps_missing_inputs_to_commands() -> None:
     assert "collect_voiceworld_real" in markdown
     assert "prepare-voiceworld" in markdown
     assert "prepare-external-predictions" in markdown
+    assert "final-assignment-audit" in markdown
     assert "paper-parity-audit" in markdown
 
 

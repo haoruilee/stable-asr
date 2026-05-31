@@ -11,6 +11,7 @@ from typing import Any
 from stable_asr.data.sources import load_data_sources, validate_data_sources
 from stable_asr.models.adapters.registry import load_adapter_registry, validate_adapter_registry
 from stable_asr.models.registry import load_model_registry, validate_model_registry
+from stable_asr.paper.acquisition_pack import audit_acquisition_assignments
 from stable_asr.paper.final_config import audit_final_run_files, load_final_run_config, validate_final_run_config
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
 from stable_asr.paper.final_inputs import load_final_input_collections, validate_final_input_collections
@@ -472,6 +473,34 @@ def _final_ready_release_checks(
         checks.append(_release_check("final", "final_inputs_ready", False, str(exc)))
 
     try:
+        assignment_path = _final_assignment_tracker_path(config, repo_root=repo_root)
+        assignment_audit_path = _final_assignment_audit_path(config, repo_root=repo_root)
+        if not assignment_path.exists():
+            checks.append(_release_check("final", "final_assignment_audit", False, f"missing: {assignment_path}"))
+        else:
+            assignment = audit_acquisition_assignments(
+                assignment_path,
+                require_owner=True,
+                require_due_date=True,
+                require_ready=True,
+            )
+            audit_output_exists = assignment_audit_path.exists()
+            detail = (
+                f"{assignment.rows} assignment row(s), {len(assignment.blocking_release)} blocker(s), "
+                f"{len(assignment.errors)} error(s), output={'present' if audit_output_exists else 'missing'}"
+            )
+            checks.append(
+                _release_check(
+                    "final",
+                    "final_assignment_audit",
+                    assignment.ok and audit_output_exists,
+                    detail,
+                )
+            )
+    except (OSError, ValueError) as exc:
+        checks.append(_release_check("final", "final_assignment_audit", False, str(exc)))
+
+    try:
         handoff_path = _final_handoff_path(config, repo_root=repo_root)
         if not handoff_path.exists():
             checks.append(_release_check("final", "final_handoff_audit", False, f"missing: {handoff_path}"))
@@ -499,6 +528,28 @@ def _final_handoff_path(config: dict[str, Any] | None, *, repo_root: Path) -> Pa
     artifacts = config.get("artifacts", {}) if isinstance(config, dict) else {}
     handoff = artifacts.get("handoff", "runs/final/FINAL_INPUT_HANDOFF.json") if isinstance(artifacts, dict) else None
     path = Path(str(handoff or "runs/final/FINAL_INPUT_HANDOFF.json"))
+    return path if path.is_absolute() else repo_root / path
+
+
+def _final_assignment_tracker_path(config: dict[str, Any] | None, *, repo_root: Path) -> Path:
+    artifacts = config.get("artifacts", {}) if isinstance(config, dict) else {}
+    assignment = (
+        artifacts.get("assignment_tracker", "runs/final_acquisition_pack/acquisition/assignments.json")
+        if isinstance(artifacts, dict)
+        else None
+    )
+    path = Path(str(assignment or "runs/final_acquisition_pack/acquisition/assignments.json"))
+    return path if path.is_absolute() else repo_root / path
+
+
+def _final_assignment_audit_path(config: dict[str, Any] | None, *, repo_root: Path) -> Path:
+    artifacts = config.get("artifacts", {}) if isinstance(config, dict) else {}
+    assignment_audit = (
+        artifacts.get("assignment_audit", "runs/final/FINAL_ASSIGNMENT_AUDIT.md")
+        if isinstance(artifacts, dict)
+        else None
+    )
+    path = Path(str(assignment_audit or "runs/final/FINAL_ASSIGNMENT_AUDIT.md"))
     return path if path.is_absolute() else repo_root / path
 
 

@@ -166,9 +166,11 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
                 "experiment cards",
                 "model cards",
                 "filled final input handoff with owner, license/consent, verification, and checksum evidence",
+                "filled final acquisition assignment audit with owners, due dates, and no release blockers",
                 "exact model checkpoints or adapter prediction manifests"
             ],
             "commands": [
+                "stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md",
                 "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md",
                 "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
                 "stable-asr final-inputs --registry configs/final/input_collections.json --output runs/final/FINAL_INPUT_COLLECTIONS.md",
@@ -187,6 +189,7 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
                 "artifact_manifest.json",
                 "artifact_hashes.json",
                 "PROVENANCE.md",
+                "FINAL_ASSIGNMENT_AUDIT.md",
                 "FINAL_INPUT_HANDOFF.json",
                 "FINAL_HANDOFF_AUDIT.md",
                 "PAPER_PARITY.md",

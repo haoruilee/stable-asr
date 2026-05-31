@@ -39,10 +39,12 @@ def test_final_evidence_matrix_maps_archive_to_final_config_path() -> None:
     report = final_evidence_matrix()
     reproducibility = next(experiment for experiment in report.experiments if experiment.id == "final_reproducibility_bundle")
     archive = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "artifacts.tar.gz")
+    assignment_audit = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "FINAL_ASSIGNMENT_AUDIT.md")
     handoff = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "FINAL_INPUT_HANDOFF.json")
     handoff_audit = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "FINAL_HANDOFF_AUDIT.md")
 
     assert archive.path == "runs/final/artifacts.tar.gz"
+    assert assignment_audit.path == "runs/final/FINAL_ASSIGNMENT_AUDIT.md"
     assert handoff.path == "runs/final/FINAL_INPUT_HANDOFF.json"
     assert handoff_audit.path == "runs/final/FINAL_HANDOFF_AUDIT.md"
 
@@ -54,11 +56,13 @@ def test_final_evidence_matrix_maps_archive_next_to_explicit_artifacts_dir(tmp_p
     archive = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "artifacts.tar.gz")
     model_card = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "MODEL_CARD.md")
     latex = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "paper.tex")
+    assignment_audit = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "FINAL_ASSIGNMENT_AUDIT.md")
     handoff = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "FINAL_INPUT_HANDOFF.json")
     handoff_audit = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "FINAL_HANDOFF_AUDIT.md")
 
     assert archive.path == str(tmp_path / "artifacts.tar.gz")
     assert model_card.path == str(tmp_path / "MODEL_CARD.md")
     assert latex.path == str(tmp_path / "paper.tex")
+    assert assignment_audit.path == str(tmp_path / "FINAL_ASSIGNMENT_AUDIT.md")
     assert handoff.path == str(tmp_path / "FINAL_INPUT_HANDOFF.json")
     assert handoff_audit.path == str(tmp_path / "FINAL_HANDOFF_AUDIT.md")

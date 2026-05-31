@@ -3214,6 +3214,7 @@ def test_paper_release_audit_cli_can_require_final_ready(capsys) -> None:
     assert code == 1
     assert "paper_release_audit: NOT_READY" in captured.out
     assert "final/final_inputs_ready" in captured.out
+    assert "final/final_assignment_audit" in captured.out
     assert "final/final_handoff_audit" in captured.out
     assert "final/final_scale_ready" in captured.out
 
