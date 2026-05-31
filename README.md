@@ -157,6 +157,7 @@ afterthought.
 stable-asr reproduce-paper --config configs/paper/paper_smoke.json
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
+stable-asr paper-release-smoke --require-final-ready
 stable-asr paper-release-audit \
   --repo-root . \
   --results runs/paper/smoke/paper_results.json \
@@ -169,6 +170,11 @@ manifests, case studies, paper/platform parity audits, final-run audits/action p
 status, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
 dataset/experiment/model cards, `artifacts.tar.gz`, and
 `RELEASE_AUDIT.md`.
+
+The smoke path can be `READY` while final paper-scale evidence is still
+`NOT_READY`; `paper-release-smoke` prints `final_scale_ready`, and
+`--require-final-ready` fails until real corpora, external predictions, and
+final artifacts are present.
 
 Use `stable-asr doctor --check-release-env` before strict release smoke. A
 READY smoke audit needs both the optional Lance backend and NanoTurn training

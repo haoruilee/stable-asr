@@ -169,5 +169,6 @@ stable-asr benchmark-suite --suite runs/paper/smoke/artifacts/benchmark_suite.js
 stable-asr paper-archive --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/artifacts.tar.gz
 stable-asr paper-archive-verify --archive runs/paper/smoke/artifacts.tar.gz
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
+stable-asr paper-release-smoke --require-final-ready
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 ```

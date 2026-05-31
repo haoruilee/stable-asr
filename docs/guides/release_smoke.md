@@ -23,6 +23,7 @@ Expected outputs:
 - `artifacts.tar.gz.sha256`
 - `archive_verification.json`
 - `ARCHIVE_VERIFICATION.md`
+- `artifacts/PAPER_STATUS.md`
 - `release_audit.json`
 - `RELEASE_AUDIT.md`
 
@@ -32,13 +33,16 @@ Useful variants:
 stable-asr doctor --check-release-env
 stable-asr paper-release-smoke --skip-train
 stable-asr paper-release-smoke --strict
+stable-asr paper-release-smoke --require-final-ready
 stable-asr paper-archive-verify --archive runs/paper/release_smoke/artifacts.tar.gz
 ```
 
 Use `--skip-train` for fast structural checks. Use `--strict` in final
 environments where missing Lance rows, NanoTurn checkpoints, or final-scale
-inputs should fail CI. Use `paper-archive-verify` after moving the generated
-archive or before attaching it to a release.
+inputs should fail CI. Use `--require-final-ready` when a job must fail until
+real paper-scale corpora, external predictions, and final artifact evidence are
+present. Use `paper-archive-verify` after moving the generated archive or
+before attaching it to a release.
 
 ## READY Smoke Environment
 

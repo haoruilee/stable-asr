@@ -18,6 +18,7 @@ from stable_asr.paper.cards import dataset_card, experiment_card, model_card
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.experiments import run_paper_smoke
 from stable_asr.paper.latex import paper_latex
+from stable_asr.paper.status import PaperStatusReport, paper_status
 
 
 @dataclass(frozen=True)
@@ -38,14 +39,21 @@ class PaperReleaseSmokeResult:
     release_audit_json: str
     release_audit_markdown: str
     audit: PaperReleaseAuditReport
+    paper_status_markdown: str
+    paper_status: PaperStatusReport
 
     @property
     def ok(self) -> bool:
         return self.audit.ok and self.archive_verification.ok
 
+    @property
+    def final_ready(self) -> bool:
+        return self.paper_status.final_ready
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "ok": self.ok,
+            "final_ready": self.final_ready,
             "output_dir": self.output_dir,
             "results_path": self.results_path,
             "artifacts_dir": self.artifacts_dir,
@@ -62,12 +70,15 @@ class PaperReleaseSmokeResult:
             "release_audit_json": self.release_audit_json,
             "release_audit_markdown": self.release_audit_markdown,
             "audit": self.audit.to_dict(),
+            "paper_status_markdown": self.paper_status_markdown,
+            "paper_status": self.paper_status.to_dict(),
         }
 
     def to_text(self) -> str:
         missing = [check for check in self.audit.checks if not check.ok]
         lines = [
             f"paper_release_smoke: {'READY' if self.ok else 'NOT_READY'}",
+            f"final_scale_ready: {'YES' if self.final_ready else 'NO'}",
             f"results: {self.results_path}",
             f"artifacts: {self.artifacts_dir}",
             f"markdown_draft: {self.markdown_draft}",
@@ -82,6 +93,8 @@ class PaperReleaseSmokeResult:
             f"archive_verification: {'OK' if self.archive_verification.ok else 'FAILED'}",
             f"release_audit_json: {self.release_audit_json}",
             f"release_audit_markdown: {self.release_audit_markdown}",
+            f"paper_status_markdown: {self.paper_status_markdown}",
+            f"final_inputs_ready: {'YES' if self.paper_status.final_inputs_ready else 'NO'}",
             f"missing_gates: {len(missing)}",
         ]
         lines.extend(f"- archive_verification/{error}" for error in self.archive_verification.errors)
@@ -131,6 +144,7 @@ def run_paper_release_smoke(
     audit_markdown = output_dir / "RELEASE_AUDIT.md"
     audit_json.write_text(json.dumps(audit.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     audit_markdown.write_text(audit.to_text() + "\n", encoding="utf-8")
+    status = paper_status(repo_root=repo_root, results_path=paper_run.results_path, artifacts_dir=bundle.output_dir)
     archive = paper_artifact_archive(bundle.output_dir, output_dir / "artifacts.tar.gz")
     archive_verification = verify_paper_artifact_archive(archive.archive_path)
     archive_verification_json = output_dir / "archive_verification.json"
@@ -158,4 +172,6 @@ def run_paper_release_smoke(
         release_audit_json=str(audit_json),
         release_audit_markdown=str(audit_markdown),
         audit=audit,
+        paper_status_markdown=bundle.paper_status["markdown"],
+        paper_status=status,
     )

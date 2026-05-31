@@ -103,6 +103,7 @@ produce a READY smoke audit:
 python -m pip install -e ".[lance,train]"
 stable-asr doctor --check-release-env
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke --strict
+stable-asr paper-release-smoke --output-dir runs/paper/release_smoke --require-final-ready
 ```
 
 ## Typical Command
