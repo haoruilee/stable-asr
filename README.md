@@ -280,6 +280,7 @@ is provided in `mkdocs.yaml`.
 - `final-config --prepare-voiceworld-real` for preparing and auditing configured real VoiceWorld metadata/audio inputs
 - `final-config --audit-voiceworld-real` for checking final real VoiceWorld scenario and factor coverage
 - `final-config --audit-asr-commands` for checking final command-backed ASR comparison inputs without executing the adapters
+- `final-config --prepare-asr-transcript-conversions` for turning configured ASR adapter outputs into the final transcript-conversion result input
 - `final-config --plan-missing` for turning the final-run file audit into an actionable data-staging and experiment runbook
 - `final-results` for assembling audited final-scale JSON outputs into `runs/final/paper_results.json`
 - `--json-output` on core evaluators so final runbooks can write machine-readable result inputs without shell redirection

@@ -1924,6 +1924,30 @@ def test_final_config_cli_prepare_asr_eval_manifest(tmp_path, capsys) -> None:
     assert code == 0
     assert "asr_command_config_audit: READY" in captured.out
 
+    fixture_a = open("tests/fixtures/streaming_asr_sample.jsonl", encoding="utf-8").read()
+    fixture_b = open("tests/fixtures/streaming_asr_fast_unstable_sample.jsonl", encoding="utf-8").read()
+    output_a = tmp_path / "runs/final/asr_commands/a.jsonl"
+    output_b = tmp_path / "runs/final/asr_commands/b.jsonl"
+    output_a.parent.mkdir(parents=True, exist_ok=True)
+    output_a.write_text(fixture_a, encoding="utf-8")
+    output_b.write_text(fixture_b, encoding="utf-8")
+
+    code = main(
+        [
+            "final-config",
+            "--config",
+            str(config_path),
+            "--repo-root",
+            str(tmp_path),
+            "--prepare-asr-transcript-conversions",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "final_asr_transcript_conversions: READY" in captured.out
+    assert (tmp_path / "runs/final/reports/asr_transcript_conversions.json").exists()
+
 
 def test_benchmark_suite_cli_validates_result_coverage(tmp_path, capsys) -> None:
     main(

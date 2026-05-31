@@ -71,6 +71,7 @@ from stable_asr.paper.final_config import (
     final_run_config_markdown,
     load_final_run_config,
     prepare_final_asr_eval_manifest,
+    prepare_final_asr_transcript_conversions,
     prepare_final_external_predictions,
     prepare_final_corpora,
     prepare_final_inputs,
@@ -927,6 +928,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--audit-asr-commands",
         action="store_true",
         help="Audit final command-backed ASR comparison config without executing adapters.",
+    )
+    final_config_parser.add_argument(
+        "--prepare-asr-transcript-conversions",
+        action="store_true",
+        help="Build the final ASR transcript conversion result input from configured adapter outputs.",
     )
     final_config_parser.add_argument("--scenario-suite", type=Path, help="Scenario suite for --audit-voiceworld-real.")
     final_config_parser.add_argument("--min-scenario-records", type=int, default=1)
@@ -2299,6 +2305,13 @@ def main(argv: list[str] | None = None) -> int:
                     min_adapters=args.min_asr_command_adapters,
                     require_input_manifest=True,
                 )
+                if args.json:
+                    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(report.to_text())
+                return 0 if report.ok else 1
+            if args.prepare_asr_transcript_conversions:
+                report = prepare_final_asr_transcript_conversions(config, repo_root=args.repo_root)
                 if args.json:
                     print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
                 else:

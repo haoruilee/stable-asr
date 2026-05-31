@@ -16,7 +16,12 @@ from stable_asr.eval.report import dict_table
 from stable_asr.models.adapters import convert_turn_prediction_jsonl, validate_turn_prediction_jsonl
 from stable_asr.resources import resolve_platform_path
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
-from stable_asr.streaming.command_compare import ASRCommandConfigAuditReport, audit_asr_command_config
+from stable_asr.streaming.command_compare import (
+    ASRCommandConfigAuditReport,
+    audit_asr_command_config,
+    load_asr_command_config,
+)
+from stable_asr.streaming.compare import compare_streaming_transcript_jsonl
 
 
 DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
@@ -147,7 +152,9 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
-        "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
+        "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md --json-output runs/final/reports/asr_command_compare.json",
+        "stable-asr sweep-streaming-asr --input runs/final/asr_commands/whisper_streaming.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160 320 --report runs/final/reports/whisper_sweep.md --json-output runs/final/reports/whisper_sweep.json",
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-transcript-conversions",
         "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
         "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
@@ -632,6 +639,41 @@ class FinalVoiceWorldPrepareReport:
         ]
         if self.audit:
             lines.extend(["", self.audit.to_text()])
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class FinalASRTranscriptConversionReport:
+    ok: bool
+    output: str
+    input_paths: dict[str, str]
+    missing_inputs: dict[str, str]
+    records_by_adapter: dict[str, int]
+    detail: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "output": self.output,
+            "input_paths": self.input_paths,
+            "missing_inputs": self.missing_inputs,
+            "records_by_adapter": self.records_by_adapter,
+            "detail": self.detail,
+        }
+
+    def to_text(self) -> str:
+        status = "READY" if self.ok else "NOT_READY"
+        lines = [
+            f"final_asr_transcript_conversions: {status}",
+            f"- output: {self.output}",
+            f"- adapters: {len(self.input_paths)}",
+            f"- missing_inputs: {len(self.missing_inputs)}",
+            f"- detail: {self.detail}",
+        ]
+        for name, path in self.input_paths.items():
+            records = self.records_by_adapter.get(name, 0)
+            marker = "MISSING" if name in self.missing_inputs else "OK"
+            lines.append(f"- {marker} {name}: {path} ({records} record(s))")
         return "\n".join(lines)
 
 
@@ -1600,6 +1642,92 @@ def prepare_final_voiceworld_real(
     )
 
 
+def prepare_final_asr_transcript_conversions(
+    config: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+) -> FinalASRTranscriptConversionReport:
+    """Compare final normalized ASR transcript outputs and write the result input JSON."""
+
+    validation = validate_final_run_config(config)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    root = Path(repo_root)
+    command_config_path = _resolve(str(config["asr_command_config"]), root=root)
+    output_value = config.get("result_inputs", {}).get(
+        "asr_transcript_conversions",
+        "runs/final/reports/asr_transcript_conversions.json",
+    )
+    output_path = _resolve(
+        str(output_value),
+        root=root,
+    )
+    try:
+        command_config = load_asr_command_config(command_config_path)
+    except (OSError, ValueError) as exc:
+        return FinalASRTranscriptConversionReport(
+            ok=False,
+            output=str(output_path),
+            input_paths={},
+            missing_inputs={},
+            records_by_adapter={},
+            detail=str(exc),
+        )
+
+    inputs: dict[str, str] = {}
+    missing: dict[str, str] = {}
+    for adapter in command_config.get("adapters", []):
+        if not isinstance(adapter, dict):
+            continue
+        name = str(adapter.get("name", "")).strip()
+        output = adapter.get("output", adapter.get("output_path"))
+        if not name or not isinstance(output, str) or not output:
+            continue
+        schema = _asr_transcript_schema_name(name)
+        resolved = _resolve(output, root=root)
+        inputs[schema] = str(resolved)
+        if not resolved.exists():
+            missing[schema] = str(resolved)
+
+    if not inputs:
+        return FinalASRTranscriptConversionReport(
+            ok=False,
+            output=str(output_path),
+            input_paths={},
+            missing_inputs={},
+            records_by_adapter={},
+            detail="ASR command config has no adapter outputs",
+        )
+    if missing:
+        return FinalASRTranscriptConversionReport(
+            ok=False,
+            output=str(output_path),
+            input_paths=inputs,
+            missing_inputs=missing,
+            records_by_adapter={},
+            detail="normalized ASR transcript output(s) missing",
+        )
+
+    report = compare_streaming_transcript_jsonl(list(inputs.items()))
+    payload = report.to_dict()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    records_by_adapter = {
+        str(row.get("adapter", "unknown")): int(row.get("records", 0))
+        for row in payload.get("rows", [])
+        if isinstance(row, dict)
+    }
+    return FinalASRTranscriptConversionReport(
+        ok=True,
+        output=str(output_path),
+        input_paths=inputs,
+        missing_inputs={},
+        records_by_adapter=records_by_adapter,
+        detail="comparison result written",
+    )
+
+
 def prepare_final_inputs(
     config: dict[str, Any],
     *,
@@ -1916,8 +2044,13 @@ def _streaming_asr_action(
             f"stable-asr final-config --config {config_path} --audit-asr-commands",
             f"stable-asr compare-asr-commands --config {config['asr_command_config']} --report runs/final/reports/asr_command_compare.md --json-output {config['result_inputs']['streaming_comparison']}",
             f"stable-asr sweep-streaming-asr --input runs/final/asr_commands/whisper_streaming.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160 320 --json-output {config['result_inputs']['streaming_sweep']}",
+            f"stable-asr final-config --config {config_path} --prepare-asr-transcript-conversions",
         ],
-        artifacts=[str(config["result_inputs"]["streaming_comparison"]), str(config["result_inputs"]["streaming_sweep"])],
+        artifacts=[
+            str(config["result_inputs"]["streaming_comparison"]),
+            str(config["result_inputs"]["streaming_sweep"]),
+            str(config["result_inputs"]["asr_transcript_conversions"]),
+        ],
         detail="Evaluate real ASR systems through command adapters without vendoring heavyweight upstream toolkits.",
     )
 
@@ -2067,6 +2200,14 @@ def _resolve(path: str, *, root: Path) -> Path:
     if candidate.is_absolute():
         return candidate
     return root / candidate
+
+
+def _asr_transcript_schema_name(adapter_name: str) -> str:
+    name = adapter_name.strip()
+    for suffix in ("_final", "_streaming", "_adapter"):
+        if name.endswith(suffix):
+            return name[: -len(suffix)]
+    return name
 
 
 def _ensure_dir(path: Path, kind: str) -> FinalRunScaffoldEntry:

@@ -12,6 +12,7 @@ Core entry points:
 - `stable_asr.paper.claims.audit_claims`
 - `stable_asr.paper.final_config.build_final_run_action_plan`
 - `stable_asr.paper.final_config.prepare_final_asr_eval_manifest`
+- `stable_asr.paper.final_config.prepare_final_asr_transcript_conversions`
 - `stable_asr.paper.final_config.prepare_final_inputs`
 - `stable_asr.paper.final_results.assemble_final_paper_results`
 - `stable_asr.streaming.command_compare.audit_asr_command_config`

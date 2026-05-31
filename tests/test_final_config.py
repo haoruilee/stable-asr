@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from stable_asr.paper.final_config import (
     final_run_config_markdown,
     load_final_run_config,
     prepare_final_asr_eval_manifest,
+    prepare_final_asr_transcript_conversions,
     prepare_final_external_predictions,
     prepare_final_corpora,
     prepare_final_inputs,
@@ -467,6 +469,73 @@ def test_prepare_final_voiceworld_real_writes_and_audits_manifest(tmp_path: Path
     assert report.audit is not None and report.audit.ok
     assert (tmp_path / "runs/final/voiceworld_real.jsonl").exists()
     assert "final_voiceworld_real_prepare: READY" in report.to_text()
+
+
+def test_prepare_final_asr_transcript_conversions_writes_result_input(tmp_path: Path) -> None:
+    fixture_a = Path("tests/fixtures/streaming_asr_sample.jsonl").read_text(encoding="utf-8")
+    fixture_b = Path("tests/fixtures/streaming_asr_fast_unstable_sample.jsonl").read_text(encoding="utf-8")
+    whisper = tmp_path / "runs/final/asr_commands/whisper_streaming.jsonl"
+    funasr = tmp_path / "runs/final/asr_commands/funasr_streaming.jsonl"
+    whisper.parent.mkdir(parents=True)
+    whisper.write_text(fixture_a, encoding="utf-8")
+    funasr.write_text(fixture_b, encoding="utf-8")
+    command_config = tmp_path / "configs/final/asr_command_compare.json"
+    command_config.parent.mkdir(parents=True)
+    command_config.write_text(
+        json.dumps(
+            {
+                "input_manifest": "runs/final/asr_eval_manifest.jsonl",
+                "adapters": [
+                    {
+                        "name": "whisper_final",
+                        "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
+                        "output": "runs/final/asr_commands/whisper_streaming.jsonl",
+                    },
+                    {
+                        "name": "funasr_final",
+                        "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
+                        "output": "runs/final/asr_commands/funasr_streaming.jsonl",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    config = load_final_run_config()
+
+    report = prepare_final_asr_transcript_conversions(config, repo_root=tmp_path)
+
+    output = tmp_path / "runs/final/reports/asr_transcript_conversions.json"
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert report.ok
+    assert report.records_by_adapter == {"whisper": 2, "funasr": 2}
+    assert {row["adapter"] for row in payload["rows"]} == {"whisper", "funasr"}
+    assert "final_asr_transcript_conversions: READY" in report.to_text()
+
+
+def test_prepare_final_asr_transcript_conversions_reports_missing_outputs(tmp_path: Path) -> None:
+    command_config = tmp_path / "configs/final/asr_command_compare.json"
+    command_config.parent.mkdir(parents=True)
+    command_config.write_text(
+        json.dumps(
+            {
+                "adapters": [
+                    {
+                        "name": "whisper_final",
+                        "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
+                        "output": "runs/final/asr_commands/whisper_streaming.jsonl",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = prepare_final_asr_transcript_conversions(load_final_run_config(), repo_root=tmp_path)
+
+    assert not report.ok
+    assert "whisper" in report.missing_inputs
+    assert "final_asr_transcript_conversions: NOT_READY" in report.to_text()
 
 
 def test_audit_final_voiceworld_real_checks_scenario_and_factor_coverage(tmp_path: Path) -> None:

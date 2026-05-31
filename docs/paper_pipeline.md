@@ -61,6 +61,7 @@ stable-asr final-config --config configs/final/paper_final.json --prepare-extern
 stable-asr final-config --config configs/final/paper_final.json --prepare-voiceworld-real
 stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json
 stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands
+stable-asr final-config --config configs/final/paper_final.json --prepare-asr-transcript-conversions
 # Expected to report NOT_READY until final corpora, splits, external predictions, real VoiceWorld, and raw ASR exports exist.
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md

@@ -165,7 +165,7 @@
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md --json-output runs/final/reports/asr_command_compare.json",
         "stable-asr sweep-streaming-asr --input runs/final/asr_commands/whisper_streaming.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160 320 --report runs/final/reports/whisper_sweep.md --json-output runs/final/reports/whisper_sweep.json",
-        "stable-asr compare-streaming-asr --input whisper=runs/final/asr_commands/whisper_streaming.jsonl --input funasr=runs/final/asr_commands/funasr_streaming.jsonl --json-output runs/final/reports/asr_transcript_conversions.json"
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-transcript-conversions"
       ],
       "metrics": [
         "wer",

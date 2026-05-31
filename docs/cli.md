@@ -55,6 +55,7 @@ stable-asr final-config --config configs/final/paper_final.json --prepare-extern
 stable-asr final-config --config configs/final/paper_final.json --prepare-voiceworld-real
 stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json
 stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands
+stable-asr final-config --config configs/final/paper_final.json --prepare-asr-transcript-conversions
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md
 stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/scenarios.json
