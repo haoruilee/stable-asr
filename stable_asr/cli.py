@@ -14,6 +14,7 @@ from stable_asr.data.bootstrap import BootstrapTurnDataConfig, bootstrap_turn_da
 from stable_asr.data.manifest import load_manifest, validate_manifest
 from stable_asr.data.profile import profile_turn_records
 from stable_asr.data.benchmark import benchmark_data_formats
+from stable_asr.data.split_audit import DEFAULT_LEAKAGE_FIELDS, audit_turn_splits
 from stable_asr.data.converters import (
     ASR_TRANSCRIPT_SCHEMAS,
     EXTERNAL_SCHEMAS,
@@ -297,6 +298,22 @@ def build_parser() -> argparse.ArgumentParser:
     split_parser.add_argument("--allow-empty", action="store_true", help="Do not rebalance tiny datasets to fill all splits.")
     split_parser.add_argument("--json", action="store_true")
 
+    split_audit_parser = subparsers.add_parser(
+        "audit-turn-splits",
+        help="Audit train/dev/test turn manifests for ID, audio, or group leakage.",
+    )
+    split_audit_parser.add_argument("--train", type=Path, required=True)
+    split_audit_parser.add_argument("--dev", type=Path, required=True)
+    split_audit_parser.add_argument("--test", type=Path, required=True)
+    split_audit_parser.add_argument(
+        "--field",
+        action="append",
+        default=None,
+        help="Field that must not appear in multiple splits. Defaults to id, audio, metadata.asr_record_id, metadata.conversation_id.",
+    )
+    split_audit_parser.add_argument("--report", type=Path, help="Optional text report output path.")
+    split_audit_parser.add_argument("--json", action="store_true")
+
     benchmark_parser = subparsers.add_parser(
         "benchmark-data",
         help="Benchmark registered manifest formats on a dataset.",
@@ -433,6 +450,12 @@ def build_parser() -> argparse.ArgumentParser:
     bootstrap_turn_parser.add_argument("--test-ratio", type=float, default=0.1)
     bootstrap_turn_parser.add_argument("--seed", type=int, default=0)
     bootstrap_turn_parser.add_argument("--split-prefix", default="turn")
+    bootstrap_turn_parser.add_argument(
+        "--group-by",
+        default="metadata.asr_record_id",
+        help="Field kept together across train/dev/test splits. Defaults to metadata.asr_record_id.",
+    )
+    bootstrap_turn_parser.add_argument("--no-group-by", action="store_true")
     bootstrap_turn_parser.add_argument("--json", action="store_true")
 
     audit_audio_parser = subparsers.add_parser(
@@ -974,6 +997,30 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{name}_path: {path}")
         return 0
 
+    if args.command == "audit-turn-splits":
+        try:
+            report = audit_turn_splits(
+                {
+                    "train": load_turn_records(args.train),
+                    "dev": load_turn_records(args.dev),
+                    "test": load_turn_records(args.test),
+                },
+                leakage_fields=tuple(args.field or DEFAULT_LEAKAGE_FIELDS),
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.report:
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(report.to_text() + "\n", encoding="utf-8")
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(report.to_text())
+            if args.report:
+                print(f"report: {args.report}")
+        return 0 if report.ok else 1
+
     if args.command == "benchmark-data":
         try:
             rows = benchmark_data_formats(
@@ -1196,6 +1243,7 @@ def main(argv: list[str] | None = None) -> int:
                     test_ratio=args.test_ratio,
                     seed=args.seed,
                     stratify_by=("turn_label",),
+                    group_by=None if args.no_group_by else args.group_by,
                 ),
             )
         except (OSError, ValueError, RuntimeError) as exc:

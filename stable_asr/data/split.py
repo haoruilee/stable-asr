@@ -94,26 +94,28 @@ def split_turn_records(
     config.validate()
     record_list = list(records)
     rng = random.Random(config.seed)
-    splits: dict[str, list[TurnManifestRecord]] = {name: [] for name in SPLIT_NAMES}
+    split_units: dict[str, list[list[TurnManifestRecord]]] = {name: [] for name in SPLIT_NAMES}
     ratios = (config.train_ratio, config.dev_ratio, config.test_ratio)
 
     buckets = _build_buckets(record_list, config=config)
-    for bucket_index, units in enumerate(buckets.values()):
+    for units in buckets.values():
         local_units = list(units)
         rng.shuffle(local_units)
         counts = _allocate_counts(len(local_units), ratios)
         cursor = 0
         for name, count in zip(SPLIT_NAMES, counts, strict=True):
-            for unit in local_units[cursor : cursor + count]:
-                splits[name].extend(unit)
+            split_units[name].extend(local_units[cursor : cursor + count])
             cursor += count
 
-        # Keep ordering deterministic across buckets with identical shuffled IDs.
-        for name in SPLIT_NAMES:
-            splits[name].sort(key=lambda record: (record.id, bucket_index))
-
     if config.ensure_non_empty:
-        _rebalance_empty_splits(splits, ratios)
+        _rebalance_empty_units(split_units, ratios)
+
+    splits: dict[str, list[TurnManifestRecord]] = {
+        name: [record for unit in split_units[name] for record in unit]
+        for name in SPLIT_NAMES
+    }
+    for name in SPLIT_NAMES:
+        splits[name].sort(key=lambda record: record.id)
 
     return TurnSplitResult(
         train=splits["train"],
@@ -171,8 +173,8 @@ def _allocate_counts(total: int, ratios: tuple[float, float, float]) -> tuple[in
     return (counts[0], counts[1], counts[2])
 
 
-def _rebalance_empty_splits(
-    splits: dict[str, list[TurnManifestRecord]],
+def _rebalance_empty_units(
+    splits: dict[str, list[list[TurnManifestRecord]]],
     ratios: tuple[float, float, float],
 ) -> None:
     desired = [name for name, ratio in zip(SPLIT_NAMES, ratios, strict=True) if ratio > 0]

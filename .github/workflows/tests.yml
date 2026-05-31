@@ -27,11 +27,13 @@ jobs:
           stable-asr labels
           stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report /tmp/stable-asr-turn-profile.md
           stable-asr split-turn-data --input examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-splits --train-ratio 0.5 --dev-ratio 0.25 --test-ratio 0.25 --seed 7
+          stable-asr audit-turn-splits --train /tmp/stable-asr-splits/turn_train.jsonl --dev /tmp/stable-asr-splits/turn_dev.jsonl --test /tmp/stable-asr-splits/turn_test.jsonl
           stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
           stable-asr asr-collections --audit-coverage
           stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output /tmp/stable-asr-asr.jsonl --audio-root examples/data --sample-rate 16000
           stable-asr asr-to-turn --input /tmp/stable-asr-asr.jsonl --output /tmp/stable-asr-asr-turn.jsonl --include-incomplete
           stable-asr bootstrap-turn-data --input examples/data/asr_metadata.tsv --output-dir /tmp/stable-asr-bootstrap --audio-root examples/data --sample-rate 16000 --include-incomplete
+          stable-asr audit-turn-splits --train /tmp/stable-asr-bootstrap/splits/turn_train.jsonl --dev /tmp/stable-asr-bootstrap/splits/turn_dev.jsonl --test /tmp/stable-asr-bootstrap/splits/turn_test.jsonl
           stable-asr make-synthetic-turn-data --output /tmp/stable-asr-synth.jsonl --episodes 3 --write-audio
           stable-asr audit-audio --kind turn --manifest /tmp/stable-asr-synth.jsonl
           stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause

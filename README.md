@@ -49,6 +49,7 @@ stable-asr make-synthetic-turn-data --output /tmp/stable-asr-synth.jsonl --episo
 stable-asr inspect-manifest examples/data/turn_demo.jsonl
 stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report /tmp/stable-asr-turn-profile.md
 stable-asr split-turn-data --input examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-splits --train-ratio 0.5 --dev-ratio 0.25 --test-ratio 0.25 --seed 7
+stable-asr audit-turn-splits --train /tmp/stable-asr-splits/turn_train.jsonl --dev /tmp/stable-asr-splits/turn_dev.jsonl --test /tmp/stable-asr-splits/turn_test.jsonl
 stable-asr convert examples/data/turn_demo.jsonl /tmp/stable-asr-copy.jsonl
 stable-asr convert examples/data/turn_demo.jsonl /tmp/stable-asr-copy.parquet
 stable-asr convert examples/data/turn_demo.jsonl /tmp/stable-asr-copy.lance
@@ -161,6 +162,7 @@ Current M0 functionality:
 - `inspect-manifest` and `convert` CLI commands
 - `profile-turn-data` for label/scenario/duration distribution reports and training-readiness warnings
 - `split-turn-data` for seedable train/dev/test turn manifest splits
+- `audit-turn-splits` for detecting record, audio, or ASR/conversation group leakage across splits
 - `convert-external` for EasyTurn-style, Full-Duplex-Bench-style, and SmartTurn-style JSONL manifests
 - `convert-predictions` for generic, SmartTurn-style, and EasyTurn-style prediction JSONL
 - `convert-asr-transcript` for Whisper-style and FunASR-style transcript JSONL into the normalized streaming ASR schema

@@ -113,6 +113,20 @@ add fields such as `scenario`, use `--group-by metadata.conversation_id` to
 keep dialogue windows together, or pass `--no-stratify` for a plain shuffled
 split.
 
+Audit splits before training or publishing a benchmark:
+
+```bash
+stable-asr audit-turn-splits \
+  --train runs/splits/turn_train.jsonl \
+  --dev runs/splits/turn_dev.jsonl \
+  --test runs/splits/turn_test.jsonl
+```
+
+The default leakage fields are `id`, `audio`, `metadata.asr_record_id`, and
+`metadata.conversation_id`. This catches common mistakes such as complete and
+incomplete windows from the same ASR utterance landing in different splits.
+Use repeated `--field` arguments to customize the leak keys.
+
 ## Turn Data Profile
 
 Use `profile-turn-data` before training or publishing a benchmark split:
@@ -227,6 +241,8 @@ stable-asr bootstrap-turn-data \
 It writes `asr_manifest.jsonl`, `turn_manifest.jsonl`, split manifests under
 `splits/`, `bootstrap_summary.json`, and `BOOTSTRAP_TURN_DATA.md` with next
 commands for validation and NanoTurn training.
+Bootstrap keeps weak windows derived from the same ASR utterance together by
+default using `metadata.asr_record_id`.
 
 ## Audio Audit
 

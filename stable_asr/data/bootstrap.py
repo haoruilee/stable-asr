@@ -90,6 +90,10 @@ class BootstrapTurnDataResult:
                 "```bash",
                 f"stable-asr validate-manifest {self.turn_manifest_path}",
                 f"stable-asr inspect-manifest {self.turn_manifest_path}",
+                "stable-asr audit-turn-splits "
+                f"--train {self.split_paths['train']} "
+                f"--dev {self.split_paths['dev']} "
+                f"--test {self.split_paths['test']}",
                 f"stable-asr train-turn --dataset {self.split_paths['train']} --output-dir {Path(self.output_dir) / 'nanoturn'}",
                 "```",
             ]
@@ -158,7 +162,10 @@ def bootstrap_turn_data(
     turn_result = asr_records_to_turn_records(asr_records, config=asr_to_turn_config)
     write_turn_records(turn_manifest_path, turn_result.records, format=config.turn_format)
 
-    split_result = split_turn_records(turn_result.records, config=split_config)
+    split_result = split_turn_records(
+        turn_result.records,
+        config=split_config or TurnSplitConfig(group_by="metadata.asr_record_id"),
+    )
     split_summaries = split_result.to_dict()["splits"]
     split_paths = {
         name: split_dir / f"{config.split_prefix}_{name}{_suffix(config.turn_format)}"

@@ -293,6 +293,42 @@ def test_bootstrap_turn_data_cli(tmp_path, capsys) -> None:
     assert (output_dir / "BOOTSTRAP_TURN_DATA.md").exists()
 
 
+def test_audit_turn_splits_cli(tmp_path, capsys) -> None:
+    output_dir = tmp_path / "bootstrap"
+    code = main(
+        [
+            "bootstrap-turn-data",
+            "--input",
+            "examples/data/asr_metadata.tsv",
+            "--output-dir",
+            str(output_dir),
+            "--audio-root",
+            "examples/data",
+            "--sample-rate",
+            "16000",
+            "--include-incomplete",
+        ]
+    )
+    assert code == 0
+    capsys.readouterr()
+
+    code = main(
+        [
+            "audit-turn-splits",
+            "--train",
+            str(output_dir / "splits" / "turn_train.jsonl"),
+            "--dev",
+            str(output_dir / "splits" / "turn_dev.jsonl"),
+            "--test",
+            str(output_dir / "splits" / "turn_test.jsonl"),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "turn_split_audit: OK" in captured.out
+
+
 def test_convert_predictions_cli(tmp_path, capsys) -> None:
     output = tmp_path / "easyturn_predictions.jsonl"
     code = main(

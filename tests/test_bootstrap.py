@@ -2,6 +2,7 @@ from pathlib import Path
 
 from stable_asr.data.bootstrap import BootstrapTurnDataConfig, bootstrap_turn_data
 from stable_asr.data.registry import load_turn_records
+from stable_asr.data.split_audit import audit_turn_splits
 from stable_asr.data.turn_from_asr import ASRToTurnConfig
 
 
@@ -27,3 +28,6 @@ def test_bootstrap_turn_data_writes_manifests_splits_and_report(tmp_path: Path) 
     assert len(turn_records) == 6
     assert {record.turn_label for record in turn_records} == {"complete", "incomplete"}
     assert "train-turn --dataset" in Path(result.report_path).read_text(encoding="utf-8")
+
+    split_audit = audit_turn_splits({name: load_turn_records(path) for name, path in result.split_paths.items()})
+    assert split_audit.ok
