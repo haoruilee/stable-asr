@@ -2065,10 +2065,12 @@ def main(argv: list[str] | None = None) -> int:
                 report = prepare_final_inputs(
                     config,
                     repo_root=args.repo_root,
+                    scenario_suite_path=args.scenario_suite,
                     require_all_corpora=args.require_all_corpora,
                     require_all_predictions=args.require_all_predictions,
                     allow_extra_predictions=args.allow_extra_predictions,
                     include_incomplete=not args.no_incomplete_turns,
+                    min_per_scenario=args.min_scenario_records,
                 )
                 if args.json:
                     print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))

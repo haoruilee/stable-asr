@@ -430,6 +430,7 @@ class FinalInputPrepareReport:
     corpora: FinalCorpusPrepareReport
     turn_splits: FinalTurnBootstrapReport
     external_predictions: FinalExternalPredictionReport
+    voiceworld_real: FinalVoiceWorldAuditReport
     file_audit: FinalRunFileAudit
 
     @property
@@ -446,6 +447,7 @@ class FinalInputPrepareReport:
             "corpora": self.corpora.to_dict(),
             "turn_splits": self.turn_splits.to_dict(),
             "external_predictions": self.external_predictions.to_dict(),
+            "voiceworld_real": self.voiceworld_real.to_dict(),
             "file_audit": self.file_audit.to_dict(),
             "missing_required": self.missing_required,
         }
@@ -457,6 +459,7 @@ class FinalInputPrepareReport:
             f"- corpora_prepared: {self.corpora.prepared_count}",
             f"- turn_records: {self.turn_splits.turn_records}",
             f"- external_predictions_prepared: {self.external_predictions.prepared_count}",
+            f"- voiceworld_real_ready: {self.voiceworld_real.ok}",
             f"- missing_required: {len(self.missing_required)}",
         ]
         lines.extend(f"  - {path}" for path in self.missing_required)
@@ -468,6 +471,8 @@ class FinalInputPrepareReport:
                 self.turn_splits.to_text(),
                 "",
                 self.external_predictions.to_text(),
+                "",
+                self.voiceworld_real.to_text(),
                 "",
                 self.file_audit.to_text(),
             ]
@@ -1108,10 +1113,12 @@ def prepare_final_inputs(
     config: dict[str, Any],
     *,
     repo_root: str | Path = ".",
+    scenario_suite_path: str | Path | None = None,
     require_all_corpora: bool = False,
     require_all_predictions: bool = False,
     allow_extra_predictions: bool = False,
     include_incomplete: bool = True,
+    min_per_scenario: int = 1,
 ) -> FinalInputPrepareReport:
     """Run the final input preparation sequence and audit remaining required inputs."""
 
@@ -1131,13 +1138,20 @@ def prepare_final_inputs(
         require_all=require_all_predictions,
         allow_extra=allow_extra_predictions,
     )
+    voiceworld_report = audit_final_voiceworld_real(
+        config,
+        repo_root=repo_root,
+        scenario_suite_path=scenario_suite_path,
+        min_per_scenario=min_per_scenario,
+    )
     file_audit = audit_final_run_files(config, repo_root=repo_root)
-    ok = corpus_report.ok and turn_report.ok and prediction_report.ok and file_audit.ok
+    ok = corpus_report.ok and turn_report.ok and prediction_report.ok and voiceworld_report.ok and file_audit.ok
     return FinalInputPrepareReport(
         ok=ok,
         corpora=corpus_report,
         turn_splits=turn_report,
         external_predictions=prediction_report,
+        voiceworld_real=voiceworld_report,
         file_audit=file_audit,
     )
 
