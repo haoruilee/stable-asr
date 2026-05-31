@@ -9,8 +9,8 @@
     {
       "id": "librispeech_dev_clean",
       "language": "en",
-      "metadata": "data/librispeech/dev-clean/metadata.tsv",
-      "audio_root": "data/librispeech/dev-clean/audio",
+      "corpus": "librispeech",
+      "input_dir": "data/librispeech/LibriSpeech/dev-clean",
       "manifest": "runs/final/librispeech_dev_clean/asr_manifest.jsonl",
       "sample_rate": 16000,
       "license": "see_upstream"
@@ -18,8 +18,9 @@
     {
       "id": "aishell1_dev",
       "language": "zh",
-      "metadata": "data/aishell1/dev/metadata.tsv",
-      "audio_root": "data/aishell1/dev/audio",
+      "corpus": "aishell1",
+      "input_dir": "data/aishell1/data_aishell",
+      "split": "dev",
       "manifest": "runs/final/aishell1_dev/asr_manifest.jsonl",
       "sample_rate": 16000,
       "license": "see_upstream"
@@ -62,7 +63,8 @@
   },
   "commands": [
     "stable-asr final-config --config configs/final/paper_final.json --validate-only",
-    "stable-asr prepare-asr-manifest --input data/librispeech/dev-clean/metadata.tsv --output runs/final/librispeech_dev_clean/asr_manifest.jsonl --audio-root data/librispeech/dev-clean/audio --sample-rate 16000 --language en --source librispeech",
+    "stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl",
+    "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl",
     "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
     "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
     "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",

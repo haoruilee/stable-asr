@@ -197,6 +197,25 @@ Supported input aliases include `utt_id`/`key`, `audio_path`/`wav`,
 `language`. This recipe is the v0 bridge from public corpora such as
 LibriSpeech, AISHELL-1, WenetSpeech, and Common Voice into the paper data layer.
 
+For common public corpus layouts, use `prepare-public-asr` directly after
+downloading and extracting the corpus:
+
+```bash
+stable-asr prepare-public-asr \
+  --corpus librispeech \
+  --input-dir data/librispeech/LibriSpeech/dev-clean \
+  --output runs/final/librispeech_dev_clean/asr_manifest.jsonl
+
+stable-asr prepare-public-asr \
+  --corpus aishell1 \
+  --input-dir data/aishell1/data_aishell \
+  --split dev \
+  --output runs/final/aishell1_dev/asr_manifest.jsonl
+```
+
+The LibriSpeech recipe parses `*.trans.txt` files and FLAC paths. The AISHELL-1
+recipe parses `aishell_transcript_v0.8.txt` and `wav/<split>/<speaker>/*.wav`.
+
 ## ASR-to-Turn Weak Labels
 
 Public ASR corpora normally do not contain full-duplex turn labels. Use

@@ -426,6 +426,36 @@ def test_asr_to_turn_cli(tmp_path, capsys) -> None:
     assert turn_manifest.exists()
 
 
+def test_prepare_public_asr_librispeech_cli(tmp_path, capsys) -> None:
+    subset = tmp_path / "LibriSpeech" / "dev-clean"
+    chapter = subset / "84" / "121123"
+    chapter.mkdir(parents=True)
+    (chapter / "84-121123.trans.txt").write_text(
+        "84-121123-0000 WHAT IS THE WEATHER\n",
+        encoding="utf-8",
+    )
+    (chapter / "84-121123-0000.flac").write_bytes(b"")
+    output = tmp_path / "librispeech.jsonl"
+
+    code = main(
+        [
+            "prepare-public-asr",
+            "--corpus",
+            "librispeech",
+            "--input-dir",
+            str(subset),
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "wrote 1 librispeech ASR record" in captured.out
+    assert '"dev-clean": 1' in captured.out
+    assert output.exists()
+
+
 def test_bootstrap_turn_data_cli(tmp_path, capsys) -> None:
     output_dir = tmp_path / "bootstrap"
     code = main(

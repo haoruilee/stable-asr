@@ -22,7 +22,7 @@ from stable_asr.data.converters import (
     convert_streaming_asr_jsonl,
 )
 from stable_asr.data.sources import data_sources_markdown, load_data_sources, validate_data_sources
-from stable_asr.data.recipes import prepare_asr_manifest
+from stable_asr.data.recipes import PUBLIC_ASR_CORPORA, prepare_asr_manifest, prepare_public_asr_manifest
 from stable_asr.data.registry import (
     TURN_FORMATS,
     convert_turn_manifest,
@@ -487,6 +487,17 @@ def build_parser() -> argparse.ArgumentParser:
     prepare_asr_parser.add_argument("--duration-field", help="Override input duration column/key.")
     prepare_asr_parser.add_argument("--speaker-field", help="Override input speaker column/key.")
     prepare_asr_parser.add_argument("--json", action="store_true", help="Print summary as JSON.")
+
+    public_asr_parser = subparsers.add_parser(
+        "prepare-public-asr",
+        help="Prepare an ASR manifest from a supported public corpus directory.",
+    )
+    public_asr_parser.add_argument("--corpus", choices=PUBLIC_ASR_CORPORA, required=True)
+    public_asr_parser.add_argument("--input-dir", type=Path, required=True)
+    public_asr_parser.add_argument("--output", type=Path, required=True)
+    public_asr_parser.add_argument("--split", help="Optional corpus split/subset filter, for example dev-clean or dev.")
+    public_asr_parser.add_argument("--sample-rate", type=int, default=16000)
+    public_asr_parser.add_argument("--json", action="store_true", help="Print summary as JSON.")
 
     validate_asr_parser = subparsers.add_parser(
         "validate-asr-manifest",
@@ -1416,6 +1427,27 @@ def main(argv: list[str] | None = None) -> int:
             print(f"wrote {len(records)} ASR record(s) to {args.output}")
             print(f"languages: {json.dumps(summary['languages'], ensure_ascii=False, sort_keys=True)}")
             print(f"sources: {json.dumps(summary['sources'], ensure_ascii=False, sort_keys=True)}")
+        return 0
+
+    if args.command == "prepare-public-asr":
+        try:
+            records = prepare_public_asr_manifest(
+                corpus=args.corpus,
+                input_dir=args.input_dir,
+                output_path=args.output,
+                split=args.split,
+                sample_rate=args.sample_rate,
+            )
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        summary = summarize_asr_records(records)
+        if args.json:
+            print(json.dumps({"output": str(args.output), "corpus": args.corpus, **summary}, ensure_ascii=False, indent=2))
+        else:
+            print(f"wrote {len(records)} {args.corpus} ASR record(s) to {args.output}")
+            print(f"splits: {json.dumps(summary['splits'], ensure_ascii=False, sort_keys=True)}")
+            print(f"languages: {json.dumps(summary['languages'], ensure_ascii=False, sort_keys=True)}")
         return 0
 
     if args.command == "validate-asr-manifest":

@@ -19,7 +19,7 @@ from stable_asr.data.manifest import (
     load_manifest,
     validate_manifest,
 )
-from stable_asr.data.recipes import prepare_asr_manifest
+from stable_asr.data.recipes import PUBLIC_ASR_CORPORA, prepare_asr_manifest, prepare_public_asr_manifest
 from stable_asr.data.registry import (
     TURN_FORMATS,
     convert_turn_manifest,
@@ -48,6 +48,7 @@ __all__ = [
     "EXTERNAL_SCHEMAS",
     "DEFAULT_DATA_SOURCES",
     "TurnManifestRecord",
+    "PUBLIC_ASR_CORPORA",
     "benchmark_data_formats",
     "convert_external_jsonl",
     "convert_rows",
@@ -58,6 +59,7 @@ __all__ = [
     "load_turn_records",
     "load_data_sources",
     "prepare_asr_manifest",
+    "prepare_public_asr_manifest",
     "summarize_asr_records",
     "summarize_records",
     "synth_tone",

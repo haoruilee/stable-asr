@@ -26,8 +26,8 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         {
             "id": "librispeech_dev_clean",
             "language": "en",
-            "metadata": "data/librispeech/dev-clean/metadata.tsv",
-            "audio_root": "data/librispeech/dev-clean/audio",
+            "corpus": "librispeech",
+            "input_dir": "data/librispeech/LibriSpeech/dev-clean",
             "manifest": "runs/final/librispeech_dev_clean/asr_manifest.jsonl",
             "sample_rate": 16000,
             "license": "see_upstream",
@@ -35,8 +35,9 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         {
             "id": "aishell1_dev",
             "language": "zh",
-            "metadata": "data/aishell1/dev/metadata.tsv",
-            "audio_root": "data/aishell1/dev/audio",
+            "corpus": "aishell1",
+            "input_dir": "data/aishell1/data_aishell",
+            "split": "dev",
             "manifest": "runs/final/aishell1_dev/asr_manifest.jsonl",
             "sample_rate": 16000,
             "license": "see_upstream",
@@ -79,7 +80,8 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
     },
     "commands": [
         "stable-asr final-config --config configs/final/paper_final.json --validate-only",
-        "stable-asr prepare-asr-manifest --input data/librispeech/dev-clean/metadata.tsv --output runs/final/librispeech_dev_clean/asr_manifest.jsonl --audio-root data/librispeech/dev-clean/audio --sample-rate 16000 --language en --source librispeech",
+        "stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl",
+        "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
@@ -216,9 +218,15 @@ def validate_final_run_config(config: dict[str, Any]) -> FinalRunConfigValidatio
                 errors.append(f"duplicate corpus id: {corpus_id}")
             else:
                 seen.add(corpus_id)
-            for key in ("language", "metadata", "audio_root", "manifest", "sample_rate", "license"):
+            for key in ("language", "manifest", "sample_rate", "license"):
                 if key not in corpus:
                     errors.append(f"corpus {corpus_id or index} missing {key}")
+            has_public_recipe = isinstance(corpus.get("corpus"), str) and isinstance(corpus.get("input_dir"), str)
+            has_metadata_recipe = isinstance(corpus.get("metadata"), str) and isinstance(corpus.get("audio_root"), str)
+            if not has_public_recipe and not has_metadata_recipe:
+                errors.append(
+                    f"corpus {corpus_id or index} must define either corpus/input_dir or metadata/audio_root"
+                )
 
     turn_splits = config.get("turn_splits")
     required_splits = {"train", "dev", "test", "voiceworld_real"}
@@ -291,8 +299,11 @@ def audit_final_run_files(config: dict[str, Any], *, repo_root: str | Path = "."
     checks: list[FinalRunPathCheck] = []
     for corpus in config.get("public_corpora", []):
         corpus_id = str(corpus["id"])
-        checks.append(_input_check(f"corpus:{corpus_id}:metadata", corpus["metadata"], root=root))
-        checks.append(_input_check(f"corpus:{corpus_id}:audio_root", corpus["audio_root"], root=root))
+        if "input_dir" in corpus:
+            checks.append(_input_check(f"corpus:{corpus_id}:input_dir", corpus["input_dir"], root=root))
+        else:
+            checks.append(_input_check(f"corpus:{corpus_id}:metadata", corpus["metadata"], root=root))
+            checks.append(_input_check(f"corpus:{corpus_id}:audio_root", corpus["audio_root"], root=root))
         checks.append(_planned_check(f"corpus:{corpus_id}:manifest", corpus["manifest"], root=root, kind="output"))
 
     for split, path in config.get("turn_splits", {}).items():
@@ -390,17 +401,26 @@ def scaffold_final_run(config: dict[str, Any], *, repo_root: str | Path = ".") -
 
     for corpus in config.get("public_corpora", []):
         corpus_id = str(corpus["id"])
-        metadata_parent = _resolve(str(corpus["metadata"]), root=root).parent
-        entries.append(_ensure_dir(metadata_parent, f"corpus:{corpus_id}:metadata_parent"))
+        input_path = _resolve(str(corpus.get("input_dir", corpus.get("metadata"))), root=root)
+        input_parent = input_path if "input_dir" in corpus else input_path.parent
+        entries.append(_ensure_dir(input_parent, f"corpus:{corpus_id}:input_parent"))
+        if "input_dir" in corpus:
+            body = (
+                f"Place or symlink the `{corpus.get('corpus', corpus_id)}` corpus directory at "
+                f"`{corpus['input_dir']}`.\n\n"
+                "Then run `stable-asr prepare-public-asr` for this corpus.\n"
+            )
+        else:
+            body = (
+                f"Place the metadata table at `{corpus['metadata']}` and audio under "
+                f"`{corpus['audio_root']}`.\n\n"
+                "Then run `stable-asr prepare-asr-manifest` for this corpus.\n"
+            )
         entries.append(
             _ensure_readme(
-                metadata_parent / "README.md",
+                input_parent / "README.md",
                 title=f"Corpus Input: {corpus_id}",
-                body=(
-                    f"Place the metadata table at `{corpus['metadata']}` and audio under "
-                    f"`{corpus['audio_root']}`.\n\n"
-                    "This scaffold does not create metadata or audio files.\n"
-                ),
+                body=body + "\nThis scaffold does not create corpus files.\n",
             )
         )
         manifest_parent = _resolve(str(corpus["manifest"]), root=root).parent
@@ -452,8 +472,9 @@ def _corpus_rows(config: dict[str, Any]) -> list[dict[str, object]]:
         rows.append(
             {
                 "id": corpus["id"],
+                "corpus": corpus.get("corpus", "metadata_table"),
                 "language": corpus["language"],
-                "metadata": corpus["metadata"],
+                "input": corpus.get("input_dir", corpus.get("metadata", "")),
                 "manifest": corpus["manifest"],
                 "sample_rate": corpus["sample_rate"],
             }

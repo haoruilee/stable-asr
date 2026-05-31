@@ -19,7 +19,7 @@ def test_paper_status_summarizes_smoke_and_final_gaps(tmp_path: Path) -> None:
     assert not report.final_inputs_ready
     assert "Stable-ASR Paper Status" in markdown
     assert "final_inputs_ready" in markdown
-    assert "data/librispeech/dev-clean/metadata.tsv" in markdown
+    assert "data/librispeech/LibriSpeech/dev-clean" in markdown
 
 
 def test_paper_status_without_results_is_not_smoke_ready() -> None:

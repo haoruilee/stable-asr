@@ -109,10 +109,13 @@ DEFAULT_DATA_SOURCES: dict[str, Any] = {
             "task": "asr",
             "languages": ["en"],
             "source_type": "public_corpus",
-            "status": "recipe_scaffold",
-            "stable_asr_entrypoint": "stable-asr prepare-asr-manifest --input <metadata.tsv> --output <manifest.jsonl>",
+            "status": "recipe_implemented",
+            "stable_asr_entrypoint": (
+                "stable-asr prepare-public-asr --corpus librispeech "
+                "--input-dir <LibriSpeech/dev-clean> --output <manifest.jsonl>"
+            ),
             "license": "see_upstream",
-            "notes": "Canonical English ASR corpus; v0 provides metadata normalization before future MiniASR training recipes.",
+            "notes": "Canonical English ASR corpus; v0 parses *.trans.txt files and FLAC paths into ASR manifests.",
         },
         {
             "id": "aishell1",
@@ -120,10 +123,13 @@ DEFAULT_DATA_SOURCES: dict[str, Any] = {
             "task": "asr",
             "languages": ["zh"],
             "source_type": "public_corpus",
-            "status": "recipe_scaffold",
-            "stable_asr_entrypoint": "stable-asr prepare-asr-manifest --input <metadata.tsv> --output <manifest.jsonl>",
+            "status": "recipe_implemented",
+            "stable_asr_entrypoint": (
+                "stable-asr prepare-public-asr --corpus aishell1 "
+                "--input-dir <data_aishell> --output <manifest.jsonl>"
+            ),
             "license": "see_upstream",
-            "notes": "Mandarin ASR corpus; v0 provides metadata normalization before future Chinese ASR recipes.",
+            "notes": "Mandarin ASR corpus; v0 parses aishell_transcript files and wav split directories into ASR manifests.",
         },
         {
             "id": "wenetspeech",

@@ -97,6 +97,7 @@ def test_scaffold_final_run_creates_directories_without_input_files(tmp_path: Pa
 
     assert (tmp_path / "runs/final/README.md").exists()
     assert (tmp_path / "runs/final/TURN_SPLITS_README.md").exists()
+    assert (tmp_path / "data/librispeech/LibriSpeech/dev-clean/README.md").exists()
     assert not (tmp_path / "runs/final/turn_train.jsonl").exists()
-    assert not (tmp_path / "data/librispeech/dev-clean/metadata.tsv").exists()
+    assert not (tmp_path / "data/librispeech/LibriSpeech/dev-clean/84").exists()
     assert "final_run_scaffold:" in report.to_text()
