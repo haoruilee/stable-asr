@@ -70,6 +70,7 @@ stable-asr scenario-suite --output /tmp/stable-asr-paper/SCENARIO_SUITE.md
 stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output /tmp/stable-asr-asr-manifest.jsonl --audio-root examples/data --sample-rate 16000
 stable-asr validate-asr-manifest /tmp/stable-asr-asr-manifest.jsonl
 stable-asr inspect-asr-manifest /tmp/stable-asr-asr-manifest.jsonl
+stable-asr asr-to-turn --input /tmp/stable-asr-asr-manifest.jsonl --output /tmp/stable-asr-asr-turn.jsonl --include-incomplete
 stable-asr audit-audio --kind turn --manifest /tmp/stable-asr-synth.jsonl
 stable-asr benchmark-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --warmup 0 --repeat 3 --report /tmp/stable-asr-turn-benchmark.md
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-nanoturn --epochs 20
@@ -172,6 +173,7 @@ Current M0 functionality:
 - `scenario-suite` for validating and rendering scenario suite definitions
 - utterance-level ASR manifest schema and metadata-table recipe via `prepare-asr-manifest`
 - `validate-asr-manifest` and `inspect-asr-manifest` for public ASR corpus manifests
+- `asr-to-turn` for weakly labeled complete/incomplete turn windows from ASR utterance manifests
 - `audit-audio` for turn/ASR manifest file existence, WAV sample-rate, and WAV duration checks
 - `benchmark-turn` for latency, throughput, RTF, and artifact-size reports
 - optional NanoTurnPico/NanoTurnNano PyTorch models

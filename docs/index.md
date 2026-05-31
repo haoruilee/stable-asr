@@ -46,6 +46,7 @@ stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.jso
 stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output runs/asr_manifest.jsonl --audio-root examples/data --sample-rate 16000
 stable-asr validate-asr-manifest runs/asr_manifest.jsonl
 stable-asr inspect-asr-manifest runs/asr_manifest.jsonl
+stable-asr asr-to-turn --input runs/asr_manifest.jsonl --output runs/asr_turn.jsonl --include-incomplete
 stable-asr audit-audio --kind asr --manifest runs/asr_manifest.jsonl
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause

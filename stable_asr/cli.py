@@ -28,6 +28,7 @@ from stable_asr.data.registry import (
     write_turn_records,
 )
 from stable_asr.data.split import TurnSplitConfig, split_turn_records
+from stable_asr.data.turn_from_asr import ASRToTurnConfig, asr_records_to_turn_records
 from stable_asr.doctor import run_doctor
 from stable_asr.eval.turn_benchmark import benchmark_turn_predictor
 from stable_asr.eval.turn_eval import evaluate_turn_records
@@ -370,6 +371,28 @@ def build_parser() -> argparse.ArgumentParser:
     )
     inspect_asr_parser.add_argument("path", type=Path)
     inspect_asr_parser.add_argument("--json", action="store_true")
+
+    asr_to_turn_parser = subparsers.add_parser(
+        "asr-to-turn",
+        help="Convert an ASR utterance manifest into weakly labeled turn windows.",
+    )
+    asr_to_turn_parser.add_argument("--input", type=Path, required=True, help="Input ASR manifest JSONL.")
+    asr_to_turn_parser.add_argument("--output", type=Path, required=True, help="Output turn manifest.")
+    asr_to_turn_parser.add_argument("--format", choices=TURN_FORMATS.names(), default="jsonl", help="Output format.")
+    asr_to_turn_parser.add_argument("--window-sec", type=float, default=2.0)
+    asr_to_turn_parser.add_argument("--no-complete", action="store_true", help="Do not emit complete windows.")
+    asr_to_turn_parser.add_argument("--include-incomplete", action="store_true", help="Also emit truncated incomplete windows.")
+    asr_to_turn_parser.add_argument("--incomplete-ratio", type=float, default=0.65)
+    asr_to_turn_parser.add_argument("--min-incomplete-sec", type=float, default=0.4)
+    asr_to_turn_parser.add_argument("--complete-pause-ms", type=int, default=900)
+    asr_to_turn_parser.add_argument("--incomplete-pause-ms", type=int, default=250)
+    asr_to_turn_parser.add_argument("--source", default="asr_weak_turn_v0")
+    asr_to_turn_parser.add_argument(
+        "--keep-incomplete-text",
+        action="store_true",
+        help="Keep full reference text on weak incomplete windows. Default drops it to avoid text-label leakage.",
+    )
+    asr_to_turn_parser.add_argument("--json", action="store_true")
 
     audit_audio_parser = subparsers.add_parser(
         "audit-audio",
@@ -1049,6 +1072,35 @@ def main(argv: list[str] | None = None) -> int:
                     for name, count in values.items():
                         print(f"  {name}: {count}")
             print(f"speakers: {summary['speakers']}")
+        return 0
+
+    if args.command == "asr-to-turn":
+        try:
+            result = asr_records_to_turn_records(
+                load_asr_manifest(args.input),
+                config=ASRToTurnConfig(
+                    window_sec=args.window_sec,
+                    include_complete=not args.no_complete,
+                    include_incomplete=args.include_incomplete,
+                    incomplete_ratio=args.incomplete_ratio,
+                    min_incomplete_sec=args.min_incomplete_sec,
+                    complete_pause_ms=args.complete_pause_ms,
+                    incomplete_pause_ms=args.incomplete_pause_ms,
+                    source=args.source,
+                    drop_incomplete_text=not args.keep_incomplete_text,
+                ),
+            )
+            write_turn_records(args.output, result.records, format=args.format)
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        payload = result.to_dict()
+        payload["output"] = str(args.output)
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            print(result.to_text())
+            print(f"output: {args.output}")
         return 0
 
     if args.command == "audit-audio":

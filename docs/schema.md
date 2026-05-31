@@ -158,6 +158,7 @@ stable-asr prepare-asr-manifest \
 
 stable-asr validate-asr-manifest runs/asr_manifest.jsonl
 stable-asr inspect-asr-manifest runs/asr_manifest.jsonl
+stable-asr asr-to-turn --input runs/asr_manifest.jsonl --output runs/asr_turn.jsonl --include-incomplete
 stable-asr audit-audio --kind asr --manifest runs/asr_manifest.jsonl
 ```
 
@@ -165,6 +166,35 @@ Supported input aliases include `utt_id`/`key`, `audio_path`/`wav`,
 `transcript`/`reference`, `duration_sec`, `speaker_id`, `split`, `source`, and
 `language`. This recipe is the v0 bridge from public corpora such as
 LibriSpeech, AISHELL-1, WenetSpeech, and Common Voice into the paper data layer.
+
+## ASR-to-Turn Weak Labels
+
+Public ASR corpora normally do not contain full-duplex turn labels. Use
+`asr-to-turn` to bootstrap weak complete windows from utterance-level ASR
+manifests:
+
+```bash
+stable-asr asr-to-turn \
+  --input runs/asr_manifest.jsonl \
+  --output runs/asr_turn.jsonl \
+  --window-sec 2.0
+```
+
+Add `--include-incomplete` to emit truncated incomplete negatives from each
+utterance:
+
+```bash
+stable-asr asr-to-turn \
+  --input runs/asr_manifest.jsonl \
+  --output runs/asr_turn_with_negatives.jsonl \
+  --include-incomplete \
+  --incomplete-ratio 0.65
+```
+
+These records are explicitly marked with `metadata.derived_from=asr_manifest`
+and `scenario=asr_weak_complete` or `asr_weak_incomplete`. They are useful for
+bootstrapping endpointing baselines, not a substitute for real interruption,
+backchannel, or wait annotations.
 
 ## Audio Audit
 
