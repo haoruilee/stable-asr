@@ -1,5 +1,5 @@
 from stable_asr.data.registry import load_turn_records
-from stable_asr.eval.turn_compare import compare_turn_predictors
+from stable_asr.eval.turn_compare import compare_turn_predictors, compare_turn_predictors_on_splits
 from stable_asr.models.adapters import TurnPredictionManifestAdapter
 from stable_asr.models.baselines import TextTurnBaseline, VADPauseBaseline
 
@@ -42,3 +42,23 @@ def test_compare_turn_predictors_rejects_duplicate_names() -> None:
         assert "duplicate predictor name" in str(exc)
     else:
         raise AssertionError("duplicate predictor names should fail")
+
+
+def test_compare_turn_predictors_on_splits() -> None:
+    records = load_turn_records("examples/data/turn_demo.jsonl")
+    report = compare_turn_predictors_on_splits(
+        {
+            "train": records[:2],
+            "dev": records[2:3],
+            "test": records[3:],
+        },
+        [
+            ("vad_pause", "baseline", VADPauseBaseline()),
+            ("text_turn", "baseline", TextTurnBaseline()),
+        ],
+    )
+
+    rows = report.rows()
+    assert {row["split"] for row in rows} == {"train", "dev", "test"}
+    assert {row["name"] for row in rows} == {"vad_pause", "text_turn"}
+    assert "Stable-ASR Turn Split Comparison" in report.to_markdown()

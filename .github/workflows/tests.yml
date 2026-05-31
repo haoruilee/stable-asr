@@ -38,3 +38,4 @@ jobs:
           stable-asr audit-audio --kind turn --manifest /tmp/stable-asr-synth.jsonl
           stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause
           stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl --report /tmp/stable-asr-turn-compare.md
+          stable-asr compare-turn-splits --train /tmp/stable-asr-splits/turn_train.jsonl --dev /tmp/stable-asr-splits/turn_dev.jsonl --test /tmp/stable-asr-splits/turn_test.jsonl --baseline vad_pause --baseline text_turn --report /tmp/stable-asr-turn-split-compare.md

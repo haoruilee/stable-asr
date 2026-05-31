@@ -138,6 +138,55 @@ def test_compare_turn_cli_with_baselines_and_predictions(tmp_path, capsys) -> No
     assert "Stable-ASR Turn Comparison" in report.read_text(encoding="utf-8")
 
 
+def test_compare_turn_splits_cli(tmp_path, capsys) -> None:
+    output_dir = tmp_path / "splits"
+    code = main(
+        [
+            "split-turn-data",
+            "--input",
+            "examples/data/turn_demo.jsonl",
+            "--output-dir",
+            str(output_dir),
+            "--train-ratio",
+            "0.5",
+            "--dev-ratio",
+            "0.25",
+            "--test-ratio",
+            "0.25",
+            "--seed",
+            "3",
+        ]
+    )
+    assert code == 0
+    capsys.readouterr()
+
+    report = tmp_path / "turn_split_compare.md"
+    code = main(
+        [
+            "compare-turn-splits",
+            "--train",
+            str(output_dir / "turn_train.jsonl"),
+            "--dev",
+            str(output_dir / "turn_dev.jsonl"),
+            "--test",
+            str(output_dir / "turn_test.jsonl"),
+            "--baseline",
+            "vad_pause",
+            "--baseline",
+            "text_turn",
+            "--report",
+            str(report),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "split=train" in captured.out
+    assert "name=text_turn" in captured.out
+    assert report.exists()
+    assert "Stable-ASR Turn Split Comparison" in report.read_text(encoding="utf-8")
+
+
 def test_benchmark_turn_cli(tmp_path, capsys) -> None:
     report_path = tmp_path / "turn_benchmark.md"
     code = main(

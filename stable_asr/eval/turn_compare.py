@@ -101,3 +101,53 @@ def compare_turn_predictors(
         )
     rows.sort(key=lambda row: (-row.macro_f1, row.false_complete_rate, row.name))
     return TurnComparisonReport(dataset=dataset, rows=rows, reports=reports)
+
+
+@dataclass(frozen=True)
+class TurnSplitComparisonReport:
+    splits: dict[str, TurnComparisonReport]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "splits": {name: report.to_dict() for name, report in self.splits.items()},
+            "rows": self.rows(),
+        }
+
+    def rows(self) -> list[dict[str, object]]:
+        rows: list[dict[str, object]] = []
+        for split_name, report in self.splits.items():
+            for row in report.rows:
+                payload = row.to_dict()
+                payload["split"] = split_name
+                rows.append(payload)
+        return sorted(rows, key=lambda row: (str(row["name"]), str(row["split"])))
+
+    def to_markdown(self) -> str:
+        report = MarkdownReport("Stable-ASR Turn Split Comparison")
+        report.add_section("Leaderboard", dict_table(self.rows()))
+        for split_name, split_report in self.splits.items():
+            report.add_section(
+                f"Split: {split_name}",
+                dict_table([row.to_dict() for row in split_report.rows]),
+            )
+        return report.to_markdown()
+
+
+def compare_turn_predictors_on_splits(
+    split_records: dict[str, list[TurnManifestRecord]],
+    predictors: list[tuple[str, str, TurnPredictor]],
+    *,
+    policy: TurnPolicy | None = None,
+) -> TurnSplitComparisonReport:
+    if not split_records:
+        raise ValueError("split_records must not be empty")
+    reports = {
+        split_name: compare_turn_predictors(
+            records,
+            predictors,
+            dataset=split_name,
+            policy=policy,
+        )
+        for split_name, records in split_records.items()
+    }
+    return TurnSplitComparisonReport(splits=reports)

@@ -34,7 +34,7 @@ from stable_asr.data.split import TurnSplitConfig, split_turn_records
 from stable_asr.data.turn_from_asr import ASRToTurnConfig, asr_records_to_turn_records
 from stable_asr.doctor import run_doctor
 from stable_asr.eval.turn_benchmark import benchmark_turn_predictor
-from stable_asr.eval.turn_compare import compare_turn_predictors
+from stable_asr.eval.turn_compare import compare_turn_predictors, compare_turn_predictors_on_splits
 from stable_asr.eval.turn_eval import evaluate_turn_records
 from stable_asr.models.baselines import RuleEndpointBaseline, TextTurnBaseline, VADPauseBaseline
 from stable_asr.models.adapters import (
@@ -213,6 +213,26 @@ def build_parser() -> argparse.ArgumentParser:
     compare_turn_parser.add_argument("--complete-pause-ms", type=int, default=700)
     compare_turn_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     compare_turn_parser.add_argument("--json", action="store_true")
+
+    compare_turn_splits_parser = subparsers.add_parser(
+        "compare-turn-splits",
+        help="Compare turn predictors across train/dev/test split manifests.",
+    )
+    compare_turn_splits_parser.add_argument("--train", type=Path, required=True)
+    compare_turn_splits_parser.add_argument("--dev", type=Path, required=True)
+    compare_turn_splits_parser.add_argument("--test", type=Path, required=True)
+    compare_turn_splits_parser.add_argument(
+        "--baseline",
+        action="append",
+        choices=["rule_endpoint", "vad_pause", "text_turn"],
+        help="Built-in baseline to include. May be repeated. Defaults to all built-in baselines.",
+    )
+    compare_turn_splits_parser.add_argument("--checkpoint", action="append", default=[], metavar="NAME=PATH")
+    compare_turn_splits_parser.add_argument("--predictions", action="append", default=[], metavar="NAME=PATH")
+    compare_turn_splits_parser.add_argument("--audio-root", type=Path)
+    compare_turn_splits_parser.add_argument("--complete-pause-ms", type=int, default=700)
+    compare_turn_splits_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
+    compare_turn_splits_parser.add_argument("--json", action="store_true")
 
     benchmark_turn_parser = subparsers.add_parser(
         "benchmark-turn",
@@ -884,6 +904,47 @@ def main(argv: list[str] | None = None) -> int:
                             f"macro_f1={row.macro_f1:.4f}",
                             f"false_complete_rate={row.false_complete_rate:.4f}",
                             f"failures={row.failures}",
+                        ]
+                    )
+                )
+            if args.report:
+                print(f"report: {args.report}")
+        return 0
+
+    if args.command == "compare-turn-splits":
+        try:
+            split_records = {
+                "train": load_manifest(args.train),
+                "dev": load_manifest(args.dev),
+                "test": load_manifest(args.test),
+            }
+            predictors = _build_turn_comparison_predictors(args, dataset_parent=args.train.parent)
+            report = compare_turn_predictors_on_splits(
+                split_records,
+                predictors,
+                policy=TurnPolicy(TurnPolicyConfig(complete_threshold=0.75)),
+            )
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.report:
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(report.to_markdown(), encoding="utf-8")
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            for row in report.rows():
+                print(
+                    " ".join(
+                        [
+                            f"split={row['split']}",
+                            f"name={row['name']}",
+                            f"kind={row['kind']}",
+                            f"records={row['records']}",
+                            f"accuracy={float(row['accuracy']):.4f}",
+                            f"macro_f1={float(row['macro_f1']):.4f}",
+                            f"false_complete_rate={float(row['false_complete_rate']):.4f}",
+                            f"failures={row['failures']}",
                         ]
                     )
                 )
