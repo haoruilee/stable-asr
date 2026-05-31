@@ -67,6 +67,7 @@ stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause
 stable-asr predict-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --output runs/text_turn_predictions.jsonl
 stable-asr validate-turn-predictions --dataset examples/data/turn_demo.jsonl --predictions runs/text_turn_predictions.jsonl
+stable-asr turn-submission --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl --system oracle_fixture --output-dir runs/submissions/oracle_fixture
 stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl --report runs/turn_compare.md
 stable-asr compare-turn-splits --train runs/splits/turn_train.jsonl --dev runs/splits/turn_dev.jsonl --test runs/splits/turn_test.jsonl --baseline vad_pause --baseline text_turn --report runs/turn_split_compare.md
 stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl

@@ -28,6 +28,11 @@ stable-asr compare-turn \
   --baseline vad_pause \
   --baseline text_turn \
   --report runs/turn_compare.md
+stable-asr turn-submission \
+  --dataset examples/data/turn_demo.jsonl \
+  --predictions tests/fixtures/turn_predictions_sample.jsonl \
+  --system oracle_fixture \
+  --output-dir runs/submissions/oracle_fixture
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
 
 # 3. Generate paper-facing evidence

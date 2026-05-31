@@ -109,6 +109,7 @@ from stable_asr.paper.parity import (
     validate_paper_parity_checklist,
 )
 from stable_asr.paper.status import paper_status, write_paper_status_markdown
+from stable_asr.paper.submissions import build_turn_submission
 from stable_asr.paper.suites import (
     audit_benchmark_required_artifacts,
     audit_benchmark_suite_coverage,
@@ -264,6 +265,20 @@ def build_parser() -> argparse.ArgumentParser:
     validate_predictions_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     validate_predictions_parser.add_argument("--json", action="store_true")
     validate_predictions_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
+
+    turn_submission_parser = subparsers.add_parser(
+        "turn-submission",
+        help="Build an auditable external turn prediction submission package.",
+    )
+    turn_submission_parser.add_argument("--dataset", type=Path, required=True, help="Turn benchmark manifest.")
+    turn_submission_parser.add_argument("--predictions", type=Path, required=True, help="Prediction JSONL to submit.")
+    turn_submission_parser.add_argument("--system", required=True, help="System name shown in leaderboard rows.")
+    turn_submission_parser.add_argument("--output-dir", type=Path, required=True)
+    turn_submission_parser.add_argument("--format", choices=TURN_FORMATS.names(), help="Optional dataset format.")
+    turn_submission_parser.add_argument("--allow-extra", action="store_true", help="Allow prediction IDs outside the dataset.")
+    turn_submission_parser.add_argument("--complete-threshold", type=float, default=0.75)
+    turn_submission_parser.add_argument("--suite", type=Path, help="Optional benchmark suite JSON path.")
+    turn_submission_parser.add_argument("--json", action="store_true")
 
     compare_turn_parser = subparsers.add_parser(
         "compare-turn",
@@ -1287,6 +1302,30 @@ def main(argv: list[str] | None = None) -> int:
             print(report.to_text())
             if args.report:
                 print(f"report: {args.report}")
+        return 0 if report.ok else 1
+
+    if args.command == "turn-submission":
+        try:
+            report = build_turn_submission(
+                dataset=args.dataset,
+                predictions=args.predictions,
+                output_dir=args.output_dir,
+                system=args.system,
+                dataset_format=args.format,
+                allow_extra=args.allow_extra,
+                complete_threshold=args.complete_threshold,
+                suite_path=args.suite,
+            )
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(f"turn_submission: {'OK' if report.ok else 'FAILED'}")
+            print(f"submission: {report.artifacts.manifest}")
+            print(f"summary: {report.artifacts.summary_markdown}")
+            print(f"leaderboard: {report.artifacts.leaderboard['jsonl']}")
         return 0 if report.ok else 1
 
     if args.command == "compare-turn":

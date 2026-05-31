@@ -277,6 +277,50 @@ def test_validate_turn_predictions_cli(tmp_path, capsys) -> None:
     assert "missing_ids: 3" in bad_output.out
 
 
+def test_turn_submission_cli(tmp_path, capsys) -> None:
+    output_dir = tmp_path / "submission"
+    code = main(
+        [
+            "turn-submission",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--predictions",
+            "tests/fixtures/turn_predictions_sample.jsonl",
+            "--system",
+            "oracle_fixture",
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "turn_submission: OK" in captured.out
+    assert (output_dir / "submission.json").exists()
+    assert (output_dir / "SUBMISSION.md").exists()
+    assert (output_dir / "leaderboard.jsonl").exists()
+
+    bad_predictions = tmp_path / "bad_predictions.jsonl"
+    bad_predictions.write_text('{"id":"zh_turn_000001","label":"complete"}\n', encoding="utf-8")
+    bad_code = main(
+        [
+            "turn-submission",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--predictions",
+            str(bad_predictions),
+            "--system",
+            "bad_fixture",
+            "--output-dir",
+            str(tmp_path / "bad_submission"),
+        ]
+    )
+
+    bad_output = capsys.readouterr()
+    assert bad_code == 1
+    assert "turn_submission: FAILED" in bad_output.out
+
+
 def test_compare_turn_cli_with_baselines_and_predictions(tmp_path, capsys) -> None:
     report = tmp_path / "turn_compare.md"
     code = main(

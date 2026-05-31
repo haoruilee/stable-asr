@@ -131,6 +131,7 @@
         {"path": "configs/schemas/stable_asr_schemas.json", "required_now": true},
         {"path": "stable_asr/paper/artifacts.py", "required_now": true},
         {"path": "stable_asr/paper/audit.py", "required_now": true},
+        {"path": "stable_asr/paper/submissions.py", "required_now": true},
         {"path": "stable_asr/schemas.py", "required_now": true},
         {"path": "stable_asr/schema_validation.py", "required_now": true},
         {"path": "stable_asr/paper/provenance.py", "required_now": true},
@@ -148,6 +149,7 @@
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only",
         "stable-asr validate-schema-file --input examples/data/turn_demo.jsonl --schema-id stable_asr.turn_manifest_record.v0",
+        "stable-asr turn-submission --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl --system oracle_fixture --output-dir runs/submissions/oracle_fixture",
         "stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts"
       ],
       "success_criteria": [
@@ -155,7 +157,8 @@
         "release audit separates structural readiness from final-scale missing evidence",
         "leaderboard exports are generated from paper result artifacts",
         "external data and artifact contracts are published as versioned JSON Schemas",
-        "JSON/JSONL artifacts can be validated directly against those contracts"
+        "JSON/JSONL artifacts can be validated directly against those contracts",
+        "external turn model submissions can produce auditable validation, evaluation, and leaderboard packages"
       ]
     },
     {

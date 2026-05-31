@@ -197,6 +197,7 @@ is provided in `mkdocs.yaml`.
 - `eval-turn` baseline evaluation command
 - `predict-turn` for exporting baseline/checkpoint predictions in the shared prediction manifest schema
 - `validate-turn-predictions` for checking prediction schema, ID coverage, duplicate IDs, and extra predictions before benchmark submission
+- `turn-submission` for packaging external turn predictions with schema validation, coverage validation, evaluation, and leaderboard rows
 - `compare-turn` for same-dataset turn baseline/checkpoint/prediction comparison reports
 - `compare-turn-splits` for train/dev/test turn benchmark comparison reports
 - rule endpoint and VAD pause baselines
