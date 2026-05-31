@@ -62,6 +62,8 @@ stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --va
 stable-asr data-sources --output /tmp/stable-asr-paper/DATA_SOURCES.md
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
 stable-asr adapter-registry --output /tmp/stable-asr-paper/ADAPTERS.md
+stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
+stable-asr asr-collections --output /tmp/stable-asr-paper/ASR_COLLECTIONS.md
 stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only
 stable-asr scenario-suite --output /tmp/stable-asr-paper/SCENARIO_SUITE.md
 stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output /tmp/stable-asr-asr-manifest.jsonl --audio-root examples/data --sample-rate 16000
@@ -161,6 +163,8 @@ Current M0 functionality:
 - `data-sources` for validating and rendering data source registries
 - machine-readable adapter registry in `configs/adapters/stable_asr_adapters.json`
 - `adapter-registry` for validating and rendering baseline, converter, command-backed, and external-system adapter entries
+- machine-readable upstream ASR reference collection in `configs/references/asr_collections.json`
+- `asr-collections` for validating and rendering top ASR project references
 - machine-readable VoiceWorld scenario suite in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - `scenario-suite` for validating and rendering scenario suite definitions
 - utterance-level ASR manifest schema and metadata-table recipe via `prepare-asr-manifest`

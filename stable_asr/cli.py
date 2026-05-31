@@ -78,6 +78,7 @@ from stable_asr.paper.suites import (
     validate_benchmark_suite,
 )
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results, paper_table
+from stable_asr.references import asr_collections_markdown, load_asr_collections, validate_asr_collections
 from stable_asr.scenarios.voice_world import evaluate_voice_world
 from stable_asr.scenarios.synthetic_turn import generate_synthetic_turn_records, write_synthetic_turn_manifest
 from stable_asr.scenarios.suites import (
@@ -313,6 +314,15 @@ def build_parser() -> argparse.ArgumentParser:
     adapter_registry_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     adapter_registry_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     adapter_registry_parser.add_argument("--validate-only", action="store_true")
+
+    asr_collections_parser = subparsers.add_parser(
+        "asr-collections",
+        help="Print or validate the curated upstream ASR reference collection.",
+    )
+    asr_collections_parser.add_argument("--registry", type=Path, help="Optional ASR collections JSON path.")
+    asr_collections_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    asr_collections_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
+    asr_collections_parser.add_argument("--validate-only", action="store_true")
 
     prepare_asr_parser = subparsers.add_parser(
         "prepare-asr-manifest",
@@ -913,6 +923,26 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"OK: {registry['id']} ({len(registry['adapters'])} adapter(s))")
                 return 0
             text = json.dumps(registry, ensure_ascii=False, indent=2) if args.json else adapter_registry_markdown(registry)
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+            print(text)
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.command == "asr-collections":
+        try:
+            registry = load_asr_collections(args.registry)
+            validation = validate_asr_collections(registry)
+            if not validation.ok:
+                print(validation.to_text(), file=sys.stderr)
+                return 1
+            if args.validate_only:
+                print(f"OK: {registry['id']} ({len(registry['entries'])} reference(s))")
+                return 0
+            text = json.dumps(registry, ensure_ascii=False, indent=2) if args.json else asr_collections_markdown(registry)
             if args.output:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")

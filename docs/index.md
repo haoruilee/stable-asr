@@ -15,6 +15,7 @@ streaming ASR and voice-agent control:
 - streaming ASR failure mining
 - utterance-level ASR corpus manifests and metadata-table recipes
 - adapter registry for baselines, converters, command-backed ASR wrappers, and external-system templates
+- curated upstream ASR reference collections for adapter and benchmark planning
 - policy search
 - paper parity audit for stable-worldmodel-style platform-paper gaps
 - final-scale experiment runbook for real paper execution
@@ -38,6 +39,7 @@ stable-asr convert examples/data/turn_demo.jsonl runs/turn_demo.lance
 stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir runs/data_bench --formats jsonl parquet lance --sample-count 16
 stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
+stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
 stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only
 stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output runs/asr_manifest.jsonl --audio-root examples/data --sample-rate 16000
 stable-asr validate-asr-manifest runs/asr_manifest.jsonl
@@ -70,3 +72,4 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --resul
 - [Paper pipeline](paper_pipeline.md)
 - [Release gates](release_gates.md)
 - [Data schema](schema.md)
+- [ASR reference collections](asr_collections.md)

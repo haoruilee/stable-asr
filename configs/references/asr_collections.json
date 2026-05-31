@@ -1,0 +1,153 @@
+{
+  "id": "stable_asr_reference_collections_v0",
+  "version": "0.1.0",
+  "reviewed_at": "2026-05-31",
+  "title": "Stable-ASR Reference Collections",
+  "description": "Curated upstream ASR projects that Stable-ASR should study, interoperate with, or benchmark against. This registry is a planning and attribution aid; it does not vendor upstream code.",
+  "entries": [
+    {
+      "id": "kaldi",
+      "name": "Kaldi",
+      "category": "classic_toolkit",
+      "source_url": "https://github.com/kaldi-asr/kaldi",
+      "docs_url": "https://kaldi-asr.org/doc/",
+      "license": "Apache-2.0",
+      "focus": "C++ ASR toolkit, recipes, WFST decoding, feature and data preparation conventions.",
+      "reference_use": "Study mature recipe structure, data preparation discipline, decoding terminology, and long-lived toolkit governance.",
+      "stable_asr_actions": ["document_recipe_patterns", "avoid_reimplementing_wfst_decoding", "compare_manifest_schema"],
+      "priority": "p1"
+    },
+    {
+      "id": "espnet",
+      "name": "ESPnet",
+      "category": "research_training_toolkit",
+      "source_url": "https://github.com/espnet/espnet",
+      "docs_url": "https://espnet.github.io/espnet/",
+      "license": "Apache-2.0",
+      "focus": "End-to-end speech processing recipes across ASR, TTS, speech translation, enhancement, diarization, and SLU.",
+      "reference_use": "Study reproducible recipe layout, multi-task speech abstractions, and benchmark reporting style.",
+      "stable_asr_actions": ["add_adapter_plan", "compare_recipe_metadata", "track_baseline_coverage"],
+      "priority": "p1"
+    },
+    {
+      "id": "wenet",
+      "name": "WeNet",
+      "category": "production_streaming_asr",
+      "source_url": "https://github.com/wenet-e2e/wenet",
+      "docs_url": "https://wenet-e2e.github.io/wenet/",
+      "license": "Apache-2.0",
+      "focus": "Production-oriented streaming and non-streaming end-to-end ASR toolkit.",
+      "reference_use": "Study streaming deployment APIs, runtime boundaries, and production-first project shape.",
+      "stable_asr_actions": ["plan_streaming_adapter", "benchmark_endpoint_delay", "compare_runtime_reports"],
+      "priority": "p0"
+    },
+    {
+      "id": "funasr",
+      "name": "FunASR",
+      "category": "industrial_asr",
+      "source_url": "https://github.com/modelscope/FunASR",
+      "docs_url": "https://www.funasr.com/",
+      "license": "see_upstream",
+      "focus": "Industrial ASR toolkit with VAD, ASR, punctuation, diarization, emotion, streaming, and service deployment.",
+      "reference_use": "Study industrial Chinese ASR ergonomics, streaming service interfaces, and one-call speech understanding APIs.",
+      "stable_asr_actions": ["plan_command_adapter_recipe", "benchmark_chinese_streaming", "compare_auxiliary_outputs"],
+      "priority": "p0"
+    },
+    {
+      "id": "nemo",
+      "name": "NVIDIA NeMo Speech",
+      "category": "research_training_toolkit",
+      "source_url": "https://github.com/NVIDIA-NeMo/NeMo",
+      "docs_url": "https://docs.nvidia.com/nemo/speech/",
+      "license": "see_upstream",
+      "focus": "Scalable Speech AI framework for ASR, TTS, diarization, model training, fine-tuning, and deployment paths.",
+      "reference_use": "Study large-model ASR configuration, pretrained checkpoint handling, and deployment-oriented reporting.",
+      "stable_asr_actions": ["plan_adapter_contract", "track_model_cards", "compare_latency_quality_tradeoffs"],
+      "priority": "p1"
+    },
+    {
+      "id": "speechbrain",
+      "name": "SpeechBrain",
+      "category": "research_training_toolkit",
+      "source_url": "https://github.com/speechbrain/speechbrain",
+      "docs_url": "https://speechbrain.github.io/",
+      "license": "Apache-2.0",
+      "focus": "PyTorch speech toolkit with broad recipes, pretrained models, tutorials, and conversational AI tasks.",
+      "reference_use": "Study tutorial quality, recipe consistency, pretrained model ergonomics, and broad task taxonomy.",
+      "stable_asr_actions": ["improve_examples", "compare_recipe_cards", "track_pretrained_baselines"],
+      "priority": "p1"
+    },
+    {
+      "id": "lhotse",
+      "name": "Lhotse",
+      "category": "data_layer",
+      "source_url": "https://github.com/lhotse-speech/lhotse",
+      "docs_url": "https://lhotse-speech.github.io/",
+      "license": "Apache-2.0",
+      "focus": "Speech and multimodal data preparation, manifests, cuts, supervision, and corpus recipes.",
+      "reference_use": "Study robust manifest design, corpus preparation recipes, and data-layer interoperability.",
+      "stable_asr_actions": ["align_manifest_concepts", "avoid_duplicate_corpus_recipes", "plan_lhotse_bridge"],
+      "priority": "p0"
+    },
+    {
+      "id": "icefall",
+      "name": "icefall",
+      "category": "research_training_toolkit",
+      "source_url": "https://github.com/k2-fsa/icefall",
+      "docs_url": "https://k2-fsa.github.io/icefall/",
+      "license": "Apache-2.0",
+      "focus": "ASR recipes and training examples built around k2, lhotse, transducers, CTC, and Zipformer-style models.",
+      "reference_use": "Study modern transducer recipes, export paths, and Lhotse-centered corpus handling.",
+      "stable_asr_actions": ["compare_transducer_recipe_outputs", "track_export_patterns", "plan_recipe_bridge"],
+      "priority": "p1"
+    },
+    {
+      "id": "sherpa_onnx",
+      "name": "sherpa-onnx",
+      "category": "deployment_runtime",
+      "source_url": "https://github.com/k2-fsa/sherpa-onnx",
+      "docs_url": "https://k2-fsa.github.io/sherpa/onnx/",
+      "license": "Apache-2.0",
+      "focus": "Offline-capable ONNX runtime for ASR, TTS, diarization, VAD, embedded systems, mobile, and WebSocket use.",
+      "reference_use": "Study deployable ASR runtime APIs, ONNX packaging, streaming examples, and embedded constraints.",
+      "stable_asr_actions": ["plan_onnx_runtime_benchmark", "compare_cpu_latency", "track_websocket_adapter"],
+      "priority": "p0"
+    },
+    {
+      "id": "whisper",
+      "name": "OpenAI Whisper",
+      "category": "model_family",
+      "source_url": "https://github.com/openai/whisper",
+      "docs_url": "https://github.com/openai/whisper/blob/main/model-card.md",
+      "license": "MIT",
+      "focus": "General-purpose multilingual ASR and speech translation model family.",
+      "reference_use": "Study model cards, transcription API shape, timestamp behavior, and robust multilingual baseline expectations.",
+      "stable_asr_actions": ["maintain_transcript_converter", "benchmark_timestamp_stability", "track_streaming_limitations"],
+      "priority": "p0"
+    },
+    {
+      "id": "faster_whisper",
+      "name": "faster-whisper",
+      "category": "inference_runtime",
+      "source_url": "https://github.com/SYSTRAN/faster-whisper",
+      "docs_url": "https://github.com/SYSTRAN/faster-whisper",
+      "license": "MIT",
+      "focus": "Whisper inference implementation using CTranslate2 for faster transcription.",
+      "reference_use": "Study practical Whisper deployment, batched inference, quantization, and latency-sensitive transcription.",
+      "stable_asr_actions": ["plan_command_adapter_recipe", "compare_rtf", "track_quantized_inference"],
+      "priority": "p1"
+    },
+    {
+      "id": "huggingface_transformers_asr",
+      "name": "Hugging Face Transformers ASR",
+      "category": "model_hub_and_finetuning",
+      "source_url": "https://github.com/huggingface/transformers",
+      "docs_url": "https://huggingface.co/docs/transformers/tasks/asr",
+      "license": "Apache-2.0",
+      "focus": "ASR pipelines, fine-tuning guides, model hub integration, and many pretrained ASR architectures.",
+      "reference_use": "Study adapter conventions for hub models, training/evaluation examples, and model-card workflows.",
+      "stable_asr_actions": ["plan_hf_adapter", "compare_model_card_fields", "track_finetuning_recipe_inputs"],
+      "priority": "p1"
+    }
+  ]
+}
