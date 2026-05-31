@@ -2,7 +2,7 @@ from pathlib import Path
 
 from stable_asr.paper.artifacts import paper_artifact_bundle
 from stable_asr.paper.audit import audit_paper_artifacts, audit_paper_release
-from stable_asr.paper.cards import dataset_card, experiment_card
+from stable_asr.paper.cards import dataset_card, experiment_card, model_card
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.experiments import run_paper_smoke
 from stable_asr.paper.latex import paper_latex
@@ -139,6 +139,29 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "OK reference/turn_collections_schema" in text
     assert "OK reference/turn_collections_coverage" in text
     assert "OK scenario/scenario_suite_coverage" in text
+
+
+def test_paper_release_audit_infers_release_smoke_outputs(tmp_path: Path) -> None:
+    result = run_paper_smoke(tmp_path / "paper", episodes=9, seed=6, train_model=False)
+    bundle = paper_artifact_bundle(result.results_path, tmp_path / "artifacts")
+    paper_draft(result.results_path, tmp_path / "PAPER_DRAFT.md", artifacts_dir=bundle.output_dir)
+    paper_latex(result.results_path, tmp_path / "paper.tex", artifacts_dir=bundle.output_dir)
+    dataset_card("examples/data/turn_demo.jsonl", tmp_path / "DATASET_CARD.md")
+    experiment_card(result.results_path, tmp_path / "EXPERIMENT_CARD.md")
+    model_card("configs/models/stable_asr_models.json", tmp_path / "MODEL_CARD.md", model_id="nanoturn_pico")
+
+    report = audit_paper_release(
+        repo_root=Path("."),
+        results_path=result.results_path,
+        artifacts_dir=bundle.output_dir,
+    )
+
+    text = report.to_text()
+    assert "OK paper/markdown_draft" in text
+    assert "OK paper/latex_draft" in text
+    assert "OK data/dataset_card" in text
+    assert "OK paper/experiment_card" in text
+    assert "OK model/model_card" in text
 
 
 def test_paper_release_audit_resolves_platform_assets_from_empty_repo_root(tmp_path: Path, monkeypatch) -> None:

@@ -422,6 +422,16 @@ def audit_paper_release(
     if artifacts_dir is None:
         checks.append(_release_check("paper", "artifact_bundle", False, "not provided"))
     else:
+        release_dir = _infer_release_dir(Path(artifacts_dir))
+        markdown_draft = _infer_release_output(markdown_draft, release_dir=release_dir, filename="PAPER_DRAFT.md")
+        latex_draft = _infer_release_output(latex_draft, release_dir=release_dir, filename="paper.tex")
+        dataset_card = _infer_release_output(dataset_card, release_dir=release_dir, filename="DATASET_CARD.md")
+        experiment_card = _infer_release_output(
+            experiment_card,
+            release_dir=release_dir,
+            filename="EXPERIMENT_CARD.md",
+        )
+        model_card = _infer_release_output(model_card, release_dir=release_dir, filename="MODEL_CARD.md")
         artifact_report = audit_paper_artifacts(results_path or repo_root / "missing_results.json", artifacts_dir)
         checks.append(
             _release_check(
@@ -1388,6 +1398,16 @@ def _optional_path_check(gate: str, name: str, path: str | Path | None) -> Paper
         return _release_check(gate, name, False, "not provided")
     path = Path(path)
     return _release_check(gate, name, path.exists(), str(path))
+
+
+def _infer_release_dir(artifacts_dir: Path) -> Path:
+    return artifacts_dir.parent if artifacts_dir.name == "artifacts" else artifacts_dir
+
+
+def _infer_release_output(path: str | Path | None, *, release_dir: Path, filename: str) -> str | Path | None:
+    if path is not None:
+        return path
+    return release_dir / filename
 
 
 def _release_check(gate: str, name: str, ok: bool, detail: str) -> PaperReleaseAuditCheck:
