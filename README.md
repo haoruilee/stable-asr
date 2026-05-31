@@ -1,17 +1,34 @@
-# Stable-ASR
+<h1 align="center">Stable-ASR</h1>
 
-Stable-ASR is a reproducible research platform for real-time ASR systems.
+<p align="center"><i>A reproducible research platform for real-time ASR systems and full-duplex turn-taking.</i></p>
 
-The project starts with turn-taking and endpointing: the missing control layer
-between streaming ASR and full-duplex voice agents. NanoTurn is the first
-built-in model family.
+<p align="center">
+  <a href="docs/index.md"><img alt="Documentation" src="https://img.shields.io/badge/Docs-blue.svg"/></a>
+  <a href="https://github.com/haoruilee/stable-asr/actions"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/haoruilee/stable-asr/tests.yml?label=Tests"/></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-green.svg"/></a>
+  <a href="ROADMAP.md"><img alt="Roadmap" src="https://img.shields.io/badge/Roadmap-Stable--ASR-orange.svg"/></a>
+</p>
 
-The long-term target is a stable-worldmodel-style platform paper:
+<p align="center">
+  <a href="#installation"><b>Installation</b></a> ·
+  <a href="#quick-start"><b>Quick Start</b></a> ·
+  <a href="#data-formats"><b>Data Formats</b></a> ·
+  <a href="#voiceworld-scenarios"><b>VoiceWorld</b></a> ·
+  <a href="#baselines-and-adapters"><b>Baselines</b></a> ·
+  <a href="#paper-and-release-smoke"><b>Paper Pipeline</b></a> ·
+  <a href="#documentation"><b>Documentation</b></a>
+</p>
 
-```text
-Stable-ASR: A Platform for Reproducible Real-Time ASR and
-Full-Duplex Turn-Taking Research and Evaluation
-```
+---
+
+Stable-ASR provides a single interface for the system layer between streaming
+ASR and voice-agent control: **data manifests**, **turn-taking baselines**,
+**scenario simulation**, **streaming ASR metrics**, **policy search**, and
+**paper-ready evaluation artifacts**.
+
+The first model family is **NanoTurn**, a lightweight turn/action model for
+endpointing, incomplete pauses, backchannels, wait commands, interruptions, and
+side speech.
 
 ## Scope
 
@@ -25,128 +42,127 @@ Stable-ASR is not another general ASR toolkit. The first releases focus on:
 - latency and deployment reports
 - paper-ready benchmark scripts, tables, and figures
 
-## Documentation
-
-See [docs/index.md](docs/index.md) for the project documentation, including the
-quick start, CLI reference, baseline guide, paper pipeline, release gates, API
-notes, and manifest schema. A MkDocs config is provided in `mkdocs.yaml`.
-
-## Quick Start
+## Installation
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-python -m pip install -e ".[train]"  # optional: NanoTurn training
-python -m pip install -e ".[lance]"  # optional: Lance data backend
-stable-asr doctor
-stable-asr doctor --check-final-files
-stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
-stable-asr validate-manifest examples/data/turn_demo.jsonl
-stable-asr labels
-stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause
-stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn
-stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl
-stable-asr predict-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --output /tmp/stable-asr-text-turn-predictions.jsonl
-stable-asr validate-turn-predictions --dataset examples/data/turn_demo.jsonl --predictions /tmp/stable-asr-text-turn-predictions.jsonl
-stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl --report /tmp/stable-asr-turn-compare.md
-stable-asr compare-turn-splits --train /tmp/stable-asr-splits/turn_train.jsonl --dev /tmp/stable-asr-splits/turn_dev.jsonl --test /tmp/stable-asr-splits/turn_test.jsonl --baseline vad_pause --baseline text_turn --report /tmp/stable-asr-turn-splits.md
-stable-asr make-synthetic-turn-data --output /tmp/stable-asr-synth.jsonl --episodes 10 --seed 42 --write-audio
-stable-asr inspect-manifest examples/data/turn_demo.jsonl
-stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report /tmp/stable-asr-turn-profile.md
-stable-asr split-turn-data --input examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-splits --train-ratio 0.5 --dev-ratio 0.25 --test-ratio 0.25 --seed 7
-stable-asr audit-turn-splits --train /tmp/stable-asr-splits/turn_train.jsonl --dev /tmp/stable-asr-splits/turn_dev.jsonl --test /tmp/stable-asr-splits/turn_test.jsonl
-stable-asr convert examples/data/turn_demo.jsonl /tmp/stable-asr-copy.jsonl
-stable-asr convert examples/data/turn_demo.jsonl /tmp/stable-asr-copy.parquet
-stable-asr convert examples/data/turn_demo.jsonl /tmp/stable-asr-copy.lance
-stable-asr convert-external --schema easyturn --input tests/fixtures/easyturn_sample.jsonl --output /tmp/stable-asr-easyturn.jsonl
-stable-asr convert-external --schema full_duplex_bench --input tests/fixtures/full_duplex_bench_sample.jsonl --output /tmp/stable-asr-fdb.jsonl
-stable-asr convert-external --schema smart_turn --input tests/fixtures/smart_turn_manifest_sample.jsonl --output /tmp/stable-asr-smartturn.jsonl
-stable-asr convert-predictions --schema easyturn --input tests/fixtures/easyturn_predictions_sample.jsonl --output /tmp/stable-asr-easyturn-predictions.jsonl
-stable-asr convert-asr-transcript --schema whisper --input tests/fixtures/whisper_transcript_sample.jsonl --output /tmp/stable-asr-whisper-streaming.jsonl
-stable-asr convert-asr-transcript --schema funasr --input tests/fixtures/funasr_transcript_sample.jsonl --output /tmp/stable-asr-funasr-streaming.jsonl
-stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-data-bench --formats jsonl parquet lance --sample-count 16
-stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only
-stable-asr data-sources --output /tmp/stable-asr-paper/DATA_SOURCES.md
-stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
-stable-asr adapter-registry --output /tmp/stable-asr-paper/ADAPTERS.md
-stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
-stable-asr asr-collections --output /tmp/stable-asr-paper/ASR_COLLECTIONS.md
-stable-asr asr-collections --audit-coverage --output /tmp/stable-asr-paper/ASR_COLLECTION_COVERAGE.md
-stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only
-stable-asr scenario-suite --output /tmp/stable-asr-paper/SCENARIO_SUITE.md
-stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output /tmp/stable-asr-asr-manifest.jsonl --audio-root examples/data --sample-rate 16000
-stable-asr validate-asr-manifest /tmp/stable-asr-asr-manifest.jsonl
-stable-asr inspect-asr-manifest /tmp/stable-asr-asr-manifest.jsonl
-stable-asr asr-to-turn --input /tmp/stable-asr-asr-manifest.jsonl --output /tmp/stable-asr-asr-turn.jsonl --include-incomplete
-stable-asr bootstrap-turn-data --input examples/data/asr_metadata.tsv --output-dir /tmp/stable-asr-bootstrap --audio-root examples/data --sample-rate 16000 --include-incomplete
-stable-asr audit-audio --kind turn --manifest /tmp/stable-asr-synth.jsonl
-stable-asr benchmark-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --warmup 0 --repeat 3 --report /tmp/stable-asr-turn-benchmark.md
-stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-nanoturn --epochs 20
-stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --checkpoint /tmp/stable-asr-nanoturn/checkpoint.pt
-stable-asr export-turn-onnx --checkpoint /tmp/stable-asr-nanoturn/checkpoint.pt --output /tmp/stable-asr-nanoturn/nanoturn.onnx
-stable-asr train-turn --dataset /tmp/stable-asr-synth.jsonl --output-dir /tmp/stable-asr-audio --feature-source audio --epochs 5
-stable-asr reproduce-paper --output-dir /tmp/stable-asr-paper --episodes 12 --seed 5
-python scripts/reproduce_paper.py --config configs/paper/paper_smoke.json --skip-train
-stable-asr paper-table baselines --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-table turn_benchmark --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-table data --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-table asr_manifest_recipe --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-table failure_cases --results /tmp/stable-asr-paper/paper_results.json
-stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl
-stable-asr compare-streaming-asr --input balanced=tests/fixtures/streaming_asr_sample.jsonl --input fast_unstable=tests/fixtures/streaming_asr_fast_unstable_sample.jsonl
-stable-asr sweep-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160
-stable-asr eval-asr-command --name my_asr --command "python your_asr_export.py --output {output}" --output /tmp/stable-asr-command-transcript.jsonl
-stable-asr compare-asr-commands --config examples/configs/asr_command_compare_demo.json --report /tmp/stable-asr-command-compare.md
-stable-asr eval-scenario --episodes 15 --seed 3 --baseline vad_pause --report /tmp/stable-asr-scenario.md
-stable-asr optimize-policy --dataset examples/data/turn_demo.jsonl --baseline vad_pause --output /tmp/stable-asr-policy.json
-stable-asr paper-table streaming --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-table streaming_failures --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-table streaming_sweep --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-table asr_transcript_conversions --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-table scenarios --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-table policy --results /tmp/stable-asr-paper/paper_results.json
-stable-asr paper-figure architecture --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/architecture.svg
-stable-asr paper-figure api_flow --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/api_flow.svg
-stable-asr paper-figure data_registry --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/data_registry.svg
-stable-asr paper-figure voiceworld_timeline --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/voiceworld_timeline.svg
-stable-asr paper-figure policy_state_machine --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/policy_state_machine.svg
-stable-asr paper-figure robustness_heatmap --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/robustness_heatmap.svg
-stable-asr paper-figure latency_quality_pareto --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/latency_quality_pareto.svg
-stable-asr paper-figure baselines --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/baselines.svg
-stable-asr paper-figure latency --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/latency.svg
-stable-asr paper-figure data --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/data.svg
-stable-asr paper-figure streaming --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/streaming.svg
-stable-asr paper-figure scenarios --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/scenarios.svg
-stable-asr paper-figure policy --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/figures/policy.svg
-stable-asr paper-bundle --results /tmp/stable-asr-paper/paper_results.json --output-dir /tmp/stable-asr-paper/artifacts
-stable-asr paper-status --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts --output /tmp/stable-asr-paper/artifacts/PAPER_STATUS.md
-stable-asr paper-case-studies --results /tmp/stable-asr-paper/paper_results.json --output-dir /tmp/stable-asr-paper/artifacts
-stable-asr paper-claim-audit --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts --output-dir /tmp/stable-asr-paper/artifacts
-stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts --output /tmp/stable-asr-paper/artifacts/PAPER_PARITY.md
-stable-asr final-experiments --registry configs/paper/final_experiments.json --output /tmp/stable-asr-paper/artifacts/FINAL_EXPERIMENTS.md
-stable-asr final-config --config configs/final/paper_final.json --output /tmp/stable-asr-paper/artifacts/FINAL_RUN_CONFIG.md
-stable-asr final-config --config configs/final/paper_final.json --scaffold
-stable-asr leaderboard-export --results /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-paper/leaderboard.jsonl --format jsonl
-stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only
-stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --results /tmp/stable-asr-paper/paper_results.json --validate-only
-stable-asr benchmark-suite --output /tmp/stable-asr-paper/BENCHMARK_SUITE.md
-stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
-stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only
-stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --validate-only
-stable-asr final-experiments --registry configs/paper/final_experiments.json --validate-only
-stable-asr final-config --config configs/final/paper_final.json --validate-only
-stable-asr paper-audit --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts
-stable-asr paper-release-smoke --output-dir /tmp/stable-asr-release-smoke
-stable-asr paper-draft --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts --output /tmp/stable-asr-paper/PAPER_DRAFT.md
-stable-asr paper-latex --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts --output /tmp/stable-asr-paper/paper.tex
-stable-asr make-card dataset --input examples/data/turn_demo.jsonl --output /tmp/stable-asr-dataset-card.md
-stable-asr make-card experiment --input /tmp/stable-asr-paper/paper_results.json --output /tmp/stable-asr-experiment-card.md
-stable-asr paper-release-audit --repo-root . --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts --markdown-draft /tmp/stable-asr-paper/PAPER_DRAFT.md --latex-draft /tmp/stable-asr-paper/paper.tex --dataset-card /tmp/stable-asr-dataset-card.md --experiment-card /tmp/stable-asr-experiment-card.md
-python -m pytest
+python -m pip install -e ".[train]"   # optional NanoTurn training
+python -m pip install -e ".[lance]"   # optional Parquet/Lance data backends
 ```
 
-Current M0 functionality:
+## Quick Start
+
+```bash
+# 1. Inspect data and compare turn-taking baselines
+stable-asr doctor
+stable-asr validate-manifest examples/data/turn_demo.jsonl
+stable-asr compare-turn \
+  --dataset examples/data/turn_demo.jsonl \
+  --baseline vad_pause \
+  --baseline text_turn \
+  --report runs/turn_compare.md
+
+# 2. Train and evaluate NanoTurn
+stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
+stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --checkpoint runs/nanoturn/checkpoint.pt
+
+# 3. Generate stable-worldmodel-style paper evidence
+stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
+```
+
+## Data Formats
+
+Stable-ASR uses a small format registry for turn manifests. JSONL is the
+zero-dependency core format; Parquet and Lance are opt-in data-layer backends for
+paper-facing throughput and random-sampling benchmarks.
+
+| Format | Install | Best for |
+| --- | --- | --- |
+| `jsonl` | base package | inspection, fixtures, simple interchange |
+| `parquet` | `stable-asr[data]` or `stable-asr[lance]` | columnar corpus manifests and compact benchmark artifacts |
+| `lance` | `stable-asr[lance]` | random indexed reads, paper data-layer benchmark rows |
+
+```bash
+stable-asr convert examples/data/turn_demo.jsonl runs/turn_demo.parquet
+stable-asr convert examples/data/turn_demo.jsonl runs/turn_demo.lance
+stable-asr benchmark-data \
+  --dataset examples/data/turn_demo.jsonl \
+  --output-dir runs/data_bench \
+  --formats jsonl parquet lance
+```
+
+## VoiceWorld Scenarios
+
+VoiceWorld is the speech interaction counterpart of stable-worldmodel's
+environment suite. The default suite is defined in
+`configs/scenarios/stable_asr_voiceworld_v0.json`.
+
+| Scenario | Expected action |
+| --- | --- |
+| normal question | `take_turn` |
+| incomplete pause | `keep_listening` |
+| listener backchannel | `continue_speaking` |
+| wait or hold command | `hold` |
+| user interruption | `stop_tts_and_listen` |
+| side conversation | `ignore` |
+| ambient speech | `ignore` |
+| noisy far-field speech | `take_turn` |
+| code switching | `take_turn` |
+
+Factors of variation include pause length, SNR, reverb, speaking rate, overlap
+offset, network jitter, far-field distance, and code-switch ratio.
+
+```bash
+stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only
+stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause --report runs/scenario.md
+```
+
+## Baselines And Adapters
+
+| System | Type | Purpose |
+| --- | --- | --- |
+| `rule_endpoint` | baseline | lowest endpointing baseline |
+| `vad_pause` | baseline | industrial pause-threshold endpointing |
+| `text_turn` | baseline | semantic text-only turn baseline |
+| `prediction_manifest` | adapter | SmartTurn/EasyTurn/VAP-style prediction bridge |
+| `nanoturn_pico` | model | trainable lightweight turn/action model |
+| command ASR adapters | adapter | evaluate Whisper, FunASR, WeNet, NeMo, ESPnet, SpeechBrain, icefall, sherpa-onnx, and HF exports without vendoring them |
+
+Reference coverage is tracked in `configs/references/asr_collections.json` and
+`configs/adapters/stable_asr_adapters.json`.
+
+```bash
+stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
+stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
+```
+
+## Paper And Release Smoke
+
+Stable-ASR treats paper artifacts as part of the platform, not a separate
+afterthought.
+
+```bash
+stable-asr reproduce-paper --config configs/paper/paper_smoke.json
+stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
+stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
+stable-asr paper-release-audit \
+  --repo-root . \
+  --results runs/paper/smoke/paper_results.json \
+  --artifacts-dir runs/paper/smoke/artifacts
+```
+
+`paper-release-smoke` writes `paper_results.json`, tables, figures, registry
+artifacts, case studies, claim evidence, roadmap status, `PAPER_DRAFT.md`,
+`paper.tex`, dataset/experiment cards, and `RELEASE_AUDIT.md`.
+
+## Documentation
+
+See [docs/index.md](docs/index.md) for the full documentation. A MkDocs config
+is provided in `mkdocs.yaml`.
+
+## Current M0 Functionality
 
 - installable package
 - `stable-asr` CLI
