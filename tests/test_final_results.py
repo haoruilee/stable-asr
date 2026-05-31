@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 
 from stable_asr.cli import main
+from stable_asr.paper.artifacts import paper_artifact_bundle
+from stable_asr.paper.audit import audit_paper_artifacts
 from stable_asr.paper.final_results import assemble_final_paper_results
 from stable_asr.paper.tables import paper_table
 
@@ -17,6 +19,9 @@ def test_assemble_final_paper_results_writes_table_compatible_schema(tmp_path: P
     assert output.exists()
     assert "rule_endpoint" in paper_table(output, "baselines")
     assert "whisper_final" in paper_table(output, "streaming")
+    bundle = paper_artifact_bundle(output, tmp_path / "artifacts")
+    audit = audit_paper_artifacts(output, artifacts_dir=bundle.output_dir)
+    assert audit.ok
 
 
 def test_final_results_cli_reports_missing_inputs(tmp_path: Path, capsys) -> None:
@@ -73,6 +78,7 @@ def _write_final_result_inputs(tmp_path: Path) -> dict[str, object]:
     _write_json(tmp_path / "runs/final/reports/policy_search.json", _policy_search())
     _write_json(tmp_path / "runs/final/reports/asr_command_compare.json", _streaming_comparison())
     _write_json(tmp_path / "runs/final/reports/whisper_sweep.json", _streaming_sweep())
+    _write_json(tmp_path / "runs/final/reports/asr_transcript_conversions.json", _asr_transcript_conversions())
     _write_json(tmp_path / "runs/final/nanoturn/metrics.json", {"accuracy": 1.0})
     return config
 
@@ -126,6 +132,7 @@ def _minimal_config() -> dict[str, object]:
             "policy_search": "runs/final/reports/policy_search.json",
             "streaming_comparison": "runs/final/reports/asr_command_compare.json",
             "streaming_sweep": "runs/final/reports/whisper_sweep.json",
+            "asr_transcript_conversions": "runs/final/reports/asr_transcript_conversions.json",
             "nanoturn": "runs/final/nanoturn/metrics.json",
         },
         "commands": ["stable-asr final-results --config configs/final/paper_final.json"],
@@ -157,6 +164,7 @@ def _turn_benchmark() -> dict[str, object]:
 
 def _scenarios() -> dict[str, object]:
     return {
+        "factor_summary": {"snr_db": {"20": 1}},
         "by_scenario": {
             "normal_question": {
                 "examples": [{"id": "turn1"}],
@@ -217,6 +225,25 @@ def _streaming_sweep() -> dict[str, object]:
             }
         ]
     }
+
+
+def _asr_transcript_conversions() -> list[dict[str, object]]:
+    metrics = {
+        "records": 1,
+        "wer": 0.0,
+        "cer": 0.0,
+        "rtf": 0.2,
+        "first_partial_latency": 0.1,
+        "final_latency": 0.2,
+        "endpoint_delay": 0.0,
+        "partial_revision_rate": 0.0,
+        "stable_prefix_ratio": 1.0,
+        "timestamp_drift": 0.0,
+    }
+    return [
+        {"schema": "whisper", "records": 1, "metrics": metrics},
+        {"schema": "funasr", "records": 1, "metrics": metrics},
+    ]
 
 
 def _data_row() -> dict[str, object]:

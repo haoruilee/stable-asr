@@ -119,6 +119,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "policy_search": "runs/final/reports/policy_search.json",
         "streaming_comparison": "runs/final/reports/asr_command_compare.json",
         "streaming_sweep": "runs/final/reports/whisper_sweep.json",
+        "asr_transcript_conversions": "runs/final/reports/asr_transcript_conversions.json",
         "nanoturn": "runs/final/nanoturn/metrics.json",
     },
     "commands": [

@@ -20,6 +20,7 @@ DEFAULT_RESULT_INPUTS: dict[str, str] = {
     "policy_search": "runs/final/reports/policy_search.json",
     "streaming_comparison": "runs/final/reports/asr_command_compare.json",
     "streaming_sweep": "runs/final/reports/whisper_sweep.json",
+    "asr_transcript_conversions": "runs/final/reports/asr_transcript_conversions.json",
     "nanoturn": "runs/final/nanoturn/metrics.json",
 }
 
@@ -179,6 +180,7 @@ def _build_results(
             "artifact_version": "final_v0",
             "config_id": config["id"],
             "config_version": config["version"],
+            "episodes": len(turn_records),
             "seed": config["seed"],
             "result_inputs": result_inputs,
         },
@@ -195,13 +197,13 @@ def _build_results(
         },
         "baselines": _dict(payloads.get("baselines")),
         "turn_benchmarks": _dict(payloads.get("turn_benchmarks")),
-        "scenarios": _dict(payloads.get("scenarios")),
+        "scenarios": _scenario_results(payloads.get("scenarios")),
         "policy_search": _dict(payloads.get("policy_search")),
         "streaming_asr": {
             "metrics": _first_streaming_metrics(payloads.get("streaming_comparison")),
             "adapter_comparison": _dict(payloads.get("streaming_comparison")),
             "schedule_sweep": _dict(payloads.get("streaming_sweep")),
-            "asr_transcript_conversions": [],
+            "asr_transcript_conversions": _list(payloads.get("asr_transcript_conversions")),
             "command_adapter": {},
         },
         "nanoturn": {
@@ -232,6 +234,13 @@ def _first_streaming_metrics(payload: Any) -> dict[str, Any]:
     return {}
 
 
+def _scenario_results(payload: Any) -> dict[str, Any]:
+    result = _dict(payload)
+    if "factor_summary" not in result:
+        result["factor_summary"] = {}
+    return result
+
+
 def _load_json(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -247,6 +256,10 @@ def _missing_check(name: str, path: Path, detail: str) -> FinalResultsInputCheck
 
 def _dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
+
+
+def _list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
 
 
 def _resolve(value: str, *, root: Path) -> Path:
