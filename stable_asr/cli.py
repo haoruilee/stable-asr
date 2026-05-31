@@ -75,6 +75,7 @@ from stable_asr.paper.final_experiments import (
     load_final_experiments,
     validate_final_experiments,
 )
+from stable_asr.paper.final_results import assemble_final_paper_results
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.leaderboard import export_leaderboard
 from stable_asr.paper.latex import paper_latex
@@ -879,6 +880,17 @@ def build_parser() -> argparse.ArgumentParser:
     final_config_parser.add_argument("--scenario-suite", type=Path, help="Scenario suite for --audit-voiceworld-real.")
     final_config_parser.add_argument("--min-scenario-records", type=int, default=1)
     final_config_parser.add_argument("--min-asr-command-adapters", type=int, default=2)
+
+    final_results_parser = subparsers.add_parser(
+        "final-results",
+        help="Assemble final-scale experiment JSON outputs into paper_results.json.",
+    )
+    final_results_parser.add_argument("--config", type=Path, help="Optional final run config JSON path.")
+    final_results_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    final_results_parser.add_argument("--output", type=Path, help="Optional paper_results.json output path.")
+    final_results_parser.add_argument("--allow-missing", action="store_true", help="Write explicit placeholders for missing inputs.")
+    final_results_parser.add_argument("--validate-only", action="store_true", help="Audit inputs without writing paper_results.json.")
+    final_results_parser.add_argument("--json", action="store_true")
 
     leaderboard_parser = subparsers.add_parser(
         "leaderboard-export",
@@ -2193,6 +2205,24 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         return 0
+
+    if args.command == "final-results":
+        try:
+            report = assemble_final_paper_results(
+                args.config,
+                repo_root=args.repo_root,
+                output_path=args.output,
+                allow_missing=args.allow_missing,
+                write=not args.validate_only,
+            )
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(report.to_text())
+        return 0 if report.ok or args.allow_missing else 1
 
     if args.command == "leaderboard-export":
         try:

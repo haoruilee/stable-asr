@@ -61,6 +61,7 @@ stable-asr final-config --config configs/final/paper_final.json --audit-voicewor
 stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands
 # Expected to report NOT_READY until final corpora, splits, external predictions, real VoiceWorld, and raw ASR exports exist.
 stable-asr final-config --config configs/final/paper_final.json --check-files
+stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
 stable-asr leaderboard-export --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/leaderboard.jsonl
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only
 stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only

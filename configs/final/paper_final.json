@@ -86,6 +86,16 @@
     "dataset_card": "runs/final/DATASET_CARD.md",
     "experiment_card": "runs/final/EXPERIMENT_CARD.md"
   },
+  "result_inputs": {
+    "data_benchmark": "runs/final/reports/data_benchmark.json",
+    "baselines": "runs/final/reports/baselines.json",
+    "turn_benchmarks": "runs/final/reports/turn_benchmarks.json",
+    "scenarios": "runs/final/reports/scenarios.json",
+    "policy_search": "runs/final/reports/policy_search.json",
+    "streaming_comparison": "runs/final/reports/asr_command_compare.json",
+    "streaming_sweep": "runs/final/reports/whisper_sweep.json",
+    "nanoturn": "runs/final/nanoturn/metrics.json"
+  },
   "commands": [
     "stable-asr final-config --config configs/final/paper_final.json --validate-only",
     "stable-asr final-config --config configs/final/paper_final.json --prepare-inputs",
@@ -101,6 +111,7 @@
     "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
     "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
     "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
+    "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
     "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
     "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final"
   ]

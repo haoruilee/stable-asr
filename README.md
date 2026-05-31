@@ -277,6 +277,7 @@ is provided in `mkdocs.yaml`.
 - `final-config --prepare-external-predictions` for normalizing configured SmartTurn/EasyTurn-style prediction exports
 - `final-config --audit-voiceworld-real` for checking final real VoiceWorld scenario and factor coverage
 - `final-config --audit-asr-commands` for checking final command-backed ASR comparison inputs without executing the adapters
+- `final-results` for assembling audited final-scale JSON outputs into `runs/final/paper_results.json`
 - `leaderboard-export` for JSONL/CSV metric rows
 - machine-readable benchmark suite definition in `configs/benchmarks/stable_asr_v0.json`
 - `benchmark-suite` for validating and rendering benchmark suite definitions

@@ -111,6 +111,16 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "dataset_card": "runs/final/DATASET_CARD.md",
         "experiment_card": "runs/final/EXPERIMENT_CARD.md",
     },
+    "result_inputs": {
+        "data_benchmark": "runs/final/reports/data_benchmark.json",
+        "baselines": "runs/final/reports/baselines.json",
+        "turn_benchmarks": "runs/final/reports/turn_benchmarks.json",
+        "scenarios": "runs/final/reports/scenarios.json",
+        "policy_search": "runs/final/reports/policy_search.json",
+        "streaming_comparison": "runs/final/reports/asr_command_compare.json",
+        "streaming_sweep": "runs/final/reports/whisper_sweep.json",
+        "nanoturn": "runs/final/nanoturn/metrics.json",
+    },
     "commands": [
         "stable-asr final-config --config configs/final/paper_final.json --validate-only",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-inputs",
@@ -126,6 +136,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
+        "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
         "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
     ],
@@ -678,6 +689,14 @@ def validate_final_run_config(config: dict[str, Any]) -> FinalRunConfigValidatio
             if key not in artifacts:
                 errors.append(f"artifacts missing {key}")
 
+    result_inputs = config.get("result_inputs", {})
+    if result_inputs is not None and not isinstance(result_inputs, dict):
+        errors.append("result_inputs must be an object")
+    elif isinstance(result_inputs, dict):
+        for key, value in result_inputs.items():
+            if not isinstance(value, str) or not value:
+                errors.append(f"result_inputs {key} must be a non-empty string")
+
     commands = config.get("commands")
     if not isinstance(commands, list) or not commands:
         errors.append("commands must be a non-empty list")
@@ -743,6 +762,9 @@ def audit_final_run_files(config: dict[str, Any], *, repo_root: str | Path = "."
     for name, path in config.get("artifacts", {}).items():
         checks.append(_planned_check(f"artifact:{name}", path, root=root, kind="output"))
 
+    for name, path in config.get("result_inputs", {}).items():
+        checks.append(_planned_check(f"result_input:{name}", path, root=root, kind="output"))
+
     return FinalRunFileAudit(ok=all(check.ok for check in checks), checks=checks)
 
 
@@ -781,6 +803,9 @@ def final_run_config_markdown(config: dict[str, Any]) -> str:
         lines.append("No external turn predictions configured.")
     lines.extend(["", "## Artifacts", ""])
     for name, path in config["artifacts"].items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Result Inputs", ""])
+    for name, path in config.get("result_inputs", {}).items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Commands", ""])
     lines.extend(f"```bash\n{command}\n```" for command in config["commands"])
@@ -887,6 +912,8 @@ def scaffold_final_run(config: dict[str, Any], *, repo_root: str | Path = ".") -
         target = _resolve(str(path), root=root)
         parent = target if target.suffix == "" else target.parent
         entries.append(_ensure_dir(parent, f"artifact:{name}:parent"))
+    for name, path in config.get("result_inputs", {}).items():
+        entries.append(_ensure_dir(_resolve(str(path), root=root).parent, f"result_input:{name}:parent"))
 
     return FinalRunScaffoldReport(output_dir=str(output_dir), entries=entries)
 

@@ -172,6 +172,7 @@
         "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
+        "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
         "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
         "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts"
       ],
