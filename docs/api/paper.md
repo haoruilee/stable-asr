@@ -26,6 +26,7 @@ Core entry points:
 - `stable_asr.paper.leaderboard.validate_leaderboard_jsonl`
 - `stable_asr.paper.adapter_pack.build_adapter_pack`
 - `stable_asr.paper.benchmark_pack.build_benchmark_pack`
+- `stable_asr.paper.scenario_pack.build_scenario_pack`
 - `stable_asr.paper.submissions.build_turn_submission`
 - `stable_asr.paper.submissions.build_streaming_submission`
 - `stable_asr.paper.submissions.index_submission_directory`

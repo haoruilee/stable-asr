@@ -50,6 +50,14 @@ cd runs/adapter_pack
 bash commands.sh
 ```
 
+## VoiceWorld Scenario Pack
+
+```bash
+stable-asr scenario-pack --output-dir runs/scenario_pack
+cd runs/scenario_pack
+bash commands.sh
+```
+
 ## Streaming ASR
 
 ```bash

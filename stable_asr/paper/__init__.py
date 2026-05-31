@@ -56,6 +56,7 @@ from stable_asr.paper.provenance import (
     write_paper_provenance,
 )
 from stable_asr.paper.release_smoke import PaperReleaseSmokeResult, run_paper_release_smoke
+from stable_asr.paper.scenario_pack import ScenarioPackReport, build_scenario_pack
 from stable_asr.paper.submissions import SubmissionIndexReport, index_submission_directory
 from stable_asr.paper.suites import (
     DEFAULT_BENCHMARK_SUITE,
@@ -99,6 +100,7 @@ __all__ = [
     "FinalEvidenceMatrixReport",
     "LeaderboardMergeReport",
     "SubmissionIndexReport",
+    "ScenarioPackReport",
     "GitProvenance",
     "PaperProvenanceReport",
     "ProvenanceFile",
@@ -109,6 +111,7 @@ __all__ = [
     "build_final_run_action_plan",
     "build_adapter_pack",
     "build_benchmark_pack",
+    "build_scenario_pack",
     "dataset_card",
     "experiment_card",
     "model_card",

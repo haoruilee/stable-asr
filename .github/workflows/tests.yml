@@ -47,6 +47,10 @@ jobs:
           bash commands.sh
           cd "$GITHUB_WORKSPACE"
           stable-asr adapter-pack --output-dir /tmp/stable-asr-adapter-pack
+          stable-asr scenario-pack --output-dir /tmp/stable-asr-scenario-pack
+          cd /tmp/stable-asr-scenario-pack
+          bash commands.sh
+          cd "$GITHUB_WORKSPACE"
       - name: Smoke test wheel install
         run: |
           python -m pip wheel . --no-deps -w /tmp/stable-asr-wheel

@@ -170,6 +170,20 @@ def test_adapter_pack_cli(capsys, tmp_path) -> None:
     assert (output_dir / "configs" / "asr_command_compare.json").exists()
 
 
+def test_scenario_pack_cli(capsys, tmp_path) -> None:
+    output_dir = tmp_path / "scenario_pack"
+    code = main(["scenario-pack", "--output-dir", str(output_dir)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "scenario_pack: OK" in captured.out
+    assert (output_dir / "README.md").exists()
+    assert (output_dir / "COMMANDS.md").exists()
+    assert (output_dir / "configs" / "scenario_suite.json").exists()
+    assert (output_dir / "data" / "voiceworld_metadata.tsv").exists()
+    assert (output_dir / "data" / "voiceworld_manifest.jsonl").exists()
+
+
 def test_labels_cli(capsys) -> None:
     code = main(["labels"])
 

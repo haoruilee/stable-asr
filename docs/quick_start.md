@@ -45,6 +45,7 @@ stable-asr submission-index \
   --root runs/submissions \
   --output-dir runs/submissions/leaderboard
 stable-asr adapter-pack --output-dir runs/adapter_pack
+stable-asr scenario-pack --output-dir runs/scenario_pack
 
 # 4. Generate paper-facing evidence
 stable-asr doctor --check-release-env

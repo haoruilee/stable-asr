@@ -28,6 +28,7 @@ streaming ASR and voice-agent control:
 - leaderboard validation for external JSONL benchmark submissions
 - benchmark starter packs for external contributors
 - adapter starter packs for external ASR systems
+- VoiceWorld scenario starter packs for external scenario contributors
 - machine-readable roadmap status for milestone evidence and planned final-scale work
 - repository doctor for environment, config, and final-input readiness checks
 - paper tables, figures, bundles, audits, and drafts
@@ -55,6 +56,7 @@ stable-asr asr-collections --audit-coverage
 stable-asr asr-collections --audit-readiness
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr adapter-pack --output-dir runs/adapter_pack
+stable-asr scenario-pack --output-dir runs/scenario_pack
 stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only
 stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output runs/asr_manifest.jsonl --audio-root examples/data --sample-rate 16000
 stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl

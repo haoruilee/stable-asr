@@ -25,6 +25,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "benchmark_pack:commands_script" in bundle.starter_packs
     assert "adapter_pack:readme" in bundle.starter_packs
     assert "adapter_pack:command_config" in bundle.starter_packs
+    assert "scenario_pack:readme" in bundle.starter_packs
+    assert "scenario_pack:metadata" in bundle.starter_packs
     assert set(bundle.data_sources) == {"json", "markdown"}
     assert set(bundle.adapter_registry) == {"json", "markdown"}
     assert set(bundle.model_registry) == {"json", "markdown"}
@@ -73,6 +75,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Starter Packs" in Path(bundle.index_path).read_text(encoding="utf-8")
     assert "Stable-ASR Benchmark Starter Pack" in Path(bundle.starter_packs["benchmark_pack:readme"]).read_text(encoding="utf-8")
     assert "Stable-ASR External ASR Adapter Pack" in Path(bundle.starter_packs["adapter_pack:readme"]).read_text(encoding="utf-8")
+    assert "Stable-ASR VoiceWorld Scenario Pack" in Path(bundle.starter_packs["scenario_pack:readme"]).read_text(encoding="utf-8")
     assert "synthetic_voiceworld" in Path(bundle.data_sources["markdown"]).read_text(encoding="utf-8")
     assert "command_streaming_asr" in Path(bundle.adapter_registry["markdown"]).read_text(encoding="utf-8")
     assert "nanoturn_pico" in Path(bundle.model_registry["markdown"]).read_text(encoding="utf-8")

@@ -115,6 +115,7 @@ from stable_asr.paper.parity import (
     paper_parity_markdown,
     validate_paper_parity_checklist,
 )
+from stable_asr.paper.scenario_pack import build_scenario_pack
 from stable_asr.paper.status import paper_status, write_paper_status_markdown
 from stable_asr.paper.submissions import build_streaming_submission, build_turn_submission, index_submission_directory
 from stable_asr.paper.suites import (
@@ -1200,6 +1201,14 @@ def build_parser() -> argparse.ArgumentParser:
     adapter_pack_parser.add_argument("--asr-collections", type=Path, help="Optional ASR collections JSON path.")
     adapter_pack_parser.add_argument("--schema-registry", type=Path, help="Optional schema registry JSON path.")
     adapter_pack_parser.add_argument("--json", action="store_true")
+
+    scenario_pack_parser = subparsers.add_parser(
+        "scenario-pack",
+        help="Create a VoiceWorld scenario starter pack with suite metadata, fixtures, and runnable evaluation commands.",
+    )
+    scenario_pack_parser.add_argument("--output-dir", type=Path, required=True)
+    scenario_pack_parser.add_argument("--suite", type=Path, help="Optional scenario suite JSON path.")
+    scenario_pack_parser.add_argument("--json", action="store_true")
 
     paper_audit_parser = subparsers.add_parser(
         "paper-audit",
@@ -3008,6 +3017,24 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
         else:
             print(f"adapter_pack: {'OK' if report.ok else 'FAILED'}")
+            print(f"output_dir: {report.output_dir}")
+            print(f"readme: {report.files.get('readme')}")
+            print(f"commands: {report.files.get('commands_markdown')}")
+        return 0 if report.ok else 1
+
+    if args.command == "scenario-pack":
+        try:
+            report = build_scenario_pack(
+                args.output_dir,
+                suite_path=args.suite,
+            )
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(f"scenario_pack: {'OK' if report.ok else 'FAILED'}")
             print(f"output_dir: {report.output_dir}")
             print(f"readme: {report.files.get('readme')}")
             print(f"commands: {report.files.get('commands_markdown')}")
