@@ -838,7 +838,7 @@ Verified locally:
 
 ```text
 python3 -m pytest
-97 passed
+test suite passes
 
 python3 -m stable_asr validate-manifest examples/data/turn_demo.jsonl
 OK: examples/data/turn_demo.jsonl contains 4 valid record(s).
@@ -854,7 +854,7 @@ Goal: deliver the first useful slice: turn-taking and endpointing.
 Current status:
 
 ```text
-in progress
+implemented structurally
 ```
 
 Deliverables:
@@ -968,7 +968,7 @@ final_loss: 1.360426
 final_accuracy: 0.3750
 
 python3 -m pytest
-97 passed
+test suite passes
 ```
 
 ### v0.2: Scenario Evaluation
@@ -978,7 +978,7 @@ Goal: evaluate turn models as interaction controllers, not just classifiers.
 Current status:
 
 ```text
-in progress
+implemented structurally
 ```
 
 Scenarios:
@@ -1048,7 +1048,7 @@ Goal: add the data-system contribution needed for a platform paper.
 Current status:
 
 ```text
-started
+implemented structurally; final-scale throughput evidence pending
 ```
 
 Deliverables:
@@ -1112,7 +1112,7 @@ python3 -m stable_asr benchmark-data --dataset examples/data/turn_demo.jsonl --o
 ]
 
 python3 -m stable_asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only
-OK: stable_asr_sources_v0 (10 source(s))
+OK: stable_asr_sources_v0 (11 source(s))
 
 python3 -m stable_asr convert-external --schema easyturn --input tests/fixtures/easyturn_sample.jsonl --output /tmp/stable-asr-external/easyturn.jsonl
 converted 3 external record(s) from tests/fixtures/easyturn_sample.jsonl to /tmp/stable-asr-external/easyturn.jsonl
@@ -1131,7 +1131,7 @@ Goal: compare existing streaming ASR systems under product-relevant metrics.
 Current status:
 
 ```text
-started
+implemented structurally; real external-system exports pending
 ```
 
 Adapters:
@@ -1261,7 +1261,7 @@ Goal: freeze the experiments needed for the first arXiv paper.
 Current status:
 
 ```text
-started
+implemented structurally; final-scale experiments pending
 ```
 
 Deliverables:
@@ -1413,7 +1413,7 @@ Goal: prepare the first stable-worldmodel-style paper draft.
 Current status:
 
 ```text
-started
+draft pipeline implemented; release tag and final paper evidence pending
 ```
 
 Deliverables:
@@ -1467,10 +1467,10 @@ stable-asr leaderboard-export --results runs/paper/smoke/paper_results.json --ou
 leaderboard: runs/paper/smoke/leaderboard.jsonl
 
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only
-OK: stable_asr_v0 (7 task(s))
+OK: stable_asr_v0 (8 task(s))
 
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --results runs/paper/smoke/paper_results.json --validate-only
-OK: stable_asr_v0 (7 task(s)); coverage=OK
+OK: stable_asr_v0 (8 task(s)); coverage=OK
 ```
 
 Paper claim:
