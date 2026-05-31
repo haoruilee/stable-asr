@@ -1402,6 +1402,48 @@ def test_compare_streaming_asr_cli_rejects_bad_input(capsys) -> None:
     assert "ADAPTER=PATH" in captured.err
 
 
+def test_streaming_submission_cli(tmp_path, capsys) -> None:
+    output_dir = tmp_path / "streaming_submission"
+    code = main(
+        [
+            "streaming-submission",
+            "--input",
+            "tests/fixtures/streaming_asr_sample.jsonl",
+            "--system",
+            "streaming_fixture",
+            "--output-dir",
+            str(output_dir),
+            "--slice",
+            "adapter",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "streaming_submission: OK" in captured.out
+    assert (output_dir / "submission.json").exists()
+    assert (output_dir / "SUBMISSION.md").exists()
+    assert (output_dir / "leaderboard.jsonl").exists()
+
+    bad_input = tmp_path / "bad_streaming.jsonl"
+    bad_input.write_text('{"id":"bad"}\n', encoding="utf-8")
+    bad_code = main(
+        [
+            "streaming-submission",
+            "--input",
+            str(bad_input),
+            "--system",
+            "bad_streaming",
+            "--output-dir",
+            str(tmp_path / "bad_streaming_submission"),
+        ]
+    )
+
+    bad_output = capsys.readouterr()
+    assert bad_code == 1
+    assert "streaming_submission: FAILED" in bad_output.out
+
+
 def test_sweep_streaming_asr_cli(tmp_path, capsys) -> None:
     report = tmp_path / "streaming_sweep.md"
     code = main(

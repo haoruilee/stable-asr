@@ -109,7 +109,7 @@ from stable_asr.paper.parity import (
     validate_paper_parity_checklist,
 )
 from stable_asr.paper.status import paper_status, write_paper_status_markdown
-from stable_asr.paper.submissions import build_turn_submission
+from stable_asr.paper.submissions import build_streaming_submission, build_turn_submission
 from stable_asr.paper.suites import (
     audit_benchmark_required_artifacts,
     audit_benchmark_suite_coverage,
@@ -740,6 +740,17 @@ def build_parser() -> argparse.ArgumentParser:
     streaming_compare_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     streaming_compare_parser.add_argument("--json", action="store_true")
     streaming_compare_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
+
+    streaming_submission_parser = subparsers.add_parser(
+        "streaming-submission",
+        help="Build an auditable external streaming ASR submission package.",
+    )
+    streaming_submission_parser.add_argument("--input", type=Path, required=True, help="Stable-ASR streaming ASR JSONL.")
+    streaming_submission_parser.add_argument("--system", required=True, help="System name shown in leaderboard rows.")
+    streaming_submission_parser.add_argument("--output-dir", type=Path, required=True)
+    streaming_submission_parser.add_argument("--slice", default="submission", help="Leaderboard slice name.")
+    streaming_submission_parser.add_argument("--suite", type=Path, help="Optional benchmark suite JSON path.")
+    streaming_submission_parser.add_argument("--json", action="store_true")
 
     streaming_sweep_parser = subparsers.add_parser(
         "sweep-streaming-asr",
@@ -2079,6 +2090,27 @@ def main(argv: list[str] | None = None) -> int:
             if args.report:
                 print(f"report: {args.report}")
         return 0
+
+    if args.command == "streaming-submission":
+        try:
+            report = build_streaming_submission(
+                input_path=args.input,
+                output_dir=args.output_dir,
+                system=args.system,
+                slice_name=args.slice,
+                suite_path=args.suite,
+            )
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(f"streaming_submission: {'OK' if report.ok else 'FAILED'}")
+            print(f"submission: {report.artifacts.manifest}")
+            print(f"summary: {report.artifacts.summary_markdown}")
+            print(f"leaderboard: {report.artifacts.leaderboard['jsonl']}")
+        return 0 if report.ok else 1
 
     if args.command == "sweep-streaming-asr":
         try:

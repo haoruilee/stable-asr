@@ -255,6 +255,7 @@ is provided in `mkdocs.yaml`.
 - `StreamingASRAdapter` protocol and `TranscriptJSONLAdapter` implementation
 - `eval-streaming-asr` for WER/CER/RTF, partial stability, endpoint delay, and timestamp drift metrics
 - `compare-streaming-asr` for multi-adapter streaming ASR comparison
+- `streaming-submission` for packaging external streaming ASR traces with schema validation, metrics, and leaderboard rows
 - `sweep-streaming-asr` for chunk-size and lookahead sensitivity
 - `eval-asr-command` for dependency-light external ASR command adapters
 - `compare-asr-commands` for JSON-configured multi-system command-backed ASR comparisons

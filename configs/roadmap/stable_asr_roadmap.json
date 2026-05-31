@@ -150,6 +150,7 @@
         "stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only",
         "stable-asr validate-schema-file --input examples/data/turn_demo.jsonl --schema-id stable_asr.turn_manifest_record.v0",
         "stable-asr turn-submission --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl --system oracle_fixture --output-dir runs/submissions/oracle_fixture",
+        "stable-asr streaming-submission --input tests/fixtures/streaming_asr_sample.jsonl --system streaming_fixture --output-dir runs/submissions/streaming_fixture",
         "stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts"
       ],
       "success_criteria": [
@@ -158,7 +159,8 @@
         "leaderboard exports are generated from paper result artifacts",
         "external data and artifact contracts are published as versioned JSON Schemas",
         "JSON/JSONL artifacts can be validated directly against those contracts",
-        "external turn model submissions can produce auditable validation, evaluation, and leaderboard packages"
+        "external turn model submissions can produce auditable validation, evaluation, and leaderboard packages",
+        "external streaming ASR submissions can produce auditable validation, evaluation, and leaderboard packages"
       ]
     },
     {

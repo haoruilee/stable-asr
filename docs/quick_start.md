@@ -35,7 +35,13 @@ stable-asr turn-submission \
   --output-dir runs/submissions/oracle_fixture
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
 
-# 3. Generate paper-facing evidence
+# 3. Package a streaming ASR trace for leaderboard-style review
+stable-asr streaming-submission \
+  --input tests/fixtures/streaming_asr_sample.jsonl \
+  --system streaming_fixture \
+  --output-dir runs/submissions/streaming_fixture
+
+# 4. Generate paper-facing evidence
 stable-asr doctor --check-release-env
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 ```

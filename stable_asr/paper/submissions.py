@@ -11,14 +11,17 @@ from stable_asr.data.registry import TURN_FORMATS, load_turn_records
 from stable_asr.eval.report import dict_table
 from stable_asr.eval.turn_eval import TurnEvalReport, evaluate_turn_records
 from stable_asr.models.adapters import TurnPredictionManifestAdapter, validate_turn_prediction_jsonl
+from stable_asr.models.adapters.transcript import load_streaming_transcript_jsonl
 from stable_asr.models.adapters.prediction_audit import TurnPredictionValidationReport
 from stable_asr.paper.leaderboard import LeaderboardRow, validate_leaderboard_jsonl
 from stable_asr.paper.suites import load_benchmark_suite
 from stable_asr.schema_validation import SchemaFileValidationReport, validate_schema_file
+from stable_asr.streaming.metrics import StreamingASRReport, evaluate_streaming_records
 from stable_asr.turn.policy import TurnPolicy, TurnPolicyConfig
 
 
 TURN_SUBMISSION_VERSION = "turn_submission_v0"
+STREAMING_SUBMISSION_VERSION = "streaming_submission_v0"
 
 
 @dataclass(frozen=True)
@@ -116,6 +119,91 @@ class TurnSubmissionReport:
                 f"- records: `{self.records}`",
                 f"- schema_validation: `{'OK' if self.schema_validation.ok else 'FAILED'}`",
                 f"- prediction_validation: `{'OK' if self.prediction_validation.ok else 'FAILED'}`",
+                f"- leaderboard_validation: `{self.leaderboard_validation_ok}`",
+                "",
+                "## Metrics",
+                "",
+                dict_table(metric_rows) if metric_rows else "No metrics; validation failed before evaluation.",
+                "",
+                "## Artifacts",
+                "",
+                dict_table(artifact_rows),
+                "",
+            ]
+        )
+
+
+@dataclass(frozen=True)
+class StreamingSubmissionArtifacts:
+    output_dir: str
+    manifest: str
+    summary_markdown: str
+    schema_validation: dict[str, str]
+    evaluation: dict[str, str]
+    leaderboard: dict[str, str]
+    leaderboard_validation: dict[str, str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "output_dir": self.output_dir,
+            "manifest": self.manifest,
+            "summary_markdown": self.summary_markdown,
+            "schema_validation": self.schema_validation,
+            "evaluation": self.evaluation,
+            "leaderboard": self.leaderboard,
+            "leaderboard_validation": self.leaderboard_validation,
+        }
+
+
+@dataclass(frozen=True)
+class StreamingSubmissionReport:
+    ok: bool
+    system: str
+    input_path: str
+    slice_name: str
+    records: int
+    schema_validation: SchemaFileValidationReport
+    evaluation: StreamingASRReport | None
+    leaderboard_validation_ok: bool | None
+    artifacts: StreamingSubmissionArtifacts
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "version": STREAMING_SUBMISSION_VERSION,
+            "system": self.system,
+            "input_path": self.input_path,
+            "slice": self.slice_name,
+            "records": self.records,
+            "schema_validation": self.schema_validation.to_dict(),
+            "evaluation": self.evaluation.to_dict() if self.evaluation is not None else None,
+            "leaderboard_validation_ok": self.leaderboard_validation_ok,
+            "artifacts": self.artifacts.to_dict(),
+        }
+
+    def to_markdown(self) -> str:
+        metric_rows = _streaming_metric_table(self.evaluation)
+        artifacts = self.artifacts.to_dict()
+        artifact_rows = [
+            {"section": section, "path": value}
+            for section, value in artifacts.items()
+            if isinstance(value, str)
+        ]
+        for section, paths in artifacts.items():
+            if isinstance(paths, dict):
+                for name, path in paths.items():
+                    artifact_rows.append({"section": f"{section}:{name}", "path": path})
+
+        return "\n".join(
+            [
+                "# Stable-ASR Streaming Submission",
+                "",
+                f"- status: `{'OK' if self.ok else 'FAILED'}`",
+                f"- system: `{self.system}`",
+                f"- input: `{self.input_path}`",
+                f"- slice: `{self.slice_name}`",
+                f"- records: `{self.records}`",
+                f"- schema_validation: `{'OK' if self.schema_validation.ok else 'FAILED'}`",
                 f"- leaderboard_validation: `{self.leaderboard_validation_ok}`",
                 "",
                 "## Metrics",
@@ -242,6 +330,103 @@ def build_turn_submission(
     return report
 
 
+def build_streaming_submission(
+    *,
+    input_path: str | Path,
+    output_dir: str | Path,
+    system: str,
+    slice_name: str = "submission",
+    suite_path: str | Path | None = None,
+) -> StreamingSubmissionReport:
+    """Build an auditable streaming ASR submission package."""
+
+    if not system:
+        raise ValueError("system must be a non-empty string")
+    if not slice_name:
+        raise ValueError("slice_name must be a non-empty string")
+
+    input_path = Path(input_path)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    schema_validation = validate_schema_file(
+        input_path,
+        schema_id="stable_asr.streaming_asr_record.v0",
+    )
+    artifacts = StreamingSubmissionArtifacts(
+        output_dir=str(output_dir),
+        manifest=str(output_dir / "submission.json"),
+        summary_markdown=str(output_dir / "SUBMISSION.md"),
+        schema_validation={
+            "json": str(output_dir / "schema_validation.json"),
+            "markdown": str(output_dir / "SCHEMA_VALIDATION.md"),
+        },
+        evaluation={
+            "json": str(output_dir / "streaming_eval.json"),
+            "markdown": str(output_dir / "STREAMING_EVAL.md"),
+        },
+        leaderboard={
+            "jsonl": str(output_dir / "leaderboard.jsonl"),
+        },
+        leaderboard_validation={
+            "json": str(output_dir / "leaderboard_validation.json"),
+            "markdown": str(output_dir / "LEADERBOARD_VALIDATION.md"),
+        },
+    )
+    _write_json(artifacts.schema_validation["json"], schema_validation.to_dict())
+    _write_text(artifacts.schema_validation["markdown"], schema_validation.to_markdown())
+
+    evaluation: StreamingASRReport | None = None
+    leaderboard_validation_ok: bool | None = None
+    records = schema_validation.records
+    if schema_validation.ok:
+        streaming_records = load_streaming_transcript_jsonl(input_path)
+        records = len(streaming_records)
+        evaluation = evaluate_streaming_records(streaming_records)
+        _write_json(artifacts.evaluation["json"], evaluation.to_dict())
+        _write_text(artifacts.evaluation["markdown"], _streaming_report_markdown(evaluation))
+
+        rows = _streaming_leaderboard_rows(
+            evaluation,
+            system=system,
+            slice_name=slice_name,
+            source=str(input_path),
+        )
+        _write_leaderboard_jsonl(artifacts.leaderboard["jsonl"], rows)
+        suite = load_benchmark_suite(suite_path) if suite_path is not None else load_benchmark_suite()
+        leaderboard_validation = validate_leaderboard_jsonl(artifacts.leaderboard["jsonl"], suite=suite)
+        leaderboard_validation_ok = leaderboard_validation.ok
+        _write_json(artifacts.leaderboard_validation["json"], leaderboard_validation.to_dict())
+        _write_text(artifacts.leaderboard_validation["markdown"], leaderboard_validation.to_markdown())
+    else:
+        _write_json(artifacts.evaluation["json"], {"ok": False, "skipped": "schema_validation_failed"})
+        _write_text(
+            artifacts.evaluation["markdown"],
+            "# Stable-ASR Streaming ASR Evaluation\n\nSkipped because schema validation failed.\n",
+        )
+        _write_text(artifacts.leaderboard["jsonl"], "")
+        _write_json(artifacts.leaderboard_validation["json"], {"ok": False, "skipped": "schema_validation_failed"})
+        _write_text(
+            artifacts.leaderboard_validation["markdown"],
+            "# Stable-ASR Leaderboard Validation\n\nSkipped because schema validation failed.\n",
+        )
+
+    report = StreamingSubmissionReport(
+        ok=bool(schema_validation.ok and leaderboard_validation_ok),
+        system=system,
+        input_path=str(input_path),
+        slice_name=slice_name,
+        records=records,
+        schema_validation=schema_validation,
+        evaluation=evaluation,
+        leaderboard_validation_ok=leaderboard_validation_ok,
+        artifacts=artifacts,
+    )
+    _write_json(artifacts.manifest, report.to_dict())
+    _write_text(artifacts.summary_markdown, report.to_markdown())
+    return report
+
+
 def _turn_quality_leaderboard_rows(
     report: TurnEvalReport,
     *,
@@ -293,6 +478,75 @@ def _turn_quality_leaderboard_rows(
             higher_is_better=False,
             source=source,
         ),
+    ]
+
+
+def _streaming_leaderboard_rows(
+    report: StreamingASRReport,
+    *,
+    system: str,
+    slice_name: str,
+    source: str,
+) -> list[LeaderboardRow]:
+    specs = [
+        ("wer", report.wer, "rate", False),
+        ("cer", report.cer, "rate", False),
+        ("rtf", report.rtf, "ratio", False),
+        ("first_partial_latency", report.first_partial_latency, "s", False),
+        ("final_latency", report.final_latency, "s", False),
+        ("endpoint_delay", report.endpoint_delay, "s", False),
+        ("partial_revision_rate", report.partial_revision_rate, "rate", False),
+        ("stable_prefix_ratio", report.stable_prefix_ratio, "rate", True),
+        ("timestamp_drift", report.timestamp_drift, "s", False),
+    ]
+    return [
+        LeaderboardRow(
+            suite="stable_asr_v0",
+            task="streaming_asr",
+            system=system,
+            slice=slice_name,
+            metric=metric,
+            value=value,
+            unit=unit,
+            higher_is_better=higher_is_better,
+            source=source,
+        )
+        for metric, value, unit, higher_is_better in specs
+    ]
+
+
+def _streaming_report_markdown(report: StreamingASRReport) -> str:
+    return "\n".join(
+        [
+            "# Stable-ASR Streaming ASR Evaluation",
+            "",
+            f"- records: `{report.records}`",
+            "",
+            "## Metrics",
+            "",
+            dict_table(_streaming_metric_table(report)),
+            "",
+            "## Failure Analysis",
+            "",
+            report.failure_analysis.to_markdown(max_cases=20) or "- no failures",
+            "",
+        ]
+    )
+
+
+def _streaming_metric_table(report: StreamingASRReport | None) -> list[dict[str, str]]:
+    if report is None:
+        return []
+    return [
+        {"metric": "wer", "value": f"{report.wer:.6f}"},
+        {"metric": "cer", "value": f"{report.cer:.6f}"},
+        {"metric": "rtf", "value": f"{report.rtf:.6f}"},
+        {"metric": "first_partial_latency", "value": f"{report.first_partial_latency:.6f}"},
+        {"metric": "final_latency", "value": f"{report.final_latency:.6f}"},
+        {"metric": "endpoint_delay", "value": f"{report.endpoint_delay:.6f}"},
+        {"metric": "partial_revision_rate", "value": f"{report.partial_revision_rate:.6f}"},
+        {"metric": "stable_prefix_ratio", "value": f"{report.stable_prefix_ratio:.6f}"},
+        {"metric": "timestamp_drift", "value": f"{report.timestamp_drift:.6f}"},
     ]
 
 
