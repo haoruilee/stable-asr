@@ -12,6 +12,7 @@ source .venv/bin/activate
 python -m pip install -e .
 python -m pip install -e ".[train]"   # optional NanoTurn training
 python -m pip install -e ".[lance]"   # optional Parquet/Lance data backends
+python -m pip install -e ".[lance,train]"  # paper-release-smoke READY path
 ```
 
 ## Three-Step Platform Flow
@@ -30,6 +31,7 @@ stable-asr compare-turn \
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
 
 # 3. Generate paper-facing evidence
+stable-asr doctor --check-release-env
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 ```
 
@@ -46,5 +48,6 @@ stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 - `release_audit.json`
 - `RELEASE_AUDIT.md`
 
-Use `--skip-train` for a faster structural run. Use `--strict` when all
-optional data backends and final-scale inputs are expected to be present.
+Use `--skip-train` for a faster structural run. Use `doctor
+--check-release-env` before `--strict`; strict smoke requires both the optional
+Lance data backend and NanoTurn training dependencies.

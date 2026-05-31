@@ -128,6 +128,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     doctor_parser.add_argument("--repo-root", type=Path, default=Path("."))
     doctor_parser.add_argument("--check-final-files", action="store_true")
+    doctor_parser.add_argument(
+        "--check-release-env",
+        action="store_true",
+        help="Fail if optional Torch and Lance dependencies needed for READY release smoke are missing.",
+    )
     doctor_parser.add_argument("--json", action="store_true")
 
     validate_parser = subparsers.add_parser(
@@ -897,7 +902,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if report.ok else 1
 
     if args.command == "doctor":
-        report = run_doctor(repo_root=args.repo_root, check_final_files=args.check_final_files)
+        report = run_doctor(
+            repo_root=args.repo_root,
+            check_final_files=args.check_final_files,
+            check_release_env=args.check_release_env,
+        )
         if args.json:
             print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
         else:

@@ -70,6 +70,15 @@ NanoTurn training or omit the optional Lance data benchmark. A paper-facing run
 should install `stable-asr[lance]`, include a checkpoint-backed NanoTurn row,
 and then scale the smoke fixtures into the final benchmark suite.
 
+Use `doctor --check-release-env` to fail early when the local environment cannot
+produce a READY smoke audit:
+
+```bash
+python -m pip install -e ".[lance,train]"
+stable-asr doctor --check-release-env
+stable-asr paper-release-smoke --output-dir runs/paper/release_smoke --strict
+```
+
 ## Typical Command
 
 ```bash

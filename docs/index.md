@@ -35,6 +35,7 @@ real-time behavior, latency, policies, and interaction failures.
 
 ```bash
 stable-asr doctor
+stable-asr doctor --check-release-env
 stable-asr doctor --check-final-files
 stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
 stable-asr validate-manifest examples/data/turn_demo.jsonl

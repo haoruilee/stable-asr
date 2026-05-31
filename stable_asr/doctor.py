@@ -44,12 +44,14 @@ class DoctorCheck:
 class DoctorReport:
     ok: bool
     final_inputs_ready: bool
+    release_environment_ready: bool
     checks: list[DoctorCheck]
 
     def to_dict(self) -> dict[str, object]:
         return {
             "ok": self.ok,
             "final_inputs_ready": self.final_inputs_ready,
+            "release_environment_ready": self.release_environment_ready,
             "checks": [check.to_dict() for check in self.checks],
         }
 
@@ -57,6 +59,7 @@ class DoctorReport:
         lines = [
             f"stable_asr_doctor: {'OK' if self.ok else 'FAILED'}",
             f"final_inputs_ready: {'YES' if self.final_inputs_ready else 'NO'}",
+            f"release_environment_ready: {'YES' if self.release_environment_ready else 'NO'}",
         ]
         for check in self.checks:
             status = "OK" if check.ok else "MISSING"
@@ -69,6 +72,7 @@ def run_doctor(
     *,
     repo_root: str | Path = ".",
     check_final_files: bool = False,
+    check_release_env: bool = False,
 ) -> DoctorReport:
     """Run a concise health check for repository setup and optional dependencies."""
 
@@ -85,6 +89,21 @@ def run_doctor(
     ]
     checks.extend(_optional_dependency_checks())
     checks.extend(_config_checks(repo_root))
+    release_environment_ready = _release_environment_ready()
+    if check_release_env:
+        checks.append(
+            DoctorCheck(
+                "release",
+                "environment",
+                release_environment_ready,
+                True,
+                (
+                    "ready for paper-release-smoke --strict"
+                    if release_environment_ready
+                    else "requires torch and Lance backend; install with: python -m pip install -e '.[lance,train]'"
+                ),
+            )
+        )
     final_inputs_ready = True
     if check_final_files:
         final_file_report = audit_final_run_files(
@@ -107,7 +126,12 @@ def run_doctor(
             )
         )
     required_ok = all(check.ok for check in checks if check.required)
-    return DoctorReport(ok=required_ok, final_inputs_ready=final_inputs_ready, checks=checks)
+    return DoctorReport(
+        ok=required_ok,
+        final_inputs_ready=final_inputs_ready,
+        release_environment_ready=release_environment_ready,
+        checks=checks,
+    )
 
 
 def _optional_dependency_checks() -> list[DoctorCheck]:
@@ -127,6 +151,26 @@ def _optional_dependency_checks() -> list[DoctorCheck]:
         )
         for name, purpose in dependencies
     ]
+
+
+def _release_environment_ready() -> bool:
+    """Return whether the local environment can produce a READY smoke audit."""
+
+    return _has_import("torch") and _has_working_lance()
+
+
+def _has_import(name: str) -> bool:
+    return importlib.util.find_spec(name) is not None
+
+
+def _has_working_lance() -> bool:
+    if importlib.util.find_spec("lance") is None:
+        return False
+    try:
+        import lance
+    except Exception:
+        return False
+    return hasattr(lance, "dataset") and hasattr(lance, "write_dataset")
 
 
 def _config_checks(repo_root: Path) -> list[DoctorCheck]:

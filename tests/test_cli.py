@@ -22,6 +22,7 @@ def test_doctor_cli(capsys) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "stable_asr_doctor: OK" in captured.out
+    assert "release_environment_ready:" in captured.out
     assert "config/benchmark_suite" in captured.out
     assert "config/roadmap" in captured.out
     assert "config/asr_collections" in captured.out
@@ -33,6 +34,15 @@ def test_doctor_cli_with_final_file_check(capsys) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "final_inputs_ready: NO" in captured.out
+
+
+def test_doctor_cli_with_release_env_check(capsys) -> None:
+    code = main(["doctor", "--check-release-env"])
+    expected = 0 if _has_import("torch") and _has_working_lance() else 1
+
+    captured = capsys.readouterr()
+    assert code == expected
+    assert "release/environment" in captured.out
 
 
 def test_paper_status_cli(capsys) -> None:
@@ -1819,11 +1829,15 @@ def test_paper_release_smoke_default_trains_nanoturn_when_torch_available(tmp_pa
 
     captured = capsys.readouterr()
     assert code == 0
-    assert "paper_release_smoke: NOT_READY" in captured.out
+    expected_status = "READY" if _has_working_lance() else "NOT_READY"
+    assert f"paper_release_smoke: {expected_status}" in captured.out
     audit = json.loads((tmp_path / "release_smoke_train" / "release_audit.json").read_text(encoding="utf-8"))
     failed = {f"{check['gate']}/{check['name']}" for check in audit["checks"] if not check["ok"]}
     assert "baseline/nanoturn_release_baseline" not in failed
-    assert "data/lance_data_layer" in failed
+    if _has_working_lance():
+        assert "data/lance_data_layer" not in failed
+    else:
+        assert "data/lance_data_layer" in failed
 
 
 def test_make_card_cli(tmp_path, capsys) -> None:
@@ -1843,3 +1857,17 @@ def test_make_card_cli(tmp_path, capsys) -> None:
     assert code == 0
     assert "card:" in captured.out
     assert output.exists()
+
+
+def _has_import(name: str) -> bool:
+    return importlib.util.find_spec(name) is not None
+
+
+def _has_working_lance() -> bool:
+    if importlib.util.find_spec("lance") is None:
+        return False
+    try:
+        import lance
+    except Exception:
+        return False
+    return hasattr(lance, "dataset") and hasattr(lance, "write_dataset")

@@ -50,6 +50,7 @@ source .venv/bin/activate
 python -m pip install -e .
 python -m pip install -e ".[train]"   # optional NanoTurn training
 python -m pip install -e ".[lance]"   # optional Parquet/Lance data backends
+python -m pip install -e ".[lance,train]"  # paper-release-smoke READY path
 ```
 
 ## Quick Start
@@ -69,6 +70,7 @@ stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --checkpoint runs/nanoturn/checkpoint.pt
 
 # 3. Generate stable-worldmodel-style paper evidence
+stable-asr doctor --check-release-env
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 ```
 
@@ -157,6 +159,16 @@ stable-asr paper-release-audit \
 `paper-release-smoke` writes `paper_results.json`, tables, figures, registry
 artifacts, case studies, claim evidence, roadmap status, `PAPER_DRAFT.md`,
 `paper.tex`, dataset/experiment cards, and `RELEASE_AUDIT.md`.
+
+Use `stable-asr doctor --check-release-env` before strict release smoke. A
+READY smoke audit needs both the optional Lance backend and NanoTurn training
+dependencies:
+
+```bash
+python -m pip install -e ".[lance,train]"
+stable-asr doctor --check-release-env
+stable-asr paper-release-smoke --output-dir runs/paper/release_smoke --strict
+```
 
 ## Documentation
 
