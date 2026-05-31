@@ -1,4 +1,5 @@
 import json
+import hashlib
 from pathlib import Path
 
 from stable_asr.paper.artifacts import paper_artifact_bundle
@@ -20,11 +21,14 @@ def test_paper_status_summarizes_smoke_and_final_gaps(tmp_path: Path) -> None:
     assert not report.final_ready
     assert not report.final_inputs_ready
     assert not report.final_assignment_ready
+    assert not report.final_handoff_ready
     assert report.final_assignment.missing
     assert "Stable-ASR Paper Status" in markdown
     assert "final_inputs_ready" in markdown
     assert "final_assignment_ready" in markdown
+    assert "final_handoff_ready" in markdown
     assert "runs/final_acquisition_pack/acquisition/assignments.json" in markdown
+    assert "runs/final/FINAL_INPUT_HANDOFF.json" in markdown
     assert "data/librispeech/LibriSpeech/dev-clean" in markdown
 
 
@@ -78,3 +82,45 @@ def test_paper_status_accepts_strict_final_assignment_gate(tmp_path: Path) -> No
     assert payload["final_assignment_ready"] is True
     assert payload["final_assignment"]["missing"] == []
     assert "final_assignment_ready" in report.to_markdown()
+
+
+def test_paper_status_accepts_strict_final_handoff_gate(tmp_path: Path) -> None:
+    write_final_run_config_json(tmp_path / "configs/final/paper_final.json")
+    staged = tmp_path / "data.txt"
+    staged.write_text("stable-asr\n", encoding="utf-8")
+    digest = hashlib.sha256(staged.read_bytes()).hexdigest()
+    handoff = tmp_path / "runs/final/FINAL_INPUT_HANDOFF.json"
+    handoff_audit = tmp_path / "runs/final/FINAL_HANDOFF_AUDIT.md"
+    handoff.parent.mkdir(parents=True)
+    handoff.write_text(
+        json.dumps(
+            {
+                "version": "stable_asr_final_handoff_v0",
+                "entries": [
+                    {
+                        "collection_id": "unit_collection",
+                        "owner": "owner",
+                        "staged_paths": ["data.txt"],
+                        "source_urls": ["https://example.com/source"],
+                        "license_or_consent_notes": "local fixture with project permission",
+                        "commands_run": ["echo build"],
+                        "verification_outputs": ["pytest"],
+                        "checksums": [{"path": "data.txt", "sha256": digest, "bytes": staged.stat().st_size}],
+                        "known_gaps": [],
+                    }
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    handoff_audit.write_text("# audit\n", encoding="utf-8")
+
+    report = paper_status(repo_root=tmp_path)
+    payload = report.to_dict()
+
+    assert report.final_handoff_ready
+    assert payload["final_handoff_ready"] is True
+    assert payload["final_handoff"]["missing"] == []
+    assert payload["final_handoff"]["checked_paths"] == ["data.txt"]
+    assert "final_handoff_ready" in report.to_markdown()

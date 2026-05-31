@@ -11,6 +11,7 @@ from stable_asr.eval.report import dict_table
 from stable_asr.paper.acquisition_pack import audit_acquisition_assignments
 from stable_asr.paper.audit import audit_paper_artifacts
 from stable_asr.paper.final_config import audit_final_run_files, load_final_run_config
+from stable_asr.paper.handoff import audit_final_handoff
 from stable_asr.paper.parity import audit_paper_parity
 
 
@@ -39,6 +40,28 @@ class FinalAssignmentStatus:
 
 
 @dataclass(frozen=True)
+class FinalHandoffStatus:
+    ready: bool
+    handoff: str
+    handoff_audit: str
+    missing: list[str]
+    errors: list[str]
+    warnings: list[str]
+    checked_paths: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ready": self.ready,
+            "handoff": self.handoff,
+            "handoff_audit": self.handoff_audit,
+            "missing": self.missing,
+            "errors": self.errors,
+            "warnings": self.warnings,
+            "checked_paths": self.checked_paths,
+        }
+
+
+@dataclass(frozen=True)
 class PaperStatusReport:
     ok: bool
     smoke_ready: bool
@@ -48,6 +71,8 @@ class PaperStatusReport:
     missing_final_inputs: list[str]
     final_assignment_ready: bool
     final_assignment: FinalAssignmentStatus
+    final_handoff_ready: bool
+    final_handoff: FinalHandoffStatus
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -59,6 +84,8 @@ class PaperStatusReport:
             "missing_final_inputs": self.missing_final_inputs,
             "final_assignment_ready": self.final_assignment_ready,
             "final_assignment": self.final_assignment.to_dict(),
+            "final_handoff_ready": self.final_handoff_ready,
+            "final_handoff": self.final_handoff.to_dict(),
         }
 
     def to_markdown(self) -> str:
@@ -72,7 +99,16 @@ class PaperStatusReport:
                 "status": _status(self.final_assignment_ready),
                 "meaning": "final input owners, due dates, release blockers, and audit artifact",
             },
-            {"gate": "final_ready", "status": _status(self.final_ready), "meaning": "no final-scale parity gaps remain"},
+            {
+                "gate": "final_handoff_ready",
+                "status": _status(self.final_handoff_ready),
+                "meaning": "filled final handoff passes path, license, verification, and checksum audit",
+            },
+            {
+                "gate": "final_ready",
+                "status": _status(self.final_ready),
+                "meaning": "no final-scale parity, input, assignment, or handoff gaps remain",
+            },
         ]
         lines = [
             "# Stable-ASR Paper Status",
@@ -107,6 +143,25 @@ class PaperStatusReport:
         _extend_markdown_list(lines, self.final_assignment.unassigned)
         lines.extend(["", "Missing due dates:", ""])
         _extend_markdown_list(lines, self.final_assignment.missing_due_dates)
+        lines.extend(
+            [
+                "",
+                "## Final Handoff Gate",
+                "",
+                f"- handoff: `{self.final_handoff.handoff}`",
+                f"- handoff audit: `{self.final_handoff.handoff_audit}`",
+                "",
+                "Missing evidence:",
+                "",
+            ]
+        )
+        _extend_markdown_list(lines, self.final_handoff.missing)
+        lines.extend(["", "Errors:", ""])
+        _extend_markdown_list(lines, self.final_handoff.errors)
+        lines.extend(["", "Warnings:", ""])
+        _extend_markdown_list(lines, self.final_handoff.warnings)
+        lines.extend(["", "Checked paths:", ""])
+        _extend_markdown_list(lines, self.final_handoff.checked_paths)
         lines.extend(
             [
                 "",
@@ -146,6 +201,7 @@ def paper_status(
     config = load_final_run_config(repo_root / "configs" / "final" / "paper_final.json")
     final_files = audit_final_run_files(config, repo_root=repo_root)
     assignment = _final_assignment_status(config, repo_root=repo_root)
+    handoff = _final_handoff_status(config, repo_root=repo_root)
     missing = [
         check.path
         for check in final_files.checks
@@ -155,11 +211,13 @@ def paper_status(
         ok=doctor.ok,
         smoke_ready=smoke_ready,
         structural_ready=parity.ok,
-        final_ready=parity.final_ready and final_files.ok and assignment.ready,
+        final_ready=parity.final_ready and final_files.ok and assignment.ready and handoff.ready,
         final_inputs_ready=final_files.ok,
         missing_final_inputs=missing,
         final_assignment_ready=assignment.ready,
         final_assignment=assignment,
+        final_handoff_ready=handoff.ready,
+        final_handoff=handoff,
     )
 
 
@@ -225,6 +283,42 @@ def _final_assignment_status(config: dict[str, Any], *, repo_root: Path) -> Fina
         blocking_release=blocking_release,
         unassigned=unassigned,
         missing_due_dates=missing_due_dates,
+    )
+
+
+def _final_handoff_status(config: dict[str, Any], *, repo_root: Path) -> FinalHandoffStatus:
+    artifacts = config.get("artifacts", {})
+    if not isinstance(artifacts, dict):
+        artifacts = {}
+    handoff = _resolve_repo_path(
+        artifacts.get("handoff", "runs/final/FINAL_INPUT_HANDOFF.json"),
+        repo_root=repo_root,
+    )
+    handoff_audit = _resolve_repo_path(
+        artifacts.get("handoff_audit", "runs/final/FINAL_HANDOFF_AUDIT.md"),
+        repo_root=repo_root,
+    )
+    missing: list[str] = []
+    errors: list[str] = []
+    warnings: list[str] = []
+    checked_paths: list[str] = []
+    if not handoff.exists():
+        missing.append(str(handoff))
+    else:
+        report = audit_final_handoff(handoff, repo_root=repo_root)
+        errors.extend(report.errors)
+        warnings.extend(report.warnings)
+        checked_paths.extend(report.checked_paths)
+    if not handoff_audit.exists():
+        missing.append(str(handoff_audit))
+    return FinalHandoffStatus(
+        ready=not missing and not errors,
+        handoff=str(handoff),
+        handoff_audit=str(handoff_audit),
+        missing=missing,
+        errors=errors,
+        warnings=warnings,
+        checked_paths=checked_paths,
     )
 
 

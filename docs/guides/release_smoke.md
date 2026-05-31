@@ -44,10 +44,11 @@ the release audit is READY and real paper-scale corpora, external predictions,
 and final artifact evidence are present. Use `paper-archive-verify` after moving the generated archive or
 before attaching it to a release.
 
-The command prints both `final_inputs_ready` and `final_assignment_ready`.
-Final scale remains `NO` until the data paths exist, the assignment tracker has
-owners and due dates with no release blockers, and the strict
-`FINAL_ASSIGNMENT_AUDIT.md` evidence file is present.
+The command prints `final_inputs_ready`, `final_assignment_ready`, and
+`final_handoff_ready`. Final scale remains `NO` until the data paths exist, the
+assignment tracker has owners and due dates with no release blockers, the
+strict `FINAL_ASSIGNMENT_AUDIT.md` evidence file is present, and the filled
+handoff passes `final-handoff-audit`.
 
 ## READY Smoke Environment
 

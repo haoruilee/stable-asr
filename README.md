@@ -188,9 +188,9 @@ The smoke path can be `READY` while final paper-scale evidence is still
 `NOT_READY`; `paper-release-smoke` prints `final_scale_ready`, and
 `--require-final-ready` fails until the release audit is READY and real
 corpora, external predictions, and final artifacts are present. It also prints `final_inputs_ready` and
-`final_assignment_ready` separately. Final-ready gates require assignment
-readiness evidence plus a filled `runs/final/FINAL_INPUT_HANDOFF.json` that
-passes `final-handoff-audit`.
+`final_assignment_ready` and `final_handoff_ready` separately. Final-ready gates
+require assignment readiness evidence plus a filled
+`runs/final/FINAL_INPUT_HANDOFF.json` that passes `final-handoff-audit`.
 
 Use `stable-asr doctor --check-release-env` before strict release smoke. A
 READY smoke audit needs both the optional Lance backend and NanoTurn training
@@ -321,7 +321,7 @@ is provided in `mkdocs.yaml`.
 - final evidence matrix artifacts in `paper-bundle`
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
 - `paper-claim-audit` for mapping platform-paper claims to concrete files, result keys, commands, and artifacts
-- `paper-status` for a single-page summary of smoke, structural, final-input, final assignment, and final-paper readiness
+- `paper-status` for a single-page summary of smoke, structural, final-input, final assignment, final handoff, and final-paper readiness
 - `paper-evidence-matrix` for mapping final experiments to blockers, commands, expected artifacts, and success criteria
 - machine-readable stable-worldmodel-style paper parity checklist in `configs/paper/paper_parity_checklist.json`
 - `paper-parity-audit` for separating smoke-level structural evidence from final-scale paper gaps
