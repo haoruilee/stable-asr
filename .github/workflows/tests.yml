@@ -32,6 +32,9 @@ jobs:
           stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
           stable-asr asr-collections --audit-coverage
           stable-asr asr-collections --format acquisition-markdown --output /tmp/stable-asr-asr-collection-acquisition.md
+          stable-asr turn-collections --registry configs/references/turn_collections.json --validate-only
+          stable-asr turn-collections --audit-coverage --output /tmp/stable-asr-turn-collection-coverage.md
+          stable-asr turn-collections --format acquisition-markdown --output /tmp/stable-asr-turn-collection-acquisition.md
           stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output /tmp/stable-asr-asr.jsonl --audio-root examples/data --sample-rate 16000
           stable-asr asr-to-turn --input /tmp/stable-asr-asr.jsonl --output /tmp/stable-asr-asr-turn.jsonl --include-incomplete
           stable-asr bootstrap-turn-data --input examples/data/asr_metadata.tsv --output-dir /tmp/stable-asr-bootstrap --audio-root examples/data --sample-rate 16000 --include-incomplete
@@ -74,6 +77,7 @@ jobs:
           /tmp/stable-asr-wheel-venv/bin/stable-asr doctor
           /tmp/stable-asr-wheel-venv/bin/stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only
           /tmp/stable-asr-wheel-venv/bin/stable-asr asr-collections --registry configs/references/asr_collections.json --audit-coverage
+          /tmp/stable-asr-wheel-venv/bin/stable-asr turn-collections --registry configs/references/turn_collections.json --audit-coverage
           /tmp/stable-asr-wheel-venv/bin/stable-asr paper-release-smoke --output-dir /tmp/stable-asr-wheel-release-smoke --episodes 9 --seed 6 --skip-train
 
   optional-data-backends:

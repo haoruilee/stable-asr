@@ -60,8 +60,13 @@ from stable_asr.references import (
     asr_collections_reference_markdown,
     audit_asr_collection_coverage,
     audit_asr_collection_readiness,
+    audit_turn_collection_coverage,
     load_asr_collections,
+    load_turn_collections,
+    turn_collections_acquisition_markdown,
+    turn_collections_markdown,
     write_asr_collections_json,
+    write_turn_collections_json,
 )
 from stable_asr.roadmap import load_roadmap, roadmap_status
 from stable_asr.scenarios.suites import scenario_suite_markdown, load_scenario_suite, write_scenario_suite_json
@@ -90,6 +95,7 @@ class PaperArtifactBundle:
     model_cards: dict[str, str]
     schema_registry: dict[str, str]
     asr_collections: dict[str, str]
+    turn_collections: dict[str, str]
     scenario_suite: dict[str, str]
     case_studies: dict[str, str]
     paper_parity: dict[str, str]
@@ -124,6 +130,7 @@ class PaperArtifactBundle:
             "model_cards": self.model_cards,
             "schema_registry": self.schema_registry,
             "asr_collections": self.asr_collections,
+            "turn_collections": self.turn_collections,
             "scenario_suite": self.scenario_suite,
             "case_studies": self.case_studies,
             "paper_parity": self.paper_parity,
@@ -291,6 +298,30 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         asr_reference_readiness.to_markdown(),
         encoding="utf-8",
     )
+    turn_reference_registry = load_turn_collections()
+    turn_reference_coverage = audit_turn_collection_coverage(
+        turn_reference_registry,
+        sources,
+        adapters,
+        required_priorities=("p0",),
+    )
+    turn_collections = {
+        "json": write_turn_collections_json(output_dir / "turn_collections.json", turn_reference_registry),
+        "markdown": str(output_dir / "TURN_COLLECTIONS.md"),
+        "acquisition_markdown": str(output_dir / "TURN_COLLECTION_ACQUISITION.md"),
+        "coverage_json": str(output_dir / "turn_collection_coverage.json"),
+        "coverage_markdown": str(output_dir / "TURN_COLLECTION_COVERAGE.md"),
+    }
+    Path(turn_collections["markdown"]).write_text(turn_collections_markdown(turn_reference_registry), encoding="utf-8")
+    Path(turn_collections["acquisition_markdown"]).write_text(
+        turn_collections_acquisition_markdown(turn_reference_registry),
+        encoding="utf-8",
+    )
+    Path(turn_collections["coverage_json"]).write_text(
+        json.dumps(turn_reference_coverage.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(turn_collections["coverage_markdown"]).write_text(turn_reference_coverage.to_markdown(), encoding="utf-8")
     voiceworld_suite = load_scenario_suite()
     scenario_suite = {
         "json": write_scenario_suite_json(output_dir / "scenario_suite.json", voiceworld_suite),
@@ -433,6 +464,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         model_cards=model_cards,
         schema_registry=schema_registry,
         asr_collections=asr_collections,
+        turn_collections=turn_collections,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
         paper_parity=paper_parity,
@@ -473,6 +505,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         model_cards=model_cards,
         schema_registry=schema_registry,
         asr_collections=asr_collections,
+        turn_collections=turn_collections,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
         paper_parity=paper_parity,
@@ -548,6 +581,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## ASR Reference Collections", ""])
     for name, path in bundle.asr_collections.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Turn Reference Collections", ""])
+    for name, path in bundle.turn_collections.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Scenario Suite", ""])
     for name, path in bundle.scenario_suite.items():
@@ -636,6 +672,7 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.model_cards,
         bundle.schema_registry,
         bundle.asr_collections,
+        bundle.turn_collections,
         bundle.scenario_suite,
         bundle.case_studies,
         bundle.paper_parity,

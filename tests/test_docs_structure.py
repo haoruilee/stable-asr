@@ -13,6 +13,7 @@ def test_mkdocs_nav_targets_exist() -> None:
         "docs/release_gates.md",
         "docs/final_inputs.md",
         "docs/asr_collections.md",
+        "docs/turn_collections.md",
         "docs/api/data.md",
         "docs/api/turn.md",
         "docs/api/scenarios.md",
@@ -34,5 +35,6 @@ def test_docs_index_links_platform_sections() -> None:
     assert "cli.md" in text
     assert "baselines.md" in text
     assert "final_inputs.md" in text
+    assert "turn_collections.md" in text
     assert "api/data.md" in text
     assert "guides/release_smoke.md" in text

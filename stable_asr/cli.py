@@ -136,8 +136,13 @@ from stable_asr.references import (
     asr_collections_reference_markdown,
     audit_asr_collection_coverage,
     audit_asr_collection_readiness,
+    audit_turn_collection_coverage,
     load_asr_collections,
+    load_turn_collections,
+    turn_collections_acquisition_markdown,
+    turn_collections_markdown,
     validate_asr_collections,
+    validate_turn_collections,
 )
 from stable_asr.resources import resolve_platform_path
 from stable_asr.roadmap import load_roadmap, roadmap_status, validate_roadmap
@@ -588,6 +593,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="Maximum registry review age for --audit-readiness. Use a large value to disable practical freshness failure.",
     )
     asr_collections_parser.add_argument(
+        "--require-priority",
+        action="append",
+        default=None,
+        choices=["p0", "p1", "p2"],
+        help="Reference priority required by --audit-coverage. Defaults to p0.",
+    )
+
+    turn_collections_parser = subparsers.add_parser(
+        "turn-collections",
+        help="Print or validate the curated turn-taking and full-duplex reference collection.",
+    )
+    turn_collections_parser.add_argument("--registry", type=Path, help="Optional turn collections JSON path.")
+    turn_collections_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    turn_collections_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
+    turn_collections_parser.add_argument(
+        "--format",
+        choices=["registry-markdown", "acquisition-markdown"],
+        default="registry-markdown",
+        help="Output format when not using --json or audit flags.",
+    )
+    turn_collections_parser.add_argument("--validate-only", action="store_true")
+    turn_collections_parser.add_argument("--audit-coverage", action="store_true")
+    turn_collections_parser.add_argument("--data-sources", type=Path, help="Data source registry for coverage audit.")
+    turn_collections_parser.add_argument("--adapter-registry", type=Path, help="Adapter registry for coverage audit.")
+    turn_collections_parser.add_argument(
         "--require-priority",
         action="append",
         default=None,
@@ -1932,6 +1962,44 @@ def main(argv: list[str] | None = None) -> int:
                 text = asr_collections_acquisition_markdown(registry)
             else:
                 text = asr_collections_markdown(registry)
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+            print(text)
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.command == "turn-collections":
+        try:
+            registry = load_turn_collections(args.registry)
+            validation = validate_turn_collections(registry)
+            if not validation.ok:
+                print(validation.to_text(), file=sys.stderr)
+                return 1
+            if args.audit_coverage:
+                coverage = audit_turn_collection_coverage(
+                    registry,
+                    load_data_sources(args.data_sources),
+                    load_adapter_registry(args.adapter_registry),
+                    required_priorities=tuple(args.require_priority or ["p0"]),
+                )
+                text = json.dumps(coverage.to_dict(), ensure_ascii=False, indent=2) if args.json else coverage.to_markdown()
+                if args.output:
+                    args.output.parent.mkdir(parents=True, exist_ok=True)
+                    args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+                print(text)
+                return 0 if coverage.ok else 1
+            if args.validate_only:
+                print(f"OK: {registry['id']} ({len(registry['entries'])} reference(s))")
+                return 0
+            if args.json:
+                text = json.dumps(registry, ensure_ascii=False, indent=2)
+            elif args.format == "acquisition-markdown":
+                text = turn_collections_acquisition_markdown(registry)
+            else:
+                text = turn_collections_markdown(registry)
             if args.output:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")

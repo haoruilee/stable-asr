@@ -203,6 +203,7 @@ DEFAULT_ADAPTER_REGISTRY: dict[str, Any] = {
             "input_schema": "SmartTurn-style completion probability JSONL",
             "output_schema": "Stable-ASR turn prediction JSONL",
             "license": "see_upstream",
+            "related_references": ["smart_turn"],
             "notes": "Converts SmartTurn-like probabilities into the shared prediction adapter format.",
         },
         {
@@ -216,6 +217,7 @@ DEFAULT_ADAPTER_REGISTRY: dict[str, Any] = {
             "input_schema": "EasyTurn-style four-state prediction JSONL",
             "output_schema": "Stable-ASR turn prediction JSONL",
             "license": "see_upstream",
+            "related_references": ["easy_turn"],
             "notes": "Converts EasyTurn-like predictions into the shared prediction adapter format.",
         },
         {
@@ -229,6 +231,7 @@ DEFAULT_ADAPTER_REGISTRY: dict[str, Any] = {
             "input_schema": "generic prediction JSONL with probs and timestamp",
             "output_schema": "Stable-ASR turn prediction JSONL",
             "license": "see_upstream",
+            "related_references": ["vap"],
             "notes": "Template for mapping VAP-style future activity scores to Stable-ASR turn probabilities.",
         },
     ],

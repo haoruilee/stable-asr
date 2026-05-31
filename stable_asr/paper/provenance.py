@@ -25,6 +25,7 @@ DEFAULT_PROVENANCE_CONFIGS = (
     "configs/datasets/stable_asr_sources.json",
     "configs/adapters/stable_asr_adapters.json",
     "configs/references/asr_collections.json",
+    "configs/references/turn_collections.json",
     "configs/scenarios/stable_asr_voiceworld_v0.json",
     "configs/roadmap/stable_asr_roadmap.json",
 )

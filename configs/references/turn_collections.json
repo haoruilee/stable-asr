@@ -1,0 +1,93 @@
+{
+  "id": "stable_asr_turn_reference_collections_v0",
+  "version": "0.1.0",
+  "reviewed_at": "2026-06-01",
+  "title": "Stable-ASR Turn And Full-Duplex Reference Collections",
+  "description": "Curated upstream turn-taking, endpointing, full-duplex, and voice-agent evaluation projects that Stable-ASR should interoperate with or benchmark against. This registry is a planning and attribution aid; it does not vendor upstream code.",
+  "entries": [
+    {
+      "id": "smart_turn",
+      "name": "Smart Turn",
+      "category": "turn_detection_model",
+      "source_url": "https://github.com/pipecat-ai/smart-turn",
+      "docs_url": "https://docs.pipecat.ai/pipecat-cloud/guides/smart-turn",
+      "license": "see_upstream",
+      "focus": "Native-audio turn completion detection for voice agents.",
+      "reference_use": "Use as an audio-only external turn detector baseline and prediction-export target.",
+      "stable_asr_actions": ["maintain_prediction_converter", "compare_turn_completion_probabilities", "audit_voice_agent_endpointing_errors"],
+      "priority": "p0"
+    },
+    {
+      "id": "easy_turn",
+      "name": "Easy Turn",
+      "category": "turn_state_model",
+      "source_url": "https://arxiv.org/abs/2509.23938",
+      "docs_url": "https://huggingface.co/ASLP-lab/Easy-Turn",
+      "license": "see_upstream",
+      "focus": "Acoustic and linguistic four-state turn-taking prediction for full-duplex spoken dialogue.",
+      "reference_use": "Use as a multimodal complete, incomplete, backchannel, and wait baseline.",
+      "stable_asr_actions": ["maintain_prediction_converter", "compare_four_state_turn_labels", "track_bimodal_baseline_gap"],
+      "priority": "p0"
+    },
+    {
+      "id": "full_duplex_bench",
+      "name": "Full-Duplex-Bench",
+      "category": "full_duplex_benchmark",
+      "source_url": "https://github.com/DanielLin94144/Full-Duplex-Bench",
+      "docs_url": "https://github.com/DanielLin94144/Full-Duplex-Bench",
+      "license": "see_upstream",
+      "focus": "Benchmark scenarios for pause handling, backchanneling, interruptions, side conversations, ambient speech, and real-time full-duplex evaluation.",
+      "reference_use": "Use as a benchmark-design reference for VoiceWorld scenario coverage and overlap handling.",
+      "stable_asr_actions": ["maintain_external_manifest_converter", "align_voiceworld_scenario_taxonomy", "compare_overlap_handling_metrics"],
+      "priority": "p0"
+    },
+    {
+      "id": "vap",
+      "name": "Voice Activity Projection",
+      "category": "turn_prediction_objective",
+      "source_url": "https://github.com/ErikEkstedt/VoiceActivityProjection",
+      "docs_url": "https://arxiv.org/abs/2205.09812",
+      "license": "see_upstream",
+      "focus": "Self-supervised future voice activity prediction for turn-taking.",
+      "reference_use": "Use as a continuous turn-prediction objective and external prediction-template target.",
+      "stable_asr_actions": ["maintain_prediction_template", "map_future_activity_to_turn_probs", "compare_stereo_dialogue_objectives"],
+      "priority": "p0"
+    },
+    {
+      "id": "pipecat",
+      "name": "Pipecat",
+      "category": "voice_agent_framework",
+      "source_url": "https://github.com/pipecat-ai/pipecat",
+      "docs_url": "https://docs.pipecat.ai/",
+      "license": "see_upstream",
+      "focus": "Realtime voice-agent orchestration and pipeline framework.",
+      "reference_use": "Use as an integration reference for VAD, Smart Turn, ASR, TTS, interruption, and transport boundaries.",
+      "stable_asr_actions": ["plan_voice_agent_pipeline_bridge", "compare_endpointing_runtime_boundaries", "document_non_replacement_scope"],
+      "priority": "p1"
+    },
+    {
+      "id": "silero_vad",
+      "name": "Silero VAD",
+      "category": "vad_endpointing_baseline",
+      "source_url": "https://github.com/snakers4/silero-vad",
+      "docs_url": "https://github.com/snakers4/silero-vad",
+      "license": "see_upstream",
+      "focus": "Lightweight voice activity detection used in many realtime speech systems.",
+      "reference_use": "Use as a VAD reference for pause-threshold endpointing baselines and false-barge-in analysis.",
+      "stable_asr_actions": ["plan_vad_adapter_recipe", "compare_pause_threshold_endpointing", "track_cpu_latency_baseline"],
+      "priority": "p1"
+    },
+    {
+      "id": "webrtcvad",
+      "name": "WebRTC VAD",
+      "category": "vad_endpointing_baseline",
+      "source_url": "https://github.com/wiseman/py-webrtcvad",
+      "docs_url": "https://github.com/wiseman/py-webrtcvad",
+      "license": "see_upstream",
+      "focus": "Classic WebRTC voice activity detection exposed through Python bindings.",
+      "reference_use": "Use as a traditional VAD endpointing reference and low-dependency realtime baseline.",
+      "stable_asr_actions": ["plan_vad_adapter_recipe", "compare_false_complete_tradeoffs", "track_low_dependency_endpointing"],
+      "priority": "p1"
+    }
+  ]
+}

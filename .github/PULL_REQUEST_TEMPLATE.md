@@ -60,4 +60,5 @@ stable-asr final-pack --output-dir /tmp/stable-asr-final-pack
 stable-asr final-acquisition-pack --output-dir /tmp/stable-asr-final-acquisition-pack
 stable-asr contributor-pack --output-dir /tmp/stable-asr-contributor-pack
 stable-asr asr-collections --format acquisition-markdown --output /tmp/stable-asr-asr-collection-acquisition.md
+stable-asr turn-collections --format acquisition-markdown --output /tmp/stable-asr-turn-collection-acquisition.md
 ```

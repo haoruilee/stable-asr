@@ -30,6 +30,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "schema_registry:markdown" in report.to_text()
     assert "final_input_collections:markdown" in report.to_text()
     assert "asr_collection_readiness:markdown" in report.to_text()
+    assert "turn_collection_coverage:markdown" in report.to_text()
     assert report.to_dict()["ok"] is True
 
 
@@ -127,6 +128,8 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "reference/asr_collections_schema" in text
     assert "OK reference/asr_collections_coverage" in text
     assert "OK reference/asr_collections_readiness" in text
+    assert "OK reference/turn_collections_schema" in text
+    assert "OK reference/turn_collections_coverage" in text
     assert "OK scenario/scenario_suite_coverage" in text
 
 

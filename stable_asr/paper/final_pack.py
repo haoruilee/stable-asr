@@ -39,7 +39,10 @@ from stable_asr.paper.final_inputs import (
 from stable_asr.references import (
     asr_collections_markdown,
     load_asr_collections,
+    load_turn_collections,
+    turn_collections_markdown,
     write_asr_collections_json,
+    write_turn_collections_json,
 )
 from stable_asr.resources import resolve_platform_path
 from stable_asr.scenarios.suites import (
@@ -56,6 +59,7 @@ PACK_FINAL_EXPERIMENTS_PATH = "configs/paper/final_experiments.json"
 PACK_SCENARIO_SUITE_PATH = "configs/scenarios/stable_asr_voiceworld_v0.json"
 PACK_MODEL_REGISTRY_PATH = "configs/models/stable_asr_models.json"
 PACK_ASR_COLLECTIONS_PATH = "configs/references/asr_collections.json"
+PACK_TURN_COLLECTIONS_PATH = "configs/references/turn_collections.json"
 
 
 @dataclass(frozen=True)
@@ -213,6 +217,15 @@ def build_final_pack(
     files["asr_collections_markdown"] = _write_text(
         output_dir / "reports" / "ASR_COLLECTIONS.md",
         asr_collections_markdown(collections),
+    )
+    turn_collections = load_turn_collections()
+    files["turn_collections_json"] = write_turn_collections_json(
+        output_dir / PACK_TURN_COLLECTIONS_PATH,
+        turn_collections,
+    )
+    files["turn_collections_markdown"] = _write_text(
+        output_dir / "reports" / "TURN_COLLECTIONS.md",
+        turn_collections_markdown(turn_collections),
     )
 
     file_audit = audit_final_run_files(config, repo_root=output_dir)

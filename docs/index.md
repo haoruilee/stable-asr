@@ -17,6 +17,7 @@ streaming ASR and voice-agent control:
 - audio file audits for turn and ASR manifests
 - adapter registry for baselines, converters, command-backed ASR wrappers, and external-system templates
 - curated upstream ASR reference collections for adapter and benchmark planning
+- curated turn-taking and full-duplex reference collections for VoiceWorld and turn-adapter planning
 - policy search
 - paper parity audit for stable-worldmodel-style platform-paper gaps
 - final-scale experiment runbook for real paper execution
@@ -59,6 +60,9 @@ stable-asr asr-collections --audit-coverage
 stable-asr asr-collections --audit-readiness
 stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
+stable-asr turn-collections --registry configs/references/turn_collections.json --validate-only
+stable-asr turn-collections --audit-coverage
+stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
 stable-asr adapter-pack --output-dir runs/adapter_pack
 stable-asr scenario-pack --output-dir runs/scenario_pack
 stable-asr final-pack --output-dir runs/final_pack
@@ -138,5 +142,6 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --resul
 - [Final inputs](final_inputs.md)
 - [Data schema](schema.md)
 - [ASR reference collections](asr_collections.md)
+- [Turn and full-duplex reference collections](turn_collections.md)
 - API: [Data](api/data.md), [Turn](api/turn.md), [Scenarios](api/scenarios.md), [Paper](api/paper.md)
 - Guides: [External ASR adapters](guides/adapters.md), [Release smoke](guides/release_smoke.md)

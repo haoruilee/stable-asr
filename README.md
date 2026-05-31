@@ -132,8 +132,8 @@ stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause --report ru
 | `nanoturn_pico` | model | trainable lightweight turn/action model |
 | command ASR adapters | adapter | evaluate Whisper, FunASR, WeNet, NeMo, ESPnet, SpeechBrain, icefall, sherpa-onnx, FireRedASR2S, Qwen3-ASR, whisper.cpp, WhisperX, Moonshine, and HF exports without vendoring them |
 
-Reference coverage is tracked in `configs/references/asr_collections.json` and
-`configs/adapters/stable_asr_adapters.json`.
+Reference coverage is tracked in `configs/references/asr_collections.json`,
+`configs/references/turn_collections.json`, and `configs/adapters/stable_asr_adapters.json`.
 
 ```bash
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
@@ -141,6 +141,8 @@ stable-asr asr-collections --audit-coverage --require-priority p0 --require-prio
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
 stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
+stable-asr turn-collections --audit-coverage --output runs/TURN_COLLECTION_COVERAGE.md
+stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
 stable-asr compare-asr-commands --config examples/configs/asr_vendor_adapter_demo.json --report runs/asr_vendor_adapter.md
 stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2
 ```
@@ -236,6 +238,8 @@ is provided in `mkdocs.yaml`.
 - `asr-collections --format acquisition-markdown` for turning the upstream ASR registry into a concrete collection and evidence-staging plan
 - `asr-collections --audit-coverage` for checking P0 reference coverage in the adapter registry
 - `asr-collections --audit-readiness` for checking review freshness, P0/P1 adapter evidence, action plans, and license-review warnings
+- machine-readable turn/full-duplex reference collection in `configs/references/turn_collections.json`
+- `turn-collections` for validating Smart Turn, Easy Turn, VAP, Full-Duplex-Bench, VAD, and voice-agent framework references
 - machine-readable VoiceWorld scenario suite in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - `scenario-suite` for validating and rendering scenario suite definitions
 - `scenario-pack` for generating a VoiceWorld scenario contribution kit with suite metadata, editable annotations, and runnable evaluation commands
@@ -281,10 +285,11 @@ is provided in `mkdocs.yaml`.
 - `paper-bundle` generation for paper results, tables, figures, artifact index, and artifact manifest
 - contributor benchmark, adapter, VoiceWorld scenario, final-run, final-input acquisition, and unified contributor starter packs in `paper-bundle`
 - schema registry JSON/Markdown artifacts in `paper-bundle`
+- ASR and turn/full-duplex reference collection artifacts in `paper-bundle`
 - paper bundle sha256 integrity manifests and `paper-artifact-integrity` verification
 - paper bundle provenance manifests that record Stable-ASR version, git commit, input result hashes, and config hashes
 - `paper-archive` and `paper-archive-verify` for publishable tar.gz artifact archives with SHA256 and embedded bundle checks
-- ASR reference collection, paper-reference, BibTeX, P0/P1 coverage, and readiness artifacts in `paper-bundle`
+- ASR and turn/full-duplex reference collection, coverage, readiness, acquisition, paper-reference, and BibTeX artifacts in `paper-bundle`
 - final evidence matrix artifacts in `paper-bundle`
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
 - `paper-claim-audit` for mapping platform-paper claims to concrete files, result keys, commands, and artifacts

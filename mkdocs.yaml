@@ -20,6 +20,7 @@ nav:
   - Release Gates: release_gates.md
   - Final Inputs: final_inputs.md
   - ASR Collections: asr_collections.md
+  - Turn Collections: turn_collections.md
   - API:
       - Data: api/data.md
       - Turn: api/turn.md

@@ -66,14 +66,17 @@
       "artifacts": [
         {"path": "configs/datasets/stable_asr_sources.json", "required_now": true},
         {"path": "configs/references/asr_collections.json", "required_now": true},
+        {"path": "configs/references/turn_collections.json", "required_now": true},
         {"path": "configs/adapters/stable_asr_adapters.json", "required_now": true},
         {"path": "docs/asr_collections.md", "required_now": true},
+        {"path": "docs/turn_collections.md", "required_now": true},
         {"path": "stable_asr/data/asr_manifest.py", "required_now": true},
         {"path": "stable_asr/data/recipes/asr_folder.py", "required_now": true},
         {"path": "stable_asr/data/recipes/public_corpora.py", "required_now": true},
         {"path": "stable_asr/data/turn_from_asr.py", "required_now": true},
         {"path": "stable_asr/data/bootstrap.py", "required_now": true},
         {"path": "stable_asr/references/collections.py", "required_now": true},
+        {"path": "stable_asr/references/turn_collections.py", "required_now": true},
         {"path": "stable_asr/paper/adapter_pack.py", "required_now": true}
       ],
       "commands": [
@@ -82,11 +85,14 @@
         "stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only",
         "stable-asr asr-collections --audit-coverage",
         "stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md",
+        "stable-asr turn-collections --registry configs/references/turn_collections.json --validate-only",
+        "stable-asr turn-collections --audit-coverage",
         "stable-asr adapter-pack --output-dir runs/adapter_pack"
       ],
       "success_criteria": [
         "P0 ASR references have adapter or bridge evidence",
         "top ASR reference collection has an acquisition plan that maps every entry to an evidence target",
+        "P0 turn/full-duplex references have data-source or adapter evidence",
         "public ASR metadata can be normalized into canonical ASR manifests",
         "ASR manifests can bootstrap weak turn windows and leakage-audited splits",
         "external ASR contributors can generate a command-adapter starter pack with registries, fixtures, and script templates"

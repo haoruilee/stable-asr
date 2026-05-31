@@ -49,6 +49,13 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         "readiness_json",
         "readiness_markdown",
     }
+    assert set(bundle.turn_collections) == {
+        "json",
+        "markdown",
+        "acquisition_markdown",
+        "coverage_json",
+        "coverage_markdown",
+    }
     assert set(bundle.scenario_suite) == {"json", "markdown"}
     assert set(bundle.case_studies) == {"json", "markdown"}
     assert set(bundle.paper_parity) == {"json", "markdown"}
@@ -103,6 +110,13 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "required_priorities: `p0, p1`" in Path(bundle.asr_collections["coverage_markdown"]).read_text(encoding="utf-8")
     assert "ASR Collection Readiness" in Path(bundle.asr_collections["readiness_markdown"]).read_text(encoding="utf-8")
     assert "license_review_needed" in Path(bundle.asr_collections["readiness_json"]).read_text(encoding="utf-8")
+    assert "Turn And Full-Duplex Reference Collections" in Path(bundle.turn_collections["markdown"]).read_text(
+        encoding="utf-8"
+    )
+    assert "Turn Collection Acquisition Plan" in Path(bundle.turn_collections["acquisition_markdown"]).read_text(
+        encoding="utf-8"
+    )
+    assert "missing_required: `0`" in Path(bundle.turn_collections["coverage_markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR VoiceWorld v0 Scenario Suite" in Path(bundle.scenario_suite["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Case Studies" in Path(bundle.case_studies["markdown"]).read_text(encoding="utf-8")
     assert "final-scale ready" in Path(bundle.paper_parity["markdown"]).read_text(encoding="utf-8")
@@ -118,6 +132,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "final_evidence_matrix" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "model_cards" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "schema_registry" in Path(bundle.manifest_path).read_text(encoding="utf-8")
+    assert "turn_collections" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "starter_packs" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "artifact_integrity" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "provenance" in Path(bundle.manifest_path).read_text(encoding="utf-8")

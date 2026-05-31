@@ -27,8 +27,11 @@ from stable_asr.paper.tables import PAPER_TABLES, load_paper_results
 from stable_asr.references import (
     audit_asr_collection_coverage,
     audit_asr_collection_readiness,
+    audit_turn_collection_coverage,
     load_asr_collections,
+    load_turn_collections,
     validate_asr_collections,
+    validate_turn_collections,
 )
 from stable_asr.resources import resolve_platform_path
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
@@ -355,6 +358,42 @@ def audit_paper_release(
                 )
         except (OSError, ValueError) as exc:
             checks.append(_release_check("reference", "asr_collections_schema", False, str(exc)))
+
+    turn_collections_path = repo_root / "configs" / "references" / "turn_collections.json"
+    if turn_collections_path.exists():
+        try:
+            turn_collections = load_turn_collections(turn_collections_path)
+            turn_validation = validate_turn_collections(turn_collections)
+            checks.append(
+                _release_check(
+                    "reference",
+                    "turn_collections_schema",
+                    turn_validation.ok,
+                    f"{len(turn_collections.get('entries', []))} reference(s)"
+                    if turn_validation.ok
+                    else "; ".join(turn_validation.errors[:3]),
+                )
+            )
+            if turn_validation.ok and adapter_registry is not None:
+                source_registry = load_data_sources(repo_root / "configs" / "datasets" / "stable_asr_sources.json")
+                coverage = audit_turn_collection_coverage(
+                    turn_collections,
+                    source_registry,
+                    adapter_registry,
+                    required_priorities=("p0",),
+                )
+                required = [check for check in coverage.checks if check.required]
+                covered = [check for check in required if check.covered]
+                checks.append(
+                    _release_check(
+                        "reference",
+                        "turn_collections_coverage",
+                        coverage.ok,
+                        f"{len(covered)}/{len(required)} required reference(s) covered",
+                    )
+                )
+        except (OSError, ValueError) as exc:
+            checks.append(_release_check("reference", "turn_collections_schema", False, str(exc)))
 
     scenario_suite_path = repo_root / "configs" / "scenarios" / "stable_asr_voiceworld_v0.json"
     if scenario_suite_path.exists():
@@ -703,6 +742,7 @@ def _ci_wheel_smoke_check(path: Path) -> PaperReleaseAuditCheck:
         "stable-asr-wheel-venv/bin/stable-asr doctor",
         "stable-asr-wheel-venv/bin/stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only",
         "stable-asr-wheel-venv/bin/stable-asr asr-collections --registry configs/references/asr_collections.json --audit-coverage",
+        "stable-asr-wheel-venv/bin/stable-asr turn-collections --registry configs/references/turn_collections.json --audit-coverage",
         "stable-asr-wheel-venv/bin/stable-asr paper-release-smoke --output-dir /tmp/stable-asr-wheel-release-smoke --episodes 9 --seed 6 --skip-train",
     )
     if not path.exists():
@@ -1093,6 +1133,11 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("asr_collection_coverage:markdown", artifacts_dir / "ASR_COLLECTION_COVERAGE.md"))
     checks.append(_exists_check("asr_collection_readiness:json", artifacts_dir / "asr_collection_readiness.json"))
     checks.append(_exists_check("asr_collection_readiness:markdown", artifacts_dir / "ASR_COLLECTION_READINESS.md"))
+    checks.append(_exists_check("turn_collections:json", artifacts_dir / "turn_collections.json"))
+    checks.append(_exists_check("turn_collections:markdown", artifacts_dir / "TURN_COLLECTIONS.md"))
+    checks.append(_exists_check("turn_collections:acquisition_markdown", artifacts_dir / "TURN_COLLECTION_ACQUISITION.md"))
+    checks.append(_exists_check("turn_collection_coverage:json", artifacts_dir / "turn_collection_coverage.json"))
+    checks.append(_exists_check("turn_collection_coverage:markdown", artifacts_dir / "TURN_COLLECTION_COVERAGE.md"))
     checks.append(_exists_check("scenario_suite:json", artifacts_dir / "scenario_suite.json"))
     checks.append(_exists_check("scenario_suite:markdown", artifacts_dir / "SCENARIO_SUITE.md"))
     checks.append(_exists_check("case_studies:json", artifacts_dir / "case_studies.json"))

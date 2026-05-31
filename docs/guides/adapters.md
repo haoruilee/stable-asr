@@ -87,13 +87,16 @@ and fail when record IDs do not cover the shared manifest.
 
 ## Reference Coverage
 
-The curated reference collection is stored in
-`configs/references/asr_collections.json`. Release audit requires P0 and P1
-references to have adapter, converter, command-template, or bridge-template
-evidence in `configs/adapters/stable_asr_adapters.json`.
+The curated reference collections are stored in
+`configs/references/asr_collections.json` and
+`configs/references/turn_collections.json`. Release audit requires P0/P1 ASR
+references and P0 turn/full-duplex references to have adapter, converter,
+command-template, data-source, or bridge-template evidence.
 Run `stable-asr asr-collections --audit-readiness` before adding a new adapter
 to confirm the upstream reference has a current review, explicit Stable-ASR
 actions, and visible license-review notes.
+Run `stable-asr turn-collections --audit-coverage` before adding a turn-taking
+or full-duplex adapter.
 
 Current command-template coverage includes classic ASR toolkits, Chinese-first
 industrial systems, modern speech-LLM ASR families, timestamp/alignment tools,

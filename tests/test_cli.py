@@ -27,6 +27,7 @@ def test_doctor_cli(capsys) -> None:
     assert "config/roadmap" in captured.out
     assert "config/schema_registry" in captured.out
     assert "config/asr_collections" in captured.out
+    assert "config/turn_collections" in captured.out
 
 
 def test_doctor_cli_with_final_file_check(capsys) -> None:
@@ -625,6 +626,36 @@ def test_asr_collections_cli_audits_readiness(tmp_path, capsys) -> None:
     assert "status: `OK`" in captured.out
     assert output.exists()
     assert "license_review_needed" in output.read_text(encoding="utf-8")
+
+
+def test_turn_collections_cli_validate(capsys) -> None:
+    code = main(["turn-collections", "--registry", "configs/references/turn_collections.json", "--validate-only"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "stable_asr_turn_reference_collections_v0" in captured.out
+
+
+def test_turn_collections_cli_audits_coverage(tmp_path, capsys) -> None:
+    output = tmp_path / "TURN_COLLECTION_COVERAGE.md"
+    code = main(["turn-collections", "--audit-coverage", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Turn Collection Coverage" in captured.out
+    assert "missing_required: `0`" in captured.out
+    assert output.exists()
+
+
+def test_turn_collections_cli_writes_acquisition_markdown(tmp_path, capsys) -> None:
+    output = tmp_path / "TURN_COLLECTION_ACQUISITION.md"
+    code = main(["turn-collections", "--format", "acquisition-markdown", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Turn Collection Acquisition Plan" in captured.out
+    assert output.exists()
+    assert "runs/final/external/smart_turn_raw.jsonl" in output.read_text(encoding="utf-8")
 
 
 def test_audit_audio_cli_with_generated_turn_wavs(tmp_path, capsys) -> None:
