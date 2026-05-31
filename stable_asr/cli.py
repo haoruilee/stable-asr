@@ -135,6 +135,13 @@ from stable_asr.scenarios.suites import (
     scenario_suite_markdown,
     validate_scenario_suite,
 )
+from stable_asr.schemas import (
+    get_schema_entry,
+    load_schema_registry,
+    schema_entry_markdown,
+    schema_registry_markdown,
+    validate_schema_registry,
+)
 from stable_asr.streaming.command_compare import audit_asr_command_config, compare_asr_commands_from_config
 from stable_asr.streaming.compare import compare_streaming_transcript_jsonl
 from stable_asr.streaming.metrics import evaluate_streaming_records
@@ -489,6 +496,16 @@ def build_parser() -> argparse.ArgumentParser:
     model_registry_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     model_registry_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     model_registry_parser.add_argument("--validate-only", action="store_true")
+
+    schema_registry_parser = subparsers.add_parser(
+        "schema-registry",
+        help="Print or validate the Stable-ASR JSON Schema registry.",
+    )
+    schema_registry_parser.add_argument("--registry", type=Path, help="Optional schema registry JSON path.")
+    schema_registry_parser.add_argument("--schema-id", help="Print one schema entry instead of the full registry.")
+    schema_registry_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    schema_registry_parser.add_argument("--json", action="store_true", help="Print registry or schema entry as JSON.")
+    schema_registry_parser.add_argument("--validate-only", action="store_true")
 
     asr_collections_parser = subparsers.add_parser(
         "asr-collections",
@@ -1635,6 +1652,30 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         return 0
 
+    if args.command == "schema-registry":
+        try:
+            registry = load_schema_registry(args.registry)
+            validation = validate_schema_registry(registry)
+            if not validation.ok:
+                print(validation.to_text(), file=sys.stderr)
+                return 1
+            if args.validate_only:
+                print(f"OK: {registry['id']} ({len(registry['schemas'])} schema(s))")
+                return 0
+            payload = get_schema_entry(registry, args.schema_id) if args.schema_id else registry
+            if args.json:
+                text = json.dumps(payload, ensure_ascii=False, indent=2)
+            else:
+                text = schema_entry_markdown(payload) if args.schema_id else schema_registry_markdown(registry)
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+            print(text)
+        except (OSError, ValueError, KeyError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0
+
     if args.command == "asr-collections":
         try:
             registry = load_asr_collections(args.registry)
@@ -2251,6 +2292,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"adapter_registry: {len(bundle.adapter_registry)}")
             print(f"model_registry: {len(bundle.model_registry)}")
             print(f"model_cards: {len(bundle.model_cards)}")
+            print(f"schema_registry: {len(bundle.schema_registry)}")
             print(f"asr_collections: {len(bundle.asr_collections)}")
             print(f"scenario_suite: {len(bundle.scenario_suite)}")
             print(f"case_studies: {len(bundle.case_studies)}")

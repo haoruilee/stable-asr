@@ -3,6 +3,22 @@
 The first stable data format is a JSONL turn/action manifest. Each line
 represents one training or evaluation window.
 
+## JSON Schema Registry
+
+Stable-ASR publishes versioned JSON Schemas for the public file contracts used
+by data converters, prediction adapters, streaming ASR evaluation, leaderboard
+exports, model cards, and final input collection plans.
+
+```bash
+stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only
+stable-asr schema-registry --output runs/SCHEMAS.md
+stable-asr schema-registry --schema-id stable_asr.turn_manifest_record.v0 --json
+```
+
+The default registry is `configs/schemas/stable_asr_schemas.json`. Paper bundles
+also copy it to `schema_registry.json` and render `SCHEMAS.md`, so released
+artifacts carry the same machine-readable contracts as the repository.
+
 ## Required Fields
 
 ```json

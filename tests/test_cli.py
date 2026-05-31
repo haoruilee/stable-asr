@@ -25,6 +25,7 @@ def test_doctor_cli(capsys) -> None:
     assert "release_environment_ready:" in captured.out
     assert "config/benchmark_suite" in captured.out
     assert "config/roadmap" in captured.out
+    assert "config/schema_registry" in captured.out
     assert "config/asr_collections" in captured.out
 
 
@@ -81,6 +82,29 @@ def test_roadmap_status_cli(capsys, tmp_path) -> None:
     assert "Stable-ASR Platform Roadmap" in captured.out
     assert output.exists()
     assert "m2_data_reference_layer" in output.read_text(encoding="utf-8")
+
+
+def test_schema_registry_cli(capsys, tmp_path) -> None:
+    code = main(["schema-registry", "--validate-only"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "stable_asr_schema_registry_v0" in captured.out
+
+    output = tmp_path / "SCHEMAS.md"
+    code = main(["schema-registry", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Schema Registry" in captured.out
+    assert output.exists()
+    assert "stable_asr.turn_manifest_record.v0" in output.read_text(encoding="utf-8")
+
+    code = main(["schema-registry", "--schema-id", "stable_asr.streaming_asr_record.v0", "--json"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert '"id": "stable_asr.streaming_asr_record.v0"' in captured.out
 
 
 def test_labels_cli(capsys) -> None:

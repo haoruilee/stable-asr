@@ -20,6 +20,7 @@ from stable_asr.references import load_asr_collections, validate_asr_collections
 from stable_asr.resources import resolve_platform_path
 from stable_asr.roadmap import load_roadmap, validate_roadmap
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
+from stable_asr.schemas import load_schema_registry, validate_schema_registry
 
 
 @dataclass(frozen=True)
@@ -210,6 +211,12 @@ def _config_checks(repo_root: Path) -> list[DoctorCheck]:
             "scenario_suite",
             repo_root / "configs" / "scenarios" / "stable_asr_voiceworld_v0.json",
             lambda path: validate_scenario_suite(load_scenario_suite(path)).to_text(),
+        ),
+        _schema_check(
+            "config",
+            "schema_registry",
+            repo_root / "configs" / "schemas" / "stable_asr_schemas.json",
+            lambda path: validate_schema_registry(load_schema_registry(path)).to_text(),
         ),
         _schema_check(
             "config",

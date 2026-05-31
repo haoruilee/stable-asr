@@ -10,6 +10,7 @@ def test_doctor_accepts_repository_configs() -> None:
     assert isinstance(report.release_environment_ready, bool)
     assert any(check.name == "benchmark_suite" and check.ok for check in report.checks)
     assert any(check.name == "roadmap" and check.ok for check in report.checks)
+    assert any(check.name == "schema_registry" and check.ok for check in report.checks)
     assert any(check.name == "asr_collections" and check.ok for check in report.checks)
     assert any(check.name == "final_run" and check.ok for check in report.checks)
 

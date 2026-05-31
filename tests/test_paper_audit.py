@@ -23,6 +23,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "provenance:json" in report.to_text()
     assert "model_card:markdown" in report.to_text()
     assert "model_registry:markdown" in report.to_text()
+    assert "schema_registry:markdown" in report.to_text()
     assert "final_input_collections:markdown" in report.to_text()
     assert "asr_collection_readiness:markdown" in report.to_text()
     assert report.to_dict()["ok"] is True
@@ -97,6 +98,7 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "OK software/manifest_in" in text
     assert "OK software/source_manifest_content" in text
     assert "OK software/wheel_data_files" in text
+    assert "OK software/schema_registry" in text
     assert "OK software/ci_wheel_smoke" in text
     assert "OK software/ci_lance_smoke" in text
     assert "OK software/license" in text

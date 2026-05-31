@@ -25,6 +25,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert set(bundle.adapter_registry) == {"json", "markdown"}
     assert set(bundle.model_registry) == {"json", "markdown"}
     assert set(bundle.model_cards) == {"json", "markdown"}
+    assert set(bundle.schema_registry) == {"json", "markdown"}
     assert set(bundle.asr_collections) == {
         "json",
         "markdown",
@@ -70,6 +71,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "nanoturn_pico" in Path(bundle.model_registry["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Model Card: NanoTurn Pico" in Path(bundle.model_cards["markdown"]).read_text(encoding="utf-8")
     assert "model_id" in Path(bundle.model_cards["json"]).read_text(encoding="utf-8")
+    assert "Stable-ASR Schema Registry" in Path(bundle.schema_registry["markdown"]).read_text(encoding="utf-8")
+    assert "stable_asr.turn_manifest_record.v0" in Path(bundle.schema_registry["json"]).read_text(encoding="utf-8")
     assert "Stable-ASR Reference Collections" in Path(bundle.asr_collections["markdown"]).read_text(encoding="utf-8")
     assert "@misc{stableasr_ref_funasr" in Path(bundle.asr_collections["bibtex"]).read_text(encoding="utf-8")
     assert "Stable-ASR Paper Reference Notes" in Path(bundle.asr_collections["paper_markdown"]).read_text(encoding="utf-8")
@@ -91,6 +94,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "final_input_collections" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "final_evidence_matrix" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "model_cards" in Path(bundle.manifest_path).read_text(encoding="utf-8")
+    assert "schema_registry" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "artifact_integrity" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "provenance" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "Stable-ASR Paper Status" in Path(bundle.paper_status["markdown"]).read_text(encoding="utf-8")

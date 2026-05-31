@@ -222,6 +222,8 @@ is provided in `mkdocs.yaml`.
 - `data-sources` for validating and rendering data source registries
 - machine-readable adapter registry in `configs/adapters/stable_asr_adapters.json`
 - `adapter-registry` for validating and rendering baseline, converter, command-backed, and external-system adapter entries
+- machine-readable JSON Schema registry in `configs/schemas/stable_asr_schemas.json`
+- `schema-registry` for validating and rendering public data, prediction, streaming, leaderboard, model, and final-input contracts
 - machine-readable upstream ASR reference collection in `configs/references/asr_collections.json`
 - `asr-collections` for validating and rendering top ASR project references
 - `asr-collections --format paper-markdown|bibtex` for paper-ready related-work reference artifacts
@@ -265,6 +267,7 @@ is provided in `mkdocs.yaml`.
 - `paper-table policy` extraction
 - `paper-figure` SVG generation for platform diagrams plus baseline, latency, data, streaming, scenario, and policy figures
 - `paper-bundle` generation for paper results, tables, figures, artifact index, and artifact manifest
+- schema registry JSON/Markdown artifacts in `paper-bundle`
 - paper bundle sha256 integrity manifests and `paper-artifact-integrity` verification
 - paper bundle provenance manifests that record Stable-ASR version, git commit, input result hashes, and config hashes
 - `paper-archive` and `paper-archive-verify` for publishable tar.gz artifact archives with SHA256 and embedded bundle checks

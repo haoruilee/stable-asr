@@ -59,6 +59,7 @@ from stable_asr.references import (
 from stable_asr.roadmap import load_roadmap, roadmap_status
 from stable_asr.scenarios.suites import scenario_suite_markdown, load_scenario_suite, write_scenario_suite_json
 from stable_asr.paper.cards import model_card_markdown, model_card_payload, write_model_card_json
+from stable_asr.schemas import load_schema_registry, schema_registry_markdown, write_schema_registry_json
 
 
 @dataclass(frozen=True)
@@ -79,6 +80,7 @@ class PaperArtifactBundle:
     adapter_registry: dict[str, str]
     model_registry: dict[str, str]
     model_cards: dict[str, str]
+    schema_registry: dict[str, str]
     asr_collections: dict[str, str]
     scenario_suite: dict[str, str]
     case_studies: dict[str, str]
@@ -111,6 +113,7 @@ class PaperArtifactBundle:
             "adapter_registry": self.adapter_registry,
             "model_registry": self.model_registry,
             "model_cards": self.model_cards,
+            "schema_registry": self.schema_registry,
             "asr_collections": self.asr_collections,
             "scenario_suite": self.scenario_suite,
             "case_studies": self.case_studies,
@@ -227,6 +230,12 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "markdown": str(output_dir / "MODEL_CARD.md"),
     }
     Path(model_cards["markdown"]).write_text(model_card_markdown(model_payload), encoding="utf-8")
+    schemas = load_schema_registry()
+    schema_registry = {
+        "json": write_schema_registry_json(output_dir / "schema_registry.json", schemas),
+        "markdown": str(output_dir / "SCHEMAS.md"),
+    }
+    Path(schema_registry["markdown"]).write_text(schema_registry_markdown(schemas), encoding="utf-8")
     asr_reference_registry = load_asr_collections()
     asr_reference_coverage = audit_asr_collection_coverage(
         asr_reference_registry,
@@ -406,6 +415,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         adapter_registry=adapter_registry,
         model_registry=model_registry,
         model_cards=model_cards,
+        schema_registry=schema_registry,
         asr_collections=asr_collections,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
@@ -444,6 +454,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         adapter_registry=adapter_registry,
         model_registry=model_registry,
         model_cards=model_cards,
+        schema_registry=schema_registry,
         asr_collections=asr_collections,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
@@ -511,6 +522,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Model Cards", ""])
     for name, path in bundle.model_cards.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Schema Registry", ""])
+    for name, path in bundle.schema_registry.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## ASR Reference Collections", ""])
     for name, path in bundle.asr_collections.items():
@@ -599,6 +613,7 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.adapter_registry,
         bundle.model_registry,
         bundle.model_cards,
+        bundle.schema_registry,
         bundle.asr_collections,
         bundle.scenario_suite,
         bundle.case_studies,

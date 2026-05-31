@@ -1,0 +1,369 @@
+{
+  "id": "stable_asr_schema_registry_v0",
+  "version": "0.1.0",
+  "title": "Stable-ASR Schema Registry",
+  "description": "Machine-readable JSON Schema contracts for Stable-ASR manifests, predictions, streaming traces, leaderboards, and registries.",
+  "schemas": [
+    {
+      "id": "stable_asr.turn_manifest_record.v0",
+      "version": "0.1.0",
+      "title": "Turn Manifest Record",
+      "description": "One turn-taking training or evaluation window.",
+      "format": "jsonl",
+      "file_patterns": ["*.jsonl", "*.parquet", "*.lance"],
+      "producer_commands": [
+        "stable-asr make-synthetic-turn-data",
+        "stable-asr prepare-voiceworld",
+        "stable-asr asr-to-turn",
+        "stable-asr split-turn-data"
+      ],
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://stable-asr.dev/schemas/turn_manifest_record.v0.json",
+        "title": "Stable-ASR TurnManifestRecord v0",
+        "type": "object",
+        "required": [
+          "id",
+          "audio",
+          "sample_rate",
+          "start",
+          "end",
+          "turn_label",
+          "action_label",
+          "assistant_speaking",
+          "overlap",
+          "language",
+          "source"
+        ],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "audio": {"type": "string", "minLength": 1},
+          "sample_rate": {"type": "integer", "minimum": 1},
+          "start": {"type": "number", "minimum": 0},
+          "end": {"type": "number", "exclusiveMinimum": 0},
+          "turn_label": {"type": "string", "enum": ["backchannel", "complete", "incomplete", "wait"]},
+          "action_label": {
+            "type": "string",
+            "enum": [
+              "continue_speaking",
+              "hold",
+              "ignore",
+              "keep_listening",
+              "light_ack",
+              "stop_tts_and_listen",
+              "take_turn"
+            ]
+          },
+          "assistant_speaking": {"type": "boolean"},
+          "overlap": {"type": "boolean"},
+          "language": {"type": "string", "minLength": 1},
+          "source": {"type": "string", "minLength": 1},
+          "text": {"type": ["string", "null"]},
+          "asr_text": {"type": ["string", "null"]},
+          "scenario": {"type": ["string", "null"]},
+          "metadata": {"type": "object"}
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "stable_asr.asr_manifest_record.v0",
+      "version": "0.1.0",
+      "title": "ASR Manifest Record",
+      "description": "One utterance-level ASR corpus item before turn/action windowing.",
+      "format": "jsonl",
+      "file_patterns": ["asr_manifest.jsonl"],
+      "producer_commands": [
+        "stable-asr prepare-asr-manifest",
+        "stable-asr prepare-public-asr"
+      ],
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://stable-asr.dev/schemas/asr_manifest_record.v0.json",
+        "title": "Stable-ASR ASRManifestRecord v0",
+        "type": "object",
+        "required": ["id", "audio", "sample_rate", "text", "language", "source"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "audio": {"type": "string", "minLength": 1},
+          "sample_rate": {"type": "integer", "minimum": 1},
+          "text": {"type": "string"},
+          "language": {"type": "string", "minLength": 1},
+          "source": {"type": "string", "minLength": 1},
+          "duration": {"type": ["number", "null"], "exclusiveMinimum": 0},
+          "split": {"type": ["string", "null"]},
+          "speaker_id": {"type": ["string", "null"]},
+          "metadata": {"type": "object"}
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "stable_asr.streaming_asr_record.v0",
+      "version": "0.1.0",
+      "title": "Streaming ASR Record",
+      "description": "One streaming ASR trace with final text, partial hypotheses, timestamps, and latency inputs.",
+      "format": "jsonl",
+      "file_patterns": ["streaming_asr*.jsonl", "*_streaming.jsonl"],
+      "producer_commands": [
+        "stable-asr convert-asr-transcript",
+        "stable-asr eval-asr-command"
+      ],
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://stable-asr.dev/schemas/streaming_asr_record.v0.json",
+        "title": "Stable-ASR StreamingASRRecord v0",
+        "type": "object",
+        "required": ["id", "reference", "final_text", "audio_duration", "processing_time"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "reference": {"type": "string"},
+          "final_text": {"type": "string"},
+          "audio_duration": {"type": "number", "minimum": 0},
+          "processing_time": {"type": "number", "minimum": 0},
+          "speech_end_time": {"type": ["number", "null"], "minimum": 0},
+          "endpoint_time": {"type": ["number", "null"], "minimum": 0},
+          "word_timestamps": {
+            "type": "array",
+            "items": {"$ref": "#/$defs/word_timestamp"}
+          },
+          "reference_word_timestamps": {
+            "type": "array",
+            "items": {"$ref": "#/$defs/word_timestamp"}
+          },
+          "partials": {
+            "type": "array",
+            "items": {"$ref": "#/$defs/partial_hypothesis"}
+          },
+          "metadata": {"type": "object"}
+        },
+        "$defs": {
+          "word_timestamp": {
+            "type": "object",
+            "required": ["word", "start", "end"],
+            "properties": {
+              "word": {"type": "string"},
+              "start": {"type": "number", "minimum": 0},
+              "end": {"type": "number", "minimum": 0}
+            },
+            "additionalProperties": true
+          },
+          "partial_hypothesis": {
+            "type": "object",
+            "required": ["time", "text"],
+            "properties": {
+              "time": {"type": "number", "minimum": 0},
+              "text": {"type": "string"},
+              "is_final": {"type": "boolean"}
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "stable_asr.turn_prediction_record.v0",
+      "version": "0.1.0",
+      "title": "Turn Prediction Record",
+      "description": "One external or exported turn prediction row keyed by manifest record id.",
+      "format": "jsonl",
+      "file_patterns": ["*predictions*.jsonl"],
+      "producer_commands": [
+        "stable-asr predict-turn",
+        "stable-asr convert-predictions"
+      ],
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://stable-asr.dev/schemas/turn_prediction_record.v0.json",
+        "title": "Stable-ASR TurnPredictionRow v0",
+        "type": "object",
+        "required": ["id", "probs"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "probs": {
+            "type": "object",
+            "minProperties": 1,
+            "properties": {
+              "backchannel": {"type": "number", "minimum": 0},
+              "complete": {"type": "number", "minimum": 0},
+              "incomplete": {"type": "number", "minimum": 0},
+              "wait": {"type": "number", "minimum": 0}
+            },
+            "additionalProperties": false
+          },
+          "timestamp": {"type": ["number", "null"], "minimum": 0}
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "stable_asr.leaderboard_row.v0",
+      "version": "0.1.0",
+      "title": "Leaderboard Row",
+      "description": "One normalized benchmark metric row exported from paper result artifacts.",
+      "format": "jsonl",
+      "file_patterns": ["leaderboard.jsonl", "leaderboard.csv"],
+      "producer_commands": ["stable-asr leaderboard-export"],
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://stable-asr.dev/schemas/leaderboard_row.v0.json",
+        "title": "Stable-ASR LeaderboardRow v0",
+        "type": "object",
+        "required": [
+          "suite",
+          "task",
+          "system",
+          "slice",
+          "metric",
+          "value",
+          "unit",
+          "higher_is_better",
+          "source"
+        ],
+        "properties": {
+          "suite": {"type": "string", "minLength": 1},
+          "task": {"type": "string", "minLength": 1},
+          "system": {"type": "string", "minLength": 1},
+          "slice": {"type": "string", "minLength": 1},
+          "metric": {"type": "string", "minLength": 1},
+          "value": {"type": "number"},
+          "unit": {"type": "string"},
+          "higher_is_better": {"type": "boolean"},
+          "source": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "stable_asr.model_registry.v0",
+      "version": "0.1.0",
+      "title": "Model Registry",
+      "description": "Built-in model and baseline registry used by reports and model cards.",
+      "format": "json",
+      "file_patterns": ["configs/models/stable_asr_models.json", "model_registry.json"],
+      "producer_commands": ["stable-asr model-registry"],
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://stable-asr.dev/schemas/model_registry.v0.json",
+        "title": "Stable-ASR ModelRegistry v0",
+        "type": "object",
+        "required": ["id", "version", "title", "models"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "version": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "description": {"type": "string"},
+          "models": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"$ref": "#/$defs/model"}
+          }
+        },
+        "$defs": {
+          "model": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "family",
+              "task",
+              "model_type",
+              "status",
+              "modality",
+              "interface",
+              "entrypoint",
+              "input_schema",
+              "output_schema",
+              "license"
+            ],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "title": {"type": "string", "minLength": 1},
+              "family": {"type": "string", "minLength": 1},
+              "task": {"type": "string", "minLength": 1},
+              "model_type": {"type": "string", "minLength": 1},
+              "status": {"type": "string", "minLength": 1},
+              "modality": {"type": "string", "minLength": 1},
+              "interface": {"type": "string", "minLength": 1},
+              "entrypoint": {"type": "string", "minLength": 1},
+              "training_entrypoint": {"type": "string"},
+              "evaluation_entrypoint": {"type": "string"},
+              "export_entrypoint": {"type": "string"},
+              "input_schema": {"type": "string", "minLength": 1},
+              "output_schema": {"type": "string", "minLength": 1},
+              "labels": {"type": "array", "items": {"type": "string"}},
+              "actions": {"type": "array", "items": {"type": "string"}},
+              "config_path": {"type": "string"},
+              "license": {"type": "string", "minLength": 1},
+              "intended_use": {"type": "string"},
+              "limitations": {"type": "array", "items": {"type": "string"}}
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "stable_asr.final_input_collection.v0",
+      "version": "0.1.0",
+      "title": "Final Input Collection Registry",
+      "description": "Operational registry for collecting real corpora, external predictions, and final paper artifacts.",
+      "format": "json",
+      "file_patterns": ["configs/final/input_collections.json", "final_input_collections.json"],
+      "producer_commands": ["stable-asr final-inputs"],
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://stable-asr.dev/schemas/final_input_collection.v0.json",
+        "title": "Stable-ASR FinalInputCollections v0",
+        "type": "object",
+        "required": ["id", "version", "title", "collections"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "version": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "description": {"type": "string"},
+          "collections": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"$ref": "#/$defs/collection"}
+          }
+        },
+        "$defs": {
+          "collection": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "category",
+              "priority",
+              "required",
+              "license",
+              "required_paths",
+              "generated_paths",
+              "commands",
+              "verification"
+            ],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "title": {"type": "string", "minLength": 1},
+              "category": {"type": "string", "minLength": 1},
+              "priority": {"type": "string", "enum": ["p0", "p1", "p2"]},
+              "required": {"type": "boolean"},
+              "license": {"type": "string", "minLength": 1},
+              "source_urls": {"type": "array", "items": {"type": "string"}},
+              "required_paths": {"type": "array", "items": {"type": "string"}},
+              "generated_paths": {"type": "array", "items": {"type": "string"}},
+              "commands": {"type": "array", "items": {"type": "string"}},
+              "verification": {"type": "array", "items": {"type": "string"}},
+              "notes": {"type": "string"}
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  ]
+}

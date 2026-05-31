@@ -38,6 +38,8 @@ DEFAULT_BENCHMARK_SUITE: dict[str, Any] = {
         "MODELS.md",
         "model_card.json",
         "MODEL_CARD.md",
+        "schema_registry.json",
+        "SCHEMAS.md",
         "final_input_collections.json",
         "final_input_collection_status.json",
         "FINAL_INPUT_COLLECTIONS.md",

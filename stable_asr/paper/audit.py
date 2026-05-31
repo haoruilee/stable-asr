@@ -32,6 +32,7 @@ from stable_asr.references import (
 )
 from stable_asr.resources import resolve_platform_path
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
+from stable_asr.schemas import load_schema_registry, validate_schema_registry
 
 
 @dataclass(frozen=True)
@@ -233,6 +234,24 @@ def audit_paper_release(
             )
         except (OSError, ValueError) as exc:
             checks.append(_release_check("paper", "final_input_collections_schema", False, str(exc)))
+
+    schema_registry_path = repo_root / "configs" / "schemas" / "stable_asr_schemas.json"
+    if schema_registry_path.exists():
+        try:
+            schema_registry = load_schema_registry(schema_registry_path)
+            schema_validation = validate_schema_registry(schema_registry)
+            checks.append(
+                _release_check(
+                    "software",
+                    "schema_registry",
+                    schema_validation.ok,
+                    f"{len(schema_registry.get('schemas', []))} schema(s)"
+                    if schema_validation.ok
+                    else "; ".join(schema_validation.errors[:3]),
+                )
+            )
+        except (OSError, ValueError) as exc:
+            checks.append(_release_check("software", "schema_registry", False, str(exc)))
 
     source_path = repo_root / "configs" / "datasets" / "stable_asr_sources.json"
     if source_path.exists():
@@ -563,11 +582,13 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
         "final_whisper_export_bridge": "scripts/export_whisper_streaming.py",
         "final_funasr_export_bridge": "scripts/export_funasr_streaming.py",
         "benchmark_suite": "configs/benchmarks/stable_asr_v0.json",
+        "schema_registry": "configs/schemas/stable_asr_schemas.json",
         "data_sources": "configs/datasets/stable_asr_sources.json",
         "adapter_registry": "configs/adapters/stable_asr_adapters.json",
         "asr_collections": "configs/references/asr_collections.json",
         "scenario_suite": "configs/scenarios/stable_asr_voiceworld_v0.json",
         "asr_manifest_schema": "stable_asr/data/asr_manifest.py",
+        "json_schema_registry": "stable_asr/schemas.py",
         "asr_manifest_recipe": "stable_asr/data/recipes/asr_folder.py",
         "paper_script": "scripts/reproduce_paper.py",
     }
@@ -644,6 +665,7 @@ def _wheel_data_files_check(path: Path) -> PaperReleaseAuditCheck:
         "share/stable-asr/configs/references",
         "share/stable-asr/configs/roadmap",
         "share/stable-asr/configs/scenarios",
+        "share/stable-asr/configs/schemas",
         "share/stable-asr/docs",
         "share/stable-asr/docs/api",
         "share/stable-asr/docs/guides",
@@ -1002,6 +1024,8 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("model_registry:markdown", artifacts_dir / "MODELS.md"))
     checks.append(_exists_check("model_card:json", artifacts_dir / "model_card.json"))
     checks.append(_exists_check("model_card:markdown", artifacts_dir / "MODEL_CARD.md"))
+    checks.append(_exists_check("schema_registry:json", artifacts_dir / "schema_registry.json"))
+    checks.append(_exists_check("schema_registry:markdown", artifacts_dir / "SCHEMAS.md"))
     checks.append(_exists_check("asr_collections:json", artifacts_dir / "asr_collections.json"))
     checks.append(_exists_check("asr_collections:markdown", artifacts_dir / "ASR_COLLECTIONS.md"))
     checks.append(_exists_check("asr_collections:paper_markdown", artifacts_dir / "ASR_REFERENCES.md"))
