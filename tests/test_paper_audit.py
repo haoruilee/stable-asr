@@ -71,3 +71,19 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "reference/asr_collections_schema" in text
     assert "OK reference/asr_collections_coverage" in text
     assert "OK scenario/scenario_suite_coverage" in text
+
+
+def test_paper_release_audit_resolves_platform_assets_from_empty_repo_root(tmp_path: Path, monkeypatch) -> None:
+    empty_root = tmp_path / "empty"
+    empty_root.mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    report = audit_paper_release(repo_root=empty_root)
+    text = report.to_text()
+
+    assert "OK software/pyproject" in text
+    assert "OK software/manifest_in" in text
+    assert "OK software/ci_workflow" in text
+    assert "OK software/asr_manifest_schema" in text
+    assert "OK paper/citation" in text
+    assert "OK software/docs_site" in text

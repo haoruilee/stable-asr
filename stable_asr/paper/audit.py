@@ -16,6 +16,7 @@ from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_
 from stable_asr.paper.suites import audit_benchmark_suite_coverage, load_benchmark_suite, validate_benchmark_suite
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results
 from stable_asr.references import audit_asr_collection_coverage, load_asr_collections, validate_asr_collections
+from stable_asr.resources import resolve_platform_path
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
 
 
@@ -310,8 +311,10 @@ def audit_paper_release(
     checks.append(_optional_path_check("paper", "latex_draft", latex_draft))
     checks.append(_optional_path_check("data", "dataset_card", dataset_card))
     checks.append(_optional_path_check("paper", "experiment_card", experiment_card))
-    checks.append(_release_check("paper", "citation", (repo_root / "CITATION.cff").exists(), "CITATION.cff"))
-    checks.append(_release_check("software", "docs_site", (repo_root / "docs").exists(), "docs/"))
+    citation_path = _repo_or_platform_path(repo_root, "CITATION.cff")
+    docs_path = _repo_or_platform_path(repo_root, "docs")
+    checks.append(_release_check("paper", "citation", citation_path.exists(), _display_repo_path(repo_root, citation_path)))
+    checks.append(_release_check("software", "docs_site", docs_path.exists(), _display_repo_path(repo_root, docs_path)))
 
     return PaperReleaseAuditReport(ok=all(check.ok for check in checks), checks=checks)
 
@@ -475,39 +478,58 @@ def _results_checks(results: dict[str, object]) -> list[PaperAuditCheck]:
 
 def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
     required = {
-        "pyproject": repo_root / "pyproject.toml",
-        "manifest_in": repo_root / "MANIFEST.in",
-        "readme": repo_root / "README.md",
-        "license": repo_root / "LICENSE",
-        "contributing": repo_root / "CONTRIBUTING.md",
-        "security": repo_root / "SECURITY.md",
-        "code_of_conduct": repo_root / "CODE_OF_CONDUCT.md",
-        "roadmap": repo_root / "ROADMAP.md",
-        "roadmap_registry": repo_root / "configs" / "roadmap" / "stable_asr_roadmap.json",
-        "ci_workflow": repo_root / ".github" / "workflows" / "tests.yml",
-        "paper_config": repo_root / "configs" / "paper" / "paper_smoke.json",
-        "paper_parity_checklist": repo_root / "configs" / "paper" / "paper_parity_checklist.json",
-        "final_experiments": repo_root / "configs" / "paper" / "final_experiments.json",
-        "final_run_config": repo_root / "configs" / "final" / "paper_final.json",
-        "final_asr_command_config": repo_root / "configs" / "final" / "asr_command_compare.json",
-        "benchmark_suite": repo_root / "configs" / "benchmarks" / "stable_asr_v0.json",
-        "data_sources": repo_root / "configs" / "datasets" / "stable_asr_sources.json",
-        "adapter_registry": repo_root / "configs" / "adapters" / "stable_asr_adapters.json",
-        "asr_collections": repo_root / "configs" / "references" / "asr_collections.json",
-        "scenario_suite": repo_root / "configs" / "scenarios" / "stable_asr_voiceworld_v0.json",
-        "asr_manifest_schema": repo_root / "stable_asr" / "data" / "asr_manifest.py",
-        "asr_manifest_recipe": repo_root / "stable_asr" / "data" / "recipes" / "asr_folder.py",
-        "paper_script": repo_root / "scripts" / "reproduce_paper.py",
+        "pyproject": "pyproject.toml",
+        "manifest_in": "MANIFEST.in",
+        "readme": "README.md",
+        "license": "LICENSE",
+        "contributing": "CONTRIBUTING.md",
+        "security": "SECURITY.md",
+        "code_of_conduct": "CODE_OF_CONDUCT.md",
+        "roadmap": "ROADMAP.md",
+        "roadmap_registry": "configs/roadmap/stable_asr_roadmap.json",
+        "ci_workflow": ".github/workflows/tests.yml",
+        "paper_config": "configs/paper/paper_smoke.json",
+        "paper_parity_checklist": "configs/paper/paper_parity_checklist.json",
+        "final_experiments": "configs/paper/final_experiments.json",
+        "final_run_config": "configs/final/paper_final.json",
+        "final_asr_command_config": "configs/final/asr_command_compare.json",
+        "benchmark_suite": "configs/benchmarks/stable_asr_v0.json",
+        "data_sources": "configs/datasets/stable_asr_sources.json",
+        "adapter_registry": "configs/adapters/stable_asr_adapters.json",
+        "asr_collections": "configs/references/asr_collections.json",
+        "scenario_suite": "configs/scenarios/stable_asr_voiceworld_v0.json",
+        "asr_manifest_schema": "stable_asr/data/asr_manifest.py",
+        "asr_manifest_recipe": "stable_asr/data/recipes/asr_folder.py",
+        "paper_script": "scripts/reproduce_paper.py",
     }
     return [
-        _release_check("software", name, path.exists(), str(path.relative_to(repo_root) if path.is_relative_to(repo_root) else path))
-        for name, path in required.items()
+        _repo_path_check(repo_root, name, relative_path)
+        for name, relative_path in required.items()
     ] + [
-        _source_manifest_content_check(repo_root / "MANIFEST.in"),
-        _wheel_data_files_check(repo_root / "pyproject.toml"),
-        _ci_wheel_smoke_check(repo_root / ".github" / "workflows" / "tests.yml"),
-        _ci_lance_smoke_check(repo_root / ".github" / "workflows" / "tests.yml"),
+        _source_manifest_content_check(_repo_or_platform_path(repo_root, "MANIFEST.in")),
+        _wheel_data_files_check(_repo_or_platform_path(repo_root, "pyproject.toml")),
+        _ci_wheel_smoke_check(_repo_or_platform_path(repo_root, ".github/workflows/tests.yml")),
+        _ci_lance_smoke_check(_repo_or_platform_path(repo_root, ".github/workflows/tests.yml")),
     ]
+
+
+def _repo_path_check(repo_root: Path, name: str, relative_path: str) -> PaperReleaseAuditCheck:
+    path = _repo_or_platform_path(repo_root, relative_path)
+    return _release_check("software", name, path.exists(), _display_repo_path(repo_root, path))
+
+
+def _repo_or_platform_path(repo_root: Path, relative_path: str | Path) -> Path:
+    repo_path = repo_root / relative_path
+    if repo_path.exists():
+        return repo_path
+    return resolve_platform_path(relative_path)
+
+
+def _display_repo_path(repo_root: Path, path: Path) -> str:
+    try:
+        return str(path.relative_to(repo_root))
+    except ValueError:
+        return str(path)
 
 
 def _source_manifest_content_check(path: Path) -> PaperReleaseAuditCheck:
@@ -519,6 +541,7 @@ def _source_manifest_content_check(path: Path) -> PaperReleaseAuditCheck:
         "include SECURITY.md",
         "include CODE_OF_CONDUCT.md",
         "include CITATION.cff",
+        "recursive-include .github/workflows",
         "recursive-include configs",
         "recursive-include docs",
         "recursive-include examples",
@@ -540,6 +563,8 @@ def _source_manifest_content_check(path: Path) -> PaperReleaseAuditCheck:
 def _wheel_data_files_check(path: Path) -> PaperReleaseAuditCheck:
     required_patterns = (
         "[tool.setuptools.data-files]",
+        "share/stable-asr",
+        "share/stable-asr/.github/workflows",
         "share/stable-asr/configs/adapters",
         "share/stable-asr/configs/benchmarks",
         "share/stable-asr/configs/datasets",
