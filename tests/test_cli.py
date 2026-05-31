@@ -112,6 +112,32 @@ def test_eval_turn_cli_external_predictions(capsys) -> None:
     assert "accuracy: 1.0000" in captured.out
 
 
+def test_compare_turn_cli_with_baselines_and_predictions(tmp_path, capsys) -> None:
+    report = tmp_path / "turn_compare.md"
+    code = main(
+        [
+            "compare-turn",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--baseline",
+            "vad_pause",
+            "--baseline",
+            "text_turn",
+            "--predictions",
+            "oracle=tests/fixtures/turn_predictions_sample.jsonl",
+            "--report",
+            str(report),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "name=oracle" in captured.out
+    assert "macro_f1=1.0000" in captured.out
+    assert report.exists()
+    assert "Stable-ASR Turn Comparison" in report.read_text(encoding="utf-8")
+
+
 def test_benchmark_turn_cli(tmp_path, capsys) -> None:
     report_path = tmp_path / "turn_benchmark.md"
     code = main(

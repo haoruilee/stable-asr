@@ -34,6 +34,7 @@ from stable_asr.data.split import TurnSplitConfig, split_turn_records
 from stable_asr.data.turn_from_asr import ASRToTurnConfig, asr_records_to_turn_records
 from stable_asr.doctor import run_doctor
 from stable_asr.eval.turn_benchmark import benchmark_turn_predictor
+from stable_asr.eval.turn_compare import compare_turn_predictors
 from stable_asr.eval.turn_eval import evaluate_turn_records
 from stable_asr.models.baselines import RuleEndpointBaseline, TextTurnBaseline, VADPauseBaseline
 from stable_asr.models.adapters import (
@@ -182,6 +183,36 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print the evaluation report as JSON.",
     )
+
+    compare_turn_parser = subparsers.add_parser(
+        "compare-turn",
+        help="Compare multiple turn baselines, checkpoints, or prediction manifests on one dataset.",
+    )
+    compare_turn_parser.add_argument("--dataset", type=Path, required=True, help="Path to a turn manifest.")
+    compare_turn_parser.add_argument(
+        "--baseline",
+        action="append",
+        choices=["rule_endpoint", "vad_pause", "text_turn"],
+        help="Built-in baseline to include. May be repeated. Defaults to all built-in baselines.",
+    )
+    compare_turn_parser.add_argument(
+        "--checkpoint",
+        action="append",
+        default=[],
+        metavar="NAME=PATH",
+        help="Named NanoTurn checkpoint to include. May be repeated.",
+    )
+    compare_turn_parser.add_argument(
+        "--predictions",
+        action="append",
+        default=[],
+        metavar="NAME=PATH",
+        help="Named Stable-ASR turn prediction JSONL to include. May be repeated.",
+    )
+    compare_turn_parser.add_argument("--audio-root", type=Path)
+    compare_turn_parser.add_argument("--complete-pause-ms", type=int, default=700)
+    compare_turn_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
+    compare_turn_parser.add_argument("--json", action="store_true")
 
     benchmark_turn_parser = subparsers.add_parser(
         "benchmark-turn",
@@ -819,6 +850,43 @@ def main(argv: list[str] | None = None) -> int:
                     ]
                 )
             )
+            if args.report:
+                print(f"report: {args.report}")
+        return 0
+
+    if args.command == "compare-turn":
+        try:
+            records = load_manifest(args.dataset)
+            predictors = _build_turn_comparison_predictors(args, dataset_parent=args.dataset.parent)
+            report = compare_turn_predictors(
+                records,
+                predictors,
+                dataset=str(args.dataset),
+                policy=TurnPolicy(TurnPolicyConfig(complete_threshold=0.75)),
+            )
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.report:
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(report.to_markdown(), encoding="utf-8")
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            for row in report.rows:
+                print(
+                    " ".join(
+                        [
+                            f"name={row.name}",
+                            f"kind={row.kind}",
+                            f"records={row.records}",
+                            f"accuracy={row.accuracy:.4f}",
+                            f"macro_f1={row.macro_f1:.4f}",
+                            f"false_complete_rate={row.false_complete_rate:.4f}",
+                            f"failures={row.failures}",
+                        ]
+                    )
+                )
             if args.report:
                 print(f"report: {args.report}")
         return 0
@@ -1849,6 +1917,35 @@ def _build_turn_predictor(args, *, dataset_parent: Path):
             audio_root=getattr(args, "audio_root", None) or dataset_parent,
         )
     return _build_baseline(args.baseline, complete_pause_ms=args.complete_pause_ms)
+
+
+def _build_turn_comparison_predictors(args, *, dataset_parent: Path):
+    predictors = []
+    baselines = args.baseline or ["rule_endpoint", "vad_pause", "text_turn"]
+    for baseline in baselines:
+        predictors.append(
+            (
+                baseline,
+                "baseline",
+                _build_baseline(baseline, complete_pause_ms=args.complete_pause_ms),
+            )
+        )
+    for item in args.predictions:
+        name, path = _parse_named_path(item)
+        predictors.append((name, "predictions", TurnPredictionManifestAdapter.from_jsonl(path)))
+    for item in args.checkpoint:
+        name, path = _parse_named_path(item)
+        predictors.append(
+            (
+                name,
+                "checkpoint",
+                NanoTurnCheckpointPredictor(
+                    path,
+                    audio_root=args.audio_root or dataset_parent,
+                ),
+            )
+        )
+    return predictors
 
 
 def _load_paper_config(path: Path | None) -> dict[str, object]:

@@ -45,6 +45,7 @@ stable-asr labels
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl
+stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl --report /tmp/stable-asr-turn-compare.md
 stable-asr make-synthetic-turn-data --output /tmp/stable-asr-synth.jsonl --episodes 10 --seed 42 --write-audio
 stable-asr inspect-manifest examples/data/turn_demo.jsonl
 stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report /tmp/stable-asr-turn-profile.md
@@ -150,6 +151,7 @@ Current M0 functionality:
 - threshold/hysteresis turn policy
 - Markdown report helper
 - `eval-turn` baseline evaluation command
+- `compare-turn` for same-dataset turn baseline/checkpoint/prediction comparison reports
 - rule endpoint and VAD pause baselines
 - text-only turn baseline via `TextTurnBaseline`
 - external turn prediction JSONL adapter via `--predictions`
