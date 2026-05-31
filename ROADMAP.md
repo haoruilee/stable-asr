@@ -35,6 +35,32 @@ the current repository contains the milestone evidence that should exist now,
 while final-scale corpora, external predictions, and final paper artifacts
 remain planned until real data and experiments are present.
 
+## Final-Scale Evidence Gate
+
+M0-M4 are structural platform milestones. M5 is deliberately blocked until real
+corpora, external ASR/turn exports, VoiceWorld records, NanoTurn checkpoints,
+and final paper artifacts exist. Final evidence must pass both coordination and
+handoff audits:
+
+```bash
+stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+stable-asr final-assignment-audit \
+  --input runs/final_acquisition_pack/acquisition/assignments.json \
+  --require-owner \
+  --require-due-date \
+  --require-ready \
+  --output runs/final/FINAL_ASSIGNMENT_AUDIT.md
+stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json
+stable-asr final-handoff-audit \
+  --input runs/final/FINAL_INPUT_HANDOFF.json \
+  --repo-root . \
+  --output runs/final/FINAL_HANDOFF_AUDIT.md
+stable-asr paper-release-audit --repo-root . --require-final-ready
+```
+
+This prevents smoke fixtures, unassigned collection work, or undocumented
+license/consent gaps from being mistaken for paper-scale evidence.
+
 ## Positioning
 
 Stable-ASR is not another all-in-one ASR toolkit. ESPnet, FunASR, WeNet, NeMo,
@@ -1278,6 +1304,9 @@ Deliverables:
 - paper artifact bundler implemented for tables, figures, leaderboard exports, benchmark suite files, index, and manifest
 - paper artifact audit implemented for result sections, tables, figures, leaderboard exports, benchmark suite files, index, and manifest
 - release-readiness audit implemented for software, data, baseline, scenario, policy, streaming, and paper gates
+- final acquisition pack implemented for collection checklists, owner assignment tracking, license/consent review, VoiceWorld recording checklist, and handoff templates
+- final assignment audit implemented for owner, due-date, and release-blocker tracking before handoff
+- final handoff audit implemented for owner, license/consent, verification, path, and checksum evidence
 - Markdown paper draft generator implemented for editable preprint drafts
 - LaTeX paper draft generator implemented for arXiv-style preprint drafts
 - `CITATION.cff` implemented
@@ -1302,6 +1331,9 @@ Exit criteria:
 - all paper figures and tables can be regenerated from checked-in configs
 - results are stored in a structured format under `runs/paper/`
 - every plotted result links back to a command, config, and seed
+- final-scale evidence requires `FINAL_ASSIGNMENT_AUDIT.md`,
+  `FINAL_INPUT_HANDOFF.json`, and `FINAL_HANDOFF_AUDIT.md` before
+  `paper-release-audit --require-final-ready` can pass
 
 Verified locally:
 
@@ -1426,6 +1458,8 @@ Deliverables:
 - install instructions
 - citation
 - benchmark data release notes
+- final acquisition assignment audit evidence
+- final input handoff audit evidence
 - limitations and ethics section
 
 Exit criteria:
@@ -1434,6 +1468,8 @@ Exit criteria:
 - at least one external baseline adapter is validated
 - paper claims are backed by scripts and logs
 - code, docs, and draft use consistent naming
+- final-ready gates fail unless assignment, handoff, and artifact evidence are
+  present and auditable
 
 ### v1.0: Stable-ASR Platform Paper Release
 
@@ -1459,6 +1495,8 @@ Exit criteria:
 - machine-readable benchmark suite definition implemented in `configs/benchmarks/stable_asr_v0.json`
 - benchmark suite validation/rendering implemented through `benchmark-suite`
 - benchmark suite coverage audit implemented against generated leaderboard rows
+- final acquisition assignment and handoff audits are required release evidence
+  for real M5 data and artifact claims
 
 Verified leaderboard export:
 
@@ -1600,6 +1638,10 @@ stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-d
 stable-asr paper-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 stable-asr paper-draft --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/PAPER_DRAFT.md
 stable-asr paper-latex --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/paper.tex
+stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md
+stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json
+stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --markdown-draft runs/paper/smoke/PAPER_DRAFT.md --latex-draft runs/paper/smoke/paper.tex
 ```
 
