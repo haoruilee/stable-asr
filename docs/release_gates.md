@@ -15,6 +15,7 @@ ready.
 `paper-release-audit` checks stricter platform-paper gates:
 
 - source package and CI exist
+- `MANIFEST.in` exists and includes platform configs, docs, examples, scripts, and fixtures for source distributions
 - `LICENSE` and `CONTRIBUTING.md` exist
 - paper config and reproduction script exist
 - roadmap registry exists and `roadmap-status` can separate current milestone evidence from planned final-scale work

@@ -472,6 +472,7 @@ def _results_checks(results: dict[str, object]) -> list[PaperAuditCheck]:
 def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
     required = {
         "pyproject": repo_root / "pyproject.toml",
+        "manifest_in": repo_root / "MANIFEST.in",
         "readme": repo_root / "README.md",
         "license": repo_root / "LICENSE",
         "contributing": repo_root / "CONTRIBUTING.md",
@@ -495,7 +496,32 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
     return [
         _release_check("software", name, path.exists(), str(path.relative_to(repo_root) if path.is_relative_to(repo_root) else path))
         for name, path in required.items()
-    ]
+    ] + [_source_manifest_content_check(repo_root / "MANIFEST.in")]
+
+
+def _source_manifest_content_check(path: Path) -> PaperReleaseAuditCheck:
+    required_patterns = (
+        "include README.md",
+        "include ROADMAP.md",
+        "include LICENSE",
+        "include CONTRIBUTING.md",
+        "include CITATION.cff",
+        "recursive-include configs",
+        "recursive-include docs",
+        "recursive-include examples",
+        "recursive-include scripts",
+        "recursive-include tests/fixtures",
+    )
+    if not path.exists():
+        return _release_check("software", "source_manifest_content", False, f"missing: {path}")
+    text = path.read_text(encoding="utf-8")
+    missing = [pattern for pattern in required_patterns if pattern not in text]
+    return _release_check(
+        "software",
+        "source_manifest_content",
+        not missing,
+        "covers platform assets" if not missing else "missing: " + ", ".join(missing),
+    )
 
 
 def _release_result_checks(
