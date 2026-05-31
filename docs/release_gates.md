@@ -89,6 +89,8 @@ ready.
 - paper parity JSON/Markdown files are included in the artifact bundle
 - final experiment JSON/Markdown files are included in the artifact bundle
 - final input collection JSON/status/Markdown files are included in the artifact bundle
+- final assignment tracker and strict `FINAL_ASSIGNMENT_AUDIT.md` evidence are
+  surfaced by `paper-status` and checked by final-ready release gates
 - final handoff JSON/Markdown audit evidence is included in the final
   reproducibility bundle
 - final-run config JSON/Markdown files are included in the artifact bundle

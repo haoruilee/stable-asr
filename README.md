@@ -318,7 +318,7 @@ is provided in `mkdocs.yaml`.
 - final evidence matrix artifacts in `paper-bundle`
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
 - `paper-claim-audit` for mapping platform-paper claims to concrete files, result keys, commands, and artifacts
-- `paper-status` for a single-page summary of smoke, structural, final-input, and final-paper readiness
+- `paper-status` for a single-page summary of smoke, structural, final-input, final assignment, and final-paper readiness
 - `paper-evidence-matrix` for mapping final experiments to blockers, commands, expected artifacts, and success criteria
 - machine-readable stable-worldmodel-style paper parity checklist in `configs/paper/paper_parity_checklist.json`
 - `paper-parity-audit` for separating smoke-level structural evidence from final-scale paper gaps

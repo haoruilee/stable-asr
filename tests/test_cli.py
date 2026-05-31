@@ -55,6 +55,7 @@ def test_paper_status_cli(capsys) -> None:
     assert code == 0
     assert "Stable-ASR Paper Status" in captured.out
     assert "final_inputs_ready" in captured.out
+    assert "final_assignment_ready" in captured.out
 
 
 def test_paper_evidence_matrix_cli_writes_markdown(tmp_path, capsys) -> None:

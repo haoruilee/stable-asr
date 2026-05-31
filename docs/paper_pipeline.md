@@ -93,6 +93,10 @@ stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.jso
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --results runs/paper/smoke/paper_results.json --validate-only
 ```
 
+The `paper-status` output reports the final assignment gate separately from
+final input paths, so missing owners, due dates, release blockers, or a missing
+`FINAL_ASSIGNMENT_AUDIT.md` stay visible before the final handoff is accepted.
+
 The bundle includes Markdown tables and SVG figures for platform architecture,
 data registry, VoiceWorld timelines, policy state transitions, baseline quality,
 latency, ASR manifest recipe summaries, failure-case taxonomy, streaming metrics,
