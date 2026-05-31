@@ -97,6 +97,7 @@ from stable_asr.paper.final_inputs import (
 )
 from stable_asr.paper.final_pack import build_final_pack
 from stable_asr.paper.final_results import assemble_final_paper_results
+from stable_asr.paper.handoff import audit_final_handoff, final_handoff_template
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.archive import paper_artifact_archive, verify_paper_artifact_archive
 from stable_asr.paper.integrity import verify_artifact_integrity
@@ -1284,6 +1285,22 @@ def build_parser() -> argparse.ArgumentParser:
     final_acquisition_pack_parser.add_argument("--input-collections", type=Path, help="Optional final input collection JSON path.")
     final_acquisition_pack_parser.add_argument("--repo-root", type=Path, default=Path("."))
     final_acquisition_pack_parser.add_argument("--json", action="store_true")
+
+    final_handoff_template_parser = subparsers.add_parser(
+        "final-handoff-template",
+        help="Write a structured JSON template for final input handoff.",
+    )
+    final_handoff_template_parser.add_argument("--output", type=Path, required=True)
+    final_handoff_template_parser.add_argument("--input-collections", type=Path, help="Optional final input collection JSON path.")
+
+    final_handoff_audit_parser = subparsers.add_parser(
+        "final-handoff-audit",
+        help="Audit a structured final input handoff JSON for paths, metadata, and checksums.",
+    )
+    final_handoff_audit_parser.add_argument("--input", type=Path, required=True)
+    final_handoff_audit_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    final_handoff_audit_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    final_handoff_audit_parser.add_argument("--json", action="store_true")
 
     contributor_pack_parser = subparsers.add_parser(
         "contributor-pack",
@@ -3244,6 +3261,27 @@ def main(argv: list[str] | None = None) -> int:
             print(f"output_dir: {report.output_dir}")
             print(f"readme: {report.files.get('readme')}")
             print(f"commands: {report.files.get('commands_markdown')}")
+        return 0 if report.ok else 1
+
+    if args.command == "final-handoff-template":
+        try:
+            registry = load_final_input_collections(args.input_collections)
+            payload = final_handoff_template(registry)
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            print(f"final_handoff_template: {args.output}")
+        except (OSError, ValueError, KeyError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.command == "final-handoff-audit":
+        report = audit_final_handoff(args.input, repo_root=args.repo_root)
+        text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+        print(text)
         return 0 if report.ok else 1
 
     if args.command == "contributor-pack":

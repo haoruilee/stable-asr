@@ -21,6 +21,7 @@ from stable_asr.paper.final_inputs import (
     validate_final_input_collections,
     write_final_input_collections_json,
 )
+from stable_asr.paper.handoff import final_handoff_schema_markdown, final_handoff_template
 from stable_asr.resources import resolve_platform_path
 
 
@@ -233,6 +234,14 @@ def build_final_acquisition_pack(
     files["handoff_template"] = _write_text(
         output_dir / "acquisition" / "HANDOFF_TEMPLATE.md",
         _handoff_template(),
+    )
+    files["handoff_json_template"] = _write_json(
+        output_dir / "acquisition" / "handoff_template.json",
+        final_handoff_template(registry),
+    )
+    files["handoff_schema_markdown"] = _write_text(
+        output_dir / "acquisition" / "HANDOFF_SCHEMA.md",
+        final_handoff_schema_markdown(),
     )
 
     commands = _starter_commands()
@@ -474,6 +483,7 @@ def _starter_commands() -> list[str]:
         f"stable-asr final-inputs --registry {PACK_FINAL_INPUTS_PATH} --config {PACK_FINAL_CONFIG_PATH} --repo-root . --output reports/FINAL_INPUT_COLLECTIONS_CURRENT.md",
         f"stable-asr final-config --config {PACK_FINAL_CONFIG_PATH} --repo-root . --plan-missing --output reports/FINAL_RUN_ACTION_PLAN_CURRENT.md",
         f"stable-asr final-config --config {PACK_FINAL_CONFIG_PATH} --repo-root . --check-files --output reports/FINAL_RUN_FILE_AUDIT_CURRENT.md || true",
+        "stable-asr final-handoff-audit --input acquisition/handoff_template.json --repo-root . --output reports/FINAL_HANDOFF_AUDIT.md || true",
     ]
 
 

@@ -237,6 +237,27 @@ def test_final_acquisition_pack_cli(capsys, tmp_path) -> None:
     assert (output_dir / "acquisition" / "LICENSE_REVIEW.md").exists()
 
 
+def test_final_handoff_template_and_audit_cli(capsys, tmp_path) -> None:
+    template = tmp_path / "handoff.json"
+    code = main(["final-handoff-template", "--output", str(template)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "final_handoff_template:" in captured.out
+    assert template.exists()
+
+    code = main(["final-handoff-audit", "--input", str(template), "--repo-root", str(tmp_path)])
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "Final Handoff Audit" in captured.out
+    assert "owner:missing" in captured.out
+
+    output = tmp_path / "HANDOFF_AUDIT.md"
+    code = main(["final-handoff-audit", "--input", str(template), "--repo-root", str(tmp_path), "--output", str(output)])
+    assert code == 1
+    assert output.exists()
+
+
 def test_contributor_pack_cli(capsys, tmp_path) -> None:
     output_dir = tmp_path / "contributor_pack"
     code = main(["contributor-pack", "--output-dir", str(output_dir)])

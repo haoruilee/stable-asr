@@ -35,6 +35,12 @@ from stable_asr.paper.final_inputs import (
 )
 from stable_asr.paper.final_pack import FinalPackReport, build_final_pack
 from stable_asr.paper.final_results import FinalResultsAssemblyReport, assemble_final_paper_results
+from stable_asr.paper.handoff import (
+    FINAL_HANDOFF_VERSION,
+    FinalHandoffAuditReport,
+    audit_final_handoff,
+    final_handoff_template,
+)
 from stable_asr.paper.integrity import (
     ArtifactDigest,
     ArtifactIntegrityReport,
@@ -110,6 +116,7 @@ __all__ = [
     "FinalAcquisitionPackReport",
     "FinalInputCollectionReport",
     "FinalEvidenceMatrixReport",
+    "FinalHandoffAuditReport",
     "FinalPackReport",
     "LeaderboardMergeReport",
     "SubmissionIndexReport",
@@ -119,6 +126,7 @@ __all__ = [
     "ProvenanceFile",
     "assemble_final_paper_results",
     "artifact_integrity_manifest",
+    "audit_final_handoff",
     "audit_paper_artifacts",
     "audit_paper_release",
     "audit_platform_parity",
@@ -148,7 +156,9 @@ __all__ = [
     "paper_artifact_bundle",
     "paper_draft",
     "final_evidence_matrix",
+    "final_handoff_template",
     "final_input_collection_report",
+    "FINAL_HANDOFF_VERSION",
     "load_final_input_collections",
     "load_platform_parity",
     "paper_figure",

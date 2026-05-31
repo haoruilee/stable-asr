@@ -1144,6 +1144,18 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     )
     checks.append(
         _exists_check(
+            "starter_pack:final_acquisition_handoff_template",
+            artifacts_dir / "starter_packs" / "final_acquisition_pack" / "acquisition" / "handoff_template.json",
+        )
+    )
+    checks.append(
+        _exists_check(
+            "starter_pack:final_acquisition_handoff_schema",
+            artifacts_dir / "starter_packs" / "final_acquisition_pack" / "acquisition" / "HANDOFF_SCHEMA.md",
+        )
+    )
+    checks.append(
+        _exists_check(
             "starter_pack:contributor_manifest",
             artifacts_dir / "starter_packs" / "contributor_pack" / "manifest.json",
         )

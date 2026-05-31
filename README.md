@@ -255,6 +255,7 @@ is provided in `mkdocs.yaml`.
 - `scenario-pack` for generating a VoiceWorld scenario contribution kit with suite metadata, editable annotations, and runnable evaluation commands
 - `final-pack` for generating a final-scale run starter kit with final configs, input collection plans, experiment runbooks, evidence audits, and scaffold directories
 - `final-acquisition-pack` for generating a collaborator-facing final input staging checklist, license/consent review sheet, VoiceWorld recording checklist, and handoff template
+- `final-handoff-template` and `final-handoff-audit` for structured owner/license/path/checksum verification before accepting final inputs
 - `contributor-pack` for generating all public contribution starter packs plus copied issue and PR templates in one onboarding workspace
 - utterance-level ASR manifest schema and metadata-table recipe via `prepare-asr-manifest`
 - `validate-asr-manifest` and `inspect-asr-manifest` for public ASR corpus manifests

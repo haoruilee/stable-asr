@@ -78,14 +78,17 @@ corpora, prediction manifests, checkpoints, or final benchmark results.
 
 ```bash
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+stable-asr final-handoff-template --output runs/final_acquisition_pack/acquisition/handoff_template.json
+stable-asr final-handoff-audit --input runs/final_acquisition_pack/acquisition/handoff_template.json --output runs/final_acquisition_pack/reports/FINAL_HANDOFF_AUDIT.md
 cd runs/final_acquisition_pack
 bash commands.sh
 ```
 
 The generated pack converts `configs/final/input_collections.json` into a
 staging checklist, source URL index, license/consent review sheet, VoiceWorld
-recording checklist, and final input handoff template. It is meant for assigning
-real data and external-output collection work before M5 final runs.
+recording checklist, and structured final input handoff template. The handoff
+audit checks staged paths, owner metadata, license/consent notes, verification
+outputs, and optional checksums before M5 final runs.
 
 ## Contributor Pack
 

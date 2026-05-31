@@ -31,6 +31,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "final_pack:action_plan_markdown" in bundle.starter_packs
     assert "final_acquisition_pack:readme" in bundle.starter_packs
     assert "final_acquisition_pack:checklist_tsv" in bundle.starter_packs
+    assert "final_acquisition_pack:handoff_json_template" in bundle.starter_packs
+    assert "final_acquisition_pack:handoff_schema_markdown" in bundle.starter_packs
     assert "contributor_pack:readme" in bundle.starter_packs
     assert "contributor_pack:tracks" in bundle.starter_packs
     assert set(bundle.data_sources) == {"json", "markdown"}

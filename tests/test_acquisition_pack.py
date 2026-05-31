@@ -25,6 +25,8 @@ def test_build_final_acquisition_pack_writes_staging_checklists(tmp_path: Path) 
     assert (output_dir / "acquisition" / "LICENSE_REVIEW.md").exists()
     assert (output_dir / "acquisition" / "VOICEWORLD_RECORDING_CHECKLIST.md").exists()
     assert (output_dir / "acquisition" / "HANDOFF_TEMPLATE.md").exists()
+    assert (output_dir / "acquisition" / "handoff_template.json").exists()
+    assert (output_dir / "acquisition" / "HANDOFF_SCHEMA.md").exists()
 
     checklist = (output_dir / "acquisition" / "staging_checklist.tsv").read_text(encoding="utf-8")
     assert "collection_id\ttitle\tcategory" in checklist
@@ -38,3 +40,9 @@ def test_build_final_acquisition_pack_writes_staging_checklists(tmp_path: Path) 
     license_review = (output_dir / "acquisition" / "LICENSE_REVIEW.md").read_text(encoding="utf-8")
     assert "project_or_recording_consent" in license_review
     assert "see_upstream" in license_review
+
+    handoff = (output_dir / "acquisition" / "handoff_template.json").read_text(encoding="utf-8")
+    assert "stable_asr_final_handoff_v0" in handoff
+    assert "librispeech_dev_clean" in handoff
+    commands = (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
+    assert "final-handoff-audit" in commands
