@@ -1160,7 +1160,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     final_config_parser.add_argument("--scenario-suite", type=Path, help="Scenario suite for --audit-voiceworld-real.")
     final_config_parser.add_argument("--min-scenario-records", type=int, default=1)
-    final_config_parser.add_argument("--min-asr-command-adapters", type=int, default=2)
+    final_config_parser.add_argument("--min-asr-command-adapters", type=int, default=4)
 
     final_results_parser = subparsers.add_parser(
         "final-results",

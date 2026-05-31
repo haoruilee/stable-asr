@@ -159,7 +159,7 @@ def final_evidence_matrix(
     command_audit = audit_asr_command_config(
         _resolve(str(config["asr_command_config"]), root=root),
         repo_root=root,
-        min_adapters=2,
+        min_adapters=4,
         require_input_manifest=True,
     )
     command_blockers = _asr_command_blockers(command_audit)

@@ -214,6 +214,8 @@
         {"path": "runs/final/external/vap_predictions.jsonl", "required_now": false},
         {"path": "runs/final/asr_commands/whisper_streaming.jsonl", "required_now": false},
         {"path": "runs/final/asr_commands/funasr_streaming.jsonl", "required_now": false},
+        {"path": "runs/final/asr_commands/qwen3_asr_streaming.jsonl", "required_now": false},
+        {"path": "runs/final/asr_commands/firered_asr2s_streaming.jsonl", "required_now": false},
         {"path": "runs/final/reports/asr_transcript_conversions.json", "required_now": false},
         {"path": "runs/final/nanoturn/checkpoint.pt", "required_now": false},
         {"path": "runs/final/FINAL_INPUT_HANDOFF.json", "required_now": false},

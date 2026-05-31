@@ -114,7 +114,7 @@ stable-asr compare-streaming-asr --input balanced=tests/fixtures/streaming_asr_s
 stable-asr streaming-submission --input tests/fixtures/streaming_asr_sample.jsonl --system streaming_fixture --output-dir runs/submissions/streaming_fixture
 stable-asr sweep-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160
 stable-asr eval-asr-command --name my_asr --command "python your_export.py --output {output}" --output runs/my_asr.jsonl
-stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2
+stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 4
 stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --json-output runs/final/reports/asr_command_compare.json
 ```
 

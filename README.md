@@ -153,7 +153,7 @@ stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1 --output runs/TURN_COLLECTION_COVERAGE.md
 stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
 stable-asr compare-asr-commands --config examples/configs/asr_vendor_adapter_demo.json --report runs/asr_vendor_adapter.md
-stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2
+stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 4
 ```
 
 ## Paper And Release Smoke
@@ -299,6 +299,7 @@ is provided in `mkdocs.yaml`.
 - `eval-asr-command` for dependency-light external ASR command adapters
 - `compare-asr-commands` for JSON-configured multi-system command-backed ASR comparisons
 - `compare-asr-commands --validate-only` for auditing adapter commands, shared ASR manifests, output placeholders, and required raw exports before executing heavyweight systems
+- `scripts/export_streaming_transcript.py` for normalizing precomputed Whisper, FunASR, Qwen3-ASR, FireRedASR2S, and other supported vendor ASR exports against one final manifest
 - paper smoke conversion checks for external Whisper, FunASR, Qwen3-ASR, and FireRedASR2S transcript schemas
 - seedable VoiceWorld scenario evaluation with per-scenario breakdowns
 - threshold policy search and cost-sensitive interaction objective

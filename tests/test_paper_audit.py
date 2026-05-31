@@ -117,6 +117,7 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "OK software/issue_template_asr_adapter" in text
     assert "OK software/issue_template_voiceworld" in text
     assert "OK software/issue_template_benchmark_submission" in text
+    assert "OK software/final_streaming_transcript_export_bridge" in text
     assert "OK software/license" in text
     assert "OK software/contributing" in text
     assert "OK software/security" in text

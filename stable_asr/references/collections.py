@@ -547,7 +547,7 @@ def asr_collections_acquisition_markdown(registry: dict[str, Any]) -> str:
         "stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md",
         "stable-asr adapter-pack --output-dir runs/adapter_pack",
         "stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack",
-        "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2",
+        "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 4",
         "```",
         "",
         "## P0 Acquisition Order",

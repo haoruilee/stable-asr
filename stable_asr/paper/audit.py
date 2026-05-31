@@ -736,6 +736,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
         "final_run_config": "configs/final/paper_final.json",
         "final_asr_command_config": "configs/final/asr_command_compare.json",
         "final_results_assembler": "stable_asr/paper/final_results.py",
+        "final_streaming_transcript_export_bridge": "scripts/export_streaming_transcript.py",
         "final_whisper_export_bridge": "scripts/export_whisper_streaming.py",
         "final_funasr_export_bridge": "scripts/export_funasr_streaming.py",
         "voiceworld_world_api": "stable_asr/scenarios/world.py",

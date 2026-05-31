@@ -1796,7 +1796,7 @@ def prepare_final_inputs(
     asr_command_report = audit_asr_command_config(
         _resolve(str(config["asr_command_config"]), root=Path(repo_root)),
         repo_root=repo_root,
-        min_adapters=2,
+        min_adapters=4,
         require_input_manifest=True,
     )
     file_audit = audit_final_run_files(config, repo_root=repo_root)
@@ -2070,7 +2070,11 @@ def _streaming_asr_action(
             str(config["result_inputs"]["streaming_sweep"]),
             str(config["result_inputs"]["asr_transcript_conversions"]),
         ],
-        detail="Evaluate real ASR systems through command adapters without vendoring heavyweight upstream toolkits.",
+        detail=(
+            "Evaluate Whisper, FunASR, Qwen3-ASR, FireRedASR2S, and other real "
+            "ASR systems through command adapters without vendoring heavyweight "
+            "upstream toolkits."
+        ),
     )
 
 

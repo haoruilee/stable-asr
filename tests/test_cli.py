@@ -2548,7 +2548,18 @@ def test_final_config_cli_prepare_asr_eval_manifest(tmp_path, capsys) -> None:
         encoding="utf-8",
     )
 
-    code = main(["final-config", "--config", str(config_path), "--repo-root", str(tmp_path), "--audit-asr-commands"])
+    code = main(
+        [
+            "final-config",
+            "--config",
+            str(config_path),
+            "--repo-root",
+            str(tmp_path),
+            "--audit-asr-commands",
+            "--min-asr-command-adapters",
+            "2",
+        ]
+    )
 
     captured = capsys.readouterr()
     assert code == 0

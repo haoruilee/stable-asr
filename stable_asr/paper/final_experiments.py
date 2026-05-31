@@ -134,7 +134,7 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
             "status": "planned",
             "priority": "P0",
             "required_inputs": [
-                "command-backed exports for at least two ASR systems, for example Whisper, FunASR, WeNet, or NeMo",
+                "command-backed exports for Whisper, FunASR, Qwen3-ASR, and FireRedASR2S",
                 "shared reference transcript manifest",
                 "streaming partial hypotheses and timestamp outputs"
             ],
@@ -148,7 +148,7 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
             "metrics": ["wer", "cer", "rtf", "first_partial_latency", "final_latency", "endpoint_delay", "partial_revision_rate", "stable_prefix_ratio", "timestamp_drift"],
             "expected_artifacts": ["tables/streaming.md", "tables/streaming_sweep.md", "tables/streaming_failures.md", "leaderboard.jsonl"],
             "success_criteria": [
-                "at least two real ASR systems have comparable rows",
+                "Whisper, FunASR, Qwen3-ASR, and FireRedASR2S have comparable normalized rows",
                 "chunk/lookahead sensitivity is reported for at least one system",
                 "failure mining identifies record-level streaming failures"
             ]

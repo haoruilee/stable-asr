@@ -77,13 +77,16 @@ stable-asr compare-asr-commands \
   --config configs/final/asr_command_compare.json \
   --validate-only \
   --require-input-manifest \
-  --min-adapters 2
+  --min-adapters 4
 ```
 
-The checked-in `scripts/export_whisper_streaming.py` and
-`scripts/export_funasr_streaming.py` bridges normalize precomputed upstream raw
-exports, enrich missing references from `runs/final/asr_eval_manifest.jsonl`,
-and fail when record IDs do not cover the shared manifest.
+The checked-in `scripts/export_streaming_transcript.py` bridge normalizes
+precomputed upstream raw exports for any supported transcript schema, enriches
+missing references from `runs/final/asr_eval_manifest.jsonl`, and fails when
+record IDs do not cover the shared manifest. The final command config uses this
+single bridge for Whisper, FunASR, Qwen3-ASR, and FireRedASR2S. The older
+Whisper/FunASR-specific scripts remain as compatibility wrappers for existing
+experiments.
 
 ## Reference Coverage
 

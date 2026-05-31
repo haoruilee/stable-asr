@@ -173,10 +173,21 @@ DEFAULT_FINAL_INPUT_COLLECTIONS: dict[str, Any] = {
             "source_urls": [
                 "https://github.com/openai/whisper",
                 "https://github.com/modelscope/FunASR",
-                "https://github.com/wenet-e2e/wenet",
+                "https://github.com/QwenLM/Qwen3-ASR",
+                "https://github.com/FireRedTeam/FireRedASR2S",
             ],
-            "required_paths": ["configs/final/asr_command_compare.json"],
+            "required_paths": [
+                "configs/final/asr_command_compare.json",
+                "runs/final/asr_commands/raw/whisper_raw.jsonl",
+                "runs/final/asr_commands/raw/funasr_raw.jsonl",
+                "runs/final/asr_commands/raw/qwen3_asr_raw.jsonl",
+                "runs/final/asr_commands/raw/firered_asr2s_raw.jsonl",
+            ],
             "generated_paths": [
+                "runs/final/asr_commands/whisper_streaming.jsonl",
+                "runs/final/asr_commands/funasr_streaming.jsonl",
+                "runs/final/asr_commands/qwen3_asr_streaming.jsonl",
+                "runs/final/asr_commands/firered_asr2s_streaming.jsonl",
                 "runs/final/reports/asr_command_compare.json",
                 "runs/final/reports/whisper_sweep.json",
                 "runs/final/reports/asr_transcript_conversions.json",
@@ -188,7 +199,7 @@ DEFAULT_FINAL_INPUT_COLLECTIONS: dict[str, Any] = {
                 "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-transcript-conversions",
             ],
             "verification": [
-                "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2"
+                "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 4"
             ],
             "notes": "Stable-ASR evaluates normalized outputs and command contracts; it does not vendor upstream ASR stacks.",
         },

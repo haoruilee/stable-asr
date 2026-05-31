@@ -399,7 +399,15 @@ def test_prepare_final_inputs_runs_sequence_and_audit(tmp_path: Path) -> None:
             '{"name":"cmd_b","command":["'
             + sys.executable
             + '","-c","print(1)","{input_manifest}","{output}"],'
-            '"output":"runs/final/asr_commands/b.jsonl"}]}\n'
+            '"output":"runs/final/asr_commands/b.jsonl"},'
+            '{"name":"cmd_c","command":["'
+            + sys.executable
+            + '","-c","print(1)","{input_manifest}","{output}"],'
+            '"output":"runs/final/asr_commands/c.jsonl"},'
+            '{"name":"cmd_d","command":["'
+            + sys.executable
+            + '","-c","print(1)","{input_manifest}","{output}"],'
+            '"output":"runs/final/asr_commands/d.jsonl"}]}\n'
         ),
         encoding="utf-8",
     )
@@ -482,9 +490,13 @@ def test_prepare_final_asr_transcript_conversions_writes_result_input(tmp_path: 
     fixture_b = Path("tests/fixtures/streaming_asr_fast_unstable_sample.jsonl").read_text(encoding="utf-8")
     whisper = tmp_path / "runs/final/asr_commands/whisper_streaming.jsonl"
     funasr = tmp_path / "runs/final/asr_commands/funasr_streaming.jsonl"
+    qwen3 = tmp_path / "runs/final/asr_commands/qwen3_asr_streaming.jsonl"
+    firered = tmp_path / "runs/final/asr_commands/firered_asr2s_streaming.jsonl"
     whisper.parent.mkdir(parents=True)
     whisper.write_text(fixture_a, encoding="utf-8")
     funasr.write_text(fixture_b, encoding="utf-8")
+    qwen3.write_text(fixture_a, encoding="utf-8")
+    firered.write_text(fixture_b, encoding="utf-8")
     command_config = tmp_path / "configs/final/asr_command_compare.json"
     command_config.parent.mkdir(parents=True)
     command_config.write_text(
@@ -502,6 +514,16 @@ def test_prepare_final_asr_transcript_conversions_writes_result_input(tmp_path: 
                         "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
                         "output": "runs/final/asr_commands/funasr_streaming.jsonl",
                     },
+                    {
+                        "name": "qwen3_asr_final",
+                        "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
+                        "output": "runs/final/asr_commands/qwen3_asr_streaming.jsonl",
+                    },
+                    {
+                        "name": "firered_asr2s_final",
+                        "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
+                        "output": "runs/final/asr_commands/firered_asr2s_streaming.jsonl",
+                    },
                 ],
             }
         ),
@@ -514,8 +536,8 @@ def test_prepare_final_asr_transcript_conversions_writes_result_input(tmp_path: 
     output = tmp_path / "runs/final/reports/asr_transcript_conversions.json"
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert report.ok
-    assert report.records_by_adapter == {"whisper": 2, "funasr": 2}
-    assert {row["adapter"] for row in payload["rows"]} == {"whisper", "funasr"}
+    assert report.records_by_adapter == {"whisper": 2, "funasr": 2, "qwen3_asr": 2, "firered_asr2s": 2}
+    assert {row["adapter"] for row in payload["rows"]} == {"whisper", "funasr", "qwen3_asr", "firered_asr2s"}
     assert "final_asr_transcript_conversions: READY" in report.to_text()
 
 
