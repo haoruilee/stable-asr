@@ -148,10 +148,14 @@ DEFAULT_DATA_SOURCES: dict[str, Any] = {
             "task": "asr",
             "languages": ["multilingual"],
             "source_type": "public_corpus",
-            "status": "recipe_scaffold",
-            "stable_asr_entrypoint": "stable-asr prepare-asr-manifest --input <metadata.tsv> --output <manifest.jsonl>",
+            "status": "recipe_implemented",
+            "stable_asr_entrypoint": (
+                "stable-asr prepare-public-asr --corpus common_voice "
+                "--input-dir <cv-corpus>/<locale> --split <train|dev|test|validated|other> "
+                "--output <manifest.jsonl>"
+            ),
             "license": "see_upstream",
-            "notes": "Multilingual source; v0 normalizes local metadata exports for accent and cross-language robustness experiments.",
+            "notes": "Multilingual source; v0 parses split TSV files and clips/*.mp3 paths for accent and cross-language robustness experiments.",
         },
     ],
 }

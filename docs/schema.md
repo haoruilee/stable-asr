@@ -211,10 +211,18 @@ stable-asr prepare-public-asr \
   --input-dir data/aishell1/data_aishell \
   --split dev \
   --output runs/final/aishell1_dev/asr_manifest.jsonl
+
+stable-asr prepare-public-asr \
+  --corpus common_voice \
+  --input-dir data/common_voice/en \
+  --split dev \
+  --output runs/final/common_voice_en_dev/asr_manifest.jsonl
 ```
 
 The LibriSpeech recipe parses `*.trans.txt` files and FLAC paths. The AISHELL-1
 recipe parses `aishell_transcript_v0.8.txt` and `wav/<split>/<speaker>/*.wav`.
+The Common Voice recipe parses split TSV files such as `train.tsv`, `dev.tsv`,
+and `test.tsv`, with MP3 clips under `clips/`.
 
 ## ASR-to-Turn Weak Labels
 

@@ -149,3 +149,37 @@ def test_prepare_aishell_public_recipe(tmp_path: Path) -> None:
     assert records[0].speaker_id == "S0724"
     assert records[0].metadata["corpus_recipe"] == "aishell1"
     assert validate_asr_manifest(output).ok
+
+
+def test_prepare_common_voice_public_recipe(tmp_path: Path) -> None:
+    root = tmp_path / "cv-corpus-25.0" / "en"
+    clips = root / "clips"
+    clips.mkdir(parents=True)
+    (root / "dev.tsv").write_text(
+        "client_id\tpath\tsentence\tsentence_id\tup_votes\tdown_votes\tage\tgender\taccents\tlocale\tsegment\n"
+        "speaker-a\tcommon_voice_en_0001.mp3\topen the door\tsent-1\t2\t0\ttwenties\tfemale\tus\ten\t\n"
+        "speaker-b\tcommon_voice_en_0002.mp3\tturn on the light\tsent-2\t3\t1\t\t\tcanada\ten\t\n",
+        encoding="utf-8",
+    )
+    (clips / "common_voice_en_0001.mp3").write_bytes(b"")
+    (clips / "common_voice_en_0002.mp3").write_bytes(b"")
+    output = tmp_path / "common_voice.jsonl"
+
+    records = prepare_public_asr_manifest(
+        corpus="common_voice",
+        input_dir=root,
+        output_path=output,
+        split="dev",
+    )
+
+    assert len(records) == 2
+    assert records[0].id == "common_voice_en_0001"
+    assert records[0].audio.endswith("clips/common_voice_en_0001.mp3")
+    assert records[0].language == "en"
+    assert records[0].source == "common_voice"
+    assert records[0].split == "dev"
+    assert records[0].speaker_id == "speaker-a"
+    assert records[0].metadata["sentence_id"] == "sent-1"
+    assert records[0].metadata["accents"] == "us"
+    assert records[0].metadata["corpus_recipe"] == "common_voice"
+    assert validate_asr_manifest(output).ok

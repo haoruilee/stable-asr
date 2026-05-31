@@ -70,6 +70,7 @@
         {"path": "docs/asr_collections.md", "required_now": true},
         {"path": "stable_asr/data/asr_manifest.py", "required_now": true},
         {"path": "stable_asr/data/recipes/asr_folder.py", "required_now": true},
+        {"path": "stable_asr/data/recipes/public_corpora.py", "required_now": true},
         {"path": "stable_asr/data/turn_from_asr.py", "required_now": true},
         {"path": "stable_asr/data/bootstrap.py", "required_now": true},
         {"path": "stable_asr/references/collections.py", "required_now": true}

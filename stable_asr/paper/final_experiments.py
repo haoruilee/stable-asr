@@ -36,6 +36,7 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
             "commands": [
                 "stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl",
                 "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl",
+                "stable-asr prepare-public-asr --corpus common_voice --input-dir data/common_voice/en --split dev --output runs/final/common_voice_en_dev/asr_manifest.jsonl",
                 "stable-asr benchmark-data --dataset runs/final/<corpus>/turn_or_asr_windows.jsonl --output-dir runs/final/data_bench --formats jsonl parquet lance --sample-count 10000"
             ],
             "metrics": ["write_seconds", "read_seconds", "size_bytes", "samples_per_second", "conversion_seconds"],

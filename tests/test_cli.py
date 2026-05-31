@@ -456,6 +456,39 @@ def test_prepare_public_asr_librispeech_cli(tmp_path, capsys) -> None:
     assert output.exists()
 
 
+def test_prepare_public_asr_common_voice_cli(tmp_path, capsys) -> None:
+    root = tmp_path / "common_voice" / "en"
+    clips = root / "clips"
+    clips.mkdir(parents=True)
+    (root / "test.tsv").write_text(
+        "client_id\tpath\tsentence\tlocale\n"
+        "speaker-a\tcommon_voice_en_0001.mp3\topen the door\ten\n",
+        encoding="utf-8",
+    )
+    (clips / "common_voice_en_0001.mp3").write_bytes(b"")
+    output = tmp_path / "common_voice.jsonl"
+
+    code = main(
+        [
+            "prepare-public-asr",
+            "--corpus",
+            "common_voice",
+            "--input-dir",
+            str(root),
+            "--split",
+            "test",
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "wrote 1 common_voice ASR record" in captured.out
+    assert '"test": 1' in captured.out
+    assert output.exists()
+
+
 def test_bootstrap_turn_data_cli(tmp_path, capsys) -> None:
     output_dir = tmp_path / "bootstrap"
     code = main(
