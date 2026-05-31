@@ -62,6 +62,7 @@ ready.
 - final experiment JSON/Markdown files are included in the artifact bundle
 - final-run config JSON/Markdown files are included in the artifact bundle
 - final-run file audit JSON/Markdown files are included in the artifact bundle
+- final-run action plan JSON/Markdown files are included in the artifact bundle
 - roadmap status JSON/Markdown files are included in the artifact bundle
 - claim evidence JSON/Markdown files are included in the artifact bundle
 - `CITATION.cff` exists

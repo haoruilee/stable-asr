@@ -68,7 +68,7 @@ def _latex_document(results_path: Path, results: dict[str, object], artifacts_di
         r"\item A shared evaluator for rule, VAD, text, NanoTurn, and external prediction-manifest baselines.",
         r"\item A VoiceWorld scenario suite for incomplete pauses, backchannels, waits, interruptions, side conversations, ambient speech, noisy far-field speech, and code-switching.",
         r"\item Cost-sensitive policy search and latency benchmarking for interaction-level decisions.",
-        r"\item Reproducible paper tables, figures, bundles, claim audits, paper-parity audits, final-experiment runbooks, final-run configs, and draft generation.",
+        r"\item Reproducible paper tables, figures, bundles, claim audits, paper-parity audits, final-experiment runbooks, final-run configs/action plans, and draft generation.",
         r"\end{itemize}",
         r"\section{Platform Overview}",
         "Stable-ASR follows the loop: prepare or convert data, run baselines or adapters, evaluate static and scenario behavior, optimize policies, then generate paper artifacts.",

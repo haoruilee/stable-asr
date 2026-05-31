@@ -938,6 +938,8 @@ def _artifact_checks(artifacts_dir: Path) -> list[PaperAuditCheck]:
     checks.append(_exists_check("final_run_config:markdown", artifacts_dir / "FINAL_RUN_CONFIG.md"))
     checks.append(_exists_check("final_run_file_audit:json", artifacts_dir / "final_run_file_audit.json"))
     checks.append(_exists_check("final_run_file_audit:markdown", artifacts_dir / "FINAL_RUN_FILE_AUDIT.md"))
+    checks.append(_exists_check("final_run_action_plan:json", artifacts_dir / "final_run_action_plan.json"))
+    checks.append(_exists_check("final_run_action_plan:markdown", artifacts_dir / "FINAL_RUN_ACTION_PLAN.md"))
     checks.append(_exists_check("paper_status:json", artifacts_dir / "paper_status.json"))
     checks.append(_exists_check("paper_status:markdown", artifacts_dir / "PAPER_STATUS.md"))
     checks.append(_exists_check("roadmap_status:json", artifacts_dir / "roadmap_status.json"))

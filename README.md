@@ -158,8 +158,9 @@ stable-asr paper-release-audit \
 ```
 
 `paper-release-smoke` writes `paper_results.json`, tables, figures, registry
-artifacts, case studies, claim evidence, roadmap status, `PAPER_DRAFT.md`,
-`paper.tex`, dataset/experiment cards, and `RELEASE_AUDIT.md`.
+artifacts, case studies, final-run audits/action plans, claim evidence, roadmap
+status, `PAPER_DRAFT.md`, `paper.tex`, dataset/experiment cards, and
+`RELEASE_AUDIT.md`.
 
 Use `stable-asr doctor --check-release-env` before strict release smoke. A
 READY smoke audit needs both the optional Lance backend and NanoTurn training

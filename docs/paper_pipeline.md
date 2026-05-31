@@ -29,6 +29,7 @@ The smoke run writes:
 - final-run config template for corpus, split, adapter, and artifact paths
 - final-run scaffold for directories and README hints without fake data
 - final-run file audit showing which real paper inputs are still missing
+- final-run action plan showing the remaining data-staging and experiment commands
 - optional NanoTurn checkpoint and metrics
 - streaming ASR fixture metrics
 
@@ -81,7 +82,7 @@ baseline/adapter registry, ASR reference collection and coverage artifacts, a Vo
 case-study JSON/Markdown artifacts that link failure examples back to source
 records, a paper parity audit that separates smoke-level structural evidence
 from final-scale paper gaps, a final-scale experiment runbook, a final-run
-configuration template, a final-run file audit, a roadmap status report, and a claim evidence matrix
+configuration template, a final-run file audit/action plan, a roadmap status report, and a claim evidence matrix
 that links platform-paper claims to files, result keys, artifacts, and
 reproduction commands. `PAPER_STATUS.md` summarizes these signals in one page.
 

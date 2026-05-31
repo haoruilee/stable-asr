@@ -77,7 +77,7 @@ def _draft_markdown(results_path: Path, results: dict[str, object], artifacts_di
         "- A shared evaluator for rule, VAD, text, NanoTurn, and external prediction-manifest baselines.",
         "- A VoiceWorld scenario suite for incomplete pauses, backchannels, waits, interruptions, side conversations, ambient speech, noisy far-field speech, and code-switching.",
         "- Cost-sensitive policy search and latency benchmarking for interaction-level decisions.",
-        "- Reproducible paper tables, figures, bundles, claim audits, paper-parity audits, final-experiment runbooks, final-run configs, and this draft generator.",
+        "- Reproducible paper tables, figures, bundles, claim audits, paper-parity audits, final-experiment runbooks, final-run configs/action plans, and this draft generator.",
         "",
         "## 3. Platform Overview",
         "",

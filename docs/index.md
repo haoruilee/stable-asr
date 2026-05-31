@@ -23,6 +23,7 @@ streaming ASR and voice-agent control:
 - final-run config template for paper-scale directory, corpus, and artifact planning
 - final-run scaffold for directories and README hints without fake data
 - final-run file audit for missing real paper inputs
+- final-run action plan for the remaining data-staging and experiment commands
 - machine-readable roadmap status for milestone evidence and planned final-scale work
 - repository doctor for environment, config, and final-input readiness checks
 - paper tables, figures, bundles, audits, and drafts

@@ -25,6 +25,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert set(bundle.final_experiments) == {"json", "markdown"}
     assert set(bundle.final_run_config) == {"json", "markdown"}
     assert set(bundle.final_run_file_audit) == {"json", "markdown"}
+    assert set(bundle.final_run_action_plan) == {"json", "markdown"}
     assert set(bundle.paper_status) == {"json", "markdown"}
     assert set(bundle.roadmap_status) == {"json", "markdown"}
     assert set(bundle.claims) == {"json", "markdown"}
@@ -44,6 +45,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "real_data_layer_benchmark" in Path(bundle.final_experiments["markdown"]).read_text(encoding="utf-8")
     assert "librispeech_dev_clean" in Path(bundle.final_run_config["markdown"]).read_text(encoding="utf-8")
     assert "Final Run File Audit" in Path(bundle.final_run_file_audit["markdown"]).read_text(encoding="utf-8")
+    assert "Final Run Action Plan" in Path(bundle.final_run_action_plan["markdown"]).read_text(encoding="utf-8")
+    assert "final_run_action_plan" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "Stable-ASR Paper Status" in Path(bundle.paper_status["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Platform Roadmap" in Path(bundle.roadmap_status["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Claim Evidence Matrix" in Path(bundle.claims["markdown"]).read_text(encoding="utf-8")
