@@ -70,6 +70,7 @@ stable-asr convert-asr-transcript --schema whisper --input tests/fixtures/whispe
 stable-asr eval-asr-command --name my_asr --command "python your_asr_export.py --output {output}" --output runs/my_asr_streaming.jsonl
 stable-asr compare-asr-commands --config examples/configs/asr_command_compare_demo.json --report runs/asr_command_compare.md
 stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause
+stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/scenarios.json
 stable-asr reproduce-paper --config configs/paper/paper_smoke.json
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts

@@ -102,7 +102,7 @@ from stable_asr.references import (
 )
 from stable_asr.resources import resolve_platform_path
 from stable_asr.roadmap import load_roadmap, roadmap_status, validate_roadmap
-from stable_asr.scenarios.voice_world import evaluate_voice_world
+from stable_asr.scenarios.voice_world import evaluate_voice_world, evaluate_voice_world_records
 from stable_asr.scenarios.synthetic_turn import generate_synthetic_turn_records, write_synthetic_turn_manifest
 from stable_asr.scenarios.suites import (
     load_scenario_suite,
@@ -663,8 +663,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     scenario_parser = subparsers.add_parser(
         "eval-scenario",
-        help="Evaluate a turn predictor on the seedable VoiceWorld mini-suite.",
+        help="Evaluate a turn predictor on a VoiceWorld manifest or the seedable mini-suite.",
     )
+    scenario_parser.add_argument("--dataset", type=Path, help="Optional VoiceWorld turn manifest to evaluate.")
     scenario_parser.add_argument("--episodes", type=int, default=25)
     scenario_parser.add_argument("--seed", type=int, default=0)
     scenario_parser.add_argument(
@@ -1839,11 +1840,19 @@ def main(argv: list[str] | None = None) -> int:
             if args.checkpoint
             else _build_baseline(args.baseline, complete_pause_ms=700)
         )
-        report = evaluate_voice_world(
-            predictor,
-            episodes=args.episodes,
-            seed=args.seed,
-        )
+        if args.dataset:
+            report = evaluate_voice_world_records(
+                load_manifest(args.dataset),
+                predictor,
+                seed=args.seed,
+                suite=str(args.dataset),
+            )
+        else:
+            report = evaluate_voice_world(
+                predictor,
+                episodes=args.episodes,
+                seed=args.seed,
+            )
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")

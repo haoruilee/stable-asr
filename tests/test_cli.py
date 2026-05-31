@@ -1203,6 +1203,47 @@ def test_eval_scenario_cli(tmp_path, capsys) -> None:
     assert "Scenario Breakdown" in report_path.read_text(encoding="utf-8")
 
 
+def test_eval_scenario_cli_accepts_manifest_dataset(tmp_path, capsys) -> None:
+    dataset = tmp_path / "voiceworld.jsonl"
+    dataset.write_text(
+        (
+            '{"id":"real1","audio":"audio/1.wav","sample_rate":16000,"start":0.0,"end":1.0,'
+            '"turn_label":"complete","action_label":"take_turn","assistant_speaking":false,'
+            '"overlap":false,"language":"en","source":"unit","scenario":"normal_question",'
+            '"metadata":{"snr_db":20,"reverb":"none","speaking_rate":1.0,'
+            '"overlap_offset_ms":0,"network_jitter_ms":0,"farfield_distance_m":0.5,'
+            '"code_switch_ratio":0.0,"accent":"standard"}}\n'
+            '{"id":"real2","audio":"audio/2.wav","sample_rate":16000,"start":0.0,"end":1.0,'
+            '"turn_label":"wait","action_label":"ignore","assistant_speaking":false,'
+            '"overlap":true,"language":"en","source":"unit","scenario":"ambient_speech",'
+            '"metadata":{"snr_db":5,"reverb":"room","speaking_rate":1.0,'
+            '"overlap_offset_ms":100,"network_jitter_ms":20,"farfield_distance_m":2.0,'
+            '"code_switch_ratio":0.0,"accent":"standard"}}\n'
+        ),
+        encoding="utf-8",
+    )
+    output = tmp_path / "scenarios.json"
+
+    code = main(
+        [
+            "eval-scenario",
+            "--dataset",
+            str(dataset),
+            "--baseline",
+            "vad_pause",
+            "--json-output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "ambient_speech" in captured.out
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert sorted(payload["by_scenario"]) == ["ambient_speech", "normal_question"]
+    assert "snr_db" in payload["factor_summary"]
+
+
 def test_optimize_policy_cli(tmp_path, capsys) -> None:
     output = tmp_path / "policy_search.json"
     code = main(

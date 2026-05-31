@@ -89,7 +89,7 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
             ],
             "commands": [
                 "stable-asr validate-manifest runs/final/voiceworld_real.jsonl",
-                "stable-asr eval-turn --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --report runs/final/reports/nanoturn_voiceworld.md",
+                "stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --seed 0 --report runs/final/reports/scenarios.md --json-output runs/final/reports/scenarios.json",
                 "stable-asr paper-table scenarios --results runs/final/paper_results.json --output runs/final/artifacts/tables/scenarios.md"
             ],
             "metrics": ["accuracy", "macro_f1", "false_complete_rate", "missed_interrupt_rate", "premature_response_rate"],
