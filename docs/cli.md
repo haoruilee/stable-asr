@@ -32,6 +32,14 @@ stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --checkpoint runs/n
 stable-asr export-turn-onnx --checkpoint runs/nanoturn/checkpoint.pt --output runs/nanoturn/nanoturn.onnx
 ```
 
+## Contributor Benchmark Pack
+
+```bash
+stable-asr benchmark-pack --output-dir runs/benchmark_pack
+cd runs/benchmark_pack
+bash commands.sh
+```
+
 ## Streaming ASR
 
 ```bash

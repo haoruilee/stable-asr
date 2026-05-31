@@ -33,6 +33,7 @@ stable-asr turn-submission \
   --predictions tests/fixtures/turn_predictions_sample.jsonl \
   --system oracle_fixture \
   --output-dir runs/submissions/oracle_fixture
+stable-asr benchmark-pack --output-dir runs/benchmark_pack
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
 
 # 3. Package a streaming ASR trace for leaderboard-style review

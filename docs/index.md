@@ -26,6 +26,7 @@ streaming ASR and voice-agent control:
 - final-run action plan for the remaining data-staging and experiment commands
 - final evidence matrix linking final experiments to blockers and expected artifacts
 - leaderboard validation for external JSONL benchmark submissions
+- benchmark starter packs for external contributors
 - machine-readable roadmap status for milestone evidence and planned final-scale work
 - repository doctor for environment, config, and final-input readiness checks
 - paper tables, figures, bundles, audits, and drafts
@@ -68,6 +69,7 @@ stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_paus
 stable-asr predict-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --output runs/text_turn_predictions.jsonl
 stable-asr validate-turn-predictions --dataset examples/data/turn_demo.jsonl --predictions runs/text_turn_predictions.jsonl
 stable-asr turn-submission --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl --system oracle_fixture --output-dir runs/submissions/oracle_fixture
+stable-asr benchmark-pack --output-dir runs/benchmark_pack
 stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl --report runs/turn_compare.md
 stable-asr compare-turn-splits --train runs/splits/turn_train.jsonl --dev runs/splits/turn_dev.jsonl --test runs/splits/turn_test.jsonl --baseline vad_pause --baseline text_turn --report runs/turn_split_compare.md
 stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl

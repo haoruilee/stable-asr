@@ -101,6 +101,7 @@ from stable_asr.paper.archive import paper_artifact_archive, verify_paper_artifa
 from stable_asr.paper.integrity import verify_artifact_integrity
 from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_report, validate_leaderboard_jsonl
 from stable_asr.paper.latex import paper_latex
+from stable_asr.paper.benchmark_pack import build_benchmark_pack
 from stable_asr.paper.release_smoke import run_paper_release_smoke
 from stable_asr.paper.parity import (
     audit_paper_parity,
@@ -1140,6 +1141,15 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark_suite_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     benchmark_suite_parser.add_argument("--json", action="store_true", help="Print the suite as JSON.")
     benchmark_suite_parser.add_argument("--validate-only", action="store_true", help="Only validate the suite.")
+
+    benchmark_pack_parser = subparsers.add_parser(
+        "benchmark-pack",
+        help="Create a contributor starter pack with schemas, suite metadata, fixtures, and runnable submission commands.",
+    )
+    benchmark_pack_parser.add_argument("--output-dir", type=Path, required=True)
+    benchmark_pack_parser.add_argument("--suite", type=Path, help="Optional benchmark suite JSON path.")
+    benchmark_pack_parser.add_argument("--schema-registry", type=Path, help="Optional schema registry JSON path.")
+    benchmark_pack_parser.add_argument("--json", action="store_true")
 
     paper_audit_parser = subparsers.add_parser(
         "paper-audit",
@@ -2853,6 +2863,25 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         return 0
+
+    if args.command == "benchmark-pack":
+        try:
+            report = build_benchmark_pack(
+                args.output_dir,
+                suite_path=args.suite,
+                schema_registry_path=args.schema_registry,
+            )
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(f"benchmark_pack: {'OK' if report.ok else 'FAILED'}")
+            print(f"output_dir: {report.output_dir}")
+            print(f"readme: {report.files.get('readme')}")
+            print(f"commands: {report.files.get('commands_markdown')}")
+        return 0 if report.ok else 1
 
     if args.command == "paper-audit":
         report = audit_paper_artifacts(args.results, args.artifacts_dir)

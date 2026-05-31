@@ -17,6 +17,7 @@ from stable_asr.paper.audit import (
     audit_paper_artifacts,
     audit_paper_release,
 )
+from stable_asr.paper.benchmark_pack import BenchmarkPackReport, build_benchmark_pack
 from stable_asr.paper.cards import dataset_card, experiment_card, model_card, model_card_payload, write_model_card_json
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.evidence import FinalEvidenceMatrixReport, final_evidence_matrix
@@ -71,6 +72,7 @@ __all__ = [
     "BenchmarkArtifactAudit",
     "BenchmarkSuiteCoverage",
     "BenchmarkSuiteValidation",
+    "BenchmarkPackReport",
     "PaperArtifactBundle",
     "PaperArchiveReport",
     "PaperArchiveVerificationReport",
@@ -94,6 +96,7 @@ __all__ = [
     "audit_paper_artifacts",
     "audit_paper_release",
     "build_final_run_action_plan",
+    "build_benchmark_pack",
     "dataset_card",
     "experiment_card",
     "model_card",
