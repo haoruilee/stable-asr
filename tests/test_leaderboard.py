@@ -8,8 +8,10 @@ from stable_asr.paper.leaderboard import (
     leaderboard_report,
     leaderboard_rows,
     load_paper_results,
+    merge_leaderboard_jsonl,
     validate_leaderboard_jsonl,
 )
+from stable_asr.paper.submissions import build_streaming_submission, build_turn_submission
 
 
 def test_leaderboard_rows_cover_major_tasks(tmp_path: Path) -> None:
@@ -100,3 +102,52 @@ def test_validate_leaderboard_jsonl_rejects_bad_unit_and_duplicates(tmp_path: Pa
     assert "unit" in text
     assert "higher_is_better" in text
     assert "duplicate" in text
+
+
+def test_merge_leaderboard_jsonl_combines_submission_packages(tmp_path: Path) -> None:
+    turn = build_turn_submission(
+        dataset=Path("examples/data/turn_demo.jsonl"),
+        predictions=Path("tests/fixtures/turn_predictions_sample.jsonl"),
+        output_dir=tmp_path / "submissions" / "turn_oracle",
+        system="oracle_fixture",
+    )
+    streaming = build_streaming_submission(
+        input_path=Path("tests/fixtures/streaming_asr_sample.jsonl"),
+        output_dir=tmp_path / "submissions" / "streaming_fixture",
+        system="streaming_fixture",
+        slice_name="adapter",
+    )
+
+    report = merge_leaderboard_jsonl(
+        [
+            Path(turn.artifacts.leaderboard["jsonl"]),
+            Path(streaming.artifacts.leaderboard["jsonl"]),
+        ],
+        tmp_path / "leaderboard" / "leaderboard.jsonl",
+        top_k=2,
+    )
+
+    assert report.ok
+    assert report.rows == report.validation.rows
+    assert report.validation.tasks["turn_quality"] > 0
+    assert report.validation.tasks["streaming_asr"] > 0
+    assert report.report.ranked_rows
+    assert "Stable-ASR Leaderboard Merge" in report.to_markdown()
+
+
+def test_merge_leaderboard_jsonl_surfaces_duplicate_rows(tmp_path: Path) -> None:
+    turn = build_turn_submission(
+        dataset=Path("examples/data/turn_demo.jsonl"),
+        predictions=Path("tests/fixtures/turn_predictions_sample.jsonl"),
+        output_dir=tmp_path / "submissions" / "turn_oracle",
+        system="oracle_fixture",
+    )
+    leaderboard = Path(turn.artifacts.leaderboard["jsonl"])
+
+    report = merge_leaderboard_jsonl(
+        [leaderboard, leaderboard],
+        tmp_path / "leaderboard" / "leaderboard.jsonl",
+    )
+
+    assert not report.ok
+    assert "duplicate" in report.validation.to_text()

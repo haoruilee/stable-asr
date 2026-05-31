@@ -196,6 +196,65 @@ class LeaderboardReport:
         return "\n".join(lines)
 
 
+@dataclass(frozen=True)
+class LeaderboardMergeReport:
+    ok: bool
+    output_path: str
+    inputs: list[str]
+    rows: int
+    validation: LeaderboardValidationReport
+    report: LeaderboardReport
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "output_path": self.output_path,
+            "inputs": self.inputs,
+            "rows": self.rows,
+            "validation": self.validation.to_dict(),
+            "report": self.report.to_dict(),
+        }
+
+    def to_text(self) -> str:
+        lines = [
+            f"leaderboard_merge: {'OK' if self.ok else 'FAILED'}",
+            f"output: {self.output_path}",
+            f"inputs: {len(self.inputs)}",
+            f"rows: {self.rows}",
+            f"groups: {self.report.groups}",
+        ]
+        if not self.validation.ok:
+            lines.append(self.validation.to_text())
+        return "\n".join(lines)
+
+    def to_markdown(self) -> str:
+        input_rows = [{"input": path} for path in self.inputs]
+        return "\n".join(
+            [
+                "# Stable-ASR Leaderboard Merge",
+                "",
+                f"- status: `{'OK' if self.ok else 'FAILED'}`",
+                f"- output: `{self.output_path}`",
+                f"- inputs: `{len(self.inputs)}`",
+                f"- rows: `{self.rows}`",
+                f"- groups: `{self.report.groups}`",
+                "",
+                "## Inputs",
+                "",
+                dict_table(input_rows) if input_rows else "No inputs.",
+                "",
+                "## Validation",
+                "",
+                self.validation.to_markdown(),
+                "",
+                "## Ranking Preview",
+                "",
+                self.report.to_markdown(),
+                "",
+            ]
+        )
+
+
 LEADERBOARD_COLUMNS = (
     "suite",
     "task",
@@ -342,6 +401,74 @@ def leaderboard_report(
         top_k=max(1, top_k),
         ranked_rows=ranked_rows,
         validation=validation,
+    )
+
+
+def merge_leaderboard_jsonl(
+    inputs: list[str | Path],
+    output_path: str | Path,
+    *,
+    suite: dict[str, Any] | None = None,
+    top_k: int = 3,
+    require_known_systems: bool = False,
+    require_known_slices: bool = False,
+    require_complete_suite: bool = False,
+) -> LeaderboardMergeReport:
+    if not inputs:
+        raise ValueError("at least one leaderboard input is required")
+
+    suite = suite or load_benchmark_suite()
+    suite_validation = validate_benchmark_suite(suite)
+    if not suite_validation.ok:
+        raise ValueError("; ".join(suite_validation.errors))
+
+    input_paths = [Path(path) for path in inputs]
+    output_path = Path(output_path)
+    output_resolved = output_path.resolve()
+    for input_path in input_paths:
+        if input_path.resolve() == output_resolved:
+            raise ValueError("output path must differ from input leaderboard paths")
+
+    rows_written = 0
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as output_handle:
+        for input_path in input_paths:
+            with input_path.open("r", encoding="utf-8") as input_handle:
+                for line_number, line in enumerate(input_handle, start=1):
+                    stripped = line.strip()
+                    if not stripped:
+                        continue
+                    try:
+                        payload = json.loads(stripped)
+                    except json.JSONDecodeError as exc:
+                        raise ValueError(f"{input_path}:{line_number}: {exc}") from exc
+                    if not isinstance(payload, dict):
+                        raise ValueError(f"{input_path}:{line_number}: row must be a JSON object")
+                    output_handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
+                    rows_written += 1
+
+    validation = validate_leaderboard_jsonl(
+        output_path,
+        suite=suite,
+        require_known_systems=require_known_systems,
+        require_known_slices=require_known_slices,
+        require_complete_suite=require_complete_suite,
+    )
+    report = leaderboard_report(
+        output_path,
+        suite=suite,
+        top_k=top_k,
+        require_known_systems=require_known_systems,
+        require_known_slices=require_known_slices,
+        require_complete_suite=require_complete_suite,
+    )
+    return LeaderboardMergeReport(
+        ok=validation.ok and report.ok,
+        output_path=str(output_path),
+        inputs=[str(path) for path in input_paths],
+        rows=rows_written,
+        validation=validation,
+        report=report,
     )
 
 

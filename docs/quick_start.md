@@ -41,6 +41,12 @@ stable-asr streaming-submission \
   --input tests/fixtures/streaming_asr_sample.jsonl \
   --system streaming_fixture \
   --output-dir runs/submissions/streaming_fixture
+stable-asr leaderboard-merge \
+  --input runs/submissions/oracle_fixture/leaderboard.jsonl \
+  --input runs/submissions/streaming_fixture/leaderboard.jsonl \
+  --output runs/submissions/leaderboard.jsonl \
+  --validation-output runs/submissions/LEADERBOARD_VALIDATION.md \
+  --report-output runs/submissions/LEADERBOARD_REPORT.md
 stable-asr adapter-pack --output-dir runs/adapter_pack
 
 # 4. Generate paper-facing evidence

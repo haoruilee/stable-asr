@@ -136,6 +136,7 @@
         {"path": "stable_asr/paper/audit.py", "required_now": true},
         {"path": "stable_asr/paper/benchmark_pack.py", "required_now": true},
         {"path": "stable_asr/paper/submissions.py", "required_now": true},
+        {"path": "stable_asr/paper/leaderboard.py", "required_now": true},
         {"path": "stable_asr/schemas.py", "required_now": true},
         {"path": "stable_asr/schema_validation.py", "required_now": true},
         {"path": "stable_asr/paper/provenance.py", "required_now": true},
@@ -156,6 +157,7 @@
         "stable-asr benchmark-pack --output-dir runs/benchmark_pack",
         "stable-asr turn-submission --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl --system oracle_fixture --output-dir runs/submissions/oracle_fixture",
         "stable-asr streaming-submission --input tests/fixtures/streaming_asr_sample.jsonl --system streaming_fixture --output-dir runs/submissions/streaming_fixture",
+        "stable-asr leaderboard-merge --input runs/submissions/oracle_fixture/leaderboard.jsonl --input runs/submissions/streaming_fixture/leaderboard.jsonl --output runs/submissions/leaderboard.jsonl --validation-output runs/submissions/LEADERBOARD_VALIDATION.md --report-output runs/submissions/LEADERBOARD_REPORT.md",
         "stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts"
       ],
       "success_criteria": [
@@ -167,7 +169,8 @@
         "JSON/JSONL artifacts can be validated directly against those contracts",
         "external contributors can generate a self-contained benchmark starter pack with schemas, suite metadata, fixtures, and runnable submission commands",
         "external turn model submissions can produce auditable validation, evaluation, and leaderboard packages",
-        "external streaming ASR submissions can produce auditable validation, evaluation, and leaderboard packages"
+        "external streaming ASR submissions can produce auditable validation, evaluation, and leaderboard packages",
+        "multiple external submission leaderboards can be merged into one validated ranked report"
       ]
     },
     {

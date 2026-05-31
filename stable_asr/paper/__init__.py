@@ -41,7 +41,13 @@ from stable_asr.paper.integrity import (
     write_artifact_integrity,
 )
 from stable_asr.paper.latex import paper_latex
-from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_report, validate_leaderboard_jsonl
+from stable_asr.paper.leaderboard import (
+    LeaderboardMergeReport,
+    export_leaderboard,
+    leaderboard_report,
+    merge_leaderboard_jsonl,
+    validate_leaderboard_jsonl,
+)
 from stable_asr.paper.provenance import (
     GitProvenance,
     PaperProvenanceReport,
@@ -90,6 +96,7 @@ __all__ = [
     "FinalRunActionPlan",
     "FinalInputCollectionReport",
     "FinalEvidenceMatrixReport",
+    "LeaderboardMergeReport",
     "GitProvenance",
     "PaperProvenanceReport",
     "ProvenanceFile",
@@ -106,6 +113,7 @@ __all__ = [
     "model_card_payload",
     "export_leaderboard",
     "leaderboard_report",
+    "merge_leaderboard_jsonl",
     "audit_benchmark_required_artifacts",
     "audit_benchmark_suite_coverage",
     "benchmark_suite_markdown",

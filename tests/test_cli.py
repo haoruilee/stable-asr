@@ -1847,6 +1847,64 @@ def test_leaderboard_report_cli(tmp_path, capsys) -> None:
     assert report.exists()
 
 
+def test_leaderboard_merge_cli(tmp_path, capsys) -> None:
+    turn_dir = tmp_path / "submissions" / "turn_oracle"
+    streaming_dir = tmp_path / "submissions" / "streaming_fixture"
+    main(
+        [
+            "turn-submission",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--predictions",
+            "tests/fixtures/turn_predictions_sample.jsonl",
+            "--system",
+            "oracle_fixture",
+            "--output-dir",
+            str(turn_dir),
+        ]
+    )
+    main(
+        [
+            "streaming-submission",
+            "--input",
+            "tests/fixtures/streaming_asr_sample.jsonl",
+            "--system",
+            "streaming_fixture",
+            "--output-dir",
+            str(streaming_dir),
+        ]
+    )
+    output = tmp_path / "leaderboard" / "leaderboard.jsonl"
+    validation = tmp_path / "leaderboard" / "LEADERBOARD_VALIDATION.md"
+    ranked = tmp_path / "leaderboard" / "LEADERBOARD_REPORT.md"
+
+    code = main(
+        [
+            "leaderboard-merge",
+            "--input",
+            str(turn_dir / "leaderboard.jsonl"),
+            "--input",
+            str(streaming_dir / "leaderboard.jsonl"),
+            "--output",
+            str(output),
+            "--validation-output",
+            str(validation),
+            "--report-output",
+            str(ranked),
+            "--top-k",
+            "2",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Leaderboard Merge" in captured.out
+    assert output.exists()
+    assert validation.exists()
+    assert ranked.exists()
+    assert "streaming_asr" in output.read_text(encoding="utf-8")
+
+
 def test_leaderboard_validate_cli_rejects_bad_submission(tmp_path, capsys) -> None:
     bad = tmp_path / "bad.jsonl"
     bad.write_text(

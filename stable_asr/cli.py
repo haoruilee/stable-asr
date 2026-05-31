@@ -99,7 +99,12 @@ from stable_asr.paper.final_results import assemble_final_paper_results
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.archive import paper_artifact_archive, verify_paper_artifact_archive
 from stable_asr.paper.integrity import verify_artifact_integrity
-from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_report, validate_leaderboard_jsonl
+from stable_asr.paper.leaderboard import (
+    export_leaderboard,
+    leaderboard_report,
+    merge_leaderboard_jsonl,
+    validate_leaderboard_jsonl,
+)
 from stable_asr.paper.latex import paper_latex
 from stable_asr.paper.adapter_pack import build_adapter_pack
 from stable_asr.paper.benchmark_pack import build_benchmark_pack
@@ -1131,6 +1136,27 @@ def build_parser() -> argparse.ArgumentParser:
     leaderboard_report_parser.add_argument("--require-known-systems", action="store_true")
     leaderboard_report_parser.add_argument("--require-known-slices", action="store_true")
     leaderboard_report_parser.add_argument("--require-complete-suite", action="store_true")
+
+    leaderboard_merge_parser = subparsers.add_parser(
+        "leaderboard-merge",
+        help="Merge multiple leaderboard JSONL submissions and emit validation plus ranked reports.",
+    )
+    leaderboard_merge_parser.add_argument(
+        "--input",
+        type=Path,
+        action="append",
+        required=True,
+        help="Leaderboard JSONL input path. Repeat for multiple submissions.",
+    )
+    leaderboard_merge_parser.add_argument("--output", type=Path, required=True)
+    leaderboard_merge_parser.add_argument("--suite", type=Path, help="Optional benchmark suite JSON path.")
+    leaderboard_merge_parser.add_argument("--validation-output", type=Path, help="Optional Markdown validation report path.")
+    leaderboard_merge_parser.add_argument("--report-output", type=Path, help="Optional Markdown or JSON ranked report path.")
+    leaderboard_merge_parser.add_argument("--top-k", type=int, default=3)
+    leaderboard_merge_parser.add_argument("--json", action="store_true")
+    leaderboard_merge_parser.add_argument("--require-known-systems", action="store_true")
+    leaderboard_merge_parser.add_argument("--require-known-slices", action="store_true")
+    leaderboard_merge_parser.add_argument("--require-complete-suite", action="store_true")
 
     benchmark_suite_parser = subparsers.add_parser(
         "benchmark-suite",
@@ -2826,6 +2852,41 @@ def main(argv: list[str] | None = None) -> int:
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+        print(text)
+        return 0 if report.ok else 1
+
+    if args.command == "leaderboard-merge":
+        try:
+            report = merge_leaderboard_jsonl(
+                args.input,
+                args.output,
+                suite=load_benchmark_suite(args.suite),
+                top_k=args.top_k,
+                require_known_systems=args.require_known_systems,
+                require_known_slices=args.require_known_slices,
+                require_complete_suite=args.require_complete_suite,
+            )
+        except (OSError, ValueError, json.JSONDecodeError, KeyError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.validation_output:
+            text = report.validation.to_markdown()
+            args.validation_output.parent.mkdir(parents=True, exist_ok=True)
+            args.validation_output.write_text(
+                text + ("\n" if not text.endswith("\n") else ""),
+                encoding="utf-8",
+            )
+        if args.report_output:
+            if args.report_output.suffix == ".json":
+                text = json.dumps(report.report.to_dict(), ensure_ascii=False, indent=2)
+            else:
+                text = report.report.to_markdown()
+            args.report_output.parent.mkdir(parents=True, exist_ok=True)
+            args.report_output.write_text(
+                text + ("\n" if not text.endswith("\n") else ""),
+                encoding="utf-8",
+            )
+        text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
         print(text)
         return 0 if report.ok else 1
 

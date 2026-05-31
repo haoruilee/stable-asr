@@ -187,8 +187,7 @@ def _starter_commands() -> list[str]:
         "stable-asr turn-submission --dataset data/turn_demo.jsonl --predictions data/turn_predictions_sample.jsonl --system oracle_fixture --output-dir submissions/turn_oracle --suite configs/benchmark_suite.json",
         "stable-asr validate-schema-file --input data/streaming_asr_sample.jsonl --schema-id stable_asr.streaming_asr_record.v0 --registry configs/schema_registry.json",
         "stable-asr streaming-submission --input data/streaming_asr_sample.jsonl --system streaming_fixture --slice adapter --output-dir submissions/streaming_fixture --suite configs/benchmark_suite.json",
-        "stable-asr leaderboard-validate --input submissions/turn_oracle/leaderboard.jsonl --suite configs/benchmark_suite.json --output submissions/turn_oracle/LEADERBOARD_VALIDATION.md",
-        "stable-asr leaderboard-report --input submissions/streaming_fixture/leaderboard.jsonl --suite configs/benchmark_suite.json --output submissions/streaming_fixture/LEADERBOARD_REPORT.md",
+        "stable-asr leaderboard-merge --input submissions/turn_oracle/leaderboard.jsonl --input submissions/streaming_fixture/leaderboard.jsonl --suite configs/benchmark_suite.json --output leaderboard/leaderboard.jsonl --validation-output leaderboard/LEADERBOARD_VALIDATION.md --report-output leaderboard/LEADERBOARD_REPORT.md",
     ]
 
 

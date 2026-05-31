@@ -308,6 +308,7 @@ is provided in `mkdocs.yaml`.
 - `leaderboard-export` for JSONL/CSV metric rows
 - `leaderboard-validate` for checking external leaderboard JSONL submissions against the benchmark suite schema
 - `leaderboard-report` for generating ranked per-task/per-metric Markdown or JSON leaderboard reports
+- `leaderboard-merge` for combining multiple external submission leaderboards into one validated ranked report
 - machine-readable benchmark suite definition in `configs/benchmarks/stable_asr_v0.json`
 - `benchmark-suite` for validating and rendering benchmark suite definitions and required artifact coverage
 - machine-readable built-in model registry in `configs/models/stable_asr_models.json`
