@@ -473,7 +473,7 @@ def _convert_external_fixtures(output_dir: Path, data_dir: Path) -> list[dict[st
 
 def _convert_streaming_asr_fixtures(output_dir: Path, data_dir: Path) -> list[dict[str, Any]]:
     conversions: list[dict[str, Any]] = []
-    for schema in ("whisper", "funasr"):
+    for schema in ("whisper", "funasr", "qwen3_asr", "firered_asr2s"):
         fixture_path = output_dir / f"external_{schema}_transcript_fixture.jsonl"
         converted_path = data_dir / f"external_{schema}_streaming_asr.jsonl"
         _write_asr_transcript_fixture(fixture_path, schema=schema)
@@ -755,6 +755,78 @@ def _write_asr_transcript_fixture(path: Path, *, schema: str) -> None:
                     {"word": "on", "start": 0.52, "end": 0.70},
                     {"word": "the", "start": 0.76, "end": 0.90},
                     {"word": "lights", "start": 1.00, "end": 1.45},
+                ],
+            },
+        ]
+    elif schema == "qwen3_asr":
+        rows = [
+            {
+                "id": "paper_qwen3_001",
+                "audio": "audio/paper_qwen3_001.wav",
+                "reference": "what is the weather",
+                "text": "what is the weather",
+                "language": "en",
+                "duration_ms": 2000,
+                "runtime_ms": 330,
+                "speech_end_time": 1.8,
+                "finalized_at": 2.1,
+                "words": [
+                    {"text": "what", "start_ms": 100, "end_ms": 340},
+                    {"text": "is", "start_ms": 400, "end_ms": 560},
+                    {"text": "the", "start_ms": 840, "end_ms": 980},
+                    {"text": "weather", "start_ms": 1050, "end_ms": 1460},
+                ],
+                "partials": [
+                    {"time_ms": 420, "text": "what"},
+                    {"time_ms": 900, "text": "what is"},
+                    {"time_ms": 2100, "text": "what is the weather", "final": True},
+                ],
+            },
+            {
+                "id": "paper_qwen3_002",
+                "audio": "audio/paper_qwen3_002.wav",
+                "reference": "我想问天气",
+                "hypothesis": "我想问天气",
+                "language_id": "zh",
+                "duration": 1.8,
+                "latency_ms": 300,
+                "endpoint_time": 1.7,
+                "timestamp": [[120, 240], [260, 420], [430, 600], [720, 1000], [1010, 1320]],
+            },
+        ]
+    elif schema == "firered_asr2s":
+        rows = [
+            {
+                "utt_id": "paper_firered_001",
+                "wav": "audio/paper_firered_001.wav",
+                "reference": "你好世界",
+                "transcript": "你好世界",
+                "lid": "zh",
+                "duration_sec": 1.6,
+                "latency_ms": 180,
+                "end_of_speech": 1.3,
+                "segments": [
+                    {"text": "你好", "start": 0.1, "end": 0.6},
+                    {"text": "世界", "start": 0.7, "end": 1.2},
+                ],
+                "timestamp": [[100, 350], [360, 600], [700, 900], [920, 1200]],
+                "metadata": {"vad_segments": [[0.05, 1.3]]},
+            },
+            {
+                "utt_id": "paper_firered_002",
+                "wav": "audio/paper_firered_002.wav",
+                "reference": "turn on the light",
+                "text": "turn on the light",
+                "language": "en",
+                "duration_ms": 1900,
+                "runtime_ms": 210,
+                "speech_end_time": 1.5,
+                "endpoint_time": 1.75,
+                "word_timestamps": [
+                    {"word": "turn", "start": 0.1, "end": 0.32},
+                    {"word": "on", "start": 0.35, "end": 0.5},
+                    {"word": "the", "start": 0.55, "end": 0.7},
+                    {"word": "light", "start": 0.8, "end": 1.2},
                 ],
             },
         ]

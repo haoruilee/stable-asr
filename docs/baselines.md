@@ -20,7 +20,7 @@ External ASR or turn-taking systems should not be vendored into Stable-ASR.
 Instead, wrap them through:
 
 - `convert-predictions` for SmartTurn, EasyTurn, VAP-style turn outputs
-- `convert-asr-transcript` for Whisper/FunASR transcript exports
+- `convert-asr-transcript` for Whisper, FunASR, Qwen3-ASR, FireRedASR2S, WhisperX, whisper.cpp, SenseVoice, Moonshine, and WhisperKit transcript exports
 - `eval-asr-command` and `compare-asr-commands` for command-backed ASR systems
 - adapter registry entries in `configs/adapters/stable_asr_adapters.json`
 

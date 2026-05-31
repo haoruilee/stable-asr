@@ -308,6 +308,11 @@ stable-asr convert-asr-transcript \
   --output /tmp/stable-asr-funasr-streaming.jsonl
 ```
 
+The same converter also accepts vendor transcript exports for `qwen3_asr`,
+`firered_asr2s`, `whisperx`, `whisper_cpp`, `sensevoice`, `moonshine`, and
+`whisperkit`, as long as the upstream command writes one JSON object per
+utterance with segment, word timestamp, partial, duration, and runtime fields.
+
 Supported external schemas currently include Whisper-style `segments`/`words`
 and FunASR-style `sentence_info`/`timestamp` rows. Future WeNet, NeMo, and
 ESPnet adapters should implement the same `StreamingASRAdapter.load_records()`

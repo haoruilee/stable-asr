@@ -12,7 +12,28 @@ from typing import Any, Iterable
 from stable_asr.data.formats.jsonl import iter_jsonl, write_jsonl
 from stable_asr.streaming.types import StreamingASRRecord
 
-ASR_TRANSCRIPT_SCHEMAS = ("whisper", "funasr")
+ASR_TRANSCRIPT_SCHEMAS = (
+    "whisper",
+    "funasr",
+    "whisper_cpp",
+    "whisperx",
+    "qwen3_asr",
+    "firered_asr2s",
+    "sensevoice",
+    "moonshine",
+    "whisperkit",
+)
+GENERIC_VENDOR_SCHEMAS = frozenset(
+    {
+        "whisper_cpp",
+        "whisperx",
+        "qwen3_asr",
+        "firered_asr2s",
+        "sensevoice",
+        "moonshine",
+        "whisperkit",
+    }
+)
 
 
 def convert_streaming_asr_jsonl(
@@ -45,6 +66,8 @@ def convert_streaming_asr_rows(
             records.append(_convert_whisper_row(row, index=index))
         elif schema == "funasr":
             records.append(_convert_funasr_row(row, index=index))
+        elif schema in GENERIC_VENDOR_SCHEMAS:
+            records.append(_convert_generic_vendor_row(row, index=index, schema=schema))
     return records
 
 
@@ -87,6 +110,57 @@ def _convert_funasr_row(row: dict[str, Any], *, index: int) -> StreamingASRRecor
         partials=partials,
         inferred_end=max(_max_time_from_segments(sentences), _max_time_from_words(words)),
     )
+    return StreamingASRRecord.from_dict(payload)
+
+
+def _convert_generic_vendor_row(row: dict[str, Any], *, index: int, schema: str) -> StreamingASRRecord:
+    """Normalize common transcript exports from command-backed upstream ASR systems.
+
+    The supported projects do not share a stable JSON contract. This converter
+    intentionally accepts a conservative intersection of fields used by modern
+    ASR exporters: segments/sentences/chunks, word/timestamp lists, partial
+    events, duration/runtime fields, and optional language/speaker metadata.
+    Project-specific scripts should do any heavyweight inference and write one
+    JSON object per utterance in this shape before Stable-ASR evaluates it.
+    """
+
+    segments = _list_of_dicts(_pick(row, "segments", "sentences", "chunks", "results"))
+    words = _normalize_words(
+        _pick(row, "word_timestamps", "words", "tokens", "alignment", "word_segments")
+    )
+    if not words:
+        words = _timestamp_words(row)
+    if not words and segments:
+        words = _segment_words(segments)
+
+    partials = _normalize_partials(
+        _pick(row, "partials", "partial_results", "events", "streaming_events")
+    )
+    if not partials and segments:
+        partials = _partials_from_segments(segments)
+
+    payload = _common_payload(
+        row,
+        index=index,
+        schema=schema,
+        words=words,
+        partials=partials,
+        inferred_end=max(_max_time_from_segments(segments), _max_time_from_words(words)),
+    )
+    metadata = payload.get("metadata", {})
+    if isinstance(metadata, dict):
+        for source_key, metadata_key in (
+            ("language", "language"),
+            ("lang", "language"),
+            ("language_id", "language"),
+            ("speaker", "speaker"),
+            ("speaker_id", "speaker"),
+            ("lid", "language"),
+            ("emotion", "emotion"),
+        ):
+            value = _optional_str(row.get(source_key))
+            if value is not None and metadata_key not in metadata:
+                metadata[metadata_key] = value
     return StreamingASRRecord.from_dict(payload)
 
 
@@ -159,13 +233,26 @@ def _common_payload(
 def _normalize_partials(value: Any) -> list[dict[str, object]]:
     partials: list[dict[str, object]] = []
     for item in _list_of_dicts(value):
-        time = _optional_seconds(_pick(item, "time", "end", "timestamp", "finalized_at"))
+        time = _optional_seconds(
+            _pick(
+                item,
+                "time",
+                "time_ms",
+                "end",
+                "end_ms",
+                "timestamp",
+                "timestamp_ms",
+                "event_time",
+                "finalized_at",
+                "t",
+            )
+        )
         if time is None:
             continue
         partials.append(
             {
                 "time": time,
-                "text": _optional_str(_pick(item, "text", "hypothesis", "transcript")) or "",
+                "text": _optional_str(_pick(item, "text", "hypothesis", "transcript", "partial")) or "",
                 "is_final": bool(item.get("is_final", item.get("final", False))),
             }
         )
@@ -176,8 +263,10 @@ def _partials_from_segments(segments: list[dict[str, Any]]) -> list[dict[str, ob
     partials: list[dict[str, object]] = []
     cumulative: list[str] = []
     for segment in segments:
-        text = _optional_str(segment.get("text"))
-        end = _optional_seconds(segment.get("end"))
+        text = _optional_str(_pick(segment, "text", "sentence", "transcript", "hypothesis"))
+        end = _optional_seconds(
+            _pick(segment, "end", "end_time", "timestamp_end", "end_ms", "to", "t1")
+        )
         if text:
             cumulative.append(text)
         if end is not None:
@@ -217,13 +306,39 @@ def _partials_from_sentences(sentences: list[dict[str, Any]]) -> list[dict[str, 
 def _normalize_words(value: Any) -> list[dict[str, object]]:
     words: list[dict[str, object]] = []
     for item in _list_of_dicts(value):
-        start = _optional_seconds(_pick(item, "start", "begin", "start_time", "timestamp_start"))
-        end = _optional_seconds(_pick(item, "end", "finish", "end_time", "timestamp_end"))
+        start = _optional_seconds(
+            _pick(
+                item,
+                "start",
+                "begin",
+                "start_time",
+                "timestamp_start",
+                "start_ms",
+                "begin_ms",
+                "offset_start",
+                "from",
+                "t0",
+            )
+        )
+        end = _optional_seconds(
+            _pick(
+                item,
+                "end",
+                "finish",
+                "end_time",
+                "timestamp_end",
+                "end_ms",
+                "finish_ms",
+                "offset_end",
+                "to",
+                "t1",
+            )
+        )
         if start is None or end is None:
             continue
         words.append(
             {
-                "word": _optional_str(_pick(item, "word", "text", "token")) or "",
+                "word": _optional_str(_pick(item, "word", "text", "token", "piece")) or "",
                 "start": start,
                 "end": end,
             }
@@ -234,12 +349,18 @@ def _normalize_words(value: Any) -> list[dict[str, object]]:
 def _segment_words(segments: list[dict[str, Any]]) -> list[dict[str, object]]:
     words: list[dict[str, object]] = []
     for segment in segments:
-        words.extend(_normalize_words(segment.get("words")))
+        words.extend(
+            _normalize_words(_pick(segment, "words", "word_timestamps", "tokens", "alignment"))
+        )
     return words
 
 
 def _funasr_timestamp_words(row: dict[str, Any]) -> list[dict[str, object]]:
-    timestamps = row.get("timestamp")
+    return _timestamp_words(row)
+
+
+def _timestamp_words(row: dict[str, Any]) -> list[dict[str, object]]:
+    timestamps = _pick(row, "timestamp", "timestamps", "word_offsets", "token_timestamps")
     if not isinstance(timestamps, list):
         return []
 

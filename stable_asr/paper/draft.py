@@ -133,7 +133,7 @@ def _draft_markdown(results_path: Path, results: dict[str, object], artifacts_di
         "",
         _table(results_path, "streaming_sweep"),
         "",
-        "External ASR transcript conversion tables show that Whisper-style and FunASR-style outputs can enter the same evaluator.",
+        "External ASR transcript conversion tables show that Whisper, FunASR, Qwen3-ASR, and FireRedASR2S-style outputs can enter the same evaluator.",
         "",
         _table(results_path, "asr_transcript_conversions"),
         "",

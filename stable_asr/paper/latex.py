@@ -97,7 +97,7 @@ def _latex_document(results_path: Path, results: dict[str, object], artifacts_di
         _latex_table(results_path, "streaming_failures", "Streaming ASR failure taxonomy."),
         "The schedule sweep shows how chunk size and lookahead alter real-time latency metrics while transcript quality remains fixed.",
         _latex_table(results_path, "streaming_sweep", "Streaming chunk and lookahead sensitivity."),
-        "External ASR transcript conversion tables show that Whisper-style and FunASR-style outputs can enter the same evaluator.",
+        "External ASR transcript conversion tables show that Whisper, FunASR, Qwen3-ASR, and FireRedASR2S-style outputs can enter the same evaluator.",
         _latex_table(results_path, "asr_transcript_conversions", "External ASR transcript conversion metrics."),
     ]
     if artifacts_dir is not None:

@@ -28,10 +28,12 @@ def test_run_paper_smoke_skip_train(tmp_path: Path) -> None:
     assert "by_scenario" in result.results["scenarios"]
     assert "best" in result.results["policy_search"]
     assert result.results["streaming_asr"]["metrics"]["records"] == 2
-    assert len(result.results["streaming_asr"]["asr_transcript_conversions"]) == 2
+    assert len(result.results["streaming_asr"]["asr_transcript_conversions"]) == 4
     assert {item["schema"] for item in result.results["streaming_asr"]["asr_transcript_conversions"]} == {
         "whisper",
         "funasr",
+        "qwen3_asr",
+        "firered_asr2s",
     }
     assert result.results["streaming_asr"]["command_adapter"]["adapter"] == "command_fixture"
     assert result.results["streaming_asr"]["command_adapter"]["metrics"]["records"] == 2

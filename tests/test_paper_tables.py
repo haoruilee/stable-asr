@@ -37,5 +37,7 @@ def test_paper_table_baselines_and_data(tmp_path: Path) -> None:
     assert "| schema | records | wer |" in asr_transcripts
     assert "whisper" in asr_transcripts
     assert "funasr" in asr_transcripts
+    assert "qwen3_asr" in asr_transcripts
+    assert "firered_asr2s" in asr_transcripts
     assert "| scenario | records | accuracy |" in scenarios
     assert "| score | complete_threshold |" in policy

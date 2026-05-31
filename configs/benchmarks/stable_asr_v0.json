@@ -109,7 +109,7 @@
       "id": "asr_transcript_conversion",
       "title": "External ASR Transcript Conversion",
       "coverage": "system_slice_metric",
-      "systems": ["whisper", "funasr"],
+      "systems": ["whisper", "funasr", "qwen3_asr", "firered_asr2s"],
       "slices": ["converted_schema"],
       "metrics": [
         {"name": "wer", "unit": "rate", "higher_is_better": false},

@@ -1,0 +1,33 @@
+{
+  "timeout_sec": 30,
+  "adapters": [
+    {
+      "name": "qwen3_asr_fixture",
+      "command": [
+        "python3",
+        "examples/commands/convert_vendor_transcript.py",
+        "--schema",
+        "qwen3_asr",
+        "--input",
+        "tests/fixtures/qwen3_asr_transcript_sample.jsonl",
+        "--output",
+        "{output}"
+      ],
+      "output": "runs/asr_vendor_adapter/qwen3_asr.jsonl"
+    },
+    {
+      "name": "firered_asr2s_fixture",
+      "command": [
+        "python3",
+        "examples/commands/convert_vendor_transcript.py",
+        "--schema",
+        "firered_asr2s",
+        "--input",
+        "tests/fixtures/firered_asr2s_transcript_sample.jsonl",
+        "--output",
+        "{output}"
+      ],
+      "output": "runs/asr_vendor_adapter/firered_asr2s.jsonl"
+    }
+  ]
+}

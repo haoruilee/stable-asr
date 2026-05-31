@@ -27,6 +27,8 @@ def test_leaderboard_rows_cover_major_tasks(tmp_path: Path) -> None:
     assert any(row.system == "command_fixture" and row.metric == "wer" for row in rows)
     assert any(row.system == "whisper" and row.task == "asr_transcript_conversion" for row in rows)
     assert any(row.system == "funasr" and row.task == "asr_transcript_conversion" for row in rows)
+    assert any(row.system == "qwen3_asr" and row.task == "asr_transcript_conversion" for row in rows)
+    assert any(row.system == "firered_asr2s" and row.task == "asr_transcript_conversion" for row in rows)
     assert any(row.task == "asr_manifest_recipe" and row.metric == "records" for row in rows)
 
 

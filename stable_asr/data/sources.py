@@ -87,6 +87,23 @@ DEFAULT_DATA_SOURCES: dict[str, Any] = {
             "notes": "Sentence/timestamp rows normalized into StreamingASRRecord JSONL.",
         },
         {
+            "id": "vendor_asr_transcript",
+            "title": "Vendor ASR transcript exports",
+            "task": "streaming_asr_eval",
+            "languages": ["multilingual"],
+            "source_type": "external_transcript",
+            "status": "converter_implemented",
+            "stable_asr_entrypoint": (
+                "stable-asr convert-asr-transcript --schema "
+                "<qwen3_asr|firered_asr2s|whisperx|whisper_cpp|sensevoice|moonshine|whisperkit>"
+            ),
+            "license": "depends_on_input_audio",
+            "notes": (
+                "Command-backed transcript exports from modern ASR systems normalized "
+                "into StreamingASRRecord JSONL."
+            ),
+        },
+        {
             "id": "librispeech",
             "title": "LibriSpeech",
             "task": "asr",

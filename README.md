@@ -136,6 +136,7 @@ Reference coverage is tracked in `configs/references/asr_collections.json` and
 ```bash
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
+stable-asr compare-asr-commands --config examples/configs/asr_vendor_adapter_demo.json --report runs/asr_vendor_adapter.md
 ```
 
 ## Paper And Release Smoke
@@ -195,7 +196,7 @@ is provided in `mkdocs.yaml`.
 - `audit-turn-splits` for detecting record, audio, or ASR/conversation group leakage across splits
 - `convert-external` for EasyTurn-style, Full-Duplex-Bench-style, and SmartTurn-style JSONL manifests
 - `convert-predictions` for generic, SmartTurn-style, and EasyTurn-style prediction JSONL
-- `convert-asr-transcript` for Whisper-style and FunASR-style transcript JSONL into the normalized streaming ASR schema
+- `convert-asr-transcript` for Whisper, FunASR, Qwen3-ASR, FireRedASR2S, WhisperX, whisper.cpp, SenseVoice, Moonshine, and WhisperKit-style transcript JSONL into the normalized streaming ASR schema
 - `benchmark-data` for paper-facing data-layer tables
 - CI smoke coverage for optional JSONL/Parquet/Lance data backend benchmarks
 - machine-readable data source registry in `configs/datasets/stable_asr_sources.json`
@@ -231,7 +232,7 @@ is provided in `mkdocs.yaml`.
 - `sweep-streaming-asr` for chunk-size and lookahead sensitivity
 - `eval-asr-command` for dependency-light external ASR command adapters
 - `compare-asr-commands` for JSON-configured multi-system command-backed ASR comparisons
-- paper smoke conversion checks for external Whisper/FunASR transcript schemas
+- paper smoke conversion checks for external Whisper, FunASR, Qwen3-ASR, and FireRedASR2S transcript schemas
 - seedable VoiceWorld scenario evaluation with per-scenario breakdowns
 - threshold policy search and cost-sensitive interaction objective
 - `paper-table streaming` extraction

@@ -35,6 +35,7 @@ def test_benchmark_suite_markdown_and_json_roundtrip(tmp_path: Path) -> None:
     assert "Stable-ASR v0 Paper Benchmark Suite" in markdown
     assert "asr_manifest_recipe" in markdown
     assert "asr_transcript_conversion" in markdown
+    assert "qwen3_asr" in markdown
 
 
 def test_benchmark_suite_validation_rejects_bad_metric() -> None:

@@ -138,7 +138,7 @@ DEFAULT_BENCHMARK_SUITE: dict[str, Any] = {
             "id": "asr_transcript_conversion",
             "title": "External ASR Transcript Conversion",
             "coverage": "system_slice_metric",
-            "systems": ["whisper", "funasr"],
+            "systems": ["whisper", "funasr", "qwen3_asr", "firered_asr2s"],
             "slices": ["converted_schema"],
             "metrics": [
                 {"name": "wer", "unit": "rate", "higher_is_better": False},
@@ -329,7 +329,7 @@ def _task_rows(suite: dict[str, Any]) -> list[dict[str, object]]:
                 "task": task["id"],
                 "title": task["title"],
                 "coverage": task.get("coverage", "system_metric"),
-                "systems": len(task.get("systems", [])),
+                "systems": ", ".join(str(system) for system in task.get("systems", [])),
                 "slices": len(task.get("slices", [])),
                 "metrics": ", ".join(str(metric["name"]) for metric in metrics if isinstance(metric, dict)),
             }

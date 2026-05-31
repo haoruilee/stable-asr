@@ -109,6 +109,29 @@ def test_convert_funasr_streaming_asr_jsonl(tmp_path: Path) -> None:
     assert records[1].endpoint_time == pytest.approx(2.3)
 
 
+@pytest.mark.parametrize(
+    ("schema", "fixture", "expected_id"),
+    [
+        ("qwen3_asr", "tests/fixtures/qwen3_asr_transcript_sample.jsonl", "qwen3_001"),
+        ("firered_asr2s", "tests/fixtures/firered_asr2s_transcript_sample.jsonl", "fire_001"),
+        ("whisperx", "tests/fixtures/whisperx_transcript_sample.jsonl", "whisperx_001"),
+        ("moonshine", "tests/fixtures/moonshine_transcript_sample.jsonl", "moon_001"),
+    ],
+)
+def test_convert_vendor_streaming_asr_jsonl(tmp_path: Path, schema: str, fixture: str, expected_id: str) -> None:
+    output = tmp_path / f"{schema}.jsonl"
+    count = convert_streaming_asr_jsonl(fixture, output, schema=schema)
+    records = load_streaming_transcript_jsonl(output)
+
+    assert count >= 1
+    assert records[0].id == expected_id
+    assert records[0].final_text
+    assert records[0].audio_duration > 0.0
+    assert records[0].endpoint_time is not None
+    assert records[0].partials[-1].is_final is True
+    assert records[0].metadata["source_schema"] == schema
+
+
 def test_convert_streaming_asr_rows_rejects_unknown_schema() -> None:
     with pytest.raises(ValueError, match="unknown ASR transcript schema"):
         convert_streaming_asr_rows([], schema="unknown")

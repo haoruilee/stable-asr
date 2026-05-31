@@ -16,6 +16,7 @@ def test_default_data_sources_validate() -> None:
     assert validate_data_sources(config_registry).ok
     assert registry["id"] == "stable_asr_sources_v0"
     assert [item["id"] for item in registry["sources"]] == [item["id"] for item in config_registry["sources"]]
+    assert "vendor_asr_transcript" in {item["id"] for item in registry["sources"]}
 
 
 def test_data_sources_markdown_and_json_roundtrip(tmp_path: Path) -> None:
@@ -27,6 +28,7 @@ def test_data_sources_markdown_and_json_roundtrip(tmp_path: Path) -> None:
     assert "Stable-ASR Data Source Registry" in markdown
     assert "synthetic_voiceworld" in markdown
     assert "librispeech" in markdown
+    assert "vendor_asr_transcript" in markdown
 
 
 def test_data_sources_validation_rejects_duplicate_id() -> None:

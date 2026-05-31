@@ -23,7 +23,7 @@ The smoke run writes:
 - config-driven command-backed ASR comparison demo under `examples/configs/asr_command_compare_demo.json`
 - chunk-size and lookahead streaming schedule sweep rows
 - command-backed streaming ASR adapter fixture
-- external Whisper/FunASR transcript conversion fixtures and streaming metrics
+- external Whisper, FunASR, Qwen3-ASR, and FireRedASR2S transcript conversion fixtures and streaming metrics
 - stable-worldmodel-style paper parity checklist and gap audit
 - final-scale experiment runbook for real paper execution
 - final-run config template for corpus, split, adapter, and artifact paths
