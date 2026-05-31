@@ -22,7 +22,12 @@ from stable_asr.paper.suites import (
     validate_benchmark_suite,
 )
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results
-from stable_asr.references import audit_asr_collection_coverage, load_asr_collections, validate_asr_collections
+from stable_asr.references import (
+    audit_asr_collection_coverage,
+    audit_asr_collection_readiness,
+    load_asr_collections,
+    validate_asr_collections,
+)
 from stable_asr.resources import resolve_platform_path
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
 
@@ -275,6 +280,19 @@ def audit_paper_release(
                         "asr_collections_coverage",
                         coverage.ok,
                         f"{len(covered)}/{len(required)} required reference(s) covered",
+                    )
+                )
+                readiness = audit_asr_collection_readiness(
+                    asr_collections,
+                    adapter_registry,
+                    required_priorities=("p0", "p1"),
+                )
+                checks.append(
+                    _release_check(
+                        "reference",
+                        "asr_collections_readiness",
+                        readiness.ok,
+                        f"{len(readiness.rows)} reference(s), {len(readiness.warnings)} warning(s)",
                     )
                 )
         except (OSError, ValueError) as exc:
@@ -944,6 +962,8 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("asr_collections:bibtex", artifacts_dir / "ASR_REFERENCES.bib"))
     checks.append(_exists_check("asr_collection_coverage:json", artifacts_dir / "asr_collection_coverage.json"))
     checks.append(_exists_check("asr_collection_coverage:markdown", artifacts_dir / "ASR_COLLECTION_COVERAGE.md"))
+    checks.append(_exists_check("asr_collection_readiness:json", artifacts_dir / "asr_collection_readiness.json"))
+    checks.append(_exists_check("asr_collection_readiness:markdown", artifacts_dir / "ASR_COLLECTION_READINESS.md"))
     checks.append(_exists_check("scenario_suite:json", artifacts_dir / "scenario_suite.json"))
     checks.append(_exists_check("scenario_suite:markdown", artifacts_dir / "SCENARIO_SUITE.md"))
     checks.append(_exists_check("case_studies:json", artifacts_dir / "case_studies.json"))

@@ -417,6 +417,18 @@ def test_asr_collections_cli_audits_p0_coverage(tmp_path, capsys) -> None:
     assert output.exists()
 
 
+def test_asr_collections_cli_audits_readiness(tmp_path, capsys) -> None:
+    output = tmp_path / "ASR_COLLECTION_READINESS.md"
+    code = main(["asr-collections", "--audit-readiness", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "ASR Collection Readiness" in captured.out
+    assert "status: `OK`" in captured.out
+    assert output.exists()
+    assert "license_review_needed" in output.read_text(encoding="utf-8")
+
+
 def test_audit_audio_cli_with_generated_turn_wavs(tmp_path, capsys) -> None:
     manifest = tmp_path / "turn.jsonl"
     code = main(["make-synthetic-turn-data", "--output", str(manifest), "--episodes", "2", "--write-audio"])

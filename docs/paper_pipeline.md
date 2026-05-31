@@ -90,7 +90,7 @@ robustness, policy search, leaderboard-ready JSONL/CSV metric rows, a
 leaderboard validation report, a copied `paper_results.json`, sha256 artifact
 integrity manifests, provenance manifests for git/config/result traceability,
 machine-readable benchmark suite definition, a data source registry, a
-baseline/adapter registry, ASR reference collection, paper-reference, BibTeX, and coverage artifacts, a VoiceWorld scenario suite definition, and
+baseline/adapter registry, ASR reference collection, paper-reference, BibTeX, coverage artifacts, and readiness artifacts, a VoiceWorld scenario suite definition, and
 case-study JSON/Markdown artifacts that link failure examples back to source
 records, a paper parity audit that separates smoke-level structural evidence
 from final-scale paper gaps, a final-scale experiment runbook, a final-run

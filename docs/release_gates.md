@@ -38,6 +38,7 @@ ready.
 - adapter registry JSON exists in `configs/adapters/stable_asr_adapters.json`
 - ASR reference collection JSON exists in `configs/references/asr_collections.json`
 - required P0 and P1 ASR references have adapter or bridge coverage evidence
+- ASR reference collection readiness checks review freshness, Stable-ASR action plans, adapter evidence, and license-review warnings
 - ASR reference collection exports paper Markdown notes and BibTeX attribution artifacts
 - VoiceWorld scenario suite JSON exists in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - ASR manifest schema and metadata-table recipe exist
@@ -65,7 +66,7 @@ ready.
 - benchmark suite JSON/Markdown files are included in the artifact bundle
 - data source registry JSON/Markdown files are included in the artifact bundle
 - adapter registry JSON/Markdown files are included in the artifact bundle
-- ASR reference collection JSON/Markdown, paper reference, BibTeX, and coverage audit files are included in the artifact bundle
+- ASR reference collection JSON/Markdown, paper reference, BibTeX, coverage audit, and readiness audit files are included in the artifact bundle
 - scenario suite JSON/Markdown files are included in the artifact bundle
 - case-study JSON/Markdown files are included in the artifact bundle
 - paper parity JSON/Markdown files are included in the artifact bundle

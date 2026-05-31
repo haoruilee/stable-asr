@@ -76,6 +76,9 @@ The curated reference collection is stored in
 `configs/references/asr_collections.json`. Release audit requires P0 and P1
 references to have adapter, converter, command-template, or bridge-template
 evidence in `configs/adapters/stable_asr_adapters.json`.
+Run `stable-asr asr-collections --audit-readiness` before adding a new adapter
+to confirm the upstream reference has a current review, explicit Stable-ASR
+actions, and visible license-review notes.
 
 Current command-template coverage includes classic ASR toolkits, Chinese-first
 industrial systems, modern speech-LLM ASR families, timestamp/alignment tools,

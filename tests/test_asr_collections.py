@@ -1,9 +1,12 @@
+from datetime import date
+
 from stable_asr.models.adapters import load_adapter_registry
 from stable_asr.references import (
     asr_collections_bibtex,
     asr_collections_markdown,
     asr_collections_reference_markdown,
     audit_asr_collection_coverage,
+    audit_asr_collection_readiness,
     load_asr_collections,
     validate_asr_collections,
 )
@@ -103,3 +106,27 @@ def test_asr_collection_coverage_can_surface_missing_required_reference() -> Non
     assert not report.ok
     missing = {check.reference_id for check in report.checks if check.required and not check.covered}
     assert "espnet" in missing
+
+
+def test_asr_collection_readiness_reports_adapter_and_license_review() -> None:
+    report = audit_asr_collection_readiness(load_asr_collections(), load_adapter_registry())
+
+    assert report.ok
+    assert report.reviewed_at == "2026-06-01"
+    assert any(row.reference_id == "funasr" and row.license_review_needed for row in report.rows)
+    assert any(row.reference_id == "whisper" and "adapter:" in ",".join(row.adapter_evidence) for row in report.rows)
+    assert "ASR Collection Readiness" in report.to_markdown()
+    assert "license_review_needed" in report.to_text()
+
+
+def test_asr_collection_readiness_can_fail_on_stale_review() -> None:
+    report = audit_asr_collection_readiness(
+        load_asr_collections(),
+        load_adapter_registry(),
+        max_review_age_days=1,
+        today=date(2026, 6, 5),
+    )
+
+    assert not report.ok
+    assert report.stale_review
+    assert "reference collection review is stale" in report.to_text()

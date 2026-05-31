@@ -11,6 +11,7 @@ stable-asr asr-collections --format paper-markdown --output runs/ASR_REFERENCES.
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr asr-collections --audit-coverage --output runs/ASR_COLLECTION_COVERAGE.md
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
+stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
 ```
 
 The registry is not a vendoring list. It records what each upstream project is
@@ -45,3 +46,9 @@ implemented converter, command template, or bridge template. For release review,
 require both P0 and P1 so Kaldi, ESPnet, NeMo Speech, SpeechBrain, icefall,
 SenseVoice, WhisperX, Moonshine, faster-whisper, and Hugging Face Transformers
 ASR also have explicit adapter or bridge plans.
+
+`asr-collections --audit-readiness` is the release-facing variant. It checks
+the registry review date, P0/P1 adapter evidence, Stable-ASR action plans, and
+license-review warnings such as `see_upstream` entries. The warnings are kept
+visible in paper bundles so adapters can interoperate with upstream projects
+without accidentally implying that Stable-ASR vendors or relicenses them.

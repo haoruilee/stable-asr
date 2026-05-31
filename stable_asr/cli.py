@@ -112,6 +112,7 @@ from stable_asr.references import (
     asr_collections_bibtex,
     asr_collections_reference_markdown,
     audit_asr_collection_coverage,
+    audit_asr_collection_readiness,
     load_asr_collections,
     validate_asr_collections,
 )
@@ -481,11 +482,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--format",
         choices=["registry-markdown", "paper-markdown", "bibtex"],
         default="registry-markdown",
-        help="Output format when not using --json or --audit-coverage.",
+        help="Output format when not using --json or audit flags.",
     )
     asr_collections_parser.add_argument("--validate-only", action="store_true")
     asr_collections_parser.add_argument("--audit-coverage", action="store_true")
-    asr_collections_parser.add_argument("--adapter-registry", type=Path, help="Adapter registry used by --audit-coverage.")
+    asr_collections_parser.add_argument("--audit-readiness", action="store_true")
+    asr_collections_parser.add_argument(
+        "--adapter-registry",
+        type=Path,
+        help="Adapter registry used by --audit-coverage or --audit-readiness.",
+    )
+    asr_collections_parser.add_argument(
+        "--max-review-age-days",
+        type=int,
+        default=3650,
+        help="Maximum registry review age for --audit-readiness. Use a large value to disable practical freshness failure.",
+    )
     asr_collections_parser.add_argument(
         "--require-priority",
         action="append",
@@ -1576,6 +1588,23 @@ def main(argv: list[str] | None = None) -> int:
                     args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
                 print(text)
                 return 0 if coverage.ok else 1
+            if args.audit_readiness:
+                readiness = audit_asr_collection_readiness(
+                    registry,
+                    load_adapter_registry(args.adapter_registry),
+                    required_priorities=tuple(args.require_priority or ["p0", "p1"]),
+                    max_review_age_days=args.max_review_age_days,
+                )
+                text = (
+                    json.dumps(readiness.to_dict(), ensure_ascii=False, indent=2)
+                    if args.json
+                    else readiness.to_markdown()
+                )
+                if args.output:
+                    args.output.parent.mkdir(parents=True, exist_ok=True)
+                    args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+                print(text)
+                return 0 if readiness.ok else 1
             if args.validate_only:
                 print(f"OK: {registry['id']} ({len(registry['entries'])} reference(s))")
                 return 0

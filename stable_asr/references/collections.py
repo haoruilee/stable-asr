@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -99,6 +100,117 @@ class ASRCollectionCoverageReport:
             required = "required" if check.required else "optional"
             evidence = ", ".join(check.evidence) if check.evidence else "none"
             lines.append(f"- {marker} {check.reference_id} ({required}; evidence: {evidence})")
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class ASRCollectionReadinessRow:
+    reference_id: str
+    name: str
+    category: str
+    priority: str
+    required: bool
+    license: str
+    license_review_needed: bool
+    action_count: int
+    adapter_evidence: list[str]
+    adapter_statuses: list[str]
+    warnings: list[str]
+    ok: bool
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "reference_id": self.reference_id,
+            "name": self.name,
+            "category": self.category,
+            "priority": self.priority,
+            "required": self.required,
+            "license": self.license,
+            "license_review_needed": self.license_review_needed,
+            "action_count": self.action_count,
+            "adapter_evidence": self.adapter_evidence,
+            "adapter_statuses": self.adapter_statuses,
+            "warnings": self.warnings,
+            "ok": self.ok,
+        }
+
+
+@dataclass(frozen=True)
+class ASRCollectionReadinessReport:
+    ok: bool
+    reviewed_at: str
+    review_age_days: int | None
+    max_review_age_days: int | None
+    stale_review: bool
+    required_priorities: tuple[str, ...]
+    rows: list[ASRCollectionReadinessRow]
+    errors: list[str]
+    warnings: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "reviewed_at": self.reviewed_at,
+            "review_age_days": self.review_age_days,
+            "max_review_age_days": self.max_review_age_days,
+            "stale_review": self.stale_review,
+            "required_priorities": list(self.required_priorities),
+            "rows": [row.to_dict() for row in self.rows],
+            "errors": self.errors,
+            "warnings": self.warnings,
+        }
+
+    def to_markdown(self) -> str:
+        rows = [
+            {
+                "reference": row.reference_id,
+                "priority": row.priority,
+                "required": "yes" if row.required else "no",
+                "license": row.license,
+                "license_review": "yes" if row.license_review_needed else "no",
+                "adapter_statuses": ", ".join(row.adapter_statuses),
+                "evidence": ", ".join(row.adapter_evidence),
+                "status": "OK" if row.ok else "MISSING",
+                "warnings": ", ".join(row.warnings),
+            }
+            for row in self.rows
+        ]
+        lines = [
+            "# ASR Collection Readiness",
+            "",
+            f"- status: `{'OK' if self.ok else 'FAILED'}`",
+            f"- reviewed_at: `{self.reviewed_at}`",
+            f"- review_age_days: `{self.review_age_days if self.review_age_days is not None else 'unknown'}`",
+            f"- max_review_age_days: `{self.max_review_age_days if self.max_review_age_days is not None else 'disabled'}`",
+            f"- stale_review: `{'yes' if self.stale_review else 'no'}`",
+            f"- required_priorities: `{', '.join(self.required_priorities)}`",
+            f"- errors: `{len(self.errors)}`",
+            f"- warnings: `{len(self.warnings)}`",
+            "",
+            dict_table(rows),
+        ]
+        if self.errors:
+            lines.extend(["", "## Errors", ""])
+            lines.extend(f"- {error}" for error in self.errors)
+        if self.warnings:
+            lines.extend(["", "## Warnings", ""])
+            lines.extend(f"- {warning}" for warning in self.warnings)
+        return "\n".join(lines)
+
+    def to_text(self) -> str:
+        lines = [
+            f"asr_collection_readiness: {'OK' if self.ok else 'FAILED'}",
+            f"reviewed_at: {self.reviewed_at}",
+            f"review_age_days: {self.review_age_days if self.review_age_days is not None else 'unknown'}",
+            f"stale_review: {self.stale_review}",
+            f"required_priorities: {', '.join(self.required_priorities)}",
+        ]
+        lines.extend(f"- ERROR {error}" for error in self.errors)
+        lines.extend(f"- WARN {warning}" for warning in self.warnings)
+        for row in self.rows:
+            marker = "OK" if row.ok else "MISSING"
+            evidence = ", ".join(row.adapter_evidence) if row.adapter_evidence else "none"
+            lines.append(f"- {marker} {row.reference_id} ({row.priority}; evidence: {evidence})")
         return "\n".join(lines)
 
 
@@ -203,6 +315,109 @@ def audit_asr_collection_coverage(
         )
     ok = all(check.covered for check in checks if check.required)
     return ASRCollectionCoverageReport(ok=ok, required_priorities=required_priorities, checks=checks)
+
+
+def audit_asr_collection_readiness(
+    collections: dict[str, Any],
+    adapter_registry: dict[str, Any],
+    *,
+    required_priorities: tuple[str, ...] = ("p0", "p1"),
+    max_review_age_days: int | None = 3650,
+    today: date | None = None,
+) -> ASRCollectionReadinessReport:
+    """Audit whether the curated references are usable for release planning."""
+
+    validation = validate_asr_collections(collections)
+    errors = list(validation.errors)
+    warnings: list[str] = []
+    rows: list[ASRCollectionReadinessRow] = []
+    reviewed_at = str(collections.get("reviewed_at", ""))
+    review_date = _parse_review_date(reviewed_at)
+    review_age_days: int | None = None
+    stale_review = False
+    if review_date is None:
+        errors.append("reviewed_at must be an ISO date")
+    elif max_review_age_days is not None:
+        current_date = today or date.today()
+        review_age_days = (current_date - review_date).days
+        stale_review = review_age_days > max_review_age_days
+        if stale_review:
+            errors.append(
+                f"reference collection review is stale: {review_age_days} day(s) old, max {max_review_age_days}"
+            )
+
+    adapters = adapter_registry.get("adapters", [])
+    if not isinstance(adapters, list):
+        errors.append("adapter registry adapters must be a list")
+        adapters = []
+    adapter_statuses = {
+        str(adapter.get("id", "")): str(adapter.get("status", "unknown"))
+        for adapter in adapters
+        if isinstance(adapter, dict)
+    }
+
+    entries = collections.get("entries", [])
+    if isinstance(entries, list):
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            priority = str(entry.get("priority", ""))
+            required = priority in required_priorities
+            evidence = _coverage_evidence(entry, adapters)
+            statuses = sorted(
+                {
+                    adapter_statuses.get(item.removeprefix("adapter:"), "unknown")
+                    for item in evidence
+                    if item.startswith("adapter:")
+                }
+            )
+            actions = entry.get("stable_asr_actions", [])
+            action_count = len(actions) if isinstance(actions, list) else 0
+            license_name = str(entry.get("license", ""))
+            row_warnings: list[str] = []
+            if license_name == "see_upstream":
+                row_warnings.append("license_review_needed")
+            if action_count < 2:
+                row_warnings.append("weak_action_plan")
+            if not evidence:
+                row_warnings.append("no_adapter_or_bridge_evidence")
+            row_ok = (not required or bool(evidence)) and action_count >= 2
+            rows.append(
+                ASRCollectionReadinessRow(
+                    reference_id=str(entry.get("id", "")),
+                    name=str(entry.get("name", "")),
+                    category=str(entry.get("category", "")),
+                    priority=priority,
+                    required=required,
+                    license=license_name,
+                    license_review_needed=license_name == "see_upstream",
+                    action_count=action_count,
+                    adapter_evidence=evidence,
+                    adapter_statuses=statuses,
+                    warnings=row_warnings,
+                    ok=row_ok,
+                )
+            )
+            warnings.extend(f"{entry.get('id', '')}: {warning}" for warning in row_warnings)
+
+    for row in rows:
+        if row.required and not row.adapter_evidence:
+            errors.append(f"required reference missing adapter evidence: {row.reference_id}")
+        if row.action_count < 2:
+            errors.append(f"reference has fewer than two Stable-ASR actions: {row.reference_id}")
+
+    ok = not errors and all(row.ok for row in rows if row.required)
+    return ASRCollectionReadinessReport(
+        ok=ok,
+        reviewed_at=reviewed_at,
+        review_age_days=review_age_days,
+        max_review_age_days=max_review_age_days,
+        stale_review=stale_review,
+        required_priorities=required_priorities,
+        rows=rows,
+        errors=errors,
+        warnings=warnings,
+    )
 
 
 def asr_collections_markdown(registry: dict[str, Any]) -> str:
@@ -326,6 +541,13 @@ def _coverage_evidence(entry: dict[str, Any], adapters: list[Any]) -> list[str]:
         if any(variant and variant in text for variant in variants):
             evidence.append(f"adapter:{adapter.get('id', '')}")
     return evidence
+
+
+def _parse_review_date(value: str) -> date | None:
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
 
 
 def _reference_variants(entry: dict[str, Any]) -> set[str]:

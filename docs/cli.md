@@ -50,6 +50,7 @@ stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
 stable-asr asr-collections --format paper-markdown --output runs/ASR_REFERENCES.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
+stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
 ```
 
 ## Paper Artifacts

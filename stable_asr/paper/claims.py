@@ -176,6 +176,8 @@ DEFAULT_CLAIMS: list[dict[str, Any]] = [
             "ASR_COLLECTIONS.md",
             "asr_collection_coverage.json",
             "ASR_COLLECTION_COVERAGE.md",
+            "asr_collection_readiness.json",
+            "ASR_COLLECTION_READINESS.md",
             "paper_parity.json",
             "PAPER_PARITY.md",
             "final_experiments.json",
@@ -192,6 +194,7 @@ DEFAULT_CLAIMS: list[dict[str, Any]] = [
         "commands": [
             "stable-asr reproduce-paper --config configs/paper/paper_smoke.json",
             "stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts",
+            "stable-asr asr-collections --audit-readiness --output runs/paper/smoke/artifacts/ASR_COLLECTION_READINESS.md",
             "stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts",
         ],
     },

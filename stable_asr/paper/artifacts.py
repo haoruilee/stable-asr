@@ -42,6 +42,7 @@ from stable_asr.references import (
     asr_collections_markdown,
     asr_collections_reference_markdown,
     audit_asr_collection_coverage,
+    audit_asr_collection_readiness,
     load_asr_collections,
     write_asr_collections_json,
 )
@@ -172,6 +173,11 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         adapters,
         required_priorities=("p0", "p1"),
     )
+    asr_reference_readiness = audit_asr_collection_readiness(
+        asr_reference_registry,
+        adapters,
+        required_priorities=("p0", "p1"),
+    )
     asr_collections = {
         "json": write_asr_collections_json(output_dir / "asr_collections.json", asr_reference_registry),
         "markdown": str(output_dir / "ASR_COLLECTIONS.md"),
@@ -179,6 +185,8 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "bibtex": str(output_dir / "ASR_REFERENCES.bib"),
         "coverage_json": str(output_dir / "asr_collection_coverage.json"),
         "coverage_markdown": str(output_dir / "ASR_COLLECTION_COVERAGE.md"),
+        "readiness_json": str(output_dir / "asr_collection_readiness.json"),
+        "readiness_markdown": str(output_dir / "ASR_COLLECTION_READINESS.md"),
     }
     Path(asr_collections["markdown"]).write_text(asr_collections_markdown(asr_reference_registry), encoding="utf-8")
     Path(asr_collections["paper_markdown"]).write_text(
@@ -191,6 +199,14 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         encoding="utf-8",
     )
     Path(asr_collections["coverage_markdown"]).write_text(asr_reference_coverage.to_markdown(), encoding="utf-8")
+    Path(asr_collections["readiness_json"]).write_text(
+        json.dumps(asr_reference_readiness.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(asr_collections["readiness_markdown"]).write_text(
+        asr_reference_readiness.to_markdown(),
+        encoding="utf-8",
+    )
     voiceworld_suite = load_scenario_suite()
     scenario_suite = {
         "json": write_scenario_suite_json(output_dir / "scenario_suite.json", voiceworld_suite),

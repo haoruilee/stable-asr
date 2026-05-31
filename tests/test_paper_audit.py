@@ -20,6 +20,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "benchmark_suite:required_artifacts" in report.to_text()
     assert "artifact_integrity:sha256" in report.to_text()
     assert "provenance:json" in report.to_text()
+    assert "asr_collection_readiness:markdown" in report.to_text()
     assert report.to_dict()["ok"] is True
 
 
@@ -110,6 +111,7 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "paper/final_run_config_schema" in text
     assert "reference/asr_collections_schema" in text
     assert "OK reference/asr_collections_coverage" in text
+    assert "OK reference/asr_collections_readiness" in text
     assert "OK scenario/scenario_suite_coverage" in text
 
 
