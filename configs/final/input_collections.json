@@ -1,0 +1,218 @@
+{
+  "id": "stable_asr_final_input_collections_v0",
+  "version": "0.1.0",
+  "title": "Stable-ASR Final Input Collection Plan",
+  "description": "Operational collection plan for the real corpora, VoiceWorld records, external turn predictions, ASR adapter outputs, NanoTurn artifacts, and final paper bundle inputs required by the Stable-ASR platform paper.",
+  "collections": [
+    {
+      "id": "librispeech_dev_clean",
+      "title": "LibriSpeech dev-clean",
+      "category": "public_asr_corpus",
+      "priority": "p0",
+      "required": true,
+      "license": "see_upstream",
+      "source_urls": ["https://www.openslr.org/12"],
+      "required_paths": ["data/librispeech/LibriSpeech/dev-clean"],
+      "generated_paths": ["runs/final/librispeech_dev_clean/asr_manifest.jsonl"],
+      "commands": [
+        "stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl"
+      ],
+      "verification": [
+        "stable-asr inspect-asr-manifest runs/final/librispeech_dev_clean/asr_manifest.jsonl"
+      ],
+      "notes": "Place or symlink the upstream LibriSpeech dev-clean directory before preparing the manifest."
+    },
+    {
+      "id": "aishell1_dev",
+      "title": "AISHELL-1 dev",
+      "category": "public_asr_corpus",
+      "priority": "p0",
+      "required": true,
+      "license": "see_upstream",
+      "source_urls": ["https://www.openslr.org/33"],
+      "required_paths": ["data/aishell1/data_aishell"],
+      "generated_paths": ["runs/final/aishell1_dev/asr_manifest.jsonl"],
+      "commands": [
+        "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl"
+      ],
+      "verification": [
+        "stable-asr inspect-asr-manifest runs/final/aishell1_dev/asr_manifest.jsonl"
+      ],
+      "notes": "Required Mandarin public ASR input for bilingual final evidence."
+    },
+    {
+      "id": "optional_public_corpora",
+      "title": "WenetSpeech and Common Voice optional corpora",
+      "category": "public_asr_corpus",
+      "priority": "p1",
+      "required": false,
+      "license": "see_upstream",
+      "source_urls": ["https://wenet.org.cn/WenetSpeech/", "https://commonvoice.mozilla.org/datasets"],
+      "required_paths": ["data/wenetspeech/WenetSpeech", "data/common_voice/en"],
+      "generated_paths": [
+        "runs/final/wenetspeech_dev/asr_manifest.jsonl",
+        "runs/final/common_voice_en_dev/asr_manifest.jsonl"
+      ],
+      "commands": [
+        "stable-asr prepare-public-asr --corpus wenetspeech --input-dir data/wenetspeech/WenetSpeech --split dev --output runs/final/wenetspeech_dev/asr_manifest.jsonl",
+        "stable-asr prepare-public-asr --corpus common_voice --input-dir data/common_voice/en --split dev --output runs/final/common_voice_en_dev/asr_manifest.jsonl"
+      ],
+      "verification": [
+        "stable-asr inspect-asr-manifest runs/final/wenetspeech_dev/asr_manifest.jsonl",
+        "stable-asr inspect-asr-manifest runs/final/common_voice_en_dev/asr_manifest.jsonl"
+      ],
+      "notes": "Optional robustness corpora; absence should not block v0 final readiness unless the final config marks them required."
+    },
+    {
+      "id": "turn_splits",
+      "title": "Leakage-audited turn train/dev/test splits",
+      "category": "derived_turn_data",
+      "priority": "p0",
+      "required": true,
+      "license": "derived_from_upstream_inputs",
+      "source_urls": [],
+      "required_paths": [
+        "runs/final/turn_train.jsonl",
+        "runs/final/turn_dev.jsonl",
+        "runs/final/turn_test.jsonl"
+      ],
+      "generated_paths": ["runs/final/asr_eval_manifest.jsonl"],
+      "commands": [
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
+        "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits"
+      ],
+      "verification": [
+        "stable-asr audit-turn-splits --train runs/final/turn_train.jsonl --dev runs/final/turn_dev.jsonl --test runs/final/turn_test.jsonl"
+      ],
+      "notes": "Derived split files are required final inputs for NanoTurn training and external baseline comparison."
+    },
+    {
+      "id": "voiceworld_real",
+      "title": "Real VoiceWorld scenario records",
+      "category": "full_duplex_scenarios",
+      "priority": "p0",
+      "required": true,
+      "license": "project_or_recording_consent",
+      "source_urls": [],
+      "required_paths": [
+        "data/voiceworld/metadata.tsv",
+        "data/voiceworld/audio",
+        "runs/final/voiceworld_real.jsonl"
+      ],
+      "generated_paths": ["runs/final/reports/scenarios.json"],
+      "commands": [
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-voiceworld-real",
+        "stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/scenarios.json"
+      ],
+      "verification": [
+        "stable-asr validate-manifest runs/final/voiceworld_real.jsonl",
+        "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json --min-scenario-records 20"
+      ],
+      "notes": "Do not use synthetic smoke examples as final VoiceWorld evidence."
+    },
+    {
+      "id": "external_turn_predictions",
+      "title": "SmartTurn and EasyTurn raw prediction exports",
+      "category": "external_turn_baselines",
+      "priority": "p0",
+      "required": true,
+      "license": "see_upstream",
+      "source_urls": [
+        "https://github.com/pipecat-ai/smart-turn",
+        "https://huggingface.co/ASLP-lab/Easy-Turn"
+      ],
+      "required_paths": [
+        "runs/final/external/smartturn_raw.jsonl",
+        "runs/final/external/easyturn_raw.jsonl"
+      ],
+      "generated_paths": [
+        "runs/final/external/smartturn_predictions.jsonl",
+        "runs/final/external/easyturn_predictions.jsonl",
+        "runs/final/reports/baselines.json"
+      ],
+      "commands": [
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions --require-all-predictions",
+        "stable-asr compare-turn --dataset runs/final/turn_test.jsonl --baseline rule_endpoint --baseline vad_pause --baseline text_turn --predictions smart_turn=runs/final/external/smartturn_predictions.jsonl --predictions easy_turn=runs/final/external/easyturn_predictions.jsonl --checkpoint nanoturn=runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/baselines.json"
+      ],
+      "verification": [
+        "stable-asr validate-turn-predictions --dataset runs/final/turn_test.jsonl --predictions runs/final/external/smartturn_predictions.jsonl",
+        "stable-asr validate-turn-predictions --dataset runs/final/turn_test.jsonl --predictions runs/final/external/easyturn_predictions.jsonl"
+      ],
+      "notes": "External systems should be run outside Stable-ASR, then normalized and coverage-checked here."
+    },
+    {
+      "id": "command_backed_asr_outputs",
+      "title": "Command-backed streaming ASR outputs",
+      "category": "external_asr_systems",
+      "priority": "p0",
+      "required": true,
+      "license": "depends_on_external_system",
+      "source_urls": [
+        "https://github.com/openai/whisper",
+        "https://github.com/modelscope/FunASR",
+        "https://github.com/wenet-e2e/wenet"
+      ],
+      "required_paths": ["configs/final/asr_command_compare.json"],
+      "generated_paths": [
+        "runs/final/reports/asr_command_compare.json",
+        "runs/final/reports/whisper_sweep.json",
+        "runs/final/reports/asr_transcript_conversions.json"
+      ],
+      "commands": [
+        "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
+        "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --json-output runs/final/reports/asr_command_compare.json",
+        "stable-asr sweep-streaming-asr --input runs/final/asr_commands/whisper_streaming.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160 320 --json-output runs/final/reports/whisper_sweep.json",
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-transcript-conversions"
+      ],
+      "verification": [
+        "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2"
+      ],
+      "notes": "Stable-ASR evaluates normalized outputs and command contracts; it does not vendor upstream ASR stacks."
+    },
+    {
+      "id": "nanoturn_final_artifacts",
+      "title": "NanoTurn final checkpoint, metrics, and export",
+      "category": "trainable_turn_model",
+      "priority": "p0",
+      "required": true,
+      "license": "project_license",
+      "source_urls": [],
+      "required_paths": [
+        "runs/final/nanoturn/checkpoint.pt",
+        "runs/final/nanoturn/metrics.json"
+      ],
+      "generated_paths": ["runs/final/nanoturn/nanoturn.onnx", "runs/final/MODEL_CARD.md"],
+      "commands": [
+        "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
+        "stable-asr export-turn-onnx --checkpoint runs/final/nanoturn/checkpoint.pt --output runs/final/nanoturn/nanoturn.onnx",
+        "stable-asr make-card model --input configs/models/stable_asr_models.json --model-id nanoturn_pico --metrics runs/final/nanoturn/metrics.json --output runs/final/MODEL_CARD.md"
+      ],
+      "verification": [
+        "stable-asr benchmark-turn --dataset runs/final/turn_test.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/turn_benchmarks.json"
+      ],
+      "notes": "Final NanoTurn metrics require real splits and must not reuse smoke fixtures."
+    },
+    {
+      "id": "final_paper_bundle",
+      "title": "Final paper result bundle and release gates",
+      "category": "paper_artifacts",
+      "priority": "p0",
+      "required": true,
+      "license": "project_license",
+      "source_urls": [],
+      "required_paths": ["runs/final/paper_results.json", "runs/final/artifacts"],
+      "generated_paths": ["runs/final/artifacts.tar.gz", "runs/final/artifacts.tar.gz.sha256"],
+      "commands": [
+        "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
+        "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
+        "stable-asr paper-archive --artifacts-dir runs/final/artifacts --output runs/final/artifacts.tar.gz"
+      ],
+      "verification": [
+        "stable-asr paper-archive-verify --archive runs/final/artifacts.tar.gz",
+        "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
+        "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --model-card runs/final/MODEL_CARD.md"
+      ],
+      "notes": "Run only after all real inputs and intermediate reports exist."
+    }
+  ]
+}

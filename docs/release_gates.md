@@ -73,6 +73,7 @@ ready.
 - case-study JSON/Markdown files are included in the artifact bundle
 - paper parity JSON/Markdown files are included in the artifact bundle
 - final experiment JSON/Markdown files are included in the artifact bundle
+- final input collection JSON/status/Markdown files are included in the artifact bundle
 - final-run config JSON/Markdown files are included in the artifact bundle
 - final-run file audit JSON/Markdown files are included in the artifact bundle
 - final-run action plan JSON/Markdown files are included in the artifact bundle

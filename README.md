@@ -161,8 +161,8 @@ stable-asr paper-release-audit \
 
 `paper-release-smoke` writes `paper_results.json`, tables, figures, registry
 artifacts, a copied `paper_results.json`, artifact hash manifests, provenance
-manifests, case studies, final-run audits/action plans, final evidence matrix,
-claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
+manifests, case studies, final-run audits/action plans, final input collection
+status, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
 dataset/experiment/model cards, `artifacts.tar.gz`, and
 `RELEASE_AUDIT.md`.
 
@@ -293,6 +293,7 @@ is provided in `mkdocs.yaml`.
 - `final-config --audit-asr-commands` for checking final command-backed ASR comparison inputs without executing the adapters
 - `final-config --prepare-asr-transcript-conversions` for turning configured ASR adapter outputs into the final transcript-conversion result input
 - `final-config --plan-missing` for turning the final-run file audit into an actionable data-staging and experiment runbook
+- `final-inputs` for validating and rendering the final-scale input collection plan in `configs/final/input_collections.json`
 - `final-results` for assembling audited final-scale JSON outputs into `runs/final/paper_results.json`
 - `--json-output` on core evaluators so final runbooks can write machine-readable result inputs without shell redirection
 - `leaderboard-export` for JSONL/CSV metric rows

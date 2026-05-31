@@ -24,6 +24,11 @@ from stable_asr.paper.final_config import (
     write_final_run_config_json,
 )
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
+from stable_asr.paper.final_inputs import (
+    final_input_collection_report,
+    load_final_input_collections,
+    write_final_input_collections_json,
+)
 from stable_asr.paper.integrity import artifact_integrity_manifest, write_artifact_integrity
 from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_report, validate_leaderboard_jsonl
 from stable_asr.paper.parity import audit_paper_parity, load_paper_parity_checklist, paper_parity_markdown
@@ -79,6 +84,7 @@ class PaperArtifactBundle:
     case_studies: dict[str, str]
     paper_parity: dict[str, str]
     final_experiments: dict[str, str]
+    final_input_collections: dict[str, str]
     final_run_config: dict[str, str]
     final_run_file_audit: dict[str, str]
     final_run_action_plan: dict[str, str]
@@ -110,6 +116,7 @@ class PaperArtifactBundle:
             "case_studies": self.case_studies,
             "paper_parity": self.paper_parity,
             "final_experiments": self.final_experiments,
+            "final_input_collections": self.final_input_collections,
             "final_run_config": self.final_run_config,
             "final_run_file_audit": self.final_run_file_audit,
             "final_run_action_plan": self.final_run_action_plan,
@@ -309,6 +316,18 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         final_experiments_markdown(final_experiment_registry),
         encoding="utf-8",
     )
+    final_input_registry = load_final_input_collections()
+    final_input_report = final_input_collection_report(final_input_registry, repo_root=Path("."))
+    final_input_collections = {
+        "json": write_final_input_collections_json(output_dir / "final_input_collections.json", final_input_registry),
+        "audit_json": str(output_dir / "final_input_collection_status.json"),
+        "markdown": str(output_dir / "FINAL_INPUT_COLLECTIONS.md"),
+    }
+    Path(final_input_collections["audit_json"]).write_text(
+        json.dumps(final_input_report.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(final_input_collections["markdown"]).write_text(final_input_report.to_markdown(), encoding="utf-8")
     final_config = load_final_run_config()
     final_run_config = {
         "json": write_final_run_config_json(output_dir / "final_run_config.json", final_config),
@@ -392,6 +411,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         case_studies=case_studies,
         paper_parity=paper_parity,
         final_experiments=final_experiments,
+        final_input_collections=final_input_collections,
         final_run_config=final_run_config,
         final_run_file_audit=final_run_file_audit,
         final_run_action_plan=final_run_action_plan,
@@ -429,6 +449,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         case_studies=case_studies,
         paper_parity=paper_parity,
         final_experiments=final_experiments,
+        final_input_collections=final_input_collections,
         final_run_config=final_run_config,
         final_run_file_audit=final_run_file_audit,
         final_run_action_plan=final_run_action_plan,
@@ -506,6 +527,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
     lines.extend(["", "## Final Experiments", ""])
     for name, path in bundle.final_experiments.items():
         lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Final Input Collections", ""])
+    for name, path in bundle.final_input_collections.items():
+        lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Final Run Config", ""])
     for name, path in bundle.final_run_config.items():
         lines.append(f"- `{name}`: `{path}`")
@@ -580,6 +604,7 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.case_studies,
         bundle.paper_parity,
         bundle.final_experiments,
+        bundle.final_input_collections,
         bundle.final_run_config,
         bundle.final_run_file_audit,
         bundle.final_run_action_plan,

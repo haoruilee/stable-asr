@@ -125,6 +125,7 @@
         {"path": "configs/paper/paper_parity_checklist.json", "required_now": true},
         {"path": "configs/paper/final_experiments.json", "required_now": true},
         {"path": "configs/final/paper_final.json", "required_now": true},
+        {"path": "configs/final/input_collections.json", "required_now": true},
         {"path": "configs/final/asr_command_compare.json", "required_now": true},
         {"path": "configs/benchmarks/stable_asr_v0.json", "required_now": true},
         {"path": "stable_asr/paper/artifacts.py", "required_now": true},
@@ -133,6 +134,7 @@
         {"path": "stable_asr/paper/integrity.py", "required_now": true},
         {"path": "stable_asr/paper/parity.py", "required_now": true},
         {"path": "stable_asr/paper/final_experiments.py", "required_now": true},
+        {"path": "stable_asr/paper/final_inputs.py", "required_now": true},
         {"path": "stable_asr/paper/final_config.py", "required_now": true},
         {"path": "scripts/reproduce_paper.py", "required_now": true}
       ],

@@ -115,6 +115,7 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --resul
 - [Baselines](baselines.md)
 - [Paper pipeline](paper_pipeline.md)
 - [Release gates](release_gates.md)
+- [Final inputs](final_inputs.md)
 - [Data schema](schema.md)
 - [ASR reference collections](asr_collections.md)
 - API: [Data](api/data.md), [Turn](api/turn.md), [Scenarios](api/scenarios.md), [Paper](api/paper.md)

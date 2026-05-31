@@ -1,0 +1,48 @@
+# Final Inputs
+
+Stable-ASR separates structural smoke evidence from final-scale evidence. The
+final paper run needs real corpora, real or explicitly composed VoiceWorld
+records, external turn-model exports, command-backed ASR outputs, NanoTurn
+artifacts, and a final paper bundle.
+
+The machine-readable collection plan lives at:
+
+```text
+configs/final/input_collections.json
+```
+
+Validate it:
+
+```bash
+stable-asr final-inputs --registry configs/final/input_collections.json --validate-only
+```
+
+Render the local collection status:
+
+```bash
+stable-asr final-inputs \
+  --registry configs/final/input_collections.json \
+  --config configs/final/paper_final.json \
+  --output runs/final/FINAL_INPUT_COLLECTIONS.md
+```
+
+The report does not create placeholder data. It checks the configured local
+paths and prints the commands needed to stage, normalize, verify, and package
+the final evidence.
+
+Expected P0 collection groups:
+
+- LibriSpeech dev-clean and AISHELL-1 dev corpus directories.
+- Leakage-audited turn train/dev/test splits derived from prepared ASR manifests.
+- Real VoiceWorld annotations and audio.
+- SmartTurn and EasyTurn raw prediction exports.
+- Command-backed ASR output reports for external ASR systems.
+- NanoTurn final checkpoint, metrics, ONNX export, and model card.
+- Final `paper_results.json`, artifact bundle, archive, and release gates.
+
+Use this together with:
+
+```bash
+stable-asr final-config --config configs/final/paper_final.json --plan-missing
+stable-asr paper-status --repo-root .
+```

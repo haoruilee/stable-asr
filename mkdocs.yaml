@@ -18,6 +18,7 @@ nav:
   - Data Schema: schema.md
   - Paper Pipeline: paper_pipeline.md
   - Release Gates: release_gates.md
+  - Final Inputs: final_inputs.md
   - ASR Collections: asr_collections.md
   - API:
       - Data: api/data.md

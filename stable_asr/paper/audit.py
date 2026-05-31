@@ -13,6 +13,7 @@ from stable_asr.models.adapters.registry import load_adapter_registry, validate_
 from stable_asr.models.registry import load_model_registry, validate_model_registry
 from stable_asr.paper.final_config import load_final_run_config, validate_final_run_config
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
+from stable_asr.paper.final_inputs import load_final_input_collections, validate_final_input_collections
 from stable_asr.paper.figures import PAPER_FIGURES
 from stable_asr.paper.integrity import verify_artifact_integrity
 from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_parity_checklist
@@ -214,6 +215,24 @@ def audit_paper_release(
             )
         except (OSError, ValueError) as exc:
             checks.append(_release_check("paper", "final_run_config_schema", False, str(exc)))
+
+    final_input_collections_path = repo_root / "configs" / "final" / "input_collections.json"
+    if final_input_collections_path.exists():
+        try:
+            final_input_collections = load_final_input_collections(final_input_collections_path)
+            final_input_validation = validate_final_input_collections(final_input_collections)
+            checks.append(
+                _release_check(
+                    "paper",
+                    "final_input_collections_schema",
+                    final_input_validation.ok,
+                    f"{len(final_input_collections.get('collections', []))} collection(s)"
+                    if final_input_validation.ok
+                    else "; ".join(final_input_validation.errors[:3]),
+                )
+            )
+        except (OSError, ValueError) as exc:
+            checks.append(_release_check("paper", "final_input_collections_schema", False, str(exc)))
 
     source_path = repo_root / "configs" / "datasets" / "stable_asr_sources.json"
     if source_path.exists():
@@ -999,6 +1018,9 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("paper_parity:markdown", artifacts_dir / "PAPER_PARITY.md"))
     checks.append(_exists_check("final_experiments:json", artifacts_dir / "final_experiments.json"))
     checks.append(_exists_check("final_experiments:markdown", artifacts_dir / "FINAL_EXPERIMENTS.md"))
+    checks.append(_exists_check("final_input_collections:json", artifacts_dir / "final_input_collections.json"))
+    checks.append(_exists_check("final_input_collections:audit_json", artifacts_dir / "final_input_collection_status.json"))
+    checks.append(_exists_check("final_input_collections:markdown", artifacts_dir / "FINAL_INPUT_COLLECTIONS.md"))
     checks.append(_exists_check("final_run_config:json", artifacts_dir / "final_run_config.json"))
     checks.append(_exists_check("final_run_config:markdown", artifacts_dir / "FINAL_RUN_CONFIG.md"))
     checks.append(_exists_check("final_run_file_audit:json", artifacts_dir / "final_run_file_audit.json"))

@@ -67,6 +67,7 @@ stable-asr final-config --config configs/final/paper_final.json --prepare-asr-tr
 # Expected to report NOT_READY until final corpora, splits, external predictions, real VoiceWorld, and raw ASR exports exist.
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md
+stable-asr final-inputs --registry configs/final/input_collections.json --output runs/final/FINAL_INPUT_COLLECTIONS.md
 stable-asr paper-evidence-matrix --output runs/final/FINAL_EVIDENCE_MATRIX.md
 stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
 stable-asr leaderboard-export --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/leaderboard.jsonl

@@ -183,6 +183,7 @@ DEFAULT_PARITY_CHECKLIST: dict[str, Any] = {
                 "PROVENANCE.md",
                 "leaderboard.jsonl",
                 "BENCHMARK_SUITE.md",
+                "FINAL_INPUT_COLLECTIONS.md",
                 "MODEL_CARD.md",
                 "MODELS.md"
             ],

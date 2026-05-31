@@ -207,6 +207,7 @@
       ],
       "commands": [
         "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
+        "stable-asr final-inputs --registry configs/final/input_collections.json --output runs/final/FINAL_INPUT_COLLECTIONS.md",
         "stable-asr make-card model --input configs/models/stable_asr_models.json --model-id nanoturn_pico --metrics runs/final/nanoturn/metrics.json --output runs/final/MODEL_CARD.md",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
         "stable-asr paper-artifact-integrity --manifest runs/final/artifacts/artifact_hashes.json --root runs/final/artifacts",
@@ -228,6 +229,7 @@
         "artifact_hashes.json",
         "PROVENANCE.md",
         "PAPER_PARITY.md",
+        "FINAL_INPUT_COLLECTIONS.md",
         "CLAIMS.md",
         "MODEL_CARD.md",
         "MODELS.md",

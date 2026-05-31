@@ -23,6 +23,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "provenance:json" in report.to_text()
     assert "model_card:markdown" in report.to_text()
     assert "model_registry:markdown" in report.to_text()
+    assert "final_input_collections:markdown" in report.to_text()
     assert "asr_collection_readiness:markdown" in report.to_text()
     assert report.to_dict()["ok"] is True
 

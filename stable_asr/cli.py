@@ -90,6 +90,11 @@ from stable_asr.paper.final_experiments import (
     load_final_experiments,
     validate_final_experiments,
 )
+from stable_asr.paper.final_inputs import (
+    final_input_collection_report,
+    load_final_input_collections,
+    validate_final_input_collections,
+)
 from stable_asr.paper.final_results import assemble_final_paper_results
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.archive import paper_artifact_archive, verify_paper_artifact_archive
@@ -932,6 +937,17 @@ def build_parser() -> argparse.ArgumentParser:
     final_experiments_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     final_experiments_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     final_experiments_parser.add_argument("--validate-only", action="store_true")
+
+    final_inputs_parser = subparsers.add_parser(
+        "final-inputs",
+        help="Print, validate, or audit the final-scale input collection plan.",
+    )
+    final_inputs_parser.add_argument("--registry", type=Path, help="Optional final input collection JSON path.")
+    final_inputs_parser.add_argument("--config", type=Path, help="Optional final run config JSON path.")
+    final_inputs_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    final_inputs_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    final_inputs_parser.add_argument("--json", action="store_true", help="Print report or registry as JSON.")
+    final_inputs_parser.add_argument("--validate-only", action="store_true")
 
     final_config_parser = subparsers.add_parser(
         "final-config",
@@ -2240,6 +2256,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"case_studies: {len(bundle.case_studies)}")
             print(f"paper_parity: {len(bundle.paper_parity)}")
             print(f"final_experiments: {len(bundle.final_experiments)}")
+            print(f"final_input_collections: {len(bundle.final_input_collections)}")
             print(f"final_run_config: {len(bundle.final_run_config)}")
             print(f"final_run_file_audit: {len(bundle.final_run_file_audit)}")
             print(f"final_run_action_plan: {len(bundle.final_run_action_plan)}")
@@ -2397,6 +2414,28 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"OK: {registry['id']} ({len(registry['experiments'])} experiment(s))")
                 return 0
             text = json.dumps(registry, ensure_ascii=False, indent=2) if args.json else final_experiments_markdown(registry)
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+            print(text)
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.command == "final-inputs":
+        try:
+            registry = load_final_input_collections(args.registry)
+            validation = validate_final_input_collections(registry)
+            if not validation.ok:
+                print(validation.to_text(), file=sys.stderr)
+                return 1
+            if args.validate_only:
+                print(f"OK: {registry['id']} ({len(registry['collections'])} collection(s))")
+                return 0
+            config = load_final_run_config(args.config)
+            report = final_input_collection_report(registry, config=config, repo_root=args.repo_root)
+            text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
             if args.output:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")

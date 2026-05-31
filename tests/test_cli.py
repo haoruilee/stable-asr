@@ -906,6 +906,25 @@ def test_final_experiments_cli_writes_markdown(tmp_path, capsys) -> None:
     assert "real_streaming_asr_systems" in output.read_text(encoding="utf-8")
 
 
+def test_final_inputs_cli_validate_config(capsys) -> None:
+    code = main(["final-inputs", "--registry", "configs/final/input_collections.json", "--validate-only"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "OK: stable_asr_final_input_collections_v0" in captured.out
+
+
+def test_final_inputs_cli_writes_status_report(tmp_path, capsys) -> None:
+    output = tmp_path / "FINAL_INPUT_COLLECTIONS.md"
+    code = main(["final-inputs", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Final Input Collections" in captured.out
+    assert output.exists()
+    assert "LibriSpeech dev-clean" in output.read_text(encoding="utf-8")
+
+
 def test_final_config_cli_validate_config(capsys) -> None:
     code = main(["final-config", "--config", "configs/final/paper_final.json", "--validate-only"])
 
@@ -2367,6 +2386,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert "scenario_suite:" in captured.out
     assert "case_studies:" in captured.out
     assert "final_evidence_matrix:" in captured.out
+    assert "final_input_collections:" in captured.out
     assert "roadmap_status:" in captured.out
     assert "claims:" in captured.out
     assert "artifact_integrity:" in captured.out
@@ -2385,6 +2405,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert (output_dir / "BENCHMARK_SUITE.md").exists()
     assert (output_dir / "SCENARIO_SUITE.md").exists()
     assert (output_dir / "CASE_STUDIES.md").exists()
+    assert (output_dir / "FINAL_INPUT_COLLECTIONS.md").exists()
     assert (output_dir / "FINAL_EVIDENCE_MATRIX.md").exists()
     assert (output_dir / "CLAIMS.md").exists()
 

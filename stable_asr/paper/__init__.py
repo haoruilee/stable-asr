@@ -23,6 +23,12 @@ from stable_asr.paper.evidence import FinalEvidenceMatrixReport, final_evidence_
 from stable_asr.paper.experiments import PaperRunResult, run_paper_smoke
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.final_config import FinalRunActionPlan, build_final_run_action_plan
+from stable_asr.paper.final_inputs import (
+    FinalInputCollectionReport,
+    final_input_collection_report,
+    load_final_input_collections,
+    validate_final_input_collections,
+)
 from stable_asr.paper.final_results import FinalResultsAssemblyReport, assemble_final_paper_results
 from stable_asr.paper.integrity import (
     ArtifactDigest,
@@ -78,6 +84,7 @@ __all__ = [
     "PaperRunResult",
     "FinalResultsAssemblyReport",
     "FinalRunActionPlan",
+    "FinalInputCollectionReport",
     "FinalEvidenceMatrixReport",
     "GitProvenance",
     "PaperProvenanceReport",
@@ -104,6 +111,8 @@ __all__ = [
     "paper_artifact_bundle",
     "paper_draft",
     "final_evidence_matrix",
+    "final_input_collection_report",
+    "load_final_input_collections",
     "paper_figure",
     "paper_latex",
     "paper_table",
@@ -111,6 +120,7 @@ __all__ = [
     "run_paper_smoke",
     "validate_benchmark_suite",
     "validate_leaderboard_jsonl",
+    "validate_final_input_collections",
     "verify_artifact_integrity",
     "verify_paper_artifact_archive",
     "write_artifact_integrity",
