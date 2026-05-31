@@ -25,7 +25,7 @@ from stable_asr.paper.final_config import (
 )
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.integrity import artifact_integrity_manifest, write_artifact_integrity
-from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
+from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_report, validate_leaderboard_jsonl
 from stable_asr.paper.parity import audit_paper_parity, load_paper_parity_checklist, paper_parity_markdown
 from stable_asr.paper.provenance import paper_bundle_provenance, write_paper_provenance
 from stable_asr.paper.status import paper_status, write_paper_status_json, write_paper_status_markdown
@@ -62,6 +62,7 @@ class PaperArtifactBundle:
     figures: dict[str, str]
     leaderboards: dict[str, str]
     leaderboard_validation: dict[str, str]
+    leaderboard_reports: dict[str, str]
     benchmark_suite: dict[str, str]
     data_sources: dict[str, str]
     adapter_registry: dict[str, str]
@@ -90,6 +91,7 @@ class PaperArtifactBundle:
             "figures": self.figures,
             "leaderboards": self.leaderboards,
             "leaderboard_validation": self.leaderboard_validation,
+            "leaderboard_reports": self.leaderboard_reports,
             "benchmark_suite": self.benchmark_suite,
             "data_sources": self.data_sources,
             "adapter_registry": self.adapter_registry,
@@ -147,6 +149,22 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     )
     Path(leaderboard_validation["markdown"]).write_text(
         leaderboard_validation_report.to_markdown(),
+        encoding="utf-8",
+    )
+    leaderboard_ranking_report = leaderboard_report(
+        leaderboards["jsonl"],
+        require_complete_suite=True,
+    )
+    leaderboard_reports = {
+        "json": str(output_dir / "leaderboard_report.json"),
+        "markdown": str(output_dir / "LEADERBOARD_REPORT.md"),
+    }
+    Path(leaderboard_reports["json"]).write_text(
+        json.dumps(leaderboard_ranking_report.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(leaderboard_reports["markdown"]).write_text(
+        leaderboard_ranking_report.to_markdown(),
         encoding="utf-8",
     )
     suite = load_benchmark_suite()
@@ -328,6 +346,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         figures=figures,
         leaderboards=leaderboards,
         leaderboard_validation=leaderboard_validation,
+        leaderboard_reports=leaderboard_reports,
         benchmark_suite=benchmark_suite,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
@@ -362,6 +381,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         figures=figures,
         leaderboards=leaderboards,
         leaderboard_validation=leaderboard_validation,
+        leaderboard_reports=leaderboard_reports,
         benchmark_suite=benchmark_suite,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
@@ -407,6 +427,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Leaderboard Validation", ""])
     for name, path in bundle.leaderboard_validation.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Leaderboard Reports", ""])
+    for name, path in bundle.leaderboard_reports.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Artifact Integrity", ""])
     for name, path in bundle.artifact_integrity.items():
@@ -501,6 +524,7 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.figures,
         bundle.leaderboards,
         bundle.leaderboard_validation,
+        bundle.leaderboard_reports,
         bundle.benchmark_suite,
         bundle.data_sources,
         bundle.adapter_registry,

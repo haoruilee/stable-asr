@@ -18,6 +18,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "paper_audit: OK" in report.to_text()
     assert "results:json" in report.to_text()
     assert "benchmark_suite:required_artifacts" in report.to_text()
+    assert "leaderboard_report:markdown" in report.to_text()
     assert "artifact_integrity:sha256" in report.to_text()
     assert "provenance:json" in report.to_text()
     assert "asr_collection_readiness:markdown" in report.to_text()

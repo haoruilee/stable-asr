@@ -15,7 +15,9 @@
     "benchmark_suite.json",
     "BENCHMARK_SUITE.md",
     "leaderboard.jsonl",
-    "leaderboard.csv"
+    "leaderboard.csv",
+    "leaderboard_report.json",
+    "LEADERBOARD_REPORT.md"
   ],
   "tasks": [
     {

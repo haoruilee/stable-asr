@@ -61,6 +61,7 @@ ready.
 - dataset and experiment cards are provided
 - leaderboard-ready JSONL/CSV exports are included in the artifact bundle
 - leaderboard validation JSON/Markdown files are included in the artifact bundle
+- ranked leaderboard report JSON/Markdown files are included in the artifact bundle
 - artifact integrity JSON/Markdown files are included and pass sha256 verification
 - provenance JSON/Markdown files record git, version, result hash, and config hashes
 - benchmark suite JSON/Markdown files are included in the artifact bundle

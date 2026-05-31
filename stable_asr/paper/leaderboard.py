@@ -99,6 +99,103 @@ class LeaderboardValidationReport:
         )
 
 
+@dataclass(frozen=True)
+class LeaderboardRankedRow:
+    rank: int
+    suite: str
+    task: str
+    slice: str
+    metric: str
+    system: str
+    value: float
+    unit: str
+    higher_is_better: bool
+    source: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "rank": self.rank,
+            "suite": self.suite,
+            "task": self.task,
+            "slice": self.slice,
+            "metric": self.metric,
+            "system": self.system,
+            "value": self.value,
+            "unit": self.unit,
+            "higher_is_better": self.higher_is_better,
+            "source": self.source,
+        }
+
+
+@dataclass(frozen=True)
+class LeaderboardReport:
+    ok: bool
+    path: str
+    suite: str
+    rows: int
+    groups: int
+    top_k: int
+    ranked_rows: list[LeaderboardRankedRow]
+    validation: LeaderboardValidationReport
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "path": self.path,
+            "suite": self.suite,
+            "rows": self.rows,
+            "groups": self.groups,
+            "top_k": self.top_k,
+            "ranked_rows": [row.to_dict() for row in self.ranked_rows],
+            "validation": self.validation.to_dict(),
+        }
+
+    def to_text(self) -> str:
+        lines = [
+            f"leaderboard_report: {'OK' if self.ok else 'FAILED'}",
+            f"path: {self.path}",
+            f"suite: {self.suite}",
+            f"rows: {self.rows}",
+            f"groups: {self.groups}",
+            f"ranked_rows: {len(self.ranked_rows)}",
+        ]
+        if not self.validation.ok:
+            lines.append(self.validation.to_text())
+        return "\n".join(lines)
+
+    def to_markdown(self) -> str:
+        summary_rows = [
+            {
+                "task": row.task,
+                "slice": row.slice,
+                "metric": row.metric,
+                "rank": row.rank,
+                "system": row.system,
+                "value": _format_value(row.value),
+                "unit": row.unit,
+                "direction": "higher" if row.higher_is_better else "lower",
+                "source": row.source,
+            }
+            for row in self.ranked_rows
+        ]
+        lines = [
+            "# Stable-ASR Leaderboard Report",
+            "",
+            f"- status: `{'OK' if self.ok else 'FAILED'}`",
+            f"- suite: `{self.suite}`",
+            f"- rows: `{self.rows}`",
+            f"- groups: `{self.groups}`",
+            f"- top_k: `{self.top_k}`",
+            "",
+            "## Ranked Metrics",
+            "",
+            dict_table(summary_rows) if summary_rows else "No valid ranked rows.",
+        ]
+        if not self.validation.ok:
+            lines.extend(["", "## Validation", "", self.validation.to_markdown()])
+        return "\n".join(lines)
+
+
 LEADERBOARD_COLUMNS = (
     "suite",
     "task",
@@ -215,6 +312,39 @@ def validate_leaderboard_jsonl(
     )
 
 
+def leaderboard_report(
+    path: str | Path,
+    *,
+    suite: dict[str, Any] | None = None,
+    top_k: int = 3,
+    require_known_systems: bool = False,
+    require_known_slices: bool = False,
+    require_complete_suite: bool = False,
+) -> LeaderboardReport:
+    suite = suite or load_benchmark_suite()
+    validation = validate_leaderboard_jsonl(
+        path,
+        suite=suite,
+        require_known_systems=require_known_systems,
+        require_known_slices=require_known_slices,
+        require_complete_suite=require_complete_suite,
+    )
+    suite_id = str(suite.get("leaderboard_suite", suite.get("id", "stable_asr_v0")))
+    rows = _load_leaderboard_rows(path) if validation.ok else []
+    ranked_rows = _rank_leaderboard_rows(rows, top_k=max(1, top_k))
+    groups = len({(row.task, row.slice, row.metric) for row in rows})
+    return LeaderboardReport(
+        ok=validation.ok,
+        path=str(path),
+        suite=suite_id,
+        rows=validation.rows,
+        groups=groups,
+        top_k=max(1, top_k),
+        ranked_rows=ranked_rows,
+        validation=validation,
+    )
+
+
 def _validate_leaderboard_row(
     payload: dict[str, Any],
     *,
@@ -294,6 +424,69 @@ def _validate_leaderboard_row(
     if key in seen:
         issues.append(LeaderboardValidationIssue(line_number, "row", "duplicate suite/task/system/slice/metric row"))
     seen.add(key)
+
+
+def _load_leaderboard_rows(path: str | Path) -> list[LeaderboardRow]:
+    rows: list[LeaderboardRow] = []
+    with Path(path).open("r", encoding="utf-8") as handle:
+        for line in handle:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            payload = json.loads(stripped)
+            rows.append(
+                LeaderboardRow(
+                    suite=str(payload["suite"]),
+                    task=str(payload["task"]),
+                    system=str(payload["system"]),
+                    slice=str(payload["slice"]),
+                    metric=str(payload["metric"]),
+                    value=float(payload["value"]),
+                    unit=str(payload["unit"]),
+                    higher_is_better=bool(payload["higher_is_better"]),
+                    source=str(payload["source"]),
+                )
+            )
+    return rows
+
+
+def _rank_leaderboard_rows(rows: list[LeaderboardRow], *, top_k: int) -> list[LeaderboardRankedRow]:
+    ranked: list[LeaderboardRankedRow] = []
+    groups: dict[tuple[str, str, str], list[LeaderboardRow]] = {}
+    for row in rows:
+        groups.setdefault((row.task, row.slice, row.metric), []).append(row)
+    for key in sorted(groups):
+        group_rows = groups[key]
+        if not group_rows:
+            continue
+        higher_is_better = group_rows[0].higher_is_better
+        ordered = sorted(
+            group_rows,
+            key=lambda row: (-row.value if higher_is_better else row.value, row.system),
+        )
+        previous_value: float | None = None
+        previous_rank = 0
+        for index, row in enumerate(ordered, start=1):
+            rank = previous_rank if previous_value is not None and row.value == previous_value else index
+            previous_rank = rank
+            previous_value = row.value
+            if rank > top_k:
+                continue
+            ranked.append(
+                LeaderboardRankedRow(
+                    rank=rank,
+                    suite=row.suite,
+                    task=row.task,
+                    slice=row.slice,
+                    metric=row.metric,
+                    system=row.system,
+                    value=row.value,
+                    unit=row.unit,
+                    higher_is_better=row.higher_is_better,
+                    source=row.source,
+                )
+            )
+    return ranked
 
 
 def _baseline_rows(results: dict[str, object], *, source: str) -> list[LeaderboardRow]:
@@ -518,3 +711,7 @@ def _row(
 
 def _dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
+
+
+def _format_value(value: float) -> str:
+    return f"{value:.6g}"

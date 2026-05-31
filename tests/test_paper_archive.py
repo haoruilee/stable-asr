@@ -25,6 +25,7 @@ def test_paper_artifact_archive_writes_tarball_and_sha256(tmp_path: Path) -> Non
         names = set(archive.getnames())
     assert "stable-asr-artifacts/paper_results.json" in names
     assert "stable-asr-artifacts/artifact_hashes.json" in names
+    assert "stable-asr-artifacts/LEADERBOARD_REPORT.md" in names
     assert "stable-asr-artifacts/PROVENANCE.md" in names
 
     verified = verify_paper_artifact_archive(report.archive_path)
@@ -35,6 +36,7 @@ def test_paper_artifact_archive_writes_tarball_and_sha256(tmp_path: Path) -> Non
     assert verified.integrity_ok
     assert verified.required_artifacts_ok
     assert "stable-asr-artifacts/paper_results.json" in verified.files
+    assert "stable-asr-artifacts/LEADERBOARD_REPORT.md" in verified.files
 
 
 def test_paper_artifact_archive_rejects_invalid_bundle(tmp_path: Path) -> None:

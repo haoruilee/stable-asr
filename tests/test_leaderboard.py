@@ -5,6 +5,7 @@ from pathlib import Path
 from stable_asr.paper.experiments import run_paper_smoke
 from stable_asr.paper.leaderboard import (
     export_leaderboard,
+    leaderboard_report,
     leaderboard_rows,
     load_paper_results,
     validate_leaderboard_jsonl,
@@ -61,6 +62,20 @@ def test_validate_leaderboard_jsonl_accepts_exported_rows(tmp_path: Path) -> Non
     assert report.rows > 0
     assert "turn_quality" in report.tasks
     assert "leaderboard_validation: OK" in report.to_text()
+
+
+def test_leaderboard_report_ranks_metric_groups(tmp_path: Path) -> None:
+    result = run_paper_smoke(tmp_path / "paper", episodes=9, seed=2, train_model=False)
+    jsonl = Path(export_leaderboard(result.results_path, tmp_path / "leaderboard.jsonl", format="jsonl"))
+
+    report = leaderboard_report(jsonl, top_k=2)
+
+    assert report.ok
+    assert report.groups > 0
+    assert report.ranked_rows
+    assert all(row.rank <= 2 for row in report.ranked_rows)
+    assert any(row.task == "turn_quality" and row.metric == "macro_f1" for row in report.ranked_rows)
+    assert "Stable-ASR Leaderboard Report" in report.to_markdown()
 
 
 def test_validate_leaderboard_jsonl_rejects_bad_unit_and_duplicates(tmp_path: Path) -> None:

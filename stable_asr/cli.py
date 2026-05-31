@@ -89,7 +89,7 @@ from stable_asr.paper.final_results import assemble_final_paper_results
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.archive import paper_artifact_archive, verify_paper_artifact_archive
 from stable_asr.paper.integrity import verify_artifact_integrity
-from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
+from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_report, validate_leaderboard_jsonl
 from stable_asr.paper.latex import paper_latex
 from stable_asr.paper.release_smoke import run_paper_release_smoke
 from stable_asr.paper.parity import (
@@ -1030,6 +1030,19 @@ def build_parser() -> argparse.ArgumentParser:
     leaderboard_validate_parser.add_argument("--require-known-systems", action="store_true")
     leaderboard_validate_parser.add_argument("--require-known-slices", action="store_true")
     leaderboard_validate_parser.add_argument("--require-complete-suite", action="store_true")
+
+    leaderboard_report_parser = subparsers.add_parser(
+        "leaderboard-report",
+        help="Generate a ranked Markdown or JSON report from leaderboard JSONL rows.",
+    )
+    leaderboard_report_parser.add_argument("--input", type=Path, required=True)
+    leaderboard_report_parser.add_argument("--suite", type=Path, help="Optional benchmark suite JSON path.")
+    leaderboard_report_parser.add_argument("--output", type=Path, help="Optional Markdown or JSON report path.")
+    leaderboard_report_parser.add_argument("--top-k", type=int, default=3)
+    leaderboard_report_parser.add_argument("--json", action="store_true")
+    leaderboard_report_parser.add_argument("--require-known-systems", action="store_true")
+    leaderboard_report_parser.add_argument("--require-known-slices", action="store_true")
+    leaderboard_report_parser.add_argument("--require-complete-suite", action="store_true")
 
     benchmark_suite_parser = subparsers.add_parser(
         "benchmark-suite",
@@ -2178,6 +2191,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"figures: {len(bundle.figures)}")
             print(f"leaderboards: {len(bundle.leaderboards)}")
             print(f"leaderboard_validation: {len(bundle.leaderboard_validation)}")
+            print(f"leaderboard_reports: {len(bundle.leaderboard_reports)}")
             print(f"benchmark_suite: {len(bundle.benchmark_suite)}")
             print(f"provenance: {len(bundle.provenance)}")
             print(f"data_sources: {len(bundle.data_sources)}")
@@ -2541,6 +2555,26 @@ def main(argv: list[str] | None = None) -> int:
                 require_complete_suite=args.require_complete_suite,
             )
         except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+        print(text)
+        return 0 if report.ok else 1
+
+    if args.command == "leaderboard-report":
+        try:
+            report = leaderboard_report(
+                args.input,
+                suite=load_benchmark_suite(args.suite),
+                top_k=args.top_k,
+                require_known_systems=args.require_known_systems,
+                require_known_slices=args.require_known_slices,
+                require_complete_suite=args.require_complete_suite,
+            )
+        except (OSError, ValueError, json.JSONDecodeError, KeyError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()

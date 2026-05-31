@@ -74,6 +74,7 @@ stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint
 stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
 stable-asr leaderboard-export --results runs/final/paper_results.json --output runs/final/leaderboard.jsonl
 stable-asr leaderboard-validate --input runs/final/leaderboard.jsonl --require-complete-suite --output runs/final/LEADERBOARD_VALIDATION.md
+stable-asr leaderboard-report --input runs/final/leaderboard.jsonl --require-complete-suite --output runs/final/LEADERBOARD_REPORT.md
 stable-asr paper-artifact-integrity --manifest runs/paper/smoke/artifacts/artifact_hashes.json --root runs/paper/smoke/artifacts
 stable-asr benchmark-suite --suite runs/paper/smoke/artifacts/benchmark_suite.json --artifacts-dir runs/paper/smoke/artifacts --validate-only
 stable-asr paper-archive --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/artifacts.tar.gz

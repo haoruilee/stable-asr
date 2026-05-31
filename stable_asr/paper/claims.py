@@ -169,6 +169,8 @@ DEFAULT_CLAIMS: list[dict[str, Any]] = [
             "provenance.json",
             "PROVENANCE.md",
             "leaderboard.jsonl",
+            "leaderboard_report.json",
+            "LEADERBOARD_REPORT.md",
             "benchmark_suite.json",
             "data_sources.json",
             "adapter_registry.json",

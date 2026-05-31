@@ -944,6 +944,8 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("leaderboard:csv", artifacts_dir / "leaderboard.csv"))
     checks.append(_exists_check("leaderboard_validation:json", artifacts_dir / "leaderboard_validation.json"))
     checks.append(_exists_check("leaderboard_validation:markdown", artifacts_dir / "LEADERBOARD_VALIDATION.md"))
+    checks.append(_exists_check("leaderboard_report:json", artifacts_dir / "leaderboard_report.json"))
+    checks.append(_exists_check("leaderboard_report:markdown", artifacts_dir / "LEADERBOARD_REPORT.md"))
     checks.append(_exists_check("artifact_integrity:json", artifacts_dir / "artifact_hashes.json"))
     checks.append(_exists_check("artifact_integrity:markdown", artifacts_dir / "ARTIFACT_HASHES.md"))
     checks.append(_integrity_check(artifacts_dir))

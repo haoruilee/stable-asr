@@ -33,7 +33,7 @@ from stable_asr.paper.integrity import (
     write_artifact_integrity,
 )
 from stable_asr.paper.latex import paper_latex
-from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
+from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_report, validate_leaderboard_jsonl
 from stable_asr.paper.provenance import (
     GitProvenance,
     PaperProvenanceReport,
@@ -90,6 +90,7 @@ __all__ = [
     "dataset_card",
     "experiment_card",
     "export_leaderboard",
+    "leaderboard_report",
     "audit_benchmark_required_artifacts",
     "audit_benchmark_suite_coverage",
     "benchmark_suite_markdown",

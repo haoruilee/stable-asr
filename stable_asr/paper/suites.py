@@ -36,6 +36,8 @@ DEFAULT_BENCHMARK_SUITE: dict[str, Any] = {
         "BENCHMARK_SUITE.md",
         "leaderboard.jsonl",
         "leaderboard.csv",
+        "leaderboard_report.json",
+        "LEADERBOARD_REPORT.md",
     ],
     "tasks": [
         {

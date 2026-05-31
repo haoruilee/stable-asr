@@ -1605,6 +1605,37 @@ def test_leaderboard_validate_cli(tmp_path, capsys) -> None:
     assert report.exists()
 
 
+def test_leaderboard_report_cli(tmp_path, capsys) -> None:
+    main(
+        [
+            "reproduce-paper",
+            "--output-dir",
+            str(tmp_path / "paper"),
+            "--episodes",
+            "9",
+            "--skip-train",
+        ]
+    )
+    output = tmp_path / "leaderboard.jsonl"
+    main(
+        [
+            "leaderboard-export",
+            "--results",
+            str(tmp_path / "paper" / "paper_results.json"),
+            "--output",
+            str(output),
+        ]
+    )
+    report = tmp_path / "LEADERBOARD_REPORT.md"
+    code = main(["leaderboard-report", "--input", str(output), "--output", str(report), "--top-k", "2"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Leaderboard Report" in captured.out
+    assert "rank" in captured.out
+    assert report.exists()
+
+
 def test_leaderboard_validate_cli_rejects_bad_submission(tmp_path, capsys) -> None:
     bad = tmp_path / "bad.jsonl"
     bad.write_text(
@@ -2310,6 +2341,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert "provenance:" in captured.out
     assert "data_sources:" in captured.out
     assert "leaderboard_validation:" in captured.out
+    assert "leaderboard_reports:" in captured.out
     assert "asr_collections:" in captured.out
     assert "scenario_suite:" in captured.out
     assert "case_studies:" in captured.out
@@ -2320,6 +2352,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert (output_dir / "ARTIFACT_INDEX.md").exists()
     assert (output_dir / "paper_results.json").exists()
     assert (output_dir / "ARTIFACT_HASHES.md").exists()
+    assert (output_dir / "LEADERBOARD_REPORT.md").exists()
     assert (output_dir / "artifact_hashes.json").exists()
     assert (output_dir / "PROVENANCE.md").exists()
     assert (output_dir / "provenance.json").exists()
