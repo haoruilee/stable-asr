@@ -19,10 +19,11 @@ benchmarks deserve priority.
 
 - Classic ASR toolkit references: Kaldi.
 - Research training toolkits: ESPnet, NeMo Speech, SpeechBrain, icefall.
-- Production and industrial ASR references: WeNet, FunASR.
+- Production and industrial ASR references: WeNet, FunASR, FireRedASR2S.
 - Data-layer references: Lhotse.
-- Deployment/runtime references: sherpa-onnx, faster-whisper.
-- Model-family and hub references: OpenAI Whisper, Hugging Face Transformers ASR.
+- Deployment/runtime references: sherpa-onnx, whisper.cpp, faster-whisper, WhisperKit.
+- Model-family and hub references: OpenAI Whisper, Qwen3-ASR, SenseVoice, Moonshine, Hugging Face Transformers ASR.
+- Timestamp/alignment references: WhisperX.
 
 ## Project Rule
 
@@ -36,5 +37,5 @@ have evidence in the adapter registry. By default it requires P0 references such
 as FunASR, WeNet, Lhotse, sherpa-onnx, and Whisper to have at least an
 implemented converter, command template, or bridge template. For release review,
 require both P0 and P1 so Kaldi, ESPnet, NeMo Speech, SpeechBrain, icefall,
-faster-whisper, and Hugging Face Transformers ASR also have explicit adapter or
-bridge plans.
+SenseVoice, WhisperX, Moonshine, faster-whisper, and Hugging Face Transformers
+ASR also have explicit adapter or bridge plans.

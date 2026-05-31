@@ -4,12 +4,13 @@ title: "Stable-ASR: A Platform for Reproducible Real-Time ASR and Full-Duplex Tu
 version: "0.0.0"
 date-released: "2026-05-31"
 license: "MIT"
-repository-code: "https://github.com/stable-asr/stable-asr"
-url: "https://github.com/stable-asr/stable-asr"
+repository-code: "https://github.com/haoruilee/stable-asr"
+url: "https://github.com/haoruilee/stable-asr"
 abstract: "Stable-ASR is a reproducible research platform for real-time ASR systems, endpointing, turn-taking, streaming evaluation, VoiceWorld scenarios, policy search, and paper artifact generation."
 authors:
-  - family-names: "Contributors"
-    given-names: "Stable-ASR"
+  - family-names: "Li"
+    given-names: "Haorui"
+    email: "haoruileee@gmail.com"
 keywords:
   - "automatic speech recognition"
   - "streaming ASR"

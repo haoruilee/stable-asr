@@ -128,7 +128,7 @@ stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause --report ru
 | `text_turn` | baseline | semantic text-only turn baseline |
 | `prediction_manifest` | adapter | SmartTurn/EasyTurn/VAP-style prediction bridge |
 | `nanoturn_pico` | model | trainable lightweight turn/action model |
-| command ASR adapters | adapter | evaluate Whisper, FunASR, WeNet, NeMo, ESPnet, SpeechBrain, icefall, sherpa-onnx, and HF exports without vendoring them |
+| command ASR adapters | adapter | evaluate Whisper, FunASR, WeNet, NeMo, ESPnet, SpeechBrain, icefall, sherpa-onnx, FireRedASR2S, Qwen3-ASR, whisper.cpp, WhisperX, Moonshine, and HF exports without vendoring them |
 
 Reference coverage is tracked in `configs/references/asr_collections.json` and
 `configs/adapters/stable_asr_adapters.json`.

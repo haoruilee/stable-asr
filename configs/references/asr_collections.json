@@ -1,7 +1,7 @@
 {
   "id": "stable_asr_reference_collections_v0",
   "version": "0.1.0",
-  "reviewed_at": "2026-05-31",
+  "reviewed_at": "2026-06-01",
   "title": "Stable-ASR Reference Collections",
   "description": "Curated upstream ASR projects that Stable-ASR should study, interoperate with, or benchmark against. This registry is a planning and attribution aid; it does not vendor upstream code.",
   "entries": [
@@ -52,6 +52,42 @@
       "reference_use": "Study industrial Chinese ASR ergonomics, streaming service interfaces, and one-call speech understanding APIs.",
       "stable_asr_actions": ["plan_command_adapter_recipe", "benchmark_chinese_streaming", "compare_auxiliary_outputs"],
       "priority": "p0"
+    },
+    {
+      "id": "firered_asr2s",
+      "name": "FireRedASR2S",
+      "category": "industrial_asr",
+      "source_url": "https://github.com/FireRedTeam/FireRedASR2S",
+      "docs_url": "https://github.com/FireRedTeam/FireRedASR2S",
+      "license": "see_upstream",
+      "focus": "Industrial all-in-one ASR system with ASR, VAD, LID, punctuation, Mandarin dialects, English, code-switching, and singing ASR support.",
+      "reference_use": "Study Chinese-first system outputs, word timestamps, VAD segments, language labels, and JSONL export shape for interaction-level evaluation.",
+      "stable_asr_actions": ["plan_command_adapter_recipe", "benchmark_chinese_code_switching", "compare_word_timestamp_outputs"],
+      "priority": "p0"
+    },
+    {
+      "id": "qwen3_asr",
+      "name": "Qwen3-ASR",
+      "category": "model_family",
+      "source_url": "https://github.com/QwenLM/Qwen3-ASR",
+      "docs_url": "https://github.com/QwenLM/Qwen3-ASR",
+      "license": "see_upstream",
+      "focus": "Open-source multilingual ASR model family with language detection, timestamp prediction, streaming demos, vLLM deployment, and forced alignment utilities.",
+      "reference_use": "Track modern speech-LLM ASR output contracts, timestamp behavior, multilingual robustness, and command-backed benchmark recipes.",
+      "stable_asr_actions": ["plan_command_adapter_recipe", "benchmark_multilingual_streaming", "compare_forced_alignment_outputs"],
+      "priority": "p0"
+    },
+    {
+      "id": "sensevoice",
+      "name": "SenseVoice",
+      "category": "speech_understanding_model",
+      "source_url": "https://github.com/FunAudioLLM/SenseVoice",
+      "docs_url": "https://github.com/FunAudioLLM/SenseVoice",
+      "license": "see_upstream",
+      "focus": "Multilingual speech understanding model covering ASR, language identification, emotion recognition, audio event detection, and service deployment.",
+      "reference_use": "Study rich transcription outputs and auxiliary speech-understanding signals that may affect turn/action policies.",
+      "stable_asr_actions": ["plan_command_adapter_recipe", "compare_rich_transcription_outputs", "track_auxiliary_audio_events"],
+      "priority": "p1"
     },
     {
       "id": "nemo",
@@ -114,6 +150,18 @@
       "priority": "p0"
     },
     {
+      "id": "whisper_cpp",
+      "name": "whisper.cpp",
+      "category": "deployment_runtime",
+      "source_url": "https://github.com/ggml-org/whisper.cpp",
+      "docs_url": "https://github.com/ggml-org/whisper.cpp",
+      "license": "MIT",
+      "focus": "C/C++ Whisper inference runtime for CPU, embedded, mobile, server, WebAssembly, and low-dependency deployment.",
+      "reference_use": "Study portable runtime packaging, quantization-facing reports, command-line transcript export, and edge latency measurement.",
+      "stable_asr_actions": ["plan_command_adapter_recipe", "compare_cpu_latency", "track_quantized_inference"],
+      "priority": "p0"
+    },
+    {
       "id": "whisper",
       "name": "OpenAI Whisper",
       "category": "model_family",
@@ -126,6 +174,18 @@
       "priority": "p0"
     },
     {
+      "id": "whisperx",
+      "name": "WhisperX",
+      "category": "timestamp_alignment",
+      "source_url": "https://github.com/m-bain/whisperX",
+      "docs_url": "https://github.com/m-bain/whisperX",
+      "license": "BSD-4-Clause",
+      "focus": "Whisper-based ASR pipeline with word-level timestamps, forced alignment, VAD, and speaker diarization.",
+      "reference_use": "Study word timestamp stability, diarization-aware transcript outputs, and long-form alignment evaluation.",
+      "stable_asr_actions": ["plan_transcript_converter", "benchmark_timestamp_stability", "compare_diarization_metadata"],
+      "priority": "p1"
+    },
+    {
       "id": "faster_whisper",
       "name": "faster-whisper",
       "category": "inference_runtime",
@@ -136,6 +196,30 @@
       "reference_use": "Study practical Whisper deployment, batched inference, quantization, and latency-sensitive transcription.",
       "stable_asr_actions": ["plan_command_adapter_recipe", "compare_rtf", "track_quantized_inference"],
       "priority": "p1"
+    },
+    {
+      "id": "moonshine",
+      "name": "Moonshine",
+      "category": "streaming_edge_asr",
+      "source_url": "https://github.com/moonshine-ai/moonshine",
+      "docs_url": "https://github.com/moonshine-ai/moonshine",
+      "license": "see_upstream",
+      "focus": "Low-latency on-device speech-to-text toolkit and model family designed for live voice interfaces and constrained deployments.",
+      "reference_use": "Study streaming transcript events, bounded-latency ASR design, and edge-device benchmark reporting.",
+      "stable_asr_actions": ["plan_command_adapter_recipe", "benchmark_live_latency", "compare_partial_transcript_events"],
+      "priority": "p1"
+    },
+    {
+      "id": "whisperkit",
+      "name": "WhisperKit",
+      "category": "on_device_runtime",
+      "source_url": "https://github.com/argmaxinc/WhisperKit",
+      "docs_url": "https://github.com/argmaxinc/WhisperKit",
+      "license": "MIT",
+      "focus": "On-device Whisper deployment stack for Apple platforms using Core ML and native Swift APIs.",
+      "reference_use": "Study mobile/on-device ASR benchmarking, Core ML export conventions, and real-time UX constraints.",
+      "stable_asr_actions": ["plan_command_adapter_recipe", "compare_on_device_latency", "track_coreml_export_metadata"],
+      "priority": "p2"
     },
     {
       "id": "huggingface_transformers_asr",

@@ -119,6 +119,9 @@
       "input_schema": "local audio or manifest handled by external script",
       "output_schema": "Stable-ASR StreamingASRRecord JSONL",
       "license": "depends_on_external_system",
+      "related_references": [
+        "whisper"
+      ],
       "notes": "Template for wrapping Whisper or faster-whisper exporters without adding a hard dependency."
     },
     {
@@ -132,7 +135,58 @@
       "input_schema": "local audio or manifest handled by external script",
       "output_schema": "Stable-ASR StreamingASRRecord JSONL",
       "license": "depends_on_external_system",
+      "related_references": [
+        "funasr"
+      ],
       "notes": "Template for evaluating FunASR-style systems through the command adapter."
+    },
+    {
+      "id": "firered_asr2s_command_template",
+      "title": "FireRedASR2S Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<fireredasr2s export script> --output {output}'",
+      "input_schema": "FireRedASR2S JSONL or normalized transcript export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "firered_asr2s"
+      ],
+      "notes": "Template for evaluating FireRedASR2S ASR, VAD, LID, punctuation, word timestamp, and code-switching outputs through Stable-ASR metrics."
+    },
+    {
+      "id": "qwen3_asr_command_template",
+      "title": "Qwen3-ASR Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<qwen3-asr export script> --output {output}'",
+      "input_schema": "Qwen3-ASR transcript, timestamp, streaming, or forced-alignment export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "qwen3_asr"
+      ],
+      "notes": "Template for evaluating Qwen3-ASR multilingual, streaming, timestamp, and forced-alignment behavior without vendoring the model stack."
+    },
+    {
+      "id": "sensevoice_command_template",
+      "title": "SenseVoice Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<sensevoice export script> --output {output}'",
+      "input_schema": "SenseVoice rich transcription export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "sensevoice"
+      ],
+      "notes": "Template for evaluating SenseVoice ASR plus rich speech-understanding outputs such as LID, emotion, and audio events."
     },
     {
       "id": "wenet_command_template",
@@ -162,6 +216,22 @@
         "sherpa_onnx"
       ],
       "notes": "Template for evaluating sherpa-onnx runtime exports, including CPU and embedded deployment reports."
+    },
+    {
+      "id": "whisper_cpp_command_template",
+      "title": "whisper.cpp Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<whisper.cpp export script> --output {output}'",
+      "input_schema": "whisper.cpp transcript, segment, or word timestamp export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "whisper_cpp"
+      ],
+      "notes": "Template for evaluating C/C++ Whisper runtimes, quantized models, CPU latency, and edge deployment reports."
     },
     {
       "id": "lhotse_manifest_bridge_template",
@@ -274,6 +344,54 @@
         "faster_whisper"
       ],
       "notes": "Template for benchmarking quantized and batched Whisper inference variants with RTF and latency metrics."
+    },
+    {
+      "id": "whisperx_transcript_template",
+      "title": "WhisperX Transcript Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_transcript",
+      "status": "template",
+      "interface": "TranscriptConverter",
+      "entrypoint": "planned: whisperx segments, word timestamps, and diarization metadata to Stable-ASR StreamingASRRecord JSONL",
+      "input_schema": "WhisperX segment, word alignment, and diarization output",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "whisperx"
+      ],
+      "notes": "Template for timestamp-stability and diarization-aware streaming transcript evaluation."
+    },
+    {
+      "id": "moonshine_command_template",
+      "title": "Moonshine Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<moonshine export script> --output {output}'",
+      "input_schema": "Moonshine transcript event or final transcript export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "moonshine"
+      ],
+      "notes": "Template for evaluating low-latency on-device ASR, live transcript events, and edge runtime tradeoffs."
+    },
+    {
+      "id": "whisperkit_command_template",
+      "title": "WhisperKit Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<whisperkit export script> --output {output}'",
+      "input_schema": "WhisperKit or Argmax SDK transcript export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "whisperkit"
+      ],
+      "notes": "Template for tracking Apple on-device ASR latency, Core ML model metadata, and mobile deployment constraints."
     },
     {
       "id": "hf_transformers_asr_template",

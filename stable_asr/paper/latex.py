@@ -37,7 +37,7 @@ def _latex_document(results_path: Path, results: dict[str, object], artifacts_di
         r"\usepackage{array}",
         r"\usepackage{hyperref}",
         r"\title{Stable-ASR: A Platform for Reproducible Real-Time ASR and Full-Duplex Turn-Taking Research}",
-        r"\author{Stable-ASR Contributors}",
+        r"\author{Haorui Li}",
         r"\date{}",
         r"\begin{document}",
         r"\maketitle",

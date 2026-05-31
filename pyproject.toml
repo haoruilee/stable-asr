@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-  { name = "Stable-ASR Contributors" }
+  { name = "haoruilee", email = "haoruileee@gmail.com" }
 ]
 keywords = [
   "asr",
@@ -56,8 +56,8 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/stable-asr/stable-asr"
-Roadmap = "https://github.com/stable-asr/stable-asr/blob/main/ROADMAP.md"
+Homepage = "https://github.com/haoruilee/stable-asr"
+Roadmap = "https://github.com/haoruilee/stable-asr/blob/main/ROADMAP.md"
 
 [project.scripts]
 stable-asr = "stable_asr.cli:main"
