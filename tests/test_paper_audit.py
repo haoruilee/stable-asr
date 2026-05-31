@@ -24,6 +24,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "starter_pack:scenario_manifest" in report.to_text()
     assert "starter_pack:final_manifest" in report.to_text()
     assert "starter_pack:final_acquisition_checklist" in report.to_text()
+    assert "starter_pack:contributor_tracks" in report.to_text()
     assert "model_card:markdown" in report.to_text()
     assert "model_registry:markdown" in report.to_text()
     assert "schema_registry:markdown" in report.to_text()

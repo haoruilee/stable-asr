@@ -84,6 +84,19 @@ staging checklist, source URL index, license/consent review sheet, VoiceWorld
 recording checklist, and final input handoff template. It is meant for assigning
 real data and external-output collection work before M5 final runs.
 
+## Contributor Pack
+
+```bash
+stable-asr contributor-pack --output-dir runs/contributor_pack
+cd runs/contributor_pack
+bash commands.sh
+```
+
+The contributor pack gathers benchmark, adapter, VoiceWorld, final-run, and
+final acquisition starter packs into one workspace, then copies the GitHub issue
+and pull request templates so contributors can choose the right track before
+opening a PR.
+
 ## Streaming ASR
 
 ```bash
@@ -121,6 +134,7 @@ stable-asr reproduce-paper --config configs/paper/paper_smoke.json
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+stable-asr contributor-pack --output-dir runs/contributor_pack
 stable-asr final-config --config configs/final/paper_final.json --prepare-inputs
 stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
 stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest

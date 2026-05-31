@@ -110,6 +110,7 @@ from stable_asr.paper.latex import paper_latex
 from stable_asr.paper.acquisition_pack import build_final_acquisition_pack
 from stable_asr.paper.adapter_pack import build_adapter_pack
 from stable_asr.paper.benchmark_pack import build_benchmark_pack
+from stable_asr.paper.contributor_pack import build_contributor_pack
 from stable_asr.paper.release_smoke import run_paper_release_smoke
 from stable_asr.paper.parity import (
     audit_paper_parity,
@@ -1232,6 +1233,13 @@ def build_parser() -> argparse.ArgumentParser:
     final_acquisition_pack_parser.add_argument("--input-collections", type=Path, help="Optional final input collection JSON path.")
     final_acquisition_pack_parser.add_argument("--repo-root", type=Path, default=Path("."))
     final_acquisition_pack_parser.add_argument("--json", action="store_true")
+
+    contributor_pack_parser = subparsers.add_parser(
+        "contributor-pack",
+        help="Create a unified contributor onboarding pack containing all starter packs and GitHub templates.",
+    )
+    contributor_pack_parser.add_argument("--output-dir", type=Path, required=True)
+    contributor_pack_parser.add_argument("--json", action="store_true")
 
     paper_audit_parser = subparsers.add_parser(
         "paper-audit",
@@ -3105,6 +3113,23 @@ def main(argv: list[str] | None = None) -> int:
             print(f"checklist_rows: {report.checklist_rows}")
             print(f"missing_required: {len(report.missing_required)}")
             print(f"license_review_items: {report.license_review_items}")
+            print(f"output_dir: {report.output_dir}")
+            print(f"readme: {report.files.get('readme')}")
+            print(f"commands: {report.files.get('commands_markdown')}")
+        return 0 if report.ok else 1
+
+    if args.command == "contributor-pack":
+        try:
+            report = build_contributor_pack(args.output_dir)
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(f"contributor_pack: {'OK' if report.ok else 'FAILED'}")
+            print(f"packs: {len(report.pack_statuses)}")
+            print(f"templates: {len(report.template_files)}")
             print(f"output_dir: {report.output_dir}")
             print(f"readme: {report.files.get('readme')}")
             print(f"commands: {report.files.get('commands_markdown')}")

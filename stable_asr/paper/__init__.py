@@ -21,6 +21,7 @@ from stable_asr.paper.acquisition_pack import FinalAcquisitionPackReport, build_
 from stable_asr.paper.adapter_pack import AdapterPackReport, build_adapter_pack
 from stable_asr.paper.benchmark_pack import BenchmarkPackReport, build_benchmark_pack
 from stable_asr.paper.cards import dataset_card, experiment_card, model_card, model_card_payload, write_model_card_json
+from stable_asr.paper.contributor_pack import ContributorPackReport, build_contributor_pack
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.evidence import FinalEvidenceMatrixReport, final_evidence_matrix
 from stable_asr.paper.experiments import PaperRunResult, run_paper_smoke
@@ -85,6 +86,7 @@ __all__ = [
     "BenchmarkSuiteValidation",
     "AdapterPackReport",
     "BenchmarkPackReport",
+    "ContributorPackReport",
     "PaperArtifactBundle",
     "PaperArchiveReport",
     "PaperArchiveVerificationReport",
@@ -115,6 +117,7 @@ __all__ = [
     "build_final_run_action_plan",
     "build_adapter_pack",
     "build_benchmark_pack",
+    "build_contributor_pack",
     "build_final_acquisition_pack",
     "build_final_pack",
     "build_scenario_pack",

@@ -38,6 +38,7 @@ Before opening final-scale data or adapter work, generate the relevant starter
 pack locally:
 
 ```bash
+stable-asr contributor-pack --output-dir runs/contributor_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
 stable-asr adapter-pack --output-dir runs/adapter_pack
 stable-asr scenario-pack --output-dir runs/scenario_pack

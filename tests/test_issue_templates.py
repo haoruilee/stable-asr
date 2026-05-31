@@ -39,4 +39,5 @@ def test_pull_request_template_requires_evidence_and_final_scale_context() -> No
     assert "Data, License, And Provenance" in template
     assert "Final-Scale Impact" in template
     assert "final-acquisition-pack" in template
+    assert "contributor-pack" in template
     assert "paper-release-smoke" in template

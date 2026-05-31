@@ -148,6 +148,7 @@
         {"path": "stable_asr/paper/final_config.py", "required_now": true},
         {"path": "stable_asr/paper/final_pack.py", "required_now": true},
         {"path": "stable_asr/paper/acquisition_pack.py", "required_now": true},
+        {"path": "stable_asr/paper/contributor_pack.py", "required_now": true},
         {"path": "scripts/reproduce_paper.py", "required_now": true}
       ],
       "commands": [
@@ -161,6 +162,7 @@
         "stable-asr scenario-pack --output-dir runs/scenario_pack",
         "stable-asr final-pack --output-dir runs/final_pack",
         "stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack",
+        "stable-asr contributor-pack --output-dir runs/contributor_pack",
         "stable-asr turn-submission --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl --system oracle_fixture --output-dir runs/submissions/oracle_fixture",
         "stable-asr streaming-submission --input tests/fixtures/streaming_asr_sample.jsonl --system streaming_fixture --output-dir runs/submissions/streaming_fixture",
         "stable-asr submission-index --root runs/submissions --output-dir runs/submissions/leaderboard",
@@ -178,6 +180,7 @@
         "external scenario contributors can generate a self-contained VoiceWorld starter pack with suite metadata, editable annotations, and runnable evaluation commands",
         "paper contributors can generate a self-contained final-run starter pack with configs, audits, runbooks, references, and scaffold directories without fake benchmark evidence",
         "paper contributors can generate a self-contained final input acquisition pack with staging, license/consent, recording, and handoff checklists",
+        "contributors can generate one onboarding pack containing every public contribution starter pack plus GitHub issue and PR templates",
         "external turn model submissions can produce auditable validation, evaluation, and leaderboard packages",
         "external streaming ASR submissions can produce auditable validation, evaluation, and leaderboard packages",
         "submission directories can be indexed into a community submission report and merged leaderboard",
@@ -208,6 +211,7 @@
       "commands": [
         "stable-asr final-pack --output-dir runs/final_pack",
         "stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack",
+        "stable-asr contributor-pack --output-dir runs/contributor_pack",
         "stable-asr final-config --config configs/final/paper_final.json --check-files",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",

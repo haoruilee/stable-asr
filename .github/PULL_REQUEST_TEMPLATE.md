@@ -58,4 +58,5 @@ stable-asr adapter-pack --output-dir /tmp/stable-asr-adapter-pack
 stable-asr scenario-pack --output-dir /tmp/stable-asr-scenario-pack
 stable-asr final-pack --output-dir /tmp/stable-asr-final-pack
 stable-asr final-acquisition-pack --output-dir /tmp/stable-asr-final-acquisition-pack
+stable-asr contributor-pack --output-dir /tmp/stable-asr-contributor-pack
 ```

@@ -639,6 +639,8 @@ def _source_manifest_content_check(path: Path) -> PaperReleaseAuditCheck:
         "include CITATION.cff",
         "include mkdocs.yaml",
         "recursive-include .github/workflows",
+        "recursive-include .github/ISSUE_TEMPLATE",
+        "include .github/PULL_REQUEST_TEMPLATE.md",
         "recursive-include configs",
         "recursive-include docs",
         "recursive-include examples",
@@ -663,6 +665,8 @@ def _wheel_data_files_check(path: Path) -> PaperReleaseAuditCheck:
         "share/stable-asr",
         "mkdocs.yaml",
         "share/stable-asr/.github/workflows",
+        "share/stable-asr/.github/ISSUE_TEMPLATE",
+        "share/stable-asr/.github",
         "share/stable-asr/configs/adapters",
         "share/stable-asr/configs/benchmarks",
         "share/stable-asr/configs/datasets",
@@ -1056,6 +1060,18 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
         _exists_check(
             "starter_pack:final_acquisition_checklist",
             artifacts_dir / "starter_packs" / "final_acquisition_pack" / "acquisition" / "staging_checklist.tsv",
+        )
+    )
+    checks.append(
+        _exists_check(
+            "starter_pack:contributor_manifest",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "manifest.json",
+        )
+    )
+    checks.append(
+        _exists_check(
+            "starter_pack:contributor_tracks",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "CONTRIBUTION_TRACKS.md",
         )
     )
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))

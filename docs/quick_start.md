@@ -52,6 +52,7 @@ stable-asr doctor --check-release-env
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+stable-asr contributor-pack --output-dir runs/contributor_pack
 ```
 
 ## What The Smoke Run Produces

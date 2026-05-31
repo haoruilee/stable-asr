@@ -45,6 +45,7 @@ Use this together with:
 ```bash
 stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+stable-asr contributor-pack --output-dir runs/contributor_pack
 stable-asr final-config --config configs/final/paper_final.json --plan-missing
 stable-asr paper-status --repo-root .
 ```

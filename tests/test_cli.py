@@ -212,6 +212,20 @@ def test_final_acquisition_pack_cli(capsys, tmp_path) -> None:
     assert (output_dir / "acquisition" / "LICENSE_REVIEW.md").exists()
 
 
+def test_contributor_pack_cli(capsys, tmp_path) -> None:
+    output_dir = tmp_path / "contributor_pack"
+    code = main(["contributor-pack", "--output-dir", str(output_dir)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "contributor_pack: OK" in captured.out
+    assert "templates:" in captured.out
+    assert (output_dir / "README.md").exists()
+    assert (output_dir / "CONTRIBUTION_TRACKS.md").exists()
+    assert (output_dir / "github_templates" / "PULL_REQUEST_TEMPLATE.md").exists()
+    assert (output_dir / "packs" / "benchmark_pack" / "README.md").exists()
+
+
 def test_labels_cli(capsys) -> None:
     code = main(["labels"])
 
