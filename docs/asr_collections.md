@@ -9,6 +9,7 @@ stable-asr asr-collections --registry configs/references/asr_collections.json --
 stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
 stable-asr asr-collections --format paper-markdown --output runs/ASR_REFERENCES.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
+stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
 stable-asr asr-collections --audit-coverage --output runs/ASR_COLLECTION_COVERAGE.md
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
@@ -21,6 +22,10 @@ benchmarks deserve priority.
 `--format paper-markdown` and `--format bibtex` turn the same curated registry
 into related-work drafting artifacts, so the paper can cite upstream projects
 without maintaining a separate manual reference list.
+
+`--format acquisition-markdown` turns the registry into a concrete collection
+plan: P0 acquisition order, adapter or bridge track, license-review flag, and
+the expected evidence artifact for each upstream reference.
 
 ## Initial Coverage
 

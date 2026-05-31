@@ -2,6 +2,7 @@ from datetime import date
 
 from stable_asr.models.adapters import load_adapter_registry
 from stable_asr.references import (
+    asr_collections_acquisition_markdown,
     asr_collections_bibtex,
     asr_collections_markdown,
     asr_collections_reference_markdown,
@@ -45,6 +46,16 @@ def test_asr_collections_reference_markdown_and_bibtex_render() -> None:
     assert "@misc{stableasr_ref_funasr" in bibtex
     assert "\\url{https://github.com/modelscope/FunASR}" in bibtex
     assert "@misc{stableasr_ref_lhotse" in bibtex
+
+
+def test_asr_collections_acquisition_markdown_renders_collection_plan() -> None:
+    markdown = asr_collections_acquisition_markdown(load_asr_collections())
+
+    assert "# Stable-ASR ASR Collection Acquisition Plan" in markdown
+    assert "P0 Acquisition Order" in markdown
+    assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in markdown
+    assert "runs/collections/lhotse/DATA_BRIDGE.md" in markdown
+    assert "license_review" in markdown
 
 
 def test_asr_collection_coverage_requires_p0_references() -> None:

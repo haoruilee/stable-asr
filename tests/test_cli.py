@@ -593,6 +593,17 @@ def test_asr_collections_cli_writes_paper_markdown(tmp_path, capsys) -> None:
     assert "stableasr_ref_funasr" in output.read_text(encoding="utf-8")
 
 
+def test_asr_collections_cli_writes_acquisition_markdown(tmp_path, capsys) -> None:
+    output = tmp_path / "ASR_COLLECTION_ACQUISITION.md"
+    code = main(["asr-collections", "--format", "acquisition-markdown", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR ASR Collection Acquisition Plan" in captured.out
+    assert output.exists()
+    assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in output.read_text(encoding="utf-8")
+
+
 def test_asr_collections_cli_audits_p0_coverage(tmp_path, capsys) -> None:
     output = tmp_path / "ASR_COLLECTION_COVERAGE.md"
     code = main(["asr-collections", "--audit-coverage", "--output", str(output)])

@@ -130,8 +130,9 @@ from stable_asr.paper.suites import (
 )
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results, paper_table
 from stable_asr.references import (
-    asr_collections_markdown,
+    asr_collections_acquisition_markdown,
     asr_collections_bibtex,
+    asr_collections_markdown,
     asr_collections_reference_markdown,
     audit_asr_collection_coverage,
     audit_asr_collection_readiness,
@@ -568,7 +569,7 @@ def build_parser() -> argparse.ArgumentParser:
     asr_collections_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     asr_collections_parser.add_argument(
         "--format",
-        choices=["registry-markdown", "paper-markdown", "bibtex"],
+        choices=["registry-markdown", "paper-markdown", "bibtex", "acquisition-markdown"],
         default="registry-markdown",
         help="Output format when not using --json or audit flags.",
     )
@@ -1927,6 +1928,8 @@ def main(argv: list[str] | None = None) -> int:
                 text = asr_collections_reference_markdown(registry)
             elif args.format == "bibtex":
                 text = asr_collections_bibtex(registry)
+            elif args.format == "acquisition-markdown":
+                text = asr_collections_acquisition_markdown(registry)
             else:
                 text = asr_collections_markdown(registry)
             if args.output:

@@ -42,6 +42,7 @@ ready.
 - required P0 and P1 ASR references have adapter or bridge coverage evidence
 - ASR reference collection readiness checks review freshness, Stable-ASR action plans, adapter evidence, and license-review warnings
 - ASR reference collection exports paper Markdown notes and BibTeX attribution artifacts
+- ASR reference collection exports an acquisition plan that maps upstream projects to evidence targets
 - VoiceWorld scenario suite JSON exists in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - ASR manifest schema and metadata-table recipe exist
 - data benchmark sections exist

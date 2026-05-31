@@ -43,6 +43,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         "markdown",
         "paper_markdown",
         "bibtex",
+        "acquisition_markdown",
         "coverage_json",
         "coverage_markdown",
         "readiness_json",
@@ -95,6 +96,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR Reference Collections" in Path(bundle.asr_collections["markdown"]).read_text(encoding="utf-8")
     assert "@misc{stableasr_ref_funasr" in Path(bundle.asr_collections["bibtex"]).read_text(encoding="utf-8")
     assert "Stable-ASR Paper Reference Notes" in Path(bundle.asr_collections["paper_markdown"]).read_text(encoding="utf-8")
+    assert "ASR Collection Acquisition Plan" in Path(bundle.asr_collections["acquisition_markdown"]).read_text(
+        encoding="utf-8"
+    )
     assert "funasr" in Path(bundle.asr_collections["coverage_markdown"]).read_text(encoding="utf-8")
     assert "required_priorities: `p0, p1`" in Path(bundle.asr_collections["coverage_markdown"]).read_text(encoding="utf-8")
     assert "ASR Collection Readiness" in Path(bundle.asr_collections["readiness_markdown"]).read_text(encoding="utf-8")

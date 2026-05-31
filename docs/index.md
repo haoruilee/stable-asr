@@ -57,6 +57,7 @@ stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json
 stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
 stable-asr asr-collections --audit-coverage
 stable-asr asr-collections --audit-readiness
+stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr adapter-pack --output-dir runs/adapter_pack
 stable-asr scenario-pack --output-dir runs/scenario_pack

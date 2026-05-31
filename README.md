@@ -139,6 +139,7 @@ Reference coverage is tracked in `configs/references/asr_collections.json` and
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
+stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr compare-asr-commands --config examples/configs/asr_vendor_adapter_demo.json --report runs/asr_vendor_adapter.md
 stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2
@@ -232,6 +233,7 @@ is provided in `mkdocs.yaml`.
 - machine-readable upstream ASR reference collection in `configs/references/asr_collections.json`
 - `asr-collections` for validating and rendering top ASR project references
 - `asr-collections --format paper-markdown|bibtex` for paper-ready related-work reference artifacts
+- `asr-collections --format acquisition-markdown` for turning the upstream ASR registry into a concrete collection and evidence-staging plan
 - `asr-collections --audit-coverage` for checking P0 reference coverage in the adapter registry
 - `asr-collections --audit-readiness` for checking review freshness, P0/P1 adapter evidence, action plans, and license-review warnings
 - machine-readable VoiceWorld scenario suite in `configs/scenarios/stable_asr_voiceworld_v0.json`

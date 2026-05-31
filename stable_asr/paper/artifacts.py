@@ -54,6 +54,7 @@ from stable_asr.models.registry import (
     write_model_registry_json,
 )
 from stable_asr.references import (
+    asr_collections_acquisition_markdown,
     asr_collections_bibtex,
     asr_collections_markdown,
     asr_collections_reference_markdown,
@@ -261,6 +262,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "markdown": str(output_dir / "ASR_COLLECTIONS.md"),
         "paper_markdown": str(output_dir / "ASR_REFERENCES.md"),
         "bibtex": str(output_dir / "ASR_REFERENCES.bib"),
+        "acquisition_markdown": str(output_dir / "ASR_COLLECTION_ACQUISITION.md"),
         "coverage_json": str(output_dir / "asr_collection_coverage.json"),
         "coverage_markdown": str(output_dir / "ASR_COLLECTION_COVERAGE.md"),
         "readiness_json": str(output_dir / "asr_collection_readiness.json"),
@@ -272,6 +274,10 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         encoding="utf-8",
     )
     Path(asr_collections["bibtex"]).write_text(asr_collections_bibtex(asr_reference_registry), encoding="utf-8")
+    Path(asr_collections["acquisition_markdown"]).write_text(
+        asr_collections_acquisition_markdown(asr_reference_registry),
+        encoding="utf-8",
+    )
     Path(asr_collections["coverage_json"]).write_text(
         json.dumps(asr_reference_coverage.to_dict(), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",

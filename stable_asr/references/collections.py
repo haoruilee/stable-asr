@@ -498,6 +498,77 @@ def asr_collections_reference_markdown(registry: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def asr_collections_acquisition_markdown(registry: dict[str, Any]) -> str:
+    """Render a contributor-facing acquisition plan for upstream ASR references."""
+
+    validation = validate_asr_collections(registry)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    rows = []
+    p0_entries = []
+    for entry in sorted(registry["entries"], key=lambda item: (item["priority"], item["category"], item["id"])):
+        track = _acquisition_track(entry)
+        license_review_needed = str(entry.get("license", "")) == "see_upstream"
+        row = {
+            "reference": entry["id"],
+            "priority": entry["priority"],
+            "track": track,
+            "license_review": "yes" if license_review_needed else "no",
+            "evidence_target": _acquisition_evidence_target(entry, track),
+            "actions": ", ".join(entry["stable_asr_actions"]),
+        }
+        rows.append(row)
+        if entry["priority"] == "p0":
+            p0_entries.append(entry)
+
+    p0_lines = [
+        f"1. `{entry['id']}`: {_acquisition_track(entry)}; write `{_acquisition_evidence_target(entry, _acquisition_track(entry))}`."
+        for entry in p0_entries
+    ]
+    lines = [
+        "# Stable-ASR ASR Collection Acquisition Plan",
+        "",
+        (
+            "This plan turns the upstream reference registry into executable collection work. "
+            "It is for adapter planning, transcript export, license review, and paper evidence staging; "
+            "it does not vendor upstream code or model weights."
+        ),
+        "",
+        f"- registry id: `{registry['id']}`",
+        f"- reviewed_at: `{registry['reviewed_at']}`",
+        f"- entries: `{len(rows)}`",
+        f"- p0_entries: `{len(p0_entries)}`",
+        "",
+        "## Common Commands",
+        "",
+        "```bash",
+        "stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md",
+        "stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md",
+        "stable-asr adapter-pack --output-dir runs/adapter_pack",
+        "stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack",
+        "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2",
+        "```",
+        "",
+        "## P0 Acquisition Order",
+        "",
+        *p0_lines,
+        "",
+        "## Full Checklist",
+        "",
+        dict_table(rows),
+        "",
+        "## Evidence Rule",
+        "",
+        (
+            "A reference is useful to Stable-ASR only after it has a concrete artifact: "
+            "a command adapter output, transcript converter, recipe bridge note, data bridge note, "
+            "or explicit license review. Registry presence alone is not evidence."
+        ),
+    ]
+    return "\n".join(lines)
+
+
 def asr_collections_bibtex(registry: dict[str, Any]) -> str:
     """Render a lightweight BibTeX file for upstream project attribution."""
 
@@ -567,6 +638,30 @@ def _normalize_reference_text(value: str) -> str:
 
 def _citation_key(entry: dict[str, Any]) -> str:
     return "stableasr_ref_" + _normalize_reference_text(str(entry.get("id", "unknown")))
+
+
+def _acquisition_track(entry: dict[str, Any]) -> str:
+    category = str(entry.get("category", ""))
+    if category == "data_layer":
+        return "data bridge"
+    if category in {"classic_toolkit", "research_training_toolkit"}:
+        return "recipe bridge"
+    if category == "timestamp_alignment":
+        return "timestamp converter"
+    if category in {"deployment_runtime", "inference_runtime", "on_device_runtime"}:
+        return "runtime command adapter"
+    return "ASR command adapter"
+
+
+def _acquisition_evidence_target(entry: dict[str, Any], track: str) -> str:
+    reference_id = str(entry.get("id", "unknown"))
+    if track == "data bridge":
+        return f"runs/collections/{reference_id}/DATA_BRIDGE.md"
+    if track == "recipe bridge":
+        return f"runs/collections/{reference_id}/RECIPE_BRIDGE.md"
+    if track == "timestamp converter":
+        return f"runs/collections/{reference_id}/TIMESTAMP_CONVERTER.md"
+    return f"runs/final/asr_commands/raw/{reference_id}_raw.jsonl"
 
 
 def _review_year(registry: dict[str, Any]) -> str:

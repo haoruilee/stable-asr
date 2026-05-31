@@ -81,10 +81,12 @@
         "stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only",
         "stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only",
         "stable-asr asr-collections --audit-coverage",
+        "stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md",
         "stable-asr adapter-pack --output-dir runs/adapter_pack"
       ],
       "success_criteria": [
         "P0 ASR references have adapter or bridge evidence",
+        "top ASR reference collection has an acquisition plan that maps every entry to an evidence target",
         "public ASR metadata can be normalized into canonical ASR manifests",
         "ASR manifests can bootstrap weak turn windows and leakage-audited splits",
         "external ASR contributors can generate a command-adapter starter pack with registries, fixtures, and script templates"
