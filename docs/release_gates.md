@@ -18,7 +18,7 @@ ready.
 - `MANIFEST.in` exists and includes platform configs, docs, examples, scripts, and fixtures for source distributions
 - wheel data-file metadata installs platform configs, docs, examples, scripts, and fixtures under `share/stable-asr`
 - CI builds a wheel, installs it into a clean virtual environment, and runs platform commands from an empty working directory
-- `LICENSE` and `CONTRIBUTING.md` exist
+- `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, and `CODE_OF_CONDUCT.md` exist
 - paper config and reproduction script exist
 - roadmap registry exists and `roadmap-status` can separate current milestone evidence from planned final-scale work
 - `stable-asr doctor` reports required config schemas as OK
