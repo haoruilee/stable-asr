@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 from stable_asr.paper.final_config import (
@@ -7,6 +8,7 @@ from stable_asr.paper.final_config import (
     final_run_file_audit_markdown,
     final_run_config_markdown,
     load_final_run_config,
+    prepare_final_asr_eval_manifest,
     prepare_final_external_predictions,
     prepare_final_corpora,
     prepare_final_inputs,
@@ -209,6 +211,49 @@ def test_bootstrap_final_turn_splits_from_prepared_asr_manifest(tmp_path: Path) 
     assert "voiceworld_real remains" in report.to_text()
 
 
+def test_prepare_final_asr_eval_manifest_combines_prepared_manifests(tmp_path: Path) -> None:
+    manifest_a = tmp_path / "runs/final/a/asr_manifest.jsonl"
+    manifest_b = tmp_path / "runs/final/b/asr_manifest.jsonl"
+    manifest_a.parent.mkdir(parents=True)
+    manifest_b.parent.mkdir(parents=True)
+    manifest_a.write_text(
+        '{"id":"utt1","audio":"audio/utt1.wav","sample_rate":16000,"text":"hello","language":"en","source":"a"}\n',
+        encoding="utf-8",
+    )
+    manifest_b.write_text(
+        '{"id":"utt2","audio":"audio/utt2.wav","sample_rate":16000,"text":"你好","language":"zh","source":"b"}\n',
+        encoding="utf-8",
+    )
+    config = load_final_run_config()
+    config["public_corpora"] = [
+        {
+            "id": "a",
+            "language": "en",
+            "corpus": "librispeech",
+            "input_dir": "data/a",
+            "manifest": "runs/final/a/asr_manifest.jsonl",
+            "sample_rate": 16000,
+            "license": "test",
+        },
+        {
+            "id": "b",
+            "language": "zh",
+            "corpus": "aishell1",
+            "input_dir": "data/b",
+            "manifest": "runs/final/b/asr_manifest.jsonl",
+            "sample_rate": 16000,
+            "license": "test",
+        },
+    ]
+
+    report = prepare_final_asr_eval_manifest(config, repo_root=tmp_path)
+
+    assert report.ok
+    assert report.records == 2
+    assert (tmp_path / "runs/final/asr_eval_manifest.jsonl").exists()
+    assert "final_asr_eval_manifest: READY" in report.to_text()
+
+
 def test_prepare_final_external_predictions_converts_and_validates(tmp_path: Path) -> None:
     test_path = tmp_path / "runs/final/turn_test.jsonl"
     raw_path = tmp_path / "runs/final/external/smartturn_raw.jsonl"
@@ -300,7 +345,20 @@ def test_prepare_final_inputs_runs_sequence_and_audit(tmp_path: Path) -> None:
     voiceworld.write_text("\n".join(rows) + "\n", encoding="utf-8")
     asr_config = tmp_path / "configs/final/asr_command_compare.json"
     asr_config.parent.mkdir(parents=True)
-    asr_config.write_text('{"systems":[]}\n', encoding="utf-8")
+    asr_config.write_text(
+        (
+            '{"input_manifest":"runs/final/asr_eval_manifest.jsonl","adapters":['
+            '{"name":"cmd_a","command":["'
+            + sys.executable
+            + '","-c","print(1)","{input_manifest}","{output}"],'
+            '"output":"runs/final/asr_commands/a.jsonl"},'
+            '{"name":"cmd_b","command":["'
+            + sys.executable
+            + '","-c","print(1)","{input_manifest}","{output}"],'
+            '"output":"runs/final/asr_commands/b.jsonl"}]}\n'
+        ),
+        encoding="utf-8",
+    )
     config = load_final_run_config()
     config["public_corpora"] = [
         {
@@ -319,9 +377,11 @@ def test_prepare_final_inputs_runs_sequence_and_audit(tmp_path: Path) -> None:
 
     assert report.ok
     assert report.corpora.prepared_count == 1
+    assert report.asr_eval_manifest.records == 3
     assert report.turn_splits.turn_records == 6
     assert report.external_predictions.prepared_count == 0
     assert report.voiceworld_real.ok
+    assert report.asr_command_config.ok
     assert report.missing_required == []
     assert (tmp_path / "runs/final/turn_train.jsonl").exists()
     assert "final_inputs_prepare: READY" in report.to_text()

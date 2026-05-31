@@ -1,29 +1,40 @@
 {
   "timeout_sec": 900,
+  "input_manifest": "runs/final/asr_eval_manifest.jsonl",
   "adapters": [
     {
       "name": "whisper_final",
       "command": [
-        "python",
+        "python3",
         "scripts/export_whisper_streaming.py",
         "--manifest",
-        "runs/final/asr_eval_manifest.jsonl",
+        "{input_manifest}",
+        "--raw",
+        "runs/final/asr_commands/raw/whisper_raw.jsonl",
         "--output",
         "{output}"
       ],
-      "output": "runs/final/asr_commands/whisper_streaming.jsonl"
+      "output": "runs/final/asr_commands/whisper_streaming.jsonl",
+      "required_inputs": [
+        "runs/final/asr_commands/raw/whisper_raw.jsonl"
+      ]
     },
     {
       "name": "funasr_final",
       "command": [
-        "python",
+        "python3",
         "scripts/export_funasr_streaming.py",
         "--manifest",
-        "runs/final/asr_eval_manifest.jsonl",
+        "{input_manifest}",
+        "--raw",
+        "runs/final/asr_commands/raw/funasr_raw.jsonl",
         "--output",
         "{output}"
       ],
-      "output": "runs/final/asr_commands/funasr_streaming.jsonl"
+      "output": "runs/final/asr_commands/funasr_streaming.jsonl",
+      "required_inputs": [
+        "runs/final/asr_commands/raw/funasr_raw.jsonl"
+      ]
     }
   ]
 }

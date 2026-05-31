@@ -139,6 +139,7 @@ Reference coverage is tracked in `configs/references/asr_collections.json` and
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr compare-asr-commands --config examples/configs/asr_vendor_adapter_demo.json --report runs/asr_vendor_adapter.md
+stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2
 ```
 
 ## Paper And Release Smoke
@@ -245,6 +246,7 @@ is provided in `mkdocs.yaml`.
 - `sweep-streaming-asr` for chunk-size and lookahead sensitivity
 - `eval-asr-command` for dependency-light external ASR command adapters
 - `compare-asr-commands` for JSON-configured multi-system command-backed ASR comparisons
+- `compare-asr-commands --validate-only` for auditing adapter commands, shared ASR manifests, output placeholders, and required raw exports before executing heavyweight systems
 - paper smoke conversion checks for external Whisper, FunASR, Qwen3-ASR, and FireRedASR2S transcript schemas
 - seedable VoiceWorld scenario evaluation with per-scenario breakdowns
 - threshold policy search and cost-sensitive interaction objective
@@ -268,11 +270,13 @@ is provided in `mkdocs.yaml`.
 - `final-config` for validating final paper run directories, corpora, splits, adapter config, and artifact paths
 - `final-config --scaffold` for creating final-run directories and README hints without fabricating data
 - `final-config --check-files` for reporting which final paper inputs are still missing before expensive runs
-- `final-config --prepare-inputs` for running final corpus, weak split, prediction, and file-audit preparation in sequence
+- `final-config --prepare-inputs` for running final corpus, ASR eval manifest, weak split, prediction, VoiceWorld, ASR-command, and file-audit preparation in sequence
 - `final-config --prepare-corpora` for preparing configured public ASR manifests from local corpus directories
+- `final-config --prepare-asr-eval-manifest` for combining prepared ASR corpus manifests into the shared final streaming-ASR evaluation manifest
 - `final-config --bootstrap-turn-splits` for creating weak train/dev/test turn splits from prepared final ASR manifests
 - `final-config --prepare-external-predictions` for normalizing configured SmartTurn/EasyTurn-style prediction exports
 - `final-config --audit-voiceworld-real` for checking final real VoiceWorld scenario and factor coverage
+- `final-config --audit-asr-commands` for checking final command-backed ASR comparison inputs without executing the adapters
 - `leaderboard-export` for JSONL/CSV metric rows
 - machine-readable benchmark suite definition in `configs/benchmarks/stable_asr_v0.json`
 - `benchmark-suite` for validating and rendering benchmark suite definitions

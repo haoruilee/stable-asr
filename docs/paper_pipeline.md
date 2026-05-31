@@ -54,10 +54,12 @@ stable-asr final-config --config configs/final/paper_final.json --output runs/pa
 stable-asr final-config --config configs/final/paper_final.json --scaffold
 stable-asr final-config --config configs/final/paper_final.json --prepare-inputs
 stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
+stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest
 stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits
 stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions
 stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json
-# Expected to report NOT_READY until final corpora, splits, and external predictions exist.
+stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands
+# Expected to report NOT_READY until final corpora, splits, external predictions, real VoiceWorld, and raw ASR exports exist.
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr leaderboard-export --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/leaderboard.jsonl
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only

@@ -26,7 +26,8 @@ ready.
 - paper parity checklist JSON exists in `configs/paper/paper_parity_checklist.json`
 - final-scale experiment registry JSON exists in `configs/paper/final_experiments.json`
 - final-run config JSON exists in `configs/final/paper_final.json`
-- final ASR command comparison config exists in `configs/final/asr_command_compare.json`
+- final ASR command comparison config exists in `configs/final/asr_command_compare.json` and `compare-asr-commands --validate-only --require-input-manifest` audits shared manifests, raw exports, output placeholders, and at least two adapters
+- final Whisper and FunASR raw-export bridge scripts exist under `scripts/` and validate manifest coverage before writing normalized streaming rows
 - benchmark suite JSON exists in `configs/benchmarks/stable_asr_v0.json`
 - benchmark suite task/system/metric coverage is verified against leaderboard rows
 - data source registry JSON exists in `configs/datasets/stable_asr_sources.json`

@@ -63,6 +63,7 @@ from stable_asr.paper.final_config import (
     final_run_file_audit_markdown,
     final_run_config_markdown,
     load_final_run_config,
+    prepare_final_asr_eval_manifest,
     prepare_final_external_predictions,
     prepare_final_corpora,
     prepare_final_inputs,
@@ -107,7 +108,7 @@ from stable_asr.scenarios.suites import (
     scenario_suite_markdown,
     validate_scenario_suite,
 )
-from stable_asr.streaming.command_compare import compare_asr_commands_from_config
+from stable_asr.streaming.command_compare import audit_asr_command_config, compare_asr_commands_from_config
 from stable_asr.streaming.compare import compare_streaming_transcript_jsonl
 from stable_asr.streaming.metrics import evaluate_streaming_records
 from stable_asr.streaming.sweep import sweep_streaming_schedule
@@ -643,6 +644,10 @@ def build_parser() -> argparse.ArgumentParser:
     command_compare_parser.add_argument("--config", type=Path, required=True)
     command_compare_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     command_compare_parser.add_argument("--json", action="store_true")
+    command_compare_parser.add_argument("--validate-only", action="store_true", help="Audit config without executing commands.")
+    command_compare_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    command_compare_parser.add_argument("--min-adapters", type=int, default=1)
+    command_compare_parser.add_argument("--require-input-manifest", action="store_true")
 
     scenario_parser = subparsers.add_parser(
         "eval-scenario",
@@ -824,7 +829,12 @@ def build_parser() -> argparse.ArgumentParser:
     final_config_parser.add_argument(
         "--prepare-inputs",
         action="store_true",
-        help="Run final corpus, weak turn split, external prediction preparation, then audit required inputs.",
+        help="Run final corpus, ASR eval manifest, weak split, prediction, VoiceWorld, ASR-command, and file audits.",
+    )
+    final_config_parser.add_argument(
+        "--prepare-asr-eval-manifest",
+        action="store_true",
+        help="Combine prepared public ASR manifests into the shared final ASR evaluation manifest.",
     )
     final_config_parser.add_argument(
         "--require-all-corpora",
@@ -861,8 +871,14 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Audit final voiceworld_real manifest scenario and factor coverage.",
     )
+    final_config_parser.add_argument(
+        "--audit-asr-commands",
+        action="store_true",
+        help="Audit final command-backed ASR comparison config without executing adapters.",
+    )
     final_config_parser.add_argument("--scenario-suite", type=Path, help="Scenario suite for --audit-voiceworld-real.")
     final_config_parser.add_argument("--min-scenario-records", type=int, default=1)
+    final_config_parser.add_argument("--min-asr-command-adapters", type=int, default=2)
 
     leaderboard_parser = subparsers.add_parser(
         "leaderboard-export",
@@ -1737,6 +1753,18 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "compare-asr-commands":
         try:
+            if args.validate_only:
+                audit = audit_asr_command_config(
+                    args.config,
+                    repo_root=args.repo_root,
+                    min_adapters=args.min_adapters,
+                    require_input_manifest=args.require_input_manifest,
+                )
+                if args.json:
+                    print(json.dumps(audit.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(audit.to_text())
+                return 0 if audit.ok else 1
             report = compare_asr_commands_from_config(args.config)
         except (OSError, RuntimeError, ValueError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
@@ -2088,6 +2116,16 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     print(report.to_text())
                 return 0 if report.ok else 1
+            if args.prepare_asr_eval_manifest:
+                report = prepare_final_asr_eval_manifest(
+                    config,
+                    repo_root=args.repo_root,
+                )
+                if args.json:
+                    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(report.to_text())
+                return 0 if report.ok else 1
             if args.bootstrap_turn_splits:
                 report = bootstrap_final_turn_splits(
                     config,
@@ -2117,6 +2155,18 @@ def main(argv: list[str] | None = None) -> int:
                     repo_root=args.repo_root,
                     scenario_suite_path=args.scenario_suite,
                     min_per_scenario=args.min_scenario_records,
+                )
+                if args.json:
+                    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(report.to_text())
+                return 0 if report.ok else 1
+            if args.audit_asr_commands:
+                report = audit_asr_command_config(
+                    _resolve_config_path(config["asr_command_config"], repo_root=args.repo_root),
+                    repo_root=args.repo_root,
+                    min_adapters=args.min_asr_command_adapters,
+                    require_input_manifest=True,
                 )
                 if args.json:
                     print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
@@ -2320,6 +2370,15 @@ def _required_config_path(config: dict[str, object], key: str) -> Path:
     if not isinstance(value, str) or not value:
         raise ValueError(f"missing required --{key.replace('_', '-')} or config field {key!r}")
     return Path(value)
+
+
+def _resolve_config_path(value: object, *, repo_root: Path) -> Path:
+    if not isinstance(value, str) or not value:
+        raise ValueError("config path must be a non-empty string")
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    return repo_root / path
 
 
 if __name__ == "__main__":

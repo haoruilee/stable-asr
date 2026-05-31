@@ -54,6 +54,22 @@ stable-asr compare-asr-commands \
   --report runs/asr_vendor_adapter/report.md
 ```
 
+Final-scale command configs can be audited before any heavyweight ASR job is
+executed:
+
+```bash
+stable-asr compare-asr-commands \
+  --config configs/final/asr_command_compare.json \
+  --validate-only \
+  --require-input-manifest \
+  --min-adapters 2
+```
+
+The checked-in `scripts/export_whisper_streaming.py` and
+`scripts/export_funasr_streaming.py` bridges normalize precomputed upstream raw
+exports, enrich missing references from `runs/final/asr_eval_manifest.jsonl`,
+and fail when record IDs do not cover the shared manifest.
+
 ## Reference Coverage
 
 The curated reference collection is stored in

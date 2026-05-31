@@ -37,6 +37,7 @@ stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl
 stable-asr compare-streaming-asr --input balanced=tests/fixtures/streaming_asr_sample.jsonl --input fast_unstable=tests/fixtures/streaming_asr_fast_unstable_sample.jsonl
 stable-asr sweep-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160
 stable-asr eval-asr-command --name my_asr --command "python your_export.py --output {output}" --output runs/my_asr.jsonl
+stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2
 ```
 
 ## Paper Artifacts
@@ -46,9 +47,11 @@ stable-asr reproduce-paper --config configs/paper/paper_smoke.json
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr final-config --config configs/final/paper_final.json --prepare-inputs
 stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
+stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest
 stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits
 stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions
 stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json
+stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts

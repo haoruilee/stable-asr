@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from stable_asr.data.asr_manifest import load_asr_manifest, summarize_asr_records
+from stable_asr.data.asr_manifest import load_asr_manifest, summarize_asr_records, write_asr_manifest
 from stable_asr.data.recipes import prepare_asr_manifest, prepare_public_asr_manifest
 from stable_asr.data.registry import load_turn_records, summarize_records, write_turn_records
 from stable_asr.data.split import SPLIT_NAMES, TurnSplitConfig, split_turn_records
@@ -16,6 +16,7 @@ from stable_asr.eval.report import dict_table
 from stable_asr.models.adapters import convert_turn_prediction_jsonl, validate_turn_prediction_jsonl
 from stable_asr.resources import resolve_platform_path
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
+from stable_asr.streaming.command_compare import ASRCommandConfigAuditReport, audit_asr_command_config
 
 
 DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
@@ -74,6 +75,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
             "required": False,
         },
     ],
+    "asr_eval_manifest": "runs/final/asr_eval_manifest.jsonl",
     "turn_splits": {
         "train": "runs/final/turn_train.jsonl",
         "dev": "runs/final/turn_dev.jsonl",
@@ -117,9 +119,11 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl",
         "stable-asr prepare-public-asr --corpus wenetspeech --input-dir data/wenetspeech/WenetSpeech --split dev --output runs/final/wenetspeech_dev/asr_manifest.jsonl",
         "stable-asr prepare-public-asr --corpus common_voice --input-dir data/common_voice/en --split dev --output runs/final/common_voice_en_dev/asr_manifest.jsonl",
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
         "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions",
         "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json",
+        "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
@@ -333,6 +337,39 @@ class FinalTurnBootstrapReport:
 
 
 @dataclass(frozen=True)
+class FinalASREvalManifestReport:
+    ok: bool
+    output: str
+    input_manifests: list[str]
+    skipped_manifests: list[str]
+    records: int
+    detail: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "output": self.output,
+            "input_manifests": self.input_manifests,
+            "skipped_manifests": self.skipped_manifests,
+            "records": self.records,
+            "detail": self.detail,
+        }
+
+    def to_text(self) -> str:
+        status = "READY" if self.ok else "NOT_READY"
+        lines = [
+            f"final_asr_eval_manifest: {status}",
+            f"- output: {self.output}",
+            f"- input_manifests: {len(self.input_manifests)}",
+            f"- skipped_manifests: {len(self.skipped_manifests)}",
+            f"- records: {self.records}",
+            f"- detail: {self.detail}",
+        ]
+        lines.extend(f"  - {path}" for path in self.input_manifests)
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
 class FinalExternalPredictionEntry:
     id: str
     schema: str
@@ -428,9 +465,11 @@ class FinalExternalPredictionReport:
 class FinalInputPrepareReport:
     ok: bool
     corpora: FinalCorpusPrepareReport
+    asr_eval_manifest: FinalASREvalManifestReport
     turn_splits: FinalTurnBootstrapReport
     external_predictions: FinalExternalPredictionReport
     voiceworld_real: FinalVoiceWorldAuditReport
+    asr_command_config: ASRCommandConfigAuditReport
     file_audit: FinalRunFileAudit
 
     @property
@@ -445,9 +484,11 @@ class FinalInputPrepareReport:
         return {
             "ok": self.ok,
             "corpora": self.corpora.to_dict(),
+            "asr_eval_manifest": self.asr_eval_manifest.to_dict(),
             "turn_splits": self.turn_splits.to_dict(),
             "external_predictions": self.external_predictions.to_dict(),
             "voiceworld_real": self.voiceworld_real.to_dict(),
+            "asr_command_config": self.asr_command_config.to_dict(),
             "file_audit": self.file_audit.to_dict(),
             "missing_required": self.missing_required,
         }
@@ -457,9 +498,11 @@ class FinalInputPrepareReport:
         lines = [
             f"final_inputs_prepare: {status}",
             f"- corpora_prepared: {self.corpora.prepared_count}",
+            f"- asr_eval_records: {self.asr_eval_manifest.records}",
             f"- turn_records: {self.turn_splits.turn_records}",
             f"- external_predictions_prepared: {self.external_predictions.prepared_count}",
             f"- voiceworld_real_ready: {self.voiceworld_real.ok}",
+            f"- asr_commands_ready: {self.asr_command_config.ok}",
             f"- missing_required: {len(self.missing_required)}",
         ]
         lines.extend(f"  - {path}" for path in self.missing_required)
@@ -468,11 +511,15 @@ class FinalInputPrepareReport:
                 "",
                 self.corpora.to_text(),
                 "",
+                self.asr_eval_manifest.to_text(),
+                "",
                 self.turn_splits.to_text(),
                 "",
                 self.external_predictions.to_text(),
                 "",
                 self.voiceworld_real.to_text(),
+                "",
+                self.asr_command_config.to_text(),
                 "",
                 self.file_audit.to_text(),
             ]
@@ -550,7 +597,18 @@ def write_final_run_config_json(path: str | Path, config: dict[str, Any] | None 
 
 def validate_final_run_config(config: dict[str, Any]) -> FinalRunConfigValidation:
     errors: list[str] = []
-    for key in ("id", "version", "title", "output_dir", "seed", "public_corpora", "turn_splits", "artifacts", "commands"):
+    for key in (
+        "id",
+        "version",
+        "title",
+        "output_dir",
+        "seed",
+        "public_corpora",
+        "asr_eval_manifest",
+        "turn_splits",
+        "artifacts",
+        "commands",
+    ):
         if key not in config:
             errors.append(f"missing top-level key: {key}")
 
@@ -630,6 +688,10 @@ def validate_final_run_config(config: dict[str, Any]) -> FinalRunConfigValidatio
     if not isinstance(asr_command_config, str) or not asr_command_config:
         errors.append("asr_command_config must be a non-empty string")
 
+    asr_eval_manifest = config.get("asr_eval_manifest")
+    if not isinstance(asr_eval_manifest, str) or not asr_eval_manifest:
+        errors.append("asr_eval_manifest must be a non-empty string")
+
     return FinalRunConfigValidation(ok=not errors, errors=errors)
 
 
@@ -660,6 +722,8 @@ def audit_final_run_files(config: dict[str, Any], *, repo_root: str | Path = "."
             checks.append(_input_check(f"corpus:{corpus_id}:metadata", corpus["metadata"], root=root, required=required))
             checks.append(_input_check(f"corpus:{corpus_id}:audio_root", corpus["audio_root"], root=root, required=required))
         checks.append(_planned_check(f"corpus:{corpus_id}:manifest", corpus["manifest"], root=root, kind="output"))
+
+    checks.append(_planned_check("asr_eval_manifest", config["asr_eval_manifest"], root=root, kind="output"))
 
     for split, path in config.get("turn_splits", {}).items():
         checks.append(_input_check(f"turn_split:{split}", path, root=root))
@@ -699,6 +763,11 @@ def final_run_config_markdown(config: dict[str, Any]) -> str:
         "## Public Corpora",
         "",
         dict_table(_corpus_rows(config)),
+        "",
+        "## ASR Eval Manifest",
+        "",
+        f"- `asr_eval_manifest`: `{config['asr_eval_manifest']}`",
+        f"- `asr_command_config`: `{config['asr_command_config']}`",
         "",
         "## Turn Splits",
         "",
@@ -783,6 +852,7 @@ def scaffold_final_run(config: dict[str, Any], *, repo_root: str | Path = ".") -
 
     split_parent = _resolve(str(config["turn_splits"]["train"]), root=root).parent
     entries.append(_ensure_dir(split_parent, "turn_splits_parent"))
+    entries.append(_ensure_dir(_resolve(str(config["asr_eval_manifest"]), root=root).parent, "asr_eval_manifest_parent"))
     entries.append(
         _ensure_readme(
             split_parent / "TURN_SPLITS_README.md",
@@ -1006,6 +1076,63 @@ def bootstrap_final_turn_splits(
     )
 
 
+def prepare_final_asr_eval_manifest(
+    config: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+) -> FinalASREvalManifestReport:
+    """Combine prepared public ASR manifests into the shared final ASR eval manifest."""
+
+    validation = validate_final_run_config(config)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    root = Path(repo_root)
+    output_path = _resolve(str(config["asr_eval_manifest"]), root=root)
+    records = []
+    input_manifests: list[str] = []
+    skipped_manifests: list[str] = []
+    for corpus in config.get("public_corpora", []):
+        manifest_path = _resolve(str(corpus["manifest"]), root=root)
+        if not manifest_path.exists():
+            skipped_manifests.append(str(manifest_path))
+            continue
+        corpus_records = load_asr_manifest(manifest_path)
+        if corpus_records:
+            input_manifests.append(str(manifest_path))
+            records.extend(corpus_records)
+
+    if not records:
+        return FinalASREvalManifestReport(
+            ok=False,
+            output=str(output_path),
+            input_manifests=input_manifests,
+            skipped_manifests=skipped_manifests,
+            records=0,
+            detail="no prepared ASR manifests found",
+        )
+
+    write_asr_manifest(output_path, records)
+    summary_path = _resolve(str(config["output_dir"]), root=root) / "final_asr_eval_manifest_summary.json"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_payload = {
+        "output": str(output_path),
+        "input_manifests": input_manifests,
+        "skipped_manifests": skipped_manifests,
+        "summary": summarize_asr_records(records),
+    }
+    summary_path.write_text(json.dumps(summary_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    return FinalASREvalManifestReport(
+        ok=True,
+        output=str(output_path),
+        input_manifests=input_manifests,
+        skipped_manifests=skipped_manifests,
+        records=len(records),
+        detail=f"manifest and summary written; summary={summary_path}",
+    )
+
+
 def prepare_final_external_predictions(
     config: dict[str, Any],
     *,
@@ -1127,6 +1254,10 @@ def prepare_final_inputs(
         repo_root=repo_root,
         require_all=require_all_corpora,
     )
+    asr_eval_report = prepare_final_asr_eval_manifest(
+        config,
+        repo_root=repo_root,
+    )
     turn_report = bootstrap_final_turn_splits(
         config,
         repo_root=repo_root,
@@ -1144,14 +1275,30 @@ def prepare_final_inputs(
         scenario_suite_path=scenario_suite_path,
         min_per_scenario=min_per_scenario,
     )
+    asr_command_report = audit_asr_command_config(
+        _resolve(str(config["asr_command_config"]), root=Path(repo_root)),
+        repo_root=repo_root,
+        min_adapters=2,
+        require_input_manifest=True,
+    )
     file_audit = audit_final_run_files(config, repo_root=repo_root)
-    ok = corpus_report.ok and turn_report.ok and prediction_report.ok and voiceworld_report.ok and file_audit.ok
+    ok = (
+        corpus_report.ok
+        and asr_eval_report.ok
+        and turn_report.ok
+        and prediction_report.ok
+        and voiceworld_report.ok
+        and asr_command_report.ok
+        and file_audit.ok
+    )
     return FinalInputPrepareReport(
         ok=ok,
         corpora=corpus_report,
+        asr_eval_manifest=asr_eval_report,
         turn_splits=turn_report,
         external_predictions=prediction_report,
         voiceworld_real=voiceworld_report,
+        asr_command_config=asr_command_report,
         file_audit=file_audit,
     )
 

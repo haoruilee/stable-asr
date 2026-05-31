@@ -880,6 +880,7 @@ def test_final_config_cli_prepare_corpora(tmp_path, capsys) -> None:
             '"turn_splits":{"train":"runs/final/turn_train.jsonl","dev":"runs/final/turn_dev.jsonl",'
             '"test":"runs/final/turn_test.jsonl","voiceworld_real":"runs/final/voiceworld_real.jsonl"},'
             '"external_turn_predictions":[],'
+            '"asr_eval_manifest":"runs/final/asr_eval_manifest.jsonl",'
             '"asr_command_config":"configs/final/asr_command_compare.json",'
             '"nanoturn":{"model":"nanoturn_pico","checkpoint":"runs/final/nanoturn/checkpoint.pt",'
             '"metrics":"runs/final/nanoturn/metrics.json","onnx":"runs/final/nanoturn/nanoturn.onnx"},'
@@ -925,6 +926,7 @@ def test_final_config_cli_bootstrap_turn_splits(tmp_path, capsys) -> None:
             '"turn_splits":{"train":"runs/final/turn_train.jsonl","dev":"runs/final/turn_dev.jsonl",'
             '"test":"runs/final/turn_test.jsonl","voiceworld_real":"runs/final/voiceworld_real.jsonl"},'
             '"external_turn_predictions":[],'
+            '"asr_eval_manifest":"runs/final/asr_eval_manifest.jsonl",'
             '"asr_command_config":"configs/final/asr_command_compare.json",'
             '"nanoturn":{"model":"nanoturn_pico","checkpoint":"runs/final/nanoturn/checkpoint.pt",'
             '"metrics":"runs/final/nanoturn/metrics.json","onnx":"runs/final/nanoturn/nanoturn.onnx"},'
@@ -972,6 +974,7 @@ def test_final_config_cli_prepare_external_predictions(tmp_path, capsys) -> None
             '"external_turn_predictions":[{"id":"smart_turn","schema":"smart_turn",'
             '"raw":"runs/final/external/smartturn_raw.jsonl",'
             '"converted":"runs/final/external/smartturn_predictions.jsonl"}],'
+            '"asr_eval_manifest":"runs/final/asr_eval_manifest.jsonl",'
             '"asr_command_config":"configs/final/asr_command_compare.json",'
             '"nanoturn":{"model":"nanoturn_pico","checkpoint":"runs/final/nanoturn/checkpoint.pt",'
             '"metrics":"runs/final/nanoturn/metrics.json","onnx":"runs/final/nanoturn/nanoturn.onnx"},'
@@ -1006,6 +1009,7 @@ def test_final_config_cli_prepare_inputs_reports_missing_required(tmp_path, caps
             '"turn_splits":{"train":"runs/final/turn_train.jsonl","dev":"runs/final/turn_dev.jsonl",'
             '"test":"runs/final/turn_test.jsonl","voiceworld_real":"runs/final/voiceworld_real.jsonl"},'
             '"external_turn_predictions":[],'
+            '"asr_eval_manifest":"runs/final/asr_eval_manifest.jsonl",'
             '"asr_command_config":"configs/final/asr_command_compare.json",'
             '"nanoturn":{"model":"nanoturn_pico","checkpoint":"runs/final/nanoturn/checkpoint.pt",'
             '"metrics":"runs/final/nanoturn/metrics.json","onnx":"runs/final/nanoturn/nanoturn.onnx"},'
@@ -1038,6 +1042,7 @@ def test_final_config_cli_audit_voiceworld_real_missing(tmp_path, capsys) -> Non
             '"turn_splits":{"train":"runs/final/turn_train.jsonl","dev":"runs/final/turn_dev.jsonl",'
             '"test":"runs/final/turn_test.jsonl","voiceworld_real":"runs/final/voiceworld_real.jsonl"},'
             '"external_turn_predictions":[],'
+            '"asr_eval_manifest":"runs/final/asr_eval_manifest.jsonl",'
             '"asr_command_config":"configs/final/asr_command_compare.json",'
             '"nanoturn":{"model":"nanoturn_pico","checkpoint":"runs/final/nanoturn/checkpoint.pt",'
             '"metrics":"runs/final/nanoturn/metrics.json","onnx":"runs/final/nanoturn/nanoturn.onnx"},'
@@ -1625,6 +1630,139 @@ def test_compare_asr_commands_cli(tmp_path, capsys) -> None:
     assert "adapter=balanced_cmd" in captured.out
     assert "adapter=fast_cmd" in captured.out
     assert report_path.exists()
+
+
+def test_compare_asr_commands_validate_only_cli(tmp_path, capsys) -> None:
+    manifest = tmp_path / "runs/final/asr_eval_manifest.jsonl"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(
+        '{"id":"utt1","audio":"audio/utt1.wav","sample_rate":16000,"text":"hello","language":"en","source":"unit"}\n',
+        encoding="utf-8",
+    )
+    config = {
+        "input_manifest": str(manifest),
+        "adapters": [
+            {
+                "name": "cmd_a",
+                "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
+                "output": str(tmp_path / "a.jsonl"),
+            },
+            {
+                "name": "cmd_b",
+                "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
+                "output": str(tmp_path / "b.jsonl"),
+            },
+        ],
+    }
+    config_path = tmp_path / "commands.json"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+
+    code = main(
+        [
+            "compare-asr-commands",
+            "--config",
+            str(config_path),
+            "--validate-only",
+            "--repo-root",
+            str(tmp_path),
+            "--min-adapters",
+            "2",
+            "--require-input-manifest",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "asr_command_config_audit: READY" in captured.out
+
+
+def test_final_config_cli_prepare_asr_eval_manifest(tmp_path, capsys) -> None:
+    manifest = tmp_path / "runs/final/librispeech_dev_clean/asr_manifest.jsonl"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text(
+        '{"id":"utt1","audio":"audio/utt1.wav","sample_rate":16000,"text":"hello","language":"en","source":"unit"}\n',
+        encoding="utf-8",
+    )
+    config = {
+        "id": "stable_asr_final_run_v0",
+        "version": "0.1.0",
+        "title": "Final",
+        "output_dir": "runs/final",
+        "seed": 0,
+        "public_corpora": [
+            {
+                "id": "librispeech_dev_clean",
+                "language": "en",
+                "corpus": "librispeech",
+                "input_dir": "data/librispeech/LibriSpeech/dev-clean",
+                "manifest": "runs/final/librispeech_dev_clean/asr_manifest.jsonl",
+                "sample_rate": 16000,
+                "license": "test",
+            }
+        ],
+        "asr_eval_manifest": "runs/final/asr_eval_manifest.jsonl",
+        "turn_splits": {
+            "train": "runs/final/turn_train.jsonl",
+            "dev": "runs/final/turn_dev.jsonl",
+            "test": "runs/final/turn_test.jsonl",
+            "voiceworld_real": "runs/final/voiceworld_real.jsonl",
+        },
+        "external_turn_predictions": [],
+        "asr_command_config": "configs/final/asr_command_compare.json",
+        "nanoturn": {
+            "model": "nanoturn_pico",
+            "checkpoint": "runs/final/nanoturn/checkpoint.pt",
+            "metrics": "runs/final/nanoturn/metrics.json",
+            "onnx": "runs/final/nanoturn/nanoturn.onnx",
+        },
+        "artifacts": {
+            "paper_results": "runs/final/paper_results.json",
+            "bundle_dir": "runs/final/artifacts",
+            "markdown_draft": "runs/final/PAPER_DRAFT.md",
+            "latex_draft": "runs/final/paper.tex",
+            "dataset_card": "runs/final/DATASET_CARD.md",
+            "experiment_card": "runs/final/EXPERIMENT_CARD.md",
+        },
+        "commands": ["stable-asr final-config --validate-only"],
+    }
+    config_path = tmp_path / "paper_final.json"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+
+    code = main(["final-config", "--config", str(config_path), "--repo-root", str(tmp_path), "--prepare-asr-eval-manifest"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "final_asr_eval_manifest: READY" in captured.out
+    assert (tmp_path / "runs/final/asr_eval_manifest.jsonl").exists()
+
+    command_config = tmp_path / "configs/final/asr_command_compare.json"
+    command_config.parent.mkdir(parents=True)
+    command_config.write_text(
+        json.dumps(
+            {
+                "input_manifest": "runs/final/asr_eval_manifest.jsonl",
+                "adapters": [
+                    {
+                        "name": "cmd_a",
+                        "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
+                        "output": "runs/final/asr_commands/a.jsonl",
+                    },
+                    {
+                        "name": "cmd_b",
+                        "command": [sys.executable, "-c", "print(1)", "{input_manifest}", "{output}"],
+                        "output": "runs/final/asr_commands/b.jsonl",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    code = main(["final-config", "--config", str(config_path), "--repo-root", str(tmp_path), "--audit-asr-commands"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "asr_command_config_audit: READY" in captured.out
 
 
 def test_benchmark_suite_cli_validates_result_coverage(tmp_path, capsys) -> None:

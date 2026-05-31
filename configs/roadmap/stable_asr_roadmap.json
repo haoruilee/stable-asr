@@ -138,6 +138,7 @@
         "stable-asr reproduce-paper --config configs/paper/paper_smoke.json",
         "stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts",
         "stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts",
+        "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts"
       ],
       "success_criteria": [
@@ -154,17 +155,22 @@
       "artifacts": [
         {"path": "runs/final/librispeech_dev_clean/asr_manifest.jsonl", "required_now": false},
         {"path": "runs/final/aishell1_dev/asr_manifest.jsonl", "required_now": false},
+        {"path": "runs/final/asr_eval_manifest.jsonl", "required_now": false},
         {"path": "runs/final/turn_train.jsonl", "required_now": false},
         {"path": "runs/final/turn_dev.jsonl", "required_now": false},
         {"path": "runs/final/turn_test.jsonl", "required_now": false},
         {"path": "runs/final/external/smartturn_predictions.jsonl", "required_now": false},
         {"path": "runs/final/external/easyturn_predictions.jsonl", "required_now": false},
+        {"path": "runs/final/asr_commands/whisper_streaming.jsonl", "required_now": false},
+        {"path": "runs/final/asr_commands/funasr_streaming.jsonl", "required_now": false},
         {"path": "runs/final/nanoturn/checkpoint.pt", "required_now": false},
         {"path": "runs/final/paper_results.json", "required_now": false},
         {"path": "runs/final/artifacts", "required_now": false}
       ],
       "commands": [
         "stable-asr final-config --config configs/final/paper_final.json --check-files",
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
+        "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
         "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
         "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts"
