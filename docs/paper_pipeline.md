@@ -80,6 +80,7 @@ reproduction commands. `PAPER_STATUS.md` summarizes these signals in one page.
 
 ```bash
 stable-asr paper-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
+stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 stable-asr paper-draft --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/PAPER_DRAFT.md
 stable-asr paper-latex --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/paper.tex
 ```
@@ -88,3 +89,8 @@ stable-asr paper-latex --results runs/paper/smoke/paper_results.json --artifacts
 repository has enough evidence for a platform paper release. `paper-parity-audit`
 checks whether each stable-worldmodel-style paper element has structural
 evidence and lists the remaining final-scale experiment requirements.
+`paper-release-smoke` runs the full smoke pipeline, creates drafts and cards,
+and writes `release_audit.json` plus `RELEASE_AUDIT.md` in one command. Use
+`--skip-train` for a faster structural check that does not train NanoTurn, and
+use `--strict` when the environment has optional Lance dependencies and
+final-scale inputs installed and a NOT_READY audit should fail the command.

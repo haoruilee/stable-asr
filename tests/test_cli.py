@@ -1778,6 +1778,28 @@ def test_paper_release_audit_cli_reports_not_ready(tmp_path, capsys) -> None:
     assert "baseline/nanoturn_release_baseline" in captured.out
 
 
+def test_paper_release_smoke_cli(tmp_path, capsys) -> None:
+    code = main(
+        [
+            "paper-release-smoke",
+            "--output-dir",
+            str(tmp_path / "release_smoke"),
+            "--episodes",
+            "9",
+            "--seed",
+            "6",
+            "--skip-train",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "paper_release_smoke: NOT_READY" in captured.out
+    assert "release_audit_json:" in captured.out
+    assert (tmp_path / "release_smoke" / "release_audit.json").exists()
+    assert (tmp_path / "release_smoke" / "RELEASE_AUDIT.md").exists()
+
+
 def test_make_card_cli(tmp_path, capsys) -> None:
     output = tmp_path / "DATASET_CARD.md"
     code = main(

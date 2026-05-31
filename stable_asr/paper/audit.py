@@ -572,6 +572,7 @@ def _ci_wheel_smoke_check(path: Path) -> PaperReleaseAuditCheck:
         "stable-asr-wheel-venv/bin/stable-asr doctor",
         "stable-asr-wheel-venv/bin/stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only",
         "stable-asr-wheel-venv/bin/stable-asr asr-collections --registry configs/references/asr_collections.json --audit-coverage",
+        "stable-asr-wheel-venv/bin/stable-asr paper-release-smoke --output-dir /tmp/stable-asr-wheel-release-smoke --episodes 9 --seed 6 --skip-train",
     )
     if not path.exists():
         return _release_check("software", "ci_wheel_smoke", False, f"missing: {path}")

@@ -501,7 +501,7 @@ def _data_spec(results: dict[str, object]) -> ChartSpec:
     benchmark = data["benchmark"]
     if not isinstance(benchmark, dict) or benchmark.get("status") != "completed":
         reason = benchmark.get("reason", "data benchmark unavailable") if isinstance(benchmark, dict) else "missing"
-        raise ValueError(str(reason))
+        return ChartSpec(f"Data Format Size Unavailable: {reason}", "KB", [("unavailable", 0.0)], y_max=1.0)
     rows = [(str(row["format"]), float(row["size_bytes"]) / 1024.0) for row in benchmark["rows"]]
     return ChartSpec("Data Format Size", "KB", rows)
 

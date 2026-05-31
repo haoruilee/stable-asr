@@ -72,6 +72,7 @@ from stable_asr.paper.final_experiments import (
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.leaderboard import export_leaderboard
 from stable_asr.paper.latex import paper_latex
+from stable_asr.paper.release_smoke import run_paper_release_smoke
 from stable_asr.paper.parity import (
     audit_paper_parity,
     load_paper_parity_checklist,
@@ -833,6 +834,28 @@ def build_parser() -> argparse.ArgumentParser:
     paper_release_audit_parser.add_argument("--dataset-card", type=Path)
     paper_release_audit_parser.add_argument("--experiment-card", type=Path)
     paper_release_audit_parser.add_argument("--json", action="store_true", help="Print release audit as JSON.")
+
+    paper_release_smoke_parser = subparsers.add_parser(
+        "paper-release-smoke",
+        help="Run the smoke paper pipeline, generate drafts/cards, and write a release audit.",
+    )
+    paper_release_smoke_parser.add_argument("--output-dir", type=Path, default=Path("runs/paper/release_smoke"))
+    paper_release_smoke_parser.add_argument("--episodes", type=int, default=9)
+    paper_release_smoke_parser.add_argument("--seed", type=int, default=6)
+    paper_release_smoke_parser.add_argument("--skip-train", action="store_true")
+    paper_release_smoke_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    paper_release_smoke_parser.add_argument(
+        "--dataset-manifest",
+        type=Path,
+        default=Path("examples/data/turn_demo.jsonl"),
+        help="Turn manifest used for the generated dataset card.",
+    )
+    paper_release_smoke_parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit nonzero if release audit is not READY.",
+    )
+    paper_release_smoke_parser.add_argument("--json", action="store_true", help="Print smoke result as JSON.")
 
     paper_draft_parser = subparsers.add_parser(
         "paper-draft",
@@ -2028,6 +2051,21 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(report.to_text())
         return 0 if report.ok else 1
+
+    if args.command == "paper-release-smoke":
+        result = run_paper_release_smoke(
+            output_dir=args.output_dir,
+            episodes=args.episodes,
+            seed=args.seed,
+            train_model=not args.skip_train,
+            repo_root=args.repo_root,
+            dataset_manifest=args.dataset_manifest,
+        )
+        if args.json:
+            print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(result.to_text())
+        return 0 if result.ok or not args.strict else 1
 
     if args.command == "paper-draft":
         output = paper_draft(args.results, args.output, artifacts_dir=args.artifacts_dir)

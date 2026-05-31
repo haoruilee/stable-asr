@@ -557,7 +557,12 @@ def _run_streaming_command_adapter(output_dir: Path, data_dir: Path, fixture_pat
 
 
 def _available_data_benchmark_formats() -> list[str]:
-    formats = ["jsonl", "parquet"]
+    formats = ["jsonl"]
+    try:
+        import pyarrow  # noqa: F401
+    except Exception:
+        return formats
+    formats.append("parquet")
     try:
         import lance  # noqa: F401
     except Exception:

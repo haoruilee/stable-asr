@@ -14,6 +14,7 @@ from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.experiments import PaperRunResult, run_paper_smoke
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.latex import paper_latex
+from stable_asr.paper.release_smoke import PaperReleaseSmokeResult, run_paper_release_smoke
 from stable_asr.paper.suites import (
     DEFAULT_BENCHMARK_SUITE,
     DEFAULT_SUITE_ID,
@@ -39,6 +40,7 @@ __all__ = [
     "PaperAuditReport",
     "PaperReleaseAuditCheck",
     "PaperReleaseAuditReport",
+    "PaperReleaseSmokeResult",
     "PaperRunResult",
     "audit_paper_artifacts",
     "audit_paper_release",
@@ -52,6 +54,7 @@ __all__ = [
     "paper_figure",
     "paper_latex",
     "paper_table",
+    "run_paper_release_smoke",
     "run_paper_smoke",
     "validate_benchmark_suite",
     "write_benchmark_suite_json",

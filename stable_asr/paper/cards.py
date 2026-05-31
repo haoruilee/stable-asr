@@ -7,10 +7,12 @@ from pathlib import Path
 from stable_asr.data.registry import load_turn_records, summarize_records
 from stable_asr.eval.report import MarkdownReport, dict_table
 from stable_asr.paper.tables import load_paper_results
+from stable_asr.resources import resolve_platform_path
 
 
 def dataset_card(manifest_path: str | Path, output_path: str | Path) -> str:
-    records = load_turn_records(manifest_path)
+    resolved_manifest_path = resolve_platform_path(manifest_path)
+    records = load_turn_records(resolved_manifest_path)
     summary = summarize_records(records)
     report = MarkdownReport("Stable-ASR Dataset Card")
     report.add_section("Source", f"- manifest: `{manifest_path}`")
@@ -81,4 +83,3 @@ def experiment_card(results_path: str | Path, output_path: str | Path) -> str:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(text, encoding="utf-8")
     return str(output_path)
-

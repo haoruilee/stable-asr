@@ -81,3 +81,10 @@ stable-asr paper-release-audit \
   --dataset-card runs/paper/smoke/DATASET_CARD.md \
   --experiment-card runs/paper/smoke/EXPERIMENT_CARD.md
 ```
+
+For a one-command smoke pass that generates the bundle, drafts, cards, and audit
+files:
+
+```bash
+stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
+```

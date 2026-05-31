@@ -136,6 +136,7 @@ stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.j
 stable-asr final-experiments --registry configs/paper/final_experiments.json --validate-only
 stable-asr final-config --config configs/final/paper_final.json --validate-only
 stable-asr paper-audit --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts
+stable-asr paper-release-smoke --output-dir /tmp/stable-asr-release-smoke
 stable-asr paper-draft --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts --output /tmp/stable-asr-paper/PAPER_DRAFT.md
 stable-asr paper-latex --results /tmp/stable-asr-paper/paper_results.json --artifacts-dir /tmp/stable-asr-paper/artifacts --output /tmp/stable-asr-paper/paper.tex
 stable-asr make-card dataset --input examples/data/turn_demo.jsonl --output /tmp/stable-asr-dataset-card.md
@@ -240,6 +241,7 @@ Current M0 functionality:
 - `benchmark-suite` for validating and rendering benchmark suite definitions
 - `paper-audit` checks for paper result sections and bundled table/figure artifacts
 - `paper-release-audit` checks stricter platform-paper release gates and reports remaining gaps
+- `paper-release-smoke` runs the smoke pipeline, generates bundle/drafts/cards, and writes release audit files
 - `paper-draft` generation for editable Markdown preprint drafts
 - `paper-latex` generation for arXiv-style LaTeX preprint drafts
 - dataset and experiment card generation via `make-card`
