@@ -55,6 +55,10 @@ jobs:
           cd /tmp/stable-asr-final-pack
           bash commands.sh
           cd "$GITHUB_WORKSPACE"
+          stable-asr final-acquisition-pack --output-dir /tmp/stable-asr-final-acquisition-pack
+          cd /tmp/stable-asr-final-acquisition-pack
+          bash commands.sh
+          cd "$GITHUB_WORKSPACE"
       - name: Smoke test wheel install
         run: |
           python -m pip wheel . --no-deps -w /tmp/stable-asr-wheel

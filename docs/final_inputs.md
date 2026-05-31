@@ -44,6 +44,12 @@ Use this together with:
 
 ```bash
 stable-asr final-pack --output-dir runs/final_pack
+stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
 stable-asr final-config --config configs/final/paper_final.json --plan-missing
 stable-asr paper-status --repo-root .
 ```
+
+`final-acquisition-pack` is the collaborator-facing version of the final input
+plan. It writes a TSV/JSON staging checklist, license and consent review sheet,
+VoiceWorld recording checklist, and handoff template so real corpora and
+external model outputs can be collected without inventing placeholder evidence.

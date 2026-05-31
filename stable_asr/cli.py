@@ -107,6 +107,7 @@ from stable_asr.paper.leaderboard import (
     validate_leaderboard_jsonl,
 )
 from stable_asr.paper.latex import paper_latex
+from stable_asr.paper.acquisition_pack import build_final_acquisition_pack
 from stable_asr.paper.adapter_pack import build_adapter_pack
 from stable_asr.paper.benchmark_pack import build_benchmark_pack
 from stable_asr.paper.release_smoke import run_paper_release_smoke
@@ -1221,6 +1222,16 @@ def build_parser() -> argparse.ArgumentParser:
     final_pack_parser.add_argument("--final-experiments", type=Path, help="Optional final experiment registry JSON path.")
     final_pack_parser.add_argument("--scenario-suite", type=Path, help="Optional scenario suite JSON path.")
     final_pack_parser.add_argument("--json", action="store_true")
+
+    final_acquisition_pack_parser = subparsers.add_parser(
+        "final-acquisition-pack",
+        help="Create a final input acquisition checklist pack for corpora, recordings, predictions, and artifacts.",
+    )
+    final_acquisition_pack_parser.add_argument("--output-dir", type=Path, required=True)
+    final_acquisition_pack_parser.add_argument("--config", type=Path, help="Optional final run config JSON path.")
+    final_acquisition_pack_parser.add_argument("--input-collections", type=Path, help="Optional final input collection JSON path.")
+    final_acquisition_pack_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    final_acquisition_pack_parser.add_argument("--json", action="store_true")
 
     paper_audit_parser = subparsers.add_parser(
         "paper-audit",
@@ -3070,6 +3081,30 @@ def main(argv: list[str] | None = None) -> int:
             print(f"final_pack: {'OK' if report.ok else 'FAILED'}")
             print(f"final_ready: {'READY' if report.final_ready else 'NOT_READY'}")
             print(f"missing_required: {len(report.missing_required)}")
+            print(f"output_dir: {report.output_dir}")
+            print(f"readme: {report.files.get('readme')}")
+            print(f"commands: {report.files.get('commands_markdown')}")
+        return 0 if report.ok else 1
+
+    if args.command == "final-acquisition-pack":
+        try:
+            report = build_final_acquisition_pack(
+                args.output_dir,
+                config_path=args.config,
+                input_collections_path=args.input_collections,
+                repo_root=args.repo_root,
+            )
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(f"final_acquisition_pack: {'OK' if report.ok else 'FAILED'}")
+            print(f"collections: {report.collections}")
+            print(f"checklist_rows: {report.checklist_rows}")
+            print(f"missing_required: {len(report.missing_required)}")
+            print(f"license_review_items: {report.license_review_items}")
             print(f"output_dir: {report.output_dir}")
             print(f"readme: {report.files.get('readme')}")
             print(f"commands: {report.files.get('commands_markdown')}")

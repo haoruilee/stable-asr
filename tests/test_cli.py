@@ -198,6 +198,20 @@ def test_final_pack_cli(capsys, tmp_path) -> None:
     assert (output_dir / "reports" / "FINAL_RUN_ACTION_PLAN.md").exists()
 
 
+def test_final_acquisition_pack_cli(capsys, tmp_path) -> None:
+    output_dir = tmp_path / "final_acquisition_pack"
+    code = main(["final-acquisition-pack", "--output-dir", str(output_dir), "--repo-root", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "final_acquisition_pack: OK" in captured.out
+    assert "license_review_items:" in captured.out
+    assert (output_dir / "README.md").exists()
+    assert (output_dir / "COMMANDS.md").exists()
+    assert (output_dir / "acquisition" / "staging_checklist.tsv").exists()
+    assert (output_dir / "acquisition" / "LICENSE_REVIEW.md").exists()
+
+
 def test_labels_cli(capsys) -> None:
     code = main(["labels"])
 
