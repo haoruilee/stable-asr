@@ -83,16 +83,16 @@
         "stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only",
         "stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only",
         "stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only",
-        "stable-asr asr-collections --audit-coverage",
+        "stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1",
         "stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md",
         "stable-asr turn-collections --registry configs/references/turn_collections.json --validate-only",
-        "stable-asr turn-collections --audit-coverage",
+        "stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1",
         "stable-asr adapter-pack --output-dir runs/adapter_pack"
       ],
       "success_criteria": [
-        "P0 ASR references have adapter or bridge evidence",
+        "P0/P1 ASR references have adapter or bridge evidence",
         "top ASR reference collection has an acquisition plan that maps every entry to an evidence target",
-        "P0 turn/full-duplex references have data-source or adapter evidence",
+        "P0/P1 turn/full-duplex references have data-source or adapter evidence",
         "public ASR metadata can be normalized into canonical ASR manifests",
         "ASR manifests can bootstrap weak turn windows and leakage-audited splits",
         "external ASR contributors can generate a command-adapter starter pack with registries, fixtures, and script templates"
@@ -109,6 +109,7 @@
         {"path": "stable_asr/streaming/compare.py", "required_now": true},
         {"path": "stable_asr/streaming/sweep.py", "required_now": true},
         {"path": "stable_asr/streaming/command_compare.py", "required_now": true},
+        {"path": "stable_asr/scenarios/world.py", "required_now": true},
         {"path": "stable_asr/scenarios/voice_world.py", "required_now": true},
         {"path": "stable_asr/scenarios/synthetic_turn.py", "required_now": true},
         {"path": "tests/fixtures/streaming_asr_sample.jsonl", "required_now": true},
@@ -122,6 +123,7 @@
       ],
       "success_criteria": [
         "streaming traces report latency, stability, endpoint, timestamp, WER, and CER metrics",
+        "VoiceWorld exposes a stable-worldmodel-style Python World API for sampling, collection, and evaluation",
         "scenario suites cover incomplete pauses, interruptions, backchannels, side speech, ambient speech, noise, and code switching",
         "external ASR commands can be compared without importing heavyweight ASR dependencies"
       ]
@@ -129,7 +131,7 @@
     {
       "id": "m4_paper_and_release_pipeline",
       "title": "Paper And Release Pipeline",
-      "status": "active",
+      "status": "complete",
       "objective": "Keep paper artifacts, parity audits, release gates, final runbooks, and leaderboard exports reproducible from checked-in configs.",
       "artifacts": [
         {"path": "configs/paper/paper_smoke.json", "required_now": true},

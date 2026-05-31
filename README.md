@@ -203,7 +203,7 @@ stable-asr paper-release-smoke --output-dir runs/paper/release_smoke --strict
 See [docs/index.md](docs/index.md) for the full documentation. A MkDocs config
 is provided in `mkdocs.yaml`.
 
-## Current M0 Functionality
+## Current Platform Functionality
 
 - installable package
 - `stable-asr` CLI

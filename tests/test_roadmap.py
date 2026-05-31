@@ -17,6 +17,12 @@ def test_roadmap_registry_validates_and_tracks_required_artifacts() -> None:
     assert len(report.milestones) >= 5
     assert not report.missing_required_artifacts
     assert any(milestone.id == "m2_data_reference_layer" for milestone in report.milestones)
+    milestones = {milestone.id: milestone for milestone in report.milestones}
+    assert milestones["m4_paper_and_release_pipeline"].status == "complete"
+    assert any(
+        artifact.path == "stable_asr/scenarios/world.py"
+        for artifact in milestones["m3_streaming_voiceworld"].required_artifacts
+    )
 
 
 def test_roadmap_status_surfaces_missing_required_artifacts(tmp_path) -> None:

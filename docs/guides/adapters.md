@@ -95,7 +95,7 @@ command-template, data-source, or bridge-template evidence.
 Run `stable-asr asr-collections --audit-readiness` before adding a new adapter
 to confirm the upstream reference has a current review, explicit Stable-ASR
 actions, and visible license-review notes.
-Run `stable-asr turn-collections --audit-coverage` before adding a turn-taking
+Run `stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1` before adding a turn-taking
 or full-duplex adapter.
 
 Current command-template coverage includes classic ASR toolkits, Chinese-first
