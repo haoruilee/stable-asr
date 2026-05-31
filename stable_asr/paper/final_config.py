@@ -15,6 +15,7 @@ from stable_asr.data.turn_from_asr import ASRToTurnConfig, asr_records_to_turn_r
 from stable_asr.eval.report import dict_table
 from stable_asr.models.adapters import convert_turn_prediction_jsonl, validate_turn_prediction_jsonl
 from stable_asr.resources import resolve_platform_path
+from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
 
 
 DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
@@ -118,6 +119,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr prepare-public-asr --corpus common_voice --input-dir data/common_voice/en --split dev --output runs/final/common_voice_en_dev/asr_manifest.jsonl",
         "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions",
+        "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
@@ -470,6 +472,56 @@ class FinalInputPrepareReport:
                 self.file_audit.to_text(),
             ]
         )
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class FinalVoiceWorldAuditReport:
+    ok: bool
+    manifest: str
+    records: int
+    min_per_scenario: int
+    scenario_counts: dict[str, int]
+    missing_scenarios: list[str]
+    undercovered_scenarios: dict[str, int]
+    factor_coverage: dict[str, int]
+    missing_factor_fields: list[str]
+    errors: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "manifest": self.manifest,
+            "records": self.records,
+            "min_per_scenario": self.min_per_scenario,
+            "scenario_counts": self.scenario_counts,
+            "missing_scenarios": self.missing_scenarios,
+            "undercovered_scenarios": self.undercovered_scenarios,
+            "factor_coverage": self.factor_coverage,
+            "missing_factor_fields": self.missing_factor_fields,
+            "errors": self.errors,
+        }
+
+    def to_text(self) -> str:
+        lines = [
+            f"final_voiceworld_real_audit: {'READY' if self.ok else 'NOT_READY'}",
+            f"- manifest: {self.manifest}",
+            f"- records: {self.records}",
+            f"- min_per_scenario: {self.min_per_scenario}",
+            f"- missing_scenarios: {len(self.missing_scenarios)}",
+            f"- undercovered_scenarios: {len(self.undercovered_scenarios)}",
+            f"- missing_factor_fields: {len(self.missing_factor_fields)}",
+        ]
+        lines.extend(f"  - {scenario}" for scenario in self.missing_scenarios)
+        lines.extend(
+            f"  - {scenario}: {count}" for scenario, count in sorted(self.undercovered_scenarios.items())
+        )
+        if self.missing_factor_fields:
+            lines.append("- factors missing from every record:")
+            lines.extend(f"  - {factor}" for factor in self.missing_factor_fields)
+        if self.errors:
+            lines.append("- errors:")
+            lines.extend(f"  - {error}" for error in self.errors)
         return "\n".join(lines)
 
 
@@ -1087,6 +1139,101 @@ def prepare_final_inputs(
         turn_splits=turn_report,
         external_predictions=prediction_report,
         file_audit=file_audit,
+    )
+
+
+def audit_final_voiceworld_real(
+    config: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+    scenario_suite_path: str | Path | None = None,
+    min_per_scenario: int = 1,
+) -> FinalVoiceWorldAuditReport:
+    """Audit the real VoiceWorld final manifest against the configured scenario suite."""
+
+    validation = validate_final_run_config(config)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+    if min_per_scenario <= 0:
+        raise ValueError("min_per_scenario must be positive")
+
+    root = Path(repo_root)
+    manifest_path = _resolve(str(config["turn_splits"]["voiceworld_real"]), root=root)
+    suite = load_scenario_suite(scenario_suite_path)
+    suite_validation = validate_scenario_suite(suite)
+    if not suite_validation.ok:
+        raise ValueError("; ".join(suite_validation.errors))
+    required_scenarios = [str(item["id"]) for item in suite["scenarios"]]
+    factor_names = [str(item["name"]) for item in suite.get("factors", []) if isinstance(item, dict) and "name" in item]
+
+    errors: list[str] = []
+    if not manifest_path.exists():
+        return FinalVoiceWorldAuditReport(
+            ok=False,
+            manifest=str(manifest_path),
+            records=0,
+            min_per_scenario=min_per_scenario,
+            scenario_counts={scenario: 0 for scenario in required_scenarios},
+            missing_scenarios=required_scenarios,
+            undercovered_scenarios={},
+            factor_coverage={factor: 0 for factor in factor_names},
+            missing_factor_fields=factor_names,
+            errors=["voiceworld_real manifest is missing"],
+        )
+
+    try:
+        records = load_turn_records(manifest_path, format="jsonl")
+    except (OSError, ValueError) as exc:
+        return FinalVoiceWorldAuditReport(
+            ok=False,
+            manifest=str(manifest_path),
+            records=0,
+            min_per_scenario=min_per_scenario,
+            scenario_counts={scenario: 0 for scenario in required_scenarios},
+            missing_scenarios=required_scenarios,
+            undercovered_scenarios={},
+            factor_coverage={factor: 0 for factor in factor_names},
+            missing_factor_fields=factor_names,
+            errors=[str(exc)],
+        )
+
+    scenario_counts = {scenario: 0 for scenario in required_scenarios}
+    factor_coverage = {factor: 0 for factor in factor_names}
+    unknown_scenarios: dict[str, int] = {}
+    for record in records:
+        scenario = record.scenario or str(record.metadata.get("scenario", ""))
+        if scenario in scenario_counts:
+            scenario_counts[scenario] += 1
+        elif scenario:
+            unknown_scenarios[scenario] = unknown_scenarios.get(scenario, 0) + 1
+        for factor in factor_names:
+            if factor in record.metadata and record.metadata[factor] not in (None, ""):
+                factor_coverage[factor] += 1
+
+    missing_scenarios = [scenario for scenario, count in scenario_counts.items() if count == 0]
+    undercovered_scenarios = {
+        scenario: count
+        for scenario, count in scenario_counts.items()
+        if 0 < count < min_per_scenario
+    }
+    missing_factor_fields = [factor for factor, count in factor_coverage.items() if count == 0]
+    if unknown_scenarios:
+        errors.append(
+            "unknown scenario id(s): "
+            + ", ".join(f"{scenario}={count}" for scenario, count in sorted(unknown_scenarios.items()))
+        )
+    ok = not errors and not missing_scenarios and not undercovered_scenarios and not missing_factor_fields
+    return FinalVoiceWorldAuditReport(
+        ok=ok,
+        manifest=str(manifest_path),
+        records=len(records),
+        min_per_scenario=min_per_scenario,
+        scenario_counts=scenario_counts,
+        missing_scenarios=missing_scenarios,
+        undercovered_scenarios=undercovered_scenarios,
+        factor_coverage=factor_coverage,
+        missing_factor_fields=missing_factor_fields,
+        errors=errors,
     )
 
 

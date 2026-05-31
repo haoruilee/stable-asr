@@ -57,6 +57,7 @@ from stable_asr.paper.claims import audit_claims, paper_claims
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.experiments import run_paper_smoke
 from stable_asr.paper.final_config import (
+    audit_final_voiceworld_real,
     audit_final_run_files,
     bootstrap_final_turn_splits,
     final_run_file_audit_markdown,
@@ -855,6 +856,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="With --prepare-external-predictions, allow prediction rows outside the test split.",
     )
+    final_config_parser.add_argument(
+        "--audit-voiceworld-real",
+        action="store_true",
+        help="Audit final voiceworld_real manifest scenario and factor coverage.",
+    )
+    final_config_parser.add_argument("--scenario-suite", type=Path, help="Scenario suite for --audit-voiceworld-real.")
+    final_config_parser.add_argument("--min-scenario-records", type=int, default=1)
 
     leaderboard_parser = subparsers.add_parser(
         "leaderboard-export",
@@ -2095,6 +2103,18 @@ def main(argv: list[str] | None = None) -> int:
                     repo_root=args.repo_root,
                     require_all=args.require_all_predictions,
                     allow_extra=args.allow_extra_predictions,
+                )
+                if args.json:
+                    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(report.to_text())
+                return 0 if report.ok else 1
+            if args.audit_voiceworld_real:
+                report = audit_final_voiceworld_real(
+                    config,
+                    repo_root=args.repo_root,
+                    scenario_suite_path=args.scenario_suite,
+                    min_per_scenario=args.min_scenario_records,
                 )
                 if args.json:
                     print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))

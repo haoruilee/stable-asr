@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from stable_asr.paper.final_config import (
+    audit_final_voiceworld_real,
     audit_final_run_files,
     bootstrap_final_turn_splits,
     final_run_file_audit_markdown,
@@ -304,3 +305,50 @@ def test_prepare_final_inputs_runs_sequence_and_audit(tmp_path: Path) -> None:
     assert report.missing_required == []
     assert (tmp_path / "runs/final/turn_train.jsonl").exists()
     assert "final_inputs_prepare: READY" in report.to_text()
+
+
+def test_audit_final_voiceworld_real_checks_scenario_and_factor_coverage(tmp_path: Path) -> None:
+    voiceworld = tmp_path / "runs/final/voiceworld_real.jsonl"
+    voiceworld.parent.mkdir(parents=True)
+    factor_payload = (
+        '"pause_ms":900,"vad_pause_ms":920,"duration_ms":1000,"snr_db":20,"reverb":"none",'
+        '"speaking_rate":1.0,"overlap_offset_ms":0,"network_jitter_ms":0,'
+        '"farfield_distance_m":0.5,"code_switch_ratio":0.0,"accent":"standard"'
+    )
+    rows = []
+    scenarios = [
+        ("normal_question", "complete", "take_turn", False, False),
+        ("incomplete_pause", "incomplete", "keep_listening", False, False),
+        ("backchannel", "backchannel", "continue_speaking", True, True),
+        ("wait_stop", "wait", "hold", False, False),
+        ("user_interruption", "complete", "stop_tts_and_listen", True, True),
+        ("side_conversation", "wait", "ignore", False, True),
+        ("ambient_speech", "wait", "ignore", False, True),
+        ("noisy_farfield", "complete", "take_turn", False, False),
+        ("code_switching", "complete", "take_turn", False, False),
+    ]
+    for index, (scenario, turn_label, action_label, assistant_speaking, overlap) in enumerate(scenarios):
+        rows.append(
+            f'{{"id":"real_{index}","audio":"audio/{index}.wav","sample_rate":16000,'
+            f'"start":0.0,"end":1.0,"turn_label":"{turn_label}","action_label":"{action_label}",'
+            f'"assistant_speaking":{str(assistant_speaking).lower()},"overlap":{str(overlap).lower()},'
+            f'"language":"en","source":"real","scenario":"{scenario}","metadata":{{{factor_payload}}}}}'
+        )
+    voiceworld.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    config = load_final_run_config()
+
+    report = audit_final_voiceworld_real(config, repo_root=tmp_path)
+
+    assert report.ok
+    assert report.records == len(scenarios)
+    assert report.missing_scenarios == []
+    assert report.missing_factor_fields == []
+    assert "final_voiceworld_real_audit: READY" in report.to_text()
+
+
+def test_audit_final_voiceworld_real_reports_missing_manifest(tmp_path: Path) -> None:
+    report = audit_final_voiceworld_real(load_final_run_config(), repo_root=tmp_path)
+
+    assert not report.ok
+    assert report.records == 0
+    assert "voiceworld_real manifest is missing" in report.to_text()

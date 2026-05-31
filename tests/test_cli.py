@@ -1025,6 +1025,38 @@ def test_final_config_cli_prepare_inputs_reports_missing_required(tmp_path, caps
     assert "missing_required" in captured.out
 
 
+def test_final_config_cli_audit_voiceworld_real_missing(tmp_path, capsys) -> None:
+    config = tmp_path / "paper_final.json"
+    config.write_text(
+        (
+            '{"id":"stable_asr_final_run_v0","version":"0.1.0","title":"Final",'
+            '"output_dir":"runs/final","seed":0,'
+            '"public_corpora":[{"id":"librispeech_dev_clean","language":"en","corpus":"librispeech",'
+            '"input_dir":"data/librispeech/LibriSpeech/dev-clean",'
+            '"manifest":"runs/final/librispeech_dev_clean/asr_manifest.jsonl",'
+            '"sample_rate":16000,"license":"test"}],'
+            '"turn_splits":{"train":"runs/final/turn_train.jsonl","dev":"runs/final/turn_dev.jsonl",'
+            '"test":"runs/final/turn_test.jsonl","voiceworld_real":"runs/final/voiceworld_real.jsonl"},'
+            '"external_turn_predictions":[],'
+            '"asr_command_config":"configs/final/asr_command_compare.json",'
+            '"nanoturn":{"model":"nanoturn_pico","checkpoint":"runs/final/nanoturn/checkpoint.pt",'
+            '"metrics":"runs/final/nanoturn/metrics.json","onnx":"runs/final/nanoturn/nanoturn.onnx"},'
+            '"artifacts":{"paper_results":"runs/final/paper_results.json","bundle_dir":"runs/final/artifacts",'
+            '"markdown_draft":"runs/final/PAPER_DRAFT.md","latex_draft":"runs/final/paper.tex",'
+            '"dataset_card":"runs/final/DATASET_CARD.md","experiment_card":"runs/final/EXPERIMENT_CARD.md"},'
+            '"commands":["stable-asr final-config --validate-only"]}\n'
+        ),
+        encoding="utf-8",
+    )
+
+    code = main(["final-config", "--config", str(config), "--repo-root", str(tmp_path), "--audit-voiceworld-real"])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "final_voiceworld_real_audit: NOT_READY" in captured.out
+    assert "voiceworld_real manifest is missing" in captured.out
+
+
 def test_adapter_registry_cli(tmp_path, capsys) -> None:
     output = tmp_path / "ADAPTERS.md"
     code = main(["adapter-registry", "--output", str(output)])
