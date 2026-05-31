@@ -499,6 +499,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
     ] + [
         _source_manifest_content_check(repo_root / "MANIFEST.in"),
         _wheel_data_files_check(repo_root / "pyproject.toml"),
+        _ci_wheel_smoke_check(repo_root / ".github" / "workflows" / "tests.yml"),
     ]
 
 
@@ -552,6 +553,27 @@ def _wheel_data_files_check(path: Path) -> PaperReleaseAuditCheck:
         "wheel_data_files",
         not missing,
         "covers platform assets" if not missing else "missing: " + ", ".join(missing),
+    )
+
+
+def _ci_wheel_smoke_check(path: Path) -> PaperReleaseAuditCheck:
+    required_patterns = (
+        "Smoke test wheel install",
+        "python -m pip wheel . --no-deps",
+        "python -m venv",
+        "stable-asr-wheel-venv/bin/stable-asr doctor",
+        "stable-asr-wheel-venv/bin/stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only",
+        "stable-asr-wheel-venv/bin/stable-asr asr-collections --registry configs/references/asr_collections.json --audit-coverage",
+    )
+    if not path.exists():
+        return _release_check("software", "ci_wheel_smoke", False, f"missing: {path}")
+    text = path.read_text(encoding="utf-8")
+    missing = [pattern for pattern in required_patterns if pattern not in text]
+    return _release_check(
+        "software",
+        "ci_wheel_smoke",
+        not missing,
+        "wheel install smoke is covered" if not missing else "missing: " + ", ".join(missing),
     )
 
 

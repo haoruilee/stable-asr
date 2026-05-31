@@ -42,3 +42,13 @@ jobs:
           stable-asr validate-turn-predictions --dataset examples/data/turn_demo.jsonl --predictions /tmp/stable-asr-text-turn-predictions.jsonl
           stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl --report /tmp/stable-asr-turn-compare.md
           stable-asr compare-turn-splits --train /tmp/stable-asr-splits/turn_train.jsonl --dev /tmp/stable-asr-splits/turn_dev.jsonl --test /tmp/stable-asr-splits/turn_test.jsonl --baseline vad_pause --baseline text_turn --report /tmp/stable-asr-turn-split-compare.md
+      - name: Smoke test wheel install
+        run: |
+          python -m pip wheel . --no-deps -w /tmp/stable-asr-wheel
+          python -m venv /tmp/stable-asr-wheel-venv
+          /tmp/stable-asr-wheel-venv/bin/python -m pip install --no-deps /tmp/stable-asr-wheel/*.whl
+          mkdir -p /tmp/stable-asr-wheel-work
+          cd /tmp/stable-asr-wheel-work
+          /tmp/stable-asr-wheel-venv/bin/stable-asr doctor
+          /tmp/stable-asr-wheel-venv/bin/stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only
+          /tmp/stable-asr-wheel-venv/bin/stable-asr asr-collections --registry configs/references/asr_collections.json --audit-coverage
