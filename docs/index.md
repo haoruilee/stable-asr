@@ -87,6 +87,7 @@ stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn
 stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions
 stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json
 stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands
+stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md
 stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only

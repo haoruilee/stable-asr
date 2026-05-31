@@ -10,6 +10,7 @@ Core entry points:
 - `stable_asr.paper.audit.audit_paper_release`
 - `stable_asr.paper.parity.audit_paper_parity`
 - `stable_asr.paper.claims.audit_claims`
+- `stable_asr.paper.final_config.build_final_run_action_plan`
 - `stable_asr.paper.final_config.prepare_final_asr_eval_manifest`
 - `stable_asr.paper.final_config.prepare_final_inputs`
 - `stable_asr.paper.final_results.assemble_final_paper_results`

@@ -59,6 +59,7 @@ from stable_asr.paper.experiments import run_paper_smoke
 from stable_asr.paper.final_config import (
     audit_final_voiceworld_real,
     audit_final_run_files,
+    build_final_run_action_plan,
     bootstrap_final_turn_splits,
     final_run_file_audit_markdown,
     final_run_config_markdown,
@@ -834,6 +835,7 @@ def build_parser() -> argparse.ArgumentParser:
     final_config_parser.add_argument("--json", action="store_true", help="Print config as JSON.")
     final_config_parser.add_argument("--validate-only", action="store_true")
     final_config_parser.add_argument("--check-files", action="store_true", help="Check required input/config paths exist.")
+    final_config_parser.add_argument("--plan-missing", action="store_true", help="Render an actionable final-run plan for missing inputs and remaining commands.")
     final_config_parser.add_argument("--scaffold", action="store_true", help="Create final-run directories and README hints.")
     final_config_parser.add_argument(
         "--prepare-corpora",
@@ -2231,6 +2233,18 @@ def main(argv: list[str] | None = None) -> int:
                     args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
                 print(text)
                 return 0 if report.ok else 1
+            if args.plan_missing:
+                report = build_final_run_action_plan(
+                    config,
+                    repo_root=args.repo_root,
+                    config_path=args.config or "configs/final/paper_final.json",
+                )
+                text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+                if args.output:
+                    args.output.parent.mkdir(parents=True, exist_ok=True)
+                    args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+                print(text)
+                return 0
             if args.validate_only:
                 print(f"OK: {config['id']} ({len(config['public_corpora'])} corpora)")
                 return 0

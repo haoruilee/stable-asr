@@ -13,6 +13,7 @@ from stable_asr.paper.cards import dataset_card, experiment_card
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.experiments import PaperRunResult, run_paper_smoke
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
+from stable_asr.paper.final_config import FinalRunActionPlan, build_final_run_action_plan
 from stable_asr.paper.final_results import FinalResultsAssemblyReport, assemble_final_paper_results
 from stable_asr.paper.latex import paper_latex
 from stable_asr.paper.release_smoke import PaperReleaseSmokeResult, run_paper_release_smoke
@@ -44,9 +45,11 @@ __all__ = [
     "PaperReleaseSmokeResult",
     "PaperRunResult",
     "FinalResultsAssemblyReport",
+    "FinalRunActionPlan",
     "assemble_final_paper_results",
     "audit_paper_artifacts",
     "audit_paper_release",
+    "build_final_run_action_plan",
     "dataset_card",
     "experiment_card",
     "audit_benchmark_suite_coverage",

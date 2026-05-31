@@ -135,6 +135,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions",
         "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
+        "stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
         "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
@@ -194,6 +195,114 @@ class FinalRunFileAudit:
             status = "OK" if check.ok else "MISSING"
             required = "required" if check.required else "planned"
             lines.append(f"- {status} {check.kind}/{check.name}: {check.path} ({required}; {check.detail})")
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class FinalRunActionItem:
+    id: str
+    title: str
+    status: str
+    blockers: list[str]
+    commands: list[str]
+    artifacts: list[str]
+    detail: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "status": self.status,
+            "blockers": self.blockers,
+            "commands": self.commands,
+            "artifacts": self.artifacts,
+            "detail": self.detail,
+        }
+
+
+@dataclass(frozen=True)
+class FinalRunActionPlan:
+    ok: bool
+    config_path: str
+    missing_required: list[FinalRunPathCheck]
+    items: list[FinalRunActionItem]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "config_path": self.config_path,
+            "missing_required": [check.to_dict() for check in self.missing_required],
+            "items": [item.to_dict() for item in self.items],
+        }
+
+    def to_text(self) -> str:
+        lines = [
+            f"final_run_action_plan: {'READY' if self.ok else 'NOT_READY'}",
+            f"config: {self.config_path}",
+            f"missing_required: {len(self.missing_required)}",
+        ]
+        for item in self.items:
+            blockers = ", ".join(item.blockers) if item.blockers else "none"
+            lines.append(f"- {item.status.upper()} {item.id}: {item.title} (blockers: {blockers})")
+            lines.extend(f"  command: {command}" for command in item.commands)
+        return "\n".join(lines)
+
+    def to_markdown(self) -> str:
+        item_rows = [
+            {
+                "step": index,
+                "id": item.id,
+                "status": item.status,
+                "blockers": len(item.blockers),
+                "artifacts": ", ".join(item.artifacts),
+            }
+            for index, item in enumerate(self.items, start=1)
+        ]
+        missing_rows = [
+            {
+                "kind": check.kind,
+                "name": check.name,
+                "path": check.path,
+                "detail": check.detail,
+                "suggested_action": _suggest_action_for_missing_check(check),
+            }
+            for check in self.missing_required
+        ]
+        lines = [
+            "# Stable-ASR Final Run Action Plan",
+            "",
+            f"- status: `{'READY' if self.ok else 'NOT_READY'}`",
+            f"- config: `{self.config_path}`",
+            f"- missing_required: `{len(self.missing_required)}`",
+            "",
+            "## Missing Required Inputs",
+            "",
+            dict_table(missing_rows) if missing_rows else "No required inputs are missing.",
+            "",
+            "## Execution Plan",
+            "",
+            dict_table(item_rows),
+        ]
+        for index, item in enumerate(self.items, start=1):
+            lines.extend(
+                [
+                    "",
+                    f"### {index}. {item.title}",
+                    "",
+                    f"- id: `{item.id}`",
+                    f"- status: `{item.status}`",
+                    f"- detail: {item.detail}",
+                    "",
+                    "Blockers:",
+                    "",
+                ]
+            )
+            lines.extend(f"- `{blocker}`" for blocker in item.blockers) if item.blockers else lines.append("- none")
+            lines.extend(["", "Commands:", ""])
+            lines.extend(f"```bash\n{command}\n```" for command in item.commands) if item.commands else lines.append("- none")
+            lines.extend(["", "Artifacts:", ""])
+            lines.extend(f"- `{artifact}`" for artifact in item.artifacts) if item.artifacts else lines.append("- none")
+        lines.append("")
         return "\n".join(lines)
 
 
@@ -826,6 +935,43 @@ def final_run_file_audit_markdown(report: FinalRunFileAudit) -> str:
     return "\n".join(lines)
 
 
+def build_final_run_action_plan(
+    config: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+    config_path: str | Path = "configs/final/paper_final.json",
+) -> FinalRunActionPlan:
+    """Build an actionable runbook from the current final-run file audit.
+
+    The plan is intentionally operational: it maps missing required inputs to
+    the next command or manual data-staging action without creating placeholder
+    benchmark evidence.
+    """
+
+    validation = validate_final_run_config(config)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    audit = audit_final_run_files(config, repo_root=repo_root)
+    missing_required = [check for check in audit.checks if check.required and not check.ok]
+    config_display = str(config_path)
+    items = [
+        _stage_corpora_action(config, missing_required, config_display),
+        _prepare_asr_turn_action(config, missing_required, config_display),
+        _voiceworld_action(config, missing_required, config_display),
+        _external_predictions_action(config, missing_required, config_display),
+        _nanoturn_action(config, missing_required, config_display),
+        _streaming_asr_action(config, missing_required, config_display),
+        _final_artifacts_action(config, missing_required, config_display),
+    ]
+    return FinalRunActionPlan(
+        ok=audit.ok,
+        config_path=config_display,
+        missing_required=missing_required,
+        items=items,
+    )
+
+
 def scaffold_final_run(config: dict[str, Any], *, repo_root: str | Path = ".") -> FinalRunScaffoldReport:
     """Create final-run directories and README hints without fabricating data."""
 
@@ -1424,6 +1570,216 @@ def audit_final_voiceworld_real(
         missing_factor_fields=missing_factor_fields,
         errors=errors,
     )
+
+
+def _stage_corpora_action(
+    config: dict[str, Any],
+    missing_required: list[FinalRunPathCheck],
+    config_path: str,
+) -> FinalRunActionItem:
+    blockers = _missing_paths(missing_required, "corpus:")
+    commands = _corpus_recipe_commands(config)
+    commands.append(f"stable-asr final-config --config {config_path} --prepare-corpora --require-all-corpora")
+    artifacts = [str(corpus["manifest"]) for corpus in config.get("public_corpora", [])]
+    return FinalRunActionItem(
+        id="stage_public_corpora",
+        title="Stage public ASR corpora and write canonical ASR manifests",
+        status=_action_status(blockers),
+        blockers=blockers,
+        commands=commands,
+        artifacts=artifacts,
+        detail="Place or symlink real upstream corpus files locally, then normalize them into Stable-ASR ASR manifests.",
+    )
+
+
+def _prepare_asr_turn_action(
+    config: dict[str, Any],
+    missing_required: list[FinalRunPathCheck],
+    config_path: str,
+) -> FinalRunActionItem:
+    blockers = _missing_paths(missing_required, "turn_split:train", "turn_split:dev", "turn_split:test")
+    artifacts = [str(config["asr_eval_manifest"])]
+    artifacts.extend(str(config["turn_splits"][name]) for name in SPLIT_NAMES)
+    return FinalRunActionItem(
+        id="prepare_asr_eval_and_turn_splits",
+        title="Assemble shared ASR evaluation manifest and weak turn splits",
+        status="blocked" if _missing_paths(missing_required, "corpus:") else _action_status(blockers),
+        blockers=blockers,
+        commands=[
+            f"stable-asr final-config --config {config_path} --prepare-asr-eval-manifest",
+            f"stable-asr final-config --config {config_path} --bootstrap-turn-splits",
+            "stable-asr audit-turn-splits --train runs/final/turn_train.jsonl --dev runs/final/turn_dev.jsonl --test runs/final/turn_test.jsonl",
+        ],
+        artifacts=artifacts,
+        detail="Build the shared ASR eval set first, then derive leakage-audited weak turn train/dev/test splits.",
+    )
+
+
+def _voiceworld_action(
+    config: dict[str, Any],
+    missing_required: list[FinalRunPathCheck],
+    config_path: str,
+) -> FinalRunActionItem:
+    voiceworld_path = str(config["turn_splits"]["voiceworld_real"])
+    blockers = _missing_paths(missing_required, "turn_split:voiceworld_real")
+    return FinalRunActionItem(
+        id="collect_voiceworld_real",
+        title="Collect or compose the real VoiceWorld scenario manifest",
+        status=_action_status(blockers),
+        blockers=blockers,
+        commands=[
+            f"stable-asr validate-manifest {voiceworld_path}",
+            (
+                f"stable-asr final-config --config {config_path} --audit-voiceworld-real "
+                "--scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json --min-scenario-records 20"
+            ),
+            f"stable-asr eval-scenario --dataset {voiceworld_path} --checkpoint {config['nanoturn']['checkpoint']} --json-output {config['result_inputs']['scenarios']}",
+        ],
+        artifacts=[voiceworld_path, str(config["result_inputs"]["scenarios"])],
+        detail="Use real or explicitly composed audio examples for every required VoiceWorld scenario and factor.",
+    )
+
+
+def _external_predictions_action(
+    config: dict[str, Any],
+    missing_required: list[FinalRunPathCheck],
+    config_path: str,
+) -> FinalRunActionItem:
+    blockers = _missing_paths(missing_required, "external_prediction:")
+    commands = [
+        f"stable-asr convert-predictions --schema {prediction['schema']} --input {prediction['raw']} --output {prediction['converted']}"
+        for prediction in config.get("external_turn_predictions", [])
+    ]
+    commands.append(f"stable-asr final-config --config {config_path} --prepare-external-predictions --require-all-predictions")
+    artifacts = [str(prediction["converted"]) for prediction in config.get("external_turn_predictions", [])]
+    artifacts.append(str(config["result_inputs"]["baselines"]))
+    return FinalRunActionItem(
+        id="normalize_external_turn_predictions",
+        title="Export and normalize external turn-system predictions",
+        status=_action_status(blockers),
+        blockers=blockers,
+        commands=commands,
+        artifacts=artifacts,
+        detail="Run SmartTurn/EasyTurn-style systems outside Stable-ASR, then normalize and coverage-check their prediction manifests.",
+    )
+
+
+def _nanoturn_action(
+    config: dict[str, Any],
+    missing_required: list[FinalRunPathCheck],
+    config_path: str,
+) -> FinalRunActionItem:
+    blockers = _missing_paths(missing_required, "turn_split:train")
+    nanoturn = config["nanoturn"]
+    return FinalRunActionItem(
+        id="train_and_export_nanoturn",
+        title="Train NanoTurn and produce latency/export artifacts",
+        status=_action_status(blockers),
+        blockers=blockers,
+        commands=[
+            (
+                f"stable-asr train-turn --dataset {config['turn_splits']['train']} --output-dir "
+                f"{Path(str(nanoturn['checkpoint'])).parent} --model {nanoturn['model']} --feature-source audio"
+            ),
+            f"stable-asr export-turn-onnx --checkpoint {nanoturn['checkpoint']} --output {nanoturn['onnx']}",
+            f"stable-asr benchmark-turn --dataset {config['turn_splits']['test']} --checkpoint {nanoturn['checkpoint']} --json-output {config['result_inputs']['turn_benchmarks']}",
+        ],
+        artifacts=[str(nanoturn["checkpoint"]), str(nanoturn["metrics"]), str(nanoturn["onnx"]), str(config["result_inputs"]["turn_benchmarks"])],
+        detail="Create the default trainable baseline and the deployment-facing artifacts needed by the platform paper.",
+    )
+
+
+def _streaming_asr_action(
+    config: dict[str, Any],
+    missing_required: list[FinalRunPathCheck],
+    config_path: str,
+) -> FinalRunActionItem:
+    blockers = _missing_paths(missing_required, "asr_command_config")
+    if any(check.name.startswith("corpus:") for check in missing_required):
+        blockers.extend(_missing_paths(missing_required, "corpus:"))
+    return FinalRunActionItem(
+        id="run_command_backed_streaming_asr",
+        title="Run command-backed ASR adapters under one streaming schema",
+        status=_action_status(blockers),
+        blockers=blockers,
+        commands=[
+            f"stable-asr final-config --config {config_path} --audit-asr-commands",
+            f"stable-asr compare-asr-commands --config {config['asr_command_config']} --report runs/final/reports/asr_command_compare.md --json-output {config['result_inputs']['streaming_comparison']}",
+            f"stable-asr sweep-streaming-asr --input runs/final/asr_commands/whisper_streaming.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160 320 --json-output {config['result_inputs']['streaming_sweep']}",
+        ],
+        artifacts=[str(config["result_inputs"]["streaming_comparison"]), str(config["result_inputs"]["streaming_sweep"])],
+        detail="Evaluate real ASR systems through command adapters without vendoring heavyweight upstream toolkits.",
+    )
+
+
+def _final_artifacts_action(
+    config: dict[str, Any],
+    missing_required: list[FinalRunPathCheck],
+    config_path: str,
+) -> FinalRunActionItem:
+    blockers = [check.path for check in missing_required]
+    artifacts = [str(config["artifacts"]["paper_results"]), str(config["artifacts"]["bundle_dir"])]
+    return FinalRunActionItem(
+        id="assemble_final_artifacts",
+        title="Assemble paper results, bundle artifacts, and run final parity gates",
+        status=_action_status(blockers),
+        blockers=blockers,
+        commands=[
+            f"stable-asr final-results --config {config_path} --output {config['artifacts']['paper_results']}",
+            f"stable-asr paper-bundle --results {config['artifacts']['paper_results']} --output-dir {config['artifacts']['bundle_dir']}",
+            f"stable-asr paper-parity-audit --results {config['artifacts']['paper_results']} --artifacts-dir {config['artifacts']['bundle_dir']} --require-final",
+            f"stable-asr paper-release-audit --repo-root . --results {config['artifacts']['paper_results']} --artifacts-dir {config['artifacts']['bundle_dir']}",
+        ],
+        artifacts=artifacts,
+        detail="Only run this as a final gate after real corpora, external predictions, VoiceWorld records, and ASR outputs exist.",
+    )
+
+
+def _corpus_recipe_commands(config: dict[str, Any]) -> list[str]:
+    commands = []
+    for corpus in config.get("public_corpora", []):
+        if "input_dir" in corpus:
+            command = (
+                f"stable-asr prepare-public-asr --corpus {corpus['corpus']} --input-dir {corpus['input_dir']} "
+                f"--output {corpus['manifest']}"
+            )
+            if corpus.get("split"):
+                command += f" --split {corpus['split']}"
+        else:
+            command = (
+                f"stable-asr prepare-asr-manifest --input {corpus['metadata']} --audio-root {corpus['audio_root']} "
+                f"--output {corpus['manifest']}"
+            )
+        commands.append(command)
+    return commands
+
+
+def _missing_paths(missing_required: list[FinalRunPathCheck], *prefixes: str) -> list[str]:
+    return [
+        check.path
+        for check in missing_required
+        if any(check.name.startswith(prefix) for prefix in prefixes)
+    ]
+
+
+def _action_status(blockers: list[str]) -> str:
+    return "blocked" if blockers else "ready"
+
+
+def _suggest_action_for_missing_check(check: FinalRunPathCheck) -> str:
+    if check.name.startswith("corpus:") and check.name.endswith(":input_dir"):
+        return "place or symlink the upstream corpus directory, then run final-config --prepare-corpora"
+    if check.name.startswith("corpus:") and (check.name.endswith(":metadata") or check.name.endswith(":audio_root")):
+        return "stage the metadata table and audio root, then run final-config --prepare-corpora"
+    if check.name in {"turn_split:train", "turn_split:dev", "turn_split:test"}:
+        return "run final-config --prepare-asr-eval-manifest and --bootstrap-turn-splits after corpus manifests exist"
+    if check.name == "turn_split:voiceworld_real":
+        return "collect or compose real VoiceWorld scenario records, then run final-config --audit-voiceworld-real"
+    if check.name.startswith("external_prediction:") and check.name.endswith(":raw"):
+        return "run the external turn model and save its raw prediction export, then run final-config --prepare-external-predictions"
+    if check.name == "asr_command_config":
+        return "restore or write the command-backed ASR comparison config"
+    return "stage the required file, then rerun final-config --check-files"
 
 
 def _corpus_rows(config: dict[str, Any]) -> list[dict[str, object]]:

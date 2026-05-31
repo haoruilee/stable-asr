@@ -850,6 +850,18 @@ def test_final_config_cli_check_files_reports_missing_inputs(capsys) -> None:
     assert "missing required input" in captured.out
 
 
+def test_final_config_cli_plan_missing_outputs_action_plan(tmp_path, capsys) -> None:
+    output = tmp_path / "FINAL_RUN_ACTION_PLAN.md"
+    code = main(["final-config", "--config", "configs/final/paper_final.json", "--plan-missing", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Final Run Action Plan" in captured.out
+    assert "stage_public_corpora" in captured.out
+    assert output.exists()
+    assert "collect_voiceworld_real" in output.read_text(encoding="utf-8")
+
+
 def test_final_config_cli_scaffold(tmp_path, capsys) -> None:
     code = main(["final-config", "--repo-root", str(tmp_path), "--scaffold"])
 

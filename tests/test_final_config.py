@@ -4,6 +4,7 @@ from pathlib import Path
 from stable_asr.paper.final_config import (
     audit_final_voiceworld_real,
     audit_final_run_files,
+    build_final_run_action_plan,
     bootstrap_final_turn_splits,
     final_run_file_audit_markdown,
     final_run_config_markdown,
@@ -55,6 +56,20 @@ def test_final_run_file_audit_reports_missing_default_inputs() -> None:
     assert not report.ok
     assert "missing required input" in report.to_text()
     assert "librispeech_dev_clean" in final_run_file_audit_markdown(report)
+
+
+def test_final_run_action_plan_maps_missing_inputs_to_commands() -> None:
+    report = build_final_run_action_plan(load_final_run_config())
+
+    markdown = report.to_markdown()
+    assert not report.ok
+    assert report.missing_required
+    assert "Stable-ASR Final Run Action Plan" in markdown
+    assert "stage_public_corpora" in markdown
+    assert "prepare-public-asr --corpus librispeech" in markdown
+    assert "collect_voiceworld_real" in markdown
+    assert "prepare-external-predictions" in markdown
+    assert "paper-parity-audit" in markdown
 
 
 def test_final_run_file_audit_accepts_existing_required_inputs(tmp_path: Path) -> None:
