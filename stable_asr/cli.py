@@ -61,6 +61,7 @@ from stable_asr.paper.final_config import (
     final_run_file_audit_markdown,
     final_run_config_markdown,
     load_final_run_config,
+    prepare_final_corpora,
     scaffold_final_run,
     validate_final_run_config,
 )
@@ -811,6 +812,16 @@ def build_parser() -> argparse.ArgumentParser:
     final_config_parser.add_argument("--validate-only", action="store_true")
     final_config_parser.add_argument("--check-files", action="store_true", help="Check required input/config paths exist.")
     final_config_parser.add_argument("--scaffold", action="store_true", help="Create final-run directories and README hints.")
+    final_config_parser.add_argument(
+        "--prepare-corpora",
+        action="store_true",
+        help="Prepare configured public ASR corpus manifests for local inputs that exist.",
+    )
+    final_config_parser.add_argument(
+        "--require-all-corpora",
+        action="store_true",
+        help="With --prepare-corpora, fail if any configured corpus input is missing.",
+    )
 
     leaderboard_parser = subparsers.add_parser(
         "leaderboard-export",
@@ -2009,6 +2020,17 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     print(report.to_text())
                 return 0
+            if args.prepare_corpora:
+                report = prepare_final_corpora(
+                    config,
+                    repo_root=args.repo_root,
+                    require_all=args.require_all_corpora,
+                )
+                if args.json:
+                    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(report.to_text())
+                return 0 if report.ok else 1
             if args.check_files:
                 report = audit_final_run_files(config, repo_root=args.repo_root)
                 text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else final_run_file_audit_markdown(report)

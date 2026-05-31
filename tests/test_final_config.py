@@ -5,6 +5,7 @@ from stable_asr.paper.final_config import (
     final_run_file_audit_markdown,
     final_run_config_markdown,
     load_final_run_config,
+    prepare_final_corpora,
     scaffold_final_run,
     validate_final_run_config,
     write_final_run_config_json,
@@ -101,3 +102,66 @@ def test_scaffold_final_run_creates_directories_without_input_files(tmp_path: Pa
     assert not (tmp_path / "runs/final/turn_train.jsonl").exists()
     assert not (tmp_path / "data/librispeech/LibriSpeech/dev-clean/84").exists()
     assert "final_run_scaffold:" in report.to_text()
+
+
+def test_prepare_final_corpora_writes_existing_inputs_and_skips_missing(tmp_path: Path) -> None:
+    chapter = tmp_path / "data/librispeech/LibriSpeech/dev-clean/84/121123"
+    chapter.mkdir(parents=True)
+    (chapter / "84-121123.trans.txt").write_text(
+        "84-121123-0000 WHAT IS THE WEATHER\n",
+        encoding="utf-8",
+    )
+    (chapter / "84-121123-0000.flac").write_bytes(b"")
+    config = load_final_run_config()
+    config["public_corpora"] = [
+        {
+            "id": "librispeech_dev_clean",
+            "language": "en",
+            "corpus": "librispeech",
+            "input_dir": "data/librispeech/LibriSpeech/dev-clean",
+            "manifest": "runs/final/librispeech_dev_clean/asr_manifest.jsonl",
+            "sample_rate": 16000,
+            "license": "test",
+        },
+        {
+            "id": "missing_common_voice",
+            "language": "en",
+            "corpus": "common_voice",
+            "input_dir": "data/common_voice/en",
+            "split": "dev",
+            "manifest": "runs/final/common_voice_en_dev/asr_manifest.jsonl",
+            "sample_rate": 16000,
+            "license": "test",
+        },
+    ]
+
+    report = prepare_final_corpora(config, repo_root=tmp_path)
+
+    assert report.ok
+    assert report.prepared_count == 1
+    assert report.skipped_count == 1
+    assert (tmp_path / "runs/final/librispeech_dev_clean/asr_manifest.jsonl").exists()
+    assert "final_corpora_prepare: READY" in report.to_text()
+
+
+def test_prepare_final_corpora_require_all_fails_on_missing_input(tmp_path: Path) -> None:
+    config = load_final_run_config()
+    config["public_corpora"] = [
+        {
+            "id": "missing_common_voice",
+            "language": "en",
+            "corpus": "common_voice",
+            "input_dir": "data/common_voice/en",
+            "split": "dev",
+            "manifest": "runs/final/common_voice_en_dev/asr_manifest.jsonl",
+            "sample_rate": 16000,
+            "license": "test",
+        }
+    ]
+
+    report = prepare_final_corpora(config, repo_root=tmp_path, require_all=True)
+
+    assert not report.ok
+    assert report.prepared_count == 0
+    assert report.skipped_count == 1
+    assert "final_corpora_prepare: FAILED" in report.to_text()

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from stable_asr.data.recipes import prepare_asr_manifest, prepare_public_asr_manifest
 from stable_asr.eval.report import dict_table
 from stable_asr.resources import resolve_platform_path
 
@@ -31,6 +32,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
             "manifest": "runs/final/librispeech_dev_clean/asr_manifest.jsonl",
             "sample_rate": 16000,
             "license": "see_upstream",
+            "required": True,
         },
         {
             "id": "aishell1_dev",
@@ -41,6 +43,29 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
             "manifest": "runs/final/aishell1_dev/asr_manifest.jsonl",
             "sample_rate": 16000,
             "license": "see_upstream",
+            "required": True,
+        },
+        {
+            "id": "wenetspeech_dev",
+            "language": "zh",
+            "corpus": "wenetspeech",
+            "input_dir": "data/wenetspeech/WenetSpeech",
+            "split": "dev",
+            "manifest": "runs/final/wenetspeech_dev/asr_manifest.jsonl",
+            "sample_rate": 16000,
+            "license": "see_upstream",
+            "required": False,
+        },
+        {
+            "id": "common_voice_en_dev",
+            "language": "en",
+            "corpus": "common_voice",
+            "input_dir": "data/common_voice/en",
+            "split": "dev",
+            "manifest": "runs/final/common_voice_en_dev/asr_manifest.jsonl",
+            "sample_rate": 16000,
+            "license": "see_upstream",
+            "required": False,
         },
     ],
     "turn_splits": {
@@ -80,8 +105,11 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
     },
     "commands": [
         "stable-asr final-config --config configs/final/paper_final.json --validate-only",
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-corpora",
         "stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl",
         "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl",
+        "stable-asr prepare-public-asr --corpus wenetspeech --input-dir data/wenetspeech/WenetSpeech --split dev --output runs/final/wenetspeech_dev/asr_manifest.jsonl",
+        "stable-asr prepare-public-asr --corpus common_voice --input-dir data/common_voice/en --split dev --output runs/final/common_voice_en_dev/asr_manifest.jsonl",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
@@ -178,6 +206,84 @@ class FinalRunScaffoldReport:
         return "\n".join(lines)
 
 
+@dataclass(frozen=True)
+class FinalCorpusPrepareEntry:
+    id: str
+    corpus: str
+    input: str
+    manifest: str
+    records: int
+    ok: bool
+    skipped: bool
+    detail: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "id": self.id,
+            "corpus": self.corpus,
+            "input": self.input,
+            "manifest": self.manifest,
+            "records": self.records,
+            "ok": self.ok,
+            "skipped": self.skipped,
+            "detail": self.detail,
+        }
+
+
+@dataclass(frozen=True)
+class FinalCorpusPrepareReport:
+    ok: bool
+    require_all: bool
+    entries: list[FinalCorpusPrepareEntry]
+
+    @property
+    def prepared_count(self) -> int:
+        return sum(1 for entry in self.entries if entry.ok and not entry.skipped)
+
+    @property
+    def skipped_count(self) -> int:
+        return sum(1 for entry in self.entries if entry.skipped)
+
+    @property
+    def failed_count(self) -> int:
+        return sum(1 for entry in self.entries if not entry.ok and not entry.skipped)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "require_all": self.require_all,
+            "prepared_count": self.prepared_count,
+            "skipped_count": self.skipped_count,
+            "failed_count": self.failed_count,
+            "entries": [entry.to_dict() for entry in self.entries],
+        }
+
+    def to_text(self) -> str:
+        if self.ok and self.prepared_count:
+            status = "READY"
+        elif self.ok:
+            status = "NO_INPUTS"
+        else:
+            status = "FAILED"
+        lines = [
+            f"final_corpora_prepare: {status}",
+            f"- prepared: {self.prepared_count}",
+            f"- skipped: {self.skipped_count}",
+            f"- failed: {self.failed_count}",
+        ]
+        for entry in self.entries:
+            if entry.ok and not entry.skipped:
+                entry_status = "PREPARED"
+            elif entry.skipped:
+                entry_status = "SKIPPED"
+            else:
+                entry_status = "FAILED"
+            lines.append(
+                f"- {entry_status} {entry.id}: {entry.records} record(s) -> {entry.manifest} ({entry.detail})"
+            )
+        return "\n".join(lines)
+
+
 def load_final_run_config(path: str | Path | None = None) -> dict[str, Any]:
     if path is None:
         return json.loads(json.dumps(DEFAULT_FINAL_RUN_CONFIG))
@@ -221,6 +327,8 @@ def validate_final_run_config(config: dict[str, Any]) -> FinalRunConfigValidatio
             for key in ("language", "manifest", "sample_rate", "license"):
                 if key not in corpus:
                     errors.append(f"corpus {corpus_id or index} missing {key}")
+            if "required" in corpus and not isinstance(corpus["required"], bool):
+                errors.append(f"corpus {corpus_id or index} required must be a boolean")
             has_public_recipe = isinstance(corpus.get("corpus"), str) and isinstance(corpus.get("input_dir"), str)
             has_metadata_recipe = isinstance(corpus.get("metadata"), str) and isinstance(corpus.get("audio_root"), str)
             if not has_public_recipe and not has_metadata_recipe:
@@ -299,11 +407,12 @@ def audit_final_run_files(config: dict[str, Any], *, repo_root: str | Path = "."
     checks: list[FinalRunPathCheck] = []
     for corpus in config.get("public_corpora", []):
         corpus_id = str(corpus["id"])
+        required = bool(corpus.get("required", True))
         if "input_dir" in corpus:
-            checks.append(_input_check(f"corpus:{corpus_id}:input_dir", corpus["input_dir"], root=root))
+            checks.append(_input_check(f"corpus:{corpus_id}:input_dir", corpus["input_dir"], root=root, required=required))
         else:
-            checks.append(_input_check(f"corpus:{corpus_id}:metadata", corpus["metadata"], root=root))
-            checks.append(_input_check(f"corpus:{corpus_id}:audio_root", corpus["audio_root"], root=root))
+            checks.append(_input_check(f"corpus:{corpus_id}:metadata", corpus["metadata"], root=root, required=required))
+            checks.append(_input_check(f"corpus:{corpus_id}:audio_root", corpus["audio_root"], root=root, required=required))
         checks.append(_planned_check(f"corpus:{corpus_id}:manifest", corpus["manifest"], root=root, kind="output"))
 
     for split, path in config.get("turn_splits", {}).items():
@@ -466,6 +575,110 @@ def scaffold_final_run(config: dict[str, Any], *, repo_root: str | Path = ".") -
     return FinalRunScaffoldReport(output_dir=str(output_dir), entries=entries)
 
 
+def prepare_final_corpora(
+    config: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+    require_all: bool = False,
+) -> FinalCorpusPrepareReport:
+    """Prepare configured public ASR corpus manifests when inputs exist.
+
+    Missing local corpora are skipped by default so users can prepare partial
+    final runs without fabricating data. Set ``require_all`` to make any missing
+    corpus input fail the report.
+    """
+
+    validation = validate_final_run_config(config)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    root = Path(repo_root)
+    entries: list[FinalCorpusPrepareEntry] = []
+    for corpus in config.get("public_corpora", []):
+        corpus_id = str(corpus["id"])
+        manifest_path = _resolve(str(corpus["manifest"]), root=root)
+        try:
+            if "input_dir" in corpus:
+                input_path = _resolve(str(corpus["input_dir"]), root=root)
+                source_name = str(corpus["corpus"])
+                if not input_path.exists():
+                    entries.append(
+                        _skipped_corpus_entry(
+                            corpus_id,
+                            corpus=source_name,
+                            input_path=input_path,
+                            manifest_path=manifest_path,
+                            detail="missing input directory",
+                            require_all=require_all,
+                        )
+                    )
+                    continue
+                records = prepare_public_asr_manifest(
+                    corpus=source_name,
+                    input_dir=input_path,
+                    output_path=manifest_path,
+                    split=corpus.get("split"),
+                    sample_rate=int(corpus["sample_rate"]),
+                )
+            else:
+                metadata_path = _resolve(str(corpus["metadata"]), root=root)
+                audio_root = _resolve(str(corpus["audio_root"]), root=root)
+                source_name = "metadata_table"
+                if not metadata_path.exists() or not audio_root.exists():
+                    missing = []
+                    if not metadata_path.exists():
+                        missing.append("metadata")
+                    if not audio_root.exists():
+                        missing.append("audio_root")
+                    entries.append(
+                        _skipped_corpus_entry(
+                            corpus_id,
+                            corpus=source_name,
+                            input_path=metadata_path,
+                            manifest_path=manifest_path,
+                            detail="missing " + " and ".join(missing),
+                            require_all=require_all,
+                        )
+                    )
+                    continue
+                records = prepare_asr_manifest(
+                    metadata_path,
+                    manifest_path,
+                    audio_root=audio_root,
+                    default_sample_rate=int(corpus["sample_rate"]),
+                    default_language=str(corpus["language"]),
+                    default_source=corpus_id,
+                    default_split=corpus.get("split"),
+                )
+            entries.append(
+                FinalCorpusPrepareEntry(
+                    id=corpus_id,
+                    corpus=source_name,
+                    input=str(input_path if "input_dir" in corpus else metadata_path),
+                    manifest=str(manifest_path),
+                    records=len(records),
+                    ok=True,
+                    skipped=False,
+                    detail="manifest written",
+                )
+            )
+        except (OSError, ValueError) as exc:
+            entries.append(
+                FinalCorpusPrepareEntry(
+                    id=corpus_id,
+                    corpus=str(corpus.get("corpus", "metadata_table")),
+                    input=str(corpus.get("input_dir", corpus.get("metadata", ""))),
+                    manifest=str(manifest_path),
+                    records=0,
+                    ok=False,
+                    skipped=False,
+                    detail=str(exc),
+                )
+            )
+    ok = all(entry.ok for entry in entries) and (not require_all or not any(entry.skipped for entry in entries))
+    return FinalCorpusPrepareReport(ok=ok, require_all=require_all, entries=entries)
+
+
 def _corpus_rows(config: dict[str, Any]) -> list[dict[str, object]]:
     rows = []
     for corpus in config["public_corpora"]:
@@ -477,6 +690,7 @@ def _corpus_rows(config: dict[str, Any]) -> list[dict[str, object]]:
                 "input": corpus.get("input_dir", corpus.get("metadata", "")),
                 "manifest": corpus["manifest"],
                 "sample_rate": corpus["sample_rate"],
+                "required": corpus.get("required", True),
             }
         )
     return rows
@@ -496,17 +710,24 @@ def _prediction_rows(config: dict[str, Any]) -> list[dict[str, object]]:
     return rows
 
 
-def _input_check(name: str, path: str, *, root: Path, kind: str = "input") -> FinalRunPathCheck:
+def _input_check(name: str, path: str, *, root: Path, kind: str = "input", required: bool = True) -> FinalRunPathCheck:
     resolved = _resolve(path, root=root)
     exists = resolved.exists()
+    ok = exists or not required
+    if exists:
+        detail = "exists"
+    elif required:
+        detail = "missing required input"
+    else:
+        detail = "optional input missing"
     return FinalRunPathCheck(
         name=name,
         path=str(path),
         kind=kind,
-        required=True,
+        required=required,
         exists=exists,
-        ok=exists,
-        detail="exists" if exists else "missing required input",
+        ok=ok,
+        detail=detail,
     )
 
 
@@ -552,4 +773,25 @@ def _ensure_readme(path: Path, *, title: str, body: str) -> FinalRunScaffoldEntr
         kind="readme",
         created=not existed,
         detail="placeholder instructions; no data generated",
+    )
+
+
+def _skipped_corpus_entry(
+    corpus_id: str,
+    *,
+    corpus: str,
+    input_path: Path,
+    manifest_path: Path,
+    detail: str,
+    require_all: bool,
+) -> FinalCorpusPrepareEntry:
+    return FinalCorpusPrepareEntry(
+        id=corpus_id,
+        corpus=corpus,
+        input=str(input_path),
+        manifest=str(manifest_path),
+        records=0,
+        ok=not require_all,
+        skipped=True,
+        detail=detail,
     )

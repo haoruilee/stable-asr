@@ -268,6 +268,7 @@ is provided in `mkdocs.yaml`.
 - `final-config` for validating final paper run directories, corpora, splits, adapter config, and artifact paths
 - `final-config --scaffold` for creating final-run directories and README hints without fabricating data
 - `final-config --check-files` for reporting which final paper inputs are still missing before expensive runs
+- `final-config --prepare-corpora` for preparing configured public ASR manifests from local corpus directories
 - `leaderboard-export` for JSONL/CSV metric rows
 - machine-readable benchmark suite definition in `configs/benchmarks/stable_asr_v0.json`
 - `benchmark-suite` for validating and rendering benchmark suite definitions

@@ -860,6 +860,45 @@ def test_final_config_cli_scaffold(tmp_path, capsys) -> None:
     assert not (tmp_path / "runs/final/turn_train.jsonl").exists()
 
 
+def test_final_config_cli_prepare_corpora(tmp_path, capsys) -> None:
+    chapter = tmp_path / "data/librispeech/LibriSpeech/dev-clean/84/121123"
+    chapter.mkdir(parents=True)
+    (chapter / "84-121123.trans.txt").write_text(
+        "84-121123-0000 WHAT IS THE WEATHER\n",
+        encoding="utf-8",
+    )
+    (chapter / "84-121123-0000.flac").write_bytes(b"")
+    config = tmp_path / "paper_final.json"
+    config.write_text(
+        (
+            '{"id":"stable_asr_final_run_v0","version":"0.1.0","title":"Final",'
+            '"output_dir":"runs/final","seed":0,'
+            '"public_corpora":[{"id":"librispeech_dev_clean","language":"en","corpus":"librispeech",'
+            '"input_dir":"data/librispeech/LibriSpeech/dev-clean",'
+            '"manifest":"runs/final/librispeech_dev_clean/asr_manifest.jsonl",'
+            '"sample_rate":16000,"license":"test"}],'
+            '"turn_splits":{"train":"runs/final/turn_train.jsonl","dev":"runs/final/turn_dev.jsonl",'
+            '"test":"runs/final/turn_test.jsonl","voiceworld_real":"runs/final/voiceworld_real.jsonl"},'
+            '"external_turn_predictions":[],'
+            '"asr_command_config":"configs/final/asr_command_compare.json",'
+            '"nanoturn":{"model":"nanoturn_pico","checkpoint":"runs/final/nanoturn/checkpoint.pt",'
+            '"metrics":"runs/final/nanoturn/metrics.json","onnx":"runs/final/nanoturn/nanoturn.onnx"},'
+            '"artifacts":{"paper_results":"runs/final/paper_results.json","bundle_dir":"runs/final/artifacts",'
+            '"markdown_draft":"runs/final/PAPER_DRAFT.md","latex_draft":"runs/final/paper.tex",'
+            '"dataset_card":"runs/final/DATASET_CARD.md","experiment_card":"runs/final/EXPERIMENT_CARD.md"},'
+            '"commands":["stable-asr final-config --validate-only"]}\n'
+        ),
+        encoding="utf-8",
+    )
+
+    code = main(["final-config", "--config", str(config), "--repo-root", str(tmp_path), "--prepare-corpora"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "final_corpora_prepare: READY" in captured.out
+    assert (tmp_path / "runs/final/librispeech_dev_clean/asr_manifest.jsonl").exists()
+
+
 def test_adapter_registry_cli(tmp_path, capsys) -> None:
     output = tmp_path / "ADAPTERS.md"
     code = main(["adapter-registry", "--output", str(output)])

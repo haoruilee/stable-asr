@@ -52,6 +52,7 @@ stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.j
 stable-asr final-experiments --registry configs/paper/final_experiments.json --output runs/paper/smoke/artifacts/FINAL_EXPERIMENTS.md
 stable-asr final-config --config configs/final/paper_final.json --output runs/paper/smoke/artifacts/FINAL_RUN_CONFIG.md
 stable-asr final-config --config configs/final/paper_final.json --scaffold
+stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
 # Expected to report NOT_READY until final corpora, splits, and external predictions exist.
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr leaderboard-export --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/leaderboard.jsonl
