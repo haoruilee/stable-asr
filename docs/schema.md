@@ -113,6 +113,22 @@ add fields such as `scenario`, use `--group-by metadata.conversation_id` to
 keep dialogue windows together, or pass `--no-stratify` for a plain shuffled
 split.
 
+## Turn Data Profile
+
+Use `profile-turn-data` before training or publishing a benchmark split:
+
+```bash
+stable-asr profile-turn-data \
+  --dataset runs/splits/turn_train.jsonl \
+  --require-all-turn-labels \
+  --report runs/splits/turn_train_profile.md
+```
+
+The profile reports duration statistics, turn/action/scenario/language/source
+distributions, assistant-speaking and overlap counts, and warnings such as
+single-label data, missing scenario metadata, severe label imbalance, or very
+short windows.
+
 ## Data Source Registry
 
 Stable-ASR keeps a machine-readable source registry at

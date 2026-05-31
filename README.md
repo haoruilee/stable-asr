@@ -47,6 +47,7 @@ stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline text_tur
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl
 stable-asr make-synthetic-turn-data --output /tmp/stable-asr-synth.jsonl --episodes 10 --seed 42 --write-audio
 stable-asr inspect-manifest examples/data/turn_demo.jsonl
+stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report /tmp/stable-asr-turn-profile.md
 stable-asr split-turn-data --input examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-splits --train-ratio 0.5 --dev-ratio 0.25 --test-ratio 0.25 --seed 7
 stable-asr convert examples/data/turn_demo.jsonl /tmp/stable-asr-copy.jsonl
 stable-asr convert examples/data/turn_demo.jsonl /tmp/stable-asr-copy.parquet
@@ -158,6 +159,7 @@ Current M0 functionality:
 - optional Parquet backend via `stable-asr[data]`
 - optional Lance backend via `stable-asr[lance]`
 - `inspect-manifest` and `convert` CLI commands
+- `profile-turn-data` for label/scenario/duration distribution reports and training-readiness warnings
 - `split-turn-data` for seedable train/dev/test turn manifest splits
 - `convert-external` for EasyTurn-style, Full-Duplex-Bench-style, and SmartTurn-style JSONL manifests
 - `convert-predictions` for generic, SmartTurn-style, and EasyTurn-style prediction JSONL

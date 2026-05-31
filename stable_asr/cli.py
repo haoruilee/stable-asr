@@ -12,6 +12,7 @@ from stable_asr.data.asr_manifest import load_asr_manifest, summarize_asr_record
 from stable_asr.data.audio_audit import audit_audio_records
 from stable_asr.data.bootstrap import BootstrapTurnDataConfig, bootstrap_turn_data
 from stable_asr.data.manifest import load_manifest, validate_manifest
+from stable_asr.data.profile import profile_turn_records
 from stable_asr.data.benchmark import benchmark_data_formats
 from stable_asr.data.converters import (
     ASR_TRANSCRIPT_SCHEMAS,
@@ -260,6 +261,18 @@ def build_parser() -> argparse.ArgumentParser:
     inspect_parser.add_argument("path", type=Path, help="Manifest path.")
     inspect_parser.add_argument("--format", choices=TURN_FORMATS.names())
     inspect_parser.add_argument("--json", action="store_true", help="Print summary as JSON.")
+
+    profile_parser = subparsers.add_parser(
+        "profile-turn-data",
+        help="Profile turn data distributions, durations, and training-readiness warnings.",
+    )
+    profile_parser.add_argument("--dataset", type=Path, required=True)
+    profile_parser.add_argument("--format", choices=TURN_FORMATS.names())
+    profile_parser.add_argument("--min-records", type=int, default=1)
+    profile_parser.add_argument("--warn-label-imbalance", type=float, default=0.85)
+    profile_parser.add_argument("--require-all-turn-labels", action="store_true")
+    profile_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
+    profile_parser.add_argument("--json", action="store_true")
 
     split_parser = subparsers.add_parser(
         "split-turn-data",
@@ -905,6 +918,28 @@ def main(argv: list[str] | None = None) -> int:
                 if isinstance(values, dict):
                     for name, count in values.items():
                         print(f"  {name}: {count}")
+        return 0
+
+    if args.command == "profile-turn-data":
+        try:
+            profile = profile_turn_records(
+                load_turn_records(args.dataset, format=args.format),
+                min_records=args.min_records,
+                warn_label_imbalance=args.warn_label_imbalance,
+                require_all_turn_labels=args.require_all_turn_labels,
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.report:
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(profile.to_markdown(), encoding="utf-8")
+        if args.json:
+            print(json.dumps(profile.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(profile.to_text())
+            if args.report:
+                print(f"report: {args.report}")
         return 0
 
     if args.command == "split-turn-data":

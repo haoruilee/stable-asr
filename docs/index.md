@@ -37,6 +37,7 @@ stable-asr doctor
 stable-asr doctor --check-final-files
 stable-asr validate-manifest examples/data/turn_demo.jsonl
 stable-asr convert examples/data/turn_demo.jsonl runs/turn_demo.lance
+stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report runs/turn_profile.md
 stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir runs/data_bench --formats jsonl parquet lance --sample-count 16
 stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only

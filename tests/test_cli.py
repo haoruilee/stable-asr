@@ -394,6 +394,18 @@ def test_inspect_manifest_cli(capsys) -> None:
     assert "normal_question: 1" in captured.out
 
 
+def test_profile_turn_data_cli(tmp_path, capsys) -> None:
+    report = tmp_path / "profile.md"
+    code = main(["profile-turn-data", "--dataset", "examples/data/turn_demo.jsonl", "--report", str(report)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "turn_data_profile:" in captured.out
+    assert "records: 4" in captured.out
+    assert report.exists()
+    assert "Stable-ASR Turn Data Profile" in report.read_text(encoding="utf-8")
+
+
 def test_convert_cli(tmp_path, capsys) -> None:
     dest = tmp_path / "converted.jsonl"
     code = main(["convert", "examples/data/turn_demo.jsonl", str(dest)])
