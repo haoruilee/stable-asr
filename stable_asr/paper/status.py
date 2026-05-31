@@ -305,7 +305,7 @@ def _final_handoff_status(config: dict[str, Any], *, repo_root: Path) -> FinalHa
     if not handoff.exists():
         missing.append(str(handoff))
     else:
-        report = audit_final_handoff(handoff, repo_root=repo_root)
+        report = audit_final_handoff(handoff, repo_root=repo_root, require_checksums=True)
         errors.extend(report.errors)
         warnings.extend(report.warnings)
         checked_paths.extend(report.checked_paths)

@@ -1316,6 +1316,11 @@ def build_parser() -> argparse.ArgumentParser:
     final_handoff_audit_parser.add_argument("--input", type=Path, required=True)
     final_handoff_audit_parser.add_argument("--repo-root", type=Path, default=Path("."))
     final_handoff_audit_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    final_handoff_audit_parser.add_argument(
+        "--require-checksums",
+        action="store_true",
+        help="Fail when staged file checksums or byte sizes are missing.",
+    )
     final_handoff_audit_parser.add_argument("--json", action="store_true")
 
     contributor_pack_parser = subparsers.add_parser(
@@ -3308,7 +3313,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "final-handoff-audit":
-        report = audit_final_handoff(args.input, repo_root=args.repo_root)
+        report = audit_final_handoff(args.input, repo_root=args.repo_root, require_checksums=args.require_checksums)
         text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)

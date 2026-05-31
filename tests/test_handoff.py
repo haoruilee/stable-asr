@@ -37,12 +37,43 @@ def test_final_handoff_audit_accepts_complete_handoff(tmp_path: Path) -> None:
     path = tmp_path / "handoff.json"
     path.write_text(json.dumps(handoff), encoding="utf-8")
 
-    report = audit_final_handoff(path, repo_root=tmp_path)
+    report = audit_final_handoff(path, repo_root=tmp_path, require_checksums=True)
 
     assert report.ok
     assert report.entries == 1
     assert "data.txt" in report.checked_paths
     assert "final_handoff_audit: OK" in report.to_text()
+
+
+def test_final_handoff_audit_can_require_checksums(tmp_path: Path) -> None:
+    staged = tmp_path / "data.txt"
+    staged.write_text("stable-asr\n", encoding="utf-8")
+    handoff = {
+        "version": "stable_asr_final_handoff_v0",
+        "entries": [
+            {
+                "collection_id": "unit_collection",
+                "owner": "tester",
+                "staged_paths": ["data.txt"],
+                "source_urls": ["https://example.com/source"],
+                "license_or_consent_notes": "local fixture with project permission",
+                "commands_run": ["echo build"],
+                "verification_outputs": ["pytest"],
+                "checksums": [],
+                "known_gaps": [],
+            }
+        ],
+    }
+    path = tmp_path / "handoff.json"
+    path.write_text(json.dumps(handoff), encoding="utf-8")
+
+    loose = audit_final_handoff(path, repo_root=tmp_path)
+    strict = audit_final_handoff(path, repo_root=tmp_path, require_checksums=True)
+
+    assert loose.ok
+    assert "unit_collection:checksums:missing" in loose.warnings
+    assert not strict.ok
+    assert "unit_collection:checksums:missing" in strict.errors
 
 
 def test_final_handoff_audit_rejects_missing_metadata_and_paths(tmp_path: Path) -> None:

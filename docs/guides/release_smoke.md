@@ -48,7 +48,7 @@ The command prints `final_inputs_ready`, `final_assignment_ready`, and
 `final_handoff_ready`. Final scale remains `NO` until the data paths exist, the
 assignment tracker has owners and due dates with no release blockers, the
 strict `FINAL_ASSIGNMENT_AUDIT.md` evidence file is present, and the filled
-handoff passes `final-handoff-audit`.
+handoff passes `final-handoff-audit --require-checksums`.
 
 ## READY Smoke Environment
 

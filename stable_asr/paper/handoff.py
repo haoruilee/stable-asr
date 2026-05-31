@@ -113,7 +113,11 @@ def final_handoff_schema_markdown() -> str:
         {"field": "license_or_consent_notes", "required": "yes", "meaning": "license review, consent, or redistribution notes"},
         {"field": "commands_run", "required": "yes", "meaning": "commands used to produce or normalize the staged artifacts"},
         {"field": "verification_outputs", "required": "yes", "meaning": "verification commands, logs, reports, or issue links"},
-        {"field": "checksums", "required": "recommended", "meaning": "sha256 and byte size for staged files"},
+        {
+            "field": "checksums",
+            "required": "final gates",
+            "meaning": "sha256 and byte size for staged files; required when auditing final-ready handoffs",
+        },
         {"field": "known_gaps", "required": "no", "meaning": "remaining limitations that block final release claims"},
     ]
     return "\n".join(
@@ -128,7 +132,12 @@ def final_handoff_schema_markdown() -> str:
     )
 
 
-def audit_final_handoff(path: str | Path, *, repo_root: str | Path = ".") -> FinalHandoffAuditReport:
+def audit_final_handoff(
+    path: str | Path,
+    *,
+    repo_root: str | Path = ".",
+    require_checksums: bool = False,
+) -> FinalHandoffAuditReport:
     handoff_path = Path(path)
     root = Path(repo_root)
     errors: list[str] = []
@@ -160,7 +169,15 @@ def audit_final_handoff(path: str | Path, *, repo_root: str | Path = ".") -> Fin
         if not isinstance(entry, dict):
             errors.append(f"entry {index} must be an object")
             continue
-        _audit_entry(index, entry, root=root, checked_paths=checked_paths, errors=errors, warnings=warnings)
+        _audit_entry(
+            index,
+            entry,
+            root=root,
+            require_checksums=require_checksums,
+            checked_paths=checked_paths,
+            errors=errors,
+            warnings=warnings,
+        )
 
     return FinalHandoffAuditReport(
         ok=not errors,
@@ -177,6 +194,7 @@ def _audit_entry(
     entry: dict[str, Any],
     *,
     root: Path,
+    require_checksums: bool,
     checked_paths: list[str],
     errors: list[str],
     warnings: list[str],
@@ -199,7 +217,15 @@ def _audit_entry(
         checked_paths.append(staged)
         if not resolved.exists():
             errors.append(f"{label}:staged_path_missing:{staged}")
-    _audit_checksums(label, entry.get("checksums", []), root=root, staged_paths=set(staged_paths), errors=errors, warnings=warnings)
+    _audit_checksums(
+        label,
+        entry.get("checksums", []),
+        root=root,
+        staged_paths=set(staged_paths),
+        require_checksums=require_checksums,
+        errors=errors,
+        warnings=warnings,
+    )
 
 
 def _audit_checksums(
@@ -208,11 +234,17 @@ def _audit_checksums(
     *,
     root: Path,
     staged_paths: set[str],
+    require_checksums: bool,
     errors: list[str],
     warnings: list[str],
 ) -> None:
     if checksums in (None, []):
-        warnings.append(f"{label}:checksums:missing")
+        _checksum_issue(
+            f"{label}:checksums:missing",
+            require_checksums=require_checksums,
+            errors=errors,
+            warnings=warnings,
+        )
         return
     if not isinstance(checksums, list):
         errors.append(f"{label}:checksums:invalid")
@@ -236,18 +268,43 @@ def _audit_checksums(
             continue
         expected_sha = checksum.get("sha256")
         if not isinstance(expected_sha, str) or not expected_sha:
-            warnings.append(f"{label}:sha256_missing:{path}")
+            _checksum_issue(
+                f"{label}:sha256_missing:{path}",
+                require_checksums=require_checksums,
+                errors=errors,
+                warnings=warnings,
+            )
         elif _sha256_file(resolved) != expected_sha:
             errors.append(f"{label}:sha256_mismatch:{path}")
         expected_bytes = checksum.get("bytes")
-        if expected_bytes is not None:
-            try:
-                bytes_value = int(expected_bytes)
-            except (TypeError, ValueError):
-                errors.append(f"{label}:bytes_invalid:{path}")
-            else:
-                if bytes_value != resolved.stat().st_size:
-                    errors.append(f"{label}:bytes_mismatch:{path}")
+        if expected_bytes is None:
+            _checksum_issue(
+                f"{label}:bytes_missing:{path}",
+                require_checksums=require_checksums,
+                errors=errors,
+                warnings=warnings,
+            )
+            continue
+        try:
+            bytes_value = int(expected_bytes)
+        except (TypeError, ValueError):
+            errors.append(f"{label}:bytes_invalid:{path}")
+        else:
+            if bytes_value != resolved.stat().st_size:
+                errors.append(f"{label}:bytes_mismatch:{path}")
+
+
+def _checksum_issue(
+    message: str,
+    *,
+    require_checksums: bool,
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    if require_checksums:
+        errors.append(message)
+    else:
+        warnings.append(message)
 
 
 def _resolve_staged_path(path: str, *, root: Path) -> Path:

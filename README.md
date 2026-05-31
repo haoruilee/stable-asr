@@ -173,7 +173,7 @@ stable-asr paper-release-audit \
 stable-asr paper-status --release-dir runs/paper/release_smoke
 stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json
 stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md
-stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md
+stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --require-checksums --output runs/final/FINAL_HANDOFF_AUDIT.md
 stable-asr paper-release-audit --repo-root . --require-final-ready
 ```
 
@@ -190,7 +190,7 @@ The smoke path can be `READY` while final paper-scale evidence is still
 corpora, external predictions, and final artifacts are present. It also prints `final_inputs_ready` and
 `final_assignment_ready` and `final_handoff_ready` separately. Final-ready gates
 require assignment readiness evidence plus a filled
-`runs/final/FINAL_INPUT_HANDOFF.json` that passes `final-handoff-audit`.
+`runs/final/FINAL_INPUT_HANDOFF.json` that passes `final-handoff-audit --require-checksums`.
 
 Use `stable-asr doctor --check-release-env` before strict release smoke. A
 READY smoke audit needs both the optional Lance backend and NanoTurn training

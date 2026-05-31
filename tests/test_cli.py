@@ -307,6 +307,46 @@ def test_final_handoff_template_and_audit_cli(capsys, tmp_path) -> None:
     assert code == 1
     assert output.exists()
 
+    staged = tmp_path / "data.txt"
+    staged.write_text("stable-asr\n", encoding="utf-8")
+    complete_without_checksums = tmp_path / "handoff_missing_checksums.json"
+    complete_without_checksums.write_text(
+        json.dumps(
+            {
+                "version": "stable_asr_final_handoff_v0",
+                "entries": [
+                    {
+                        "collection_id": "unit_collection",
+                        "owner": "owner",
+                        "staged_paths": ["data.txt"],
+                        "source_urls": ["https://example.com/source"],
+                        "license_or_consent_notes": "local fixture with project permission",
+                        "commands_run": ["echo build"],
+                        "verification_outputs": ["pytest"],
+                        "checksums": [],
+                        "known_gaps": [],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    strict_code = main(
+        [
+            "final-handoff-audit",
+            "--input",
+            str(complete_without_checksums),
+            "--repo-root",
+            str(tmp_path),
+            "--require-checksums",
+            "--json",
+        ]
+    )
+    strict_captured = capsys.readouterr()
+    assert strict_code == 1
+    assert "unit_collection:checksums:missing" in strict_captured.out
+
 
 def test_contributor_pack_cli(capsys, tmp_path) -> None:
     output_dir = tmp_path / "contributor_pack"

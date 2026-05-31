@@ -757,7 +757,7 @@ def _assignments_markdown(rows: list[AcquisitionAssignmentRow]) -> str:
         "1. Set `owner` and `due_date` in `assignments.json` or this Markdown copy.",
         "2. Stage the required paths and generated artifacts listed for the collection.",
         "3. Run the collection verification command from `DATA_ACQUISITION.md`.",
-        "4. Fill `handoff_template.json` and run `stable-asr final-handoff-audit`.",
+        "4. Fill `handoff_template.json` and run `stable-asr final-handoff-audit --require-checksums`.",
         "",
     ]
     return "\n".join(lines)
@@ -867,11 +867,11 @@ def _handoff_template() -> str:
 
 def _starter_commands() -> list[str]:
     return [
-        f"stable-asr final-inputs --registry {PACK_FINAL_INPUTS_PATH} --config {PACK_FINAL_CONFIG_PATH} --repo-root . --output reports/FINAL_INPUT_COLLECTIONS_CURRENT.md",
+        f"stable-asr final-inputs --registry {PACK_FINAL_INPUTS_PATH} --config {PACK_FINAL_CONFIG_PATH} --repo-root . --require-checksums --output reports/FINAL_INPUT_COLLECTIONS_CURRENT.md",
         f"stable-asr final-config --config {PACK_FINAL_CONFIG_PATH} --repo-root . --plan-missing --output reports/FINAL_RUN_ACTION_PLAN_CURRENT.md",
         f"stable-asr final-config --config {PACK_FINAL_CONFIG_PATH} --repo-root . --check-files --output reports/FINAL_RUN_FILE_AUDIT_CURRENT.md || true",
         "stable-asr final-assignment-audit --input acquisition/assignments.json --output reports/FINAL_ASSIGNMENT_AUDIT.md || true",
-        "stable-asr final-handoff-audit --input acquisition/handoff_template.json --repo-root . --output reports/FINAL_HANDOFF_AUDIT.md || true",
+        "stable-asr final-handoff-audit --input acquisition/handoff_template.json --repo-root . --require-checksums --output reports/FINAL_HANDOFF_AUDIT.md || true",
     ]
 
 

@@ -518,7 +518,7 @@ def _final_ready_release_checks(
         if not handoff_path.exists():
             checks.append(_release_check("final", "final_handoff_audit", False, f"missing: {handoff_path}"))
         else:
-            handoff = audit_final_handoff(handoff_path, repo_root=repo_root)
+            handoff = audit_final_handoff(handoff_path, repo_root=repo_root, require_checksums=True)
             detail = (
                 f"{handoff.entries} entries, {len(handoff.checked_paths)} staged path(s), "
                 f"{len(handoff.errors)} error(s), {len(handoff.warnings)} warning(s)"

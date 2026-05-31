@@ -50,21 +50,21 @@ stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
 stable-asr contributor-pack --output-dir runs/contributor_pack
 stable-asr final-config --config configs/final/paper_final.json --plan-missing
-stable-asr paper-status --repo-root .
+stable-asr paper-status --repo-root . --require-checksums
 ```
 
 `paper-status` includes the strict final assignment and handoff gates, so a
 final run stays `NOT_READY` until the owner assignment tracker exists, passes
 `final-assignment-audit --require-owner --require-due-date --require-ready`,
 the `FINAL_ASSIGNMENT_AUDIT.md` evidence file is present, and the filled
-`FINAL_INPUT_HANDOFF.json` passes `final-handoff-audit`.
+`FINAL_INPUT_HANDOFF.json` passes `final-handoff-audit --require-checksums`.
 
 `final-acquisition-pack` is the collaborator-facing version of the final input
 plan. It writes a TSV/JSON staging checklist, owner assignment tracker, license
 and consent review sheet, VoiceWorld recording checklist, and structured
 handoff template so real corpora and external model outputs can be collected
 without inventing placeholder evidence. Use `final-assignment-audit` before
-handoff, then use `final-handoff-audit` on a filled handoff JSON before treating
+handoff, then use `final-handoff-audit --require-checksums` on a filled handoff JSON before treating
 the staged inputs as final release evidence. `paper-release-audit
 --require-final-ready` now checks that assignment and handoff evidence exist
 and audit cleanly.
