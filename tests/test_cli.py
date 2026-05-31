@@ -22,6 +22,7 @@ def test_doctor_cli(capsys) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "stable_asr_doctor: OK" in captured.out
+    assert "final_inputs_ready: NOT_CHECKED" in captured.out
     assert "release_environment_ready:" in captured.out
     assert "config/benchmark_suite" in captured.out
     assert "config/roadmap" in captured.out
@@ -45,6 +46,7 @@ def test_doctor_cli_with_release_env_check(capsys) -> None:
 
     captured = capsys.readouterr()
     assert code == expected
+    assert "final_inputs_ready: NOT_CHECKED" in captured.out
     assert "release/environment" in captured.out
 
 

@@ -7,6 +7,8 @@ def test_doctor_accepts_repository_configs() -> None:
     report = run_doctor()
 
     assert report.ok
+    assert not report.final_inputs_checked
+    assert "final_inputs_ready: NOT_CHECKED" in report.to_text()
     assert isinstance(report.release_environment_ready, bool)
     assert any(check.name == "benchmark_suite" and check.ok for check in report.checks)
     assert any(check.name == "roadmap" and check.ok for check in report.checks)
@@ -21,6 +23,7 @@ def test_doctor_final_file_readiness_is_optional_and_reports_missing_inputs() ->
     report = run_doctor(check_final_files=True)
 
     assert report.ok
+    assert report.final_inputs_checked
     assert not report.final_inputs_ready
     assert "final_inputs_ready: NO" in report.to_text()
     assert "required input(s) missing" in report.to_text()
@@ -31,7 +34,9 @@ def test_doctor_release_environment_check_matches_optional_dependencies() -> Non
     expected = _has_import("torch") and _has_working_lance()
 
     assert report.ok is expected
+    assert not report.final_inputs_checked
     assert report.release_environment_ready is expected
+    assert "final_inputs_ready: NOT_CHECKED" in report.to_text()
     assert "release/environment" in report.to_text()
 
 

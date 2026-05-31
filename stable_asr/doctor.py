@@ -51,6 +51,7 @@ class DoctorCheck:
 class DoctorReport:
     ok: bool
     final_inputs_ready: bool
+    final_inputs_checked: bool
     release_environment_ready: bool
     checks: list[DoctorCheck]
 
@@ -58,14 +59,19 @@ class DoctorReport:
         return {
             "ok": self.ok,
             "final_inputs_ready": self.final_inputs_ready,
+            "final_inputs_checked": self.final_inputs_checked,
             "release_environment_ready": self.release_environment_ready,
             "checks": [check.to_dict() for check in self.checks],
         }
 
     def to_text(self) -> str:
+        if self.final_inputs_checked:
+            final_status = "YES" if self.final_inputs_ready else "NO"
+        else:
+            final_status = "NOT_CHECKED"
         lines = [
             f"stable_asr_doctor: {'OK' if self.ok else 'FAILED'}",
-            f"final_inputs_ready: {'YES' if self.final_inputs_ready else 'NO'}",
+            f"final_inputs_ready: {final_status}",
             f"release_environment_ready: {'YES' if self.release_environment_ready else 'NO'}",
         ]
         for check in self.checks:
@@ -111,7 +117,8 @@ def run_doctor(
                 ),
             )
         )
-    final_inputs_ready = True
+    final_inputs_ready = False
+    final_inputs_checked = check_final_files
     if check_final_files:
         final_file_report = audit_final_run_files(
             load_final_run_config(repo_root / "configs" / "final" / "paper_final.json"),
@@ -136,6 +143,7 @@ def run_doctor(
     return DoctorReport(
         ok=required_ok,
         final_inputs_ready=final_inputs_ready,
+        final_inputs_checked=final_inputs_checked,
         release_environment_ready=release_environment_ready,
         checks=checks,
     )

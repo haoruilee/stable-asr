@@ -13,6 +13,10 @@ stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.
 stable-asr platform-parity --output runs/PLATFORM_PARITY.md
 ```
 
+`doctor` reports final input readiness as `NOT_CHECKED` unless
+`--check-final-files` is supplied. Use `--check-release-env` separately for the
+optional Torch/Lance dependency gate needed by strict release smoke.
+
 ## Turn Data
 
 ```bash

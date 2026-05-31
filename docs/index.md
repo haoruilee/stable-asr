@@ -35,7 +35,7 @@ streaming ASR and voice-agent control:
 - VoiceWorld scenario starter packs for external scenario contributors
 - unified contributor pack for onboarding across benchmark, adapter, scenario, final-run, and final-acquisition tracks
 - machine-readable roadmap status for milestone evidence and planned final-scale work
-- repository doctor for environment, config, and final-input readiness checks
+- repository doctor for environment, config, explicit final-input readiness, and release dependency checks
 - paper tables, figures, bundles, audits, and drafts
 - repository-level platform parity audit against the stable-worldmodel-style platform shape
 

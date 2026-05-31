@@ -110,11 +110,13 @@ assignment and handoff evidence, and then scale the smoke fixtures into the
 final benchmark suite.
 
 Use `doctor --check-release-env` to fail early when the local environment cannot
-produce a READY smoke audit:
+produce a READY smoke audit. Add `doctor --check-final-files` when you also
+want the real final input paths audited:
 
 ```bash
 python -m pip install -e ".[lance,train]"
 stable-asr doctor --check-release-env
+stable-asr doctor --check-final-files
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke --strict
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke --require-final-ready
 stable-asr paper-release-audit --repo-root . --require-final-ready
