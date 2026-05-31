@@ -506,6 +506,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
         _source_manifest_content_check(repo_root / "MANIFEST.in"),
         _wheel_data_files_check(repo_root / "pyproject.toml"),
         _ci_wheel_smoke_check(repo_root / ".github" / "workflows" / "tests.yml"),
+        _ci_lance_smoke_check(repo_root / ".github" / "workflows" / "tests.yml"),
     ]
 
 
@@ -583,6 +584,24 @@ def _ci_wheel_smoke_check(path: Path) -> PaperReleaseAuditCheck:
         "ci_wheel_smoke",
         not missing,
         "wheel install smoke is covered" if not missing else "missing: " + ", ".join(missing),
+    )
+
+
+def _ci_lance_smoke_check(path: Path) -> PaperReleaseAuditCheck:
+    required_patterns = (
+        "optional-data-backends",
+        "python -m pip install -e \".[lance]\"",
+        "stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-data-backends --formats jsonl parquet lance --sample-count 16",
+    )
+    if not path.exists():
+        return _release_check("software", "ci_lance_smoke", False, f"missing: {path}")
+    text = path.read_text(encoding="utf-8")
+    missing = [pattern for pattern in required_patterns if pattern not in text]
+    return _release_check(
+        "software",
+        "ci_lance_smoke",
+        not missing,
+        "optional Lance backend smoke is covered" if not missing else "missing: " + ", ".join(missing),
     )
 
 

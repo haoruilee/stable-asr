@@ -25,6 +25,7 @@ def resolve_platform_path(path: str | Path) -> Path:
     env_root = os.environ.get("STABLE_ASR_ASSET_ROOT")
     if env_root:
         roots.append(Path(env_root))
+    roots.append(Path(__file__).resolve().parents[1])
     roots.extend(
         [
             Path(sys.prefix) / "share" / "stable-asr",

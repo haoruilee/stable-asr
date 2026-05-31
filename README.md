@@ -180,6 +180,7 @@ Current M0 functionality:
 - `convert-predictions` for generic, SmartTurn-style, and EasyTurn-style prediction JSONL
 - `convert-asr-transcript` for Whisper-style and FunASR-style transcript JSONL into the normalized streaming ASR schema
 - `benchmark-data` for paper-facing data-layer tables
+- CI smoke coverage for optional JSONL/Parquet/Lance data backend benchmarks
 - machine-readable data source registry in `configs/datasets/stable_asr_sources.json`
 - `data-sources` for validating and rendering data source registries
 - machine-readable adapter registry in `configs/adapters/stable_asr_adapters.json`

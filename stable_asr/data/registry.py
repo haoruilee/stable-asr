@@ -10,6 +10,7 @@ from stable_asr.data.formats.jsonl import write_jsonl
 from stable_asr.data.formats.lance import load_lance, write_lance
 from stable_asr.data.formats.parquet import load_parquet, write_parquet
 from stable_asr.data.manifest import TurnManifestRecord, load_manifest
+from stable_asr.resources import resolve_platform_path
 
 
 class TurnFormat(Protocol):
@@ -92,8 +93,9 @@ TURN_FORMATS.register(LanceTurnFormat())
 
 
 def load_turn_records(path: str | Path, *, format: str | None = None) -> list[TurnManifestRecord]:
-    data_format = TURN_FORMATS.get(format) if format else TURN_FORMATS.detect(path)
-    return data_format.load(path)
+    resolved_path = resolve_platform_path(path)
+    data_format = TURN_FORMATS.get(format) if format else TURN_FORMATS.detect(resolved_path)
+    return data_format.load(resolved_path)
 
 
 def write_turn_records(
