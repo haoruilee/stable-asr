@@ -165,6 +165,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md",
         "stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md",
         "stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json",
+        "stable-asr final-handoff-checksums --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_INPUT_HANDOFF.json",
         "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --require-checksums --output runs/final/FINAL_HANDOFF_AUDIT.md",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md --json-output runs/final/reports/asr_command_compare.json",
@@ -2101,6 +2102,7 @@ def _final_artifacts_action(
         commands=[
             f"stable-asr final-results --config {config_path} --output {config['artifacts']['paper_results']}",
             f"stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output {config['artifacts'].get('assignment_audit', 'runs/final/FINAL_ASSIGNMENT_AUDIT.md')}",
+            f"stable-asr final-handoff-checksums --input {config['artifacts'].get('handoff', 'runs/final/FINAL_INPUT_HANDOFF.json')} --repo-root . --output {config['artifacts'].get('handoff', 'runs/final/FINAL_INPUT_HANDOFF.json')}",
             f"stable-asr final-handoff-audit --input {config['artifacts'].get('handoff', 'runs/final/FINAL_INPUT_HANDOFF.json')} --repo-root . --require-checksums --output {config['artifacts'].get('handoff_audit', 'runs/final/FINAL_HANDOFF_AUDIT.md')}",
             f"stable-asr paper-bundle --results {config['artifacts']['paper_results']} --output-dir {config['artifacts']['bundle_dir']}",
             f"stable-asr make-card model --input configs/models/stable_asr_models.json --model-id {config.get('nanoturn', {}).get('model', 'nanoturn_pico')} --metrics {config.get('nanoturn', {}).get('metrics', 'runs/final/nanoturn/metrics.json')} --output {config['artifacts'].get('model_card', 'runs/final/MODEL_CARD.md')}",

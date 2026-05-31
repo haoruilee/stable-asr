@@ -135,6 +135,7 @@
     "stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md",
     "stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md",
     "stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json",
+    "stable-asr final-handoff-checksums --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_INPUT_HANDOFF.json",
     "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --require-checksums --output runs/final/FINAL_HANDOFF_AUDIT.md",
     "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
     "stable-asr benchmark-data --dataset runs/final/turn_train.jsonl --output-dir runs/final/data_bench --formats jsonl parquet lance --sample-count 10000 --json-output runs/final/reports/data_benchmark.json",

@@ -97,7 +97,7 @@ from stable_asr.paper.final_inputs import (
 )
 from stable_asr.paper.final_pack import build_final_pack
 from stable_asr.paper.final_results import assemble_final_paper_results
-from stable_asr.paper.handoff import audit_final_handoff, final_handoff_template
+from stable_asr.paper.handoff import audit_final_handoff, final_handoff_template, populate_final_handoff_checksums
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.archive import paper_artifact_archive, verify_paper_artifact_archive
 from stable_asr.paper.integrity import verify_artifact_integrity
@@ -1315,6 +1315,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     final_handoff_template_parser.add_argument("--output", type=Path, required=True)
     final_handoff_template_parser.add_argument("--input-collections", type=Path, help="Optional final input collection JSON path.")
+
+    final_handoff_checksums_parser = subparsers.add_parser(
+        "final-handoff-checksums",
+        help="Populate sha256 and byte-size checksum entries for staged files in a final input handoff JSON.",
+    )
+    final_handoff_checksums_parser.add_argument("--input", type=Path, required=True)
+    final_handoff_checksums_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    final_handoff_checksums_parser.add_argument("--output", type=Path, required=True)
+    final_handoff_checksums_parser.add_argument("--json", action="store_true")
 
     final_handoff_audit_parser = subparsers.add_parser(
         "final-handoff-audit",
@@ -3340,6 +3349,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         return 0
+
+    if args.command == "final-handoff-checksums":
+        report = populate_final_handoff_checksums(args.input, repo_root=args.repo_root, output=args.output)
+        text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_text()
+        print(text)
+        return 0 if report.ok else 1
 
     if args.command == "final-handoff-audit":
         report = audit_final_handoff(args.input, repo_root=args.repo_root, require_checksums=args.require_checksums)

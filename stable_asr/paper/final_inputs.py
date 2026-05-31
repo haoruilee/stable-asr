@@ -241,6 +241,7 @@ DEFAULT_FINAL_INPUT_COLLECTIONS: dict[str, Any] = {
             "commands": [
                 "stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md",
                 "stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json",
+                "stable-asr final-handoff-checksums --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_INPUT_HANDOFF.json",
                 "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --require-checksums --output runs/final/FINAL_HANDOFF_AUDIT.md",
                 "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
                 "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
@@ -248,6 +249,7 @@ DEFAULT_FINAL_INPUT_COLLECTIONS: dict[str, Any] = {
             ],
             "verification": [
                 "stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready",
+                "stable-asr final-handoff-checksums --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_INPUT_HANDOFF.json",
                 "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --require-checksums",
                 "stable-asr paper-archive-verify --archive runs/final/artifacts.tar.gz",
                 "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",

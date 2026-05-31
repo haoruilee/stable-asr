@@ -347,6 +347,29 @@ def test_final_handoff_template_and_audit_cli(capsys, tmp_path) -> None:
     assert strict_code == 1
     assert "unit_collection:checksums:missing" in strict_captured.out
 
+    checksummed = tmp_path / "handoff_with_checksums.json"
+    code = main(
+        [
+            "final-handoff-checksums",
+            "--input",
+            str(complete_without_checksums),
+            "--repo-root",
+            str(tmp_path),
+            "--output",
+            str(checksummed),
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 0
+    assert '"checksums": 1' in captured.out
+    assert checksummed.exists()
+
+    code = main(["final-handoff-audit", "--input", str(checksummed), "--repo-root", str(tmp_path), "--require-checksums"])
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "status: `OK`" in captured.out
+
 
 def test_contributor_pack_cli(capsys, tmp_path) -> None:
     output_dir = tmp_path / "contributor_pack"

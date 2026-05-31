@@ -43,8 +43,10 @@ from stable_asr.paper.final_results import FinalResultsAssemblyReport, assemble_
 from stable_asr.paper.handoff import (
     FINAL_HANDOFF_VERSION,
     FinalHandoffAuditReport,
+    FinalHandoffChecksumReport,
     audit_final_handoff,
     final_handoff_template,
+    populate_final_handoff_checksums,
 )
 from stable_asr.paper.integrity import (
     ArtifactDigest,
@@ -123,6 +125,7 @@ __all__ = [
     "FinalInputCollectionReport",
     "FinalEvidenceMatrixReport",
     "FinalHandoffAuditReport",
+    "FinalHandoffChecksumReport",
     "FinalPackReport",
     "LeaderboardMergeReport",
     "SubmissionIndexReport",
@@ -164,6 +167,7 @@ __all__ = [
     "paper_draft",
     "final_evidence_matrix",
     "final_handoff_template",
+    "populate_final_handoff_checksums",
     "final_input_collection_report",
     "FINAL_HANDOFF_VERSION",
     "load_final_input_collections",
