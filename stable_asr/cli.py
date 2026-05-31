@@ -61,6 +61,7 @@ from stable_asr.paper.cards import dataset_card, experiment_card
 from stable_asr.paper.case_studies import paper_case_studies
 from stable_asr.paper.claims import audit_claims, paper_claims
 from stable_asr.paper.draft import paper_draft
+from stable_asr.paper.evidence import final_evidence_matrix
 from stable_asr.paper.experiments import run_paper_smoke
 from stable_asr.paper.final_config import (
     audit_final_voiceworld_real,
@@ -823,6 +824,17 @@ def build_parser() -> argparse.ArgumentParser:
     paper_status_parser.add_argument("--artifacts-dir", type=Path)
     paper_status_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     paper_status_parser.add_argument("--json", action="store_true")
+
+    evidence_parser = subparsers.add_parser(
+        "paper-evidence-matrix",
+        help="Audit final-scale experiment evidence, blockers, commands, and expected artifacts.",
+    )
+    evidence_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    evidence_parser.add_argument("--registry", type=Path, help="Optional final experiment registry JSON path.")
+    evidence_parser.add_argument("--config", type=Path, help="Optional final run config JSON path.")
+    evidence_parser.add_argument("--artifacts-dir", type=Path, help="Optional artifact bundle directory to check.")
+    evidence_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    evidence_parser.add_argument("--json", action="store_true")
 
     case_studies_parser = subparsers.add_parser(
         "paper-case-studies",
@@ -2102,6 +2114,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"final_experiments: {len(bundle.final_experiments)}")
             print(f"final_run_config: {len(bundle.final_run_config)}")
             print(f"final_run_file_audit: {len(bundle.final_run_file_audit)}")
+            print(f"final_run_action_plan: {len(bundle.final_run_action_plan)}")
+            print(f"final_evidence_matrix: {len(bundle.final_evidence_matrix)}")
             print(f"paper_status: {len(bundle.paper_status)}")
             print(f"roadmap_status: {len(bundle.roadmap_status)}")
             print(f"claims: {len(bundle.claims)}")
@@ -2122,6 +2136,24 @@ def main(argv: list[str] | None = None) -> int:
                 print(report.to_markdown())
                 if args.output:
                     print(f"paper_status_markdown: {args.output}")
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0 if report.ok else 1
+
+    if args.command == "paper-evidence-matrix":
+        try:
+            report = final_evidence_matrix(
+                repo_root=args.repo_root,
+                registry_path=args.registry,
+                config_path=args.config,
+                artifacts_dir=args.artifacts_dir,
+            )
+            text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+            print(text)
         except (OSError, ValueError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1

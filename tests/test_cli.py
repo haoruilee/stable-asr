@@ -54,6 +54,18 @@ def test_paper_status_cli(capsys) -> None:
     assert "final_inputs_ready" in captured.out
 
 
+def test_paper_evidence_matrix_cli_writes_markdown(tmp_path, capsys) -> None:
+    output = tmp_path / "FINAL_EVIDENCE_MATRIX.md"
+    code = main(["paper-evidence-matrix", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Final Evidence Matrix" in captured.out
+    assert "real_data_layer_benchmark" in captured.out
+    assert output.exists()
+    assert "data/librispeech/LibriSpeech/dev-clean" in output.read_text(encoding="utf-8")
+
+
 def test_roadmap_status_cli(capsys, tmp_path) -> None:
     code = main(["roadmap-status", "--validate-only"])
 
@@ -2237,6 +2249,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert "asr_collections:" in captured.out
     assert "scenario_suite:" in captured.out
     assert "case_studies:" in captured.out
+    assert "final_evidence_matrix:" in captured.out
     assert "roadmap_status:" in captured.out
     assert "claims:" in captured.out
     assert (output_dir / "ARTIFACT_INDEX.md").exists()
@@ -2245,6 +2258,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert (output_dir / "BENCHMARK_SUITE.md").exists()
     assert (output_dir / "SCENARIO_SUITE.md").exists()
     assert (output_dir / "CASE_STUDIES.md").exists()
+    assert (output_dir / "FINAL_EVIDENCE_MATRIX.md").exists()
     assert (output_dir / "CLAIMS.md").exists()
 
 

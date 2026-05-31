@@ -8,6 +8,7 @@ from pathlib import Path
 
 from stable_asr.paper.case_studies import paper_case_studies
 from stable_asr.paper.claims import paper_claims
+from stable_asr.paper.evidence import final_evidence_matrix
 from stable_asr.paper.final_experiments import (
     final_experiments_markdown,
     load_final_experiments,
@@ -64,6 +65,7 @@ class PaperArtifactBundle:
     final_run_config: dict[str, str]
     final_run_file_audit: dict[str, str]
     final_run_action_plan: dict[str, str]
+    final_evidence_matrix: dict[str, str]
     paper_status: dict[str, str]
     roadmap_status: dict[str, str]
     claims: dict[str, str]
@@ -87,6 +89,7 @@ class PaperArtifactBundle:
             "final_run_config": self.final_run_config,
             "final_run_file_audit": self.final_run_file_audit,
             "final_run_action_plan": self.final_run_action_plan,
+            "final_evidence_matrix": self.final_evidence_matrix,
             "paper_status": self.paper_status,
             "roadmap_status": self.roadmap_status,
             "claims": self.claims,
@@ -234,6 +237,16 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         final_action_report.to_markdown(),
         encoding="utf-8",
     )
+    final_evidence_report = final_evidence_matrix(artifacts_dir=output_dir)
+    final_evidence = {
+        "json": str(output_dir / "final_evidence_matrix.json"),
+        "markdown": str(output_dir / "FINAL_EVIDENCE_MATRIX.md"),
+    }
+    Path(final_evidence["json"]).write_text(
+        json.dumps(final_evidence_report.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(final_evidence["markdown"]).write_text(final_evidence_report.to_markdown(), encoding="utf-8")
     status_report = paper_status(repo_root=Path("."), results_path=results_path, artifacts_dir=output_dir)
     paper_status_artifacts = {
         "json": write_paper_status_json(status_report, output_dir / "paper_status.json"),
@@ -271,6 +284,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         final_run_config=final_run_config,
         final_run_file_audit=final_run_file_audit,
         final_run_action_plan=final_run_action_plan,
+        final_evidence_matrix=final_evidence,
         paper_status=paper_status_artifacts,
         roadmap_status=roadmap_status_artifacts,
         claims={},
@@ -298,6 +312,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         final_run_config=final_run_config,
         final_run_file_audit=final_run_file_audit,
         final_run_action_plan=final_run_action_plan,
+        final_evidence_matrix=final_evidence,
         paper_status=paper_status_artifacts,
         roadmap_status=roadmap_status_artifacts,
         claims=claims,
@@ -356,6 +371,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Final Run Action Plan", ""])
     for name, path in bundle.final_run_action_plan.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Final Evidence Matrix", ""])
+    for name, path in bundle.final_evidence_matrix.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Paper Status", ""])
     for name, path in bundle.paper_status.items():

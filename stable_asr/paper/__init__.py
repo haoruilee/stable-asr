@@ -11,6 +11,7 @@ from stable_asr.paper.audit import (
 )
 from stable_asr.paper.cards import dataset_card, experiment_card
 from stable_asr.paper.draft import paper_draft
+from stable_asr.paper.evidence import FinalEvidenceMatrixReport, final_evidence_matrix
 from stable_asr.paper.experiments import PaperRunResult, run_paper_smoke
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.final_config import FinalRunActionPlan, build_final_run_action_plan
@@ -46,6 +47,7 @@ __all__ = [
     "PaperRunResult",
     "FinalResultsAssemblyReport",
     "FinalRunActionPlan",
+    "FinalEvidenceMatrixReport",
     "assemble_final_paper_results",
     "audit_paper_artifacts",
     "audit_paper_release",
@@ -57,6 +59,7 @@ __all__ = [
     "load_benchmark_suite",
     "paper_artifact_bundle",
     "paper_draft",
+    "final_evidence_matrix",
     "paper_figure",
     "paper_latex",
     "paper_table",

@@ -159,7 +159,7 @@ stable-asr paper-release-audit \
 ```
 
 `paper-release-smoke` writes `paper_results.json`, tables, figures, registry
-artifacts, case studies, final-run audits/action plans, claim evidence, roadmap
+artifacts, case studies, final-run audits/action plans, final evidence matrix, claim evidence, roadmap
 status, `PAPER_DRAFT.md`, `paper.tex`, dataset/experiment cards, and
 `RELEASE_AUDIT.md`.
 
@@ -262,9 +262,11 @@ is provided in `mkdocs.yaml`.
 - `paper-figure` SVG generation for platform diagrams plus baseline, latency, data, streaming, scenario, and policy figures
 - `paper-bundle` generation for paper tables, figures, artifact index, and artifact manifest
 - ASR reference collection, paper-reference, BibTeX, and P0/P1 coverage artifacts in `paper-bundle`
+- final evidence matrix artifacts in `paper-bundle`
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
 - `paper-claim-audit` for mapping platform-paper claims to concrete files, result keys, commands, and artifacts
 - `paper-status` for a single-page summary of smoke, structural, final-input, and final-paper readiness
+- `paper-evidence-matrix` for mapping final experiments to blockers, commands, expected artifacts, and success criteria
 - machine-readable stable-worldmodel-style paper parity checklist in `configs/paper/paper_parity_checklist.json`
 - `paper-parity-audit` for separating smoke-level structural evidence from final-scale paper gaps
 - roadmap status JSON/Markdown artifacts in `paper-bundle`

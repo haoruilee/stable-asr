@@ -24,6 +24,7 @@ streaming ASR and voice-agent control:
 - final-run scaffold for directories and README hints without fake data
 - final-run file audit for missing real paper inputs
 - final-run action plan for the remaining data-staging and experiment commands
+- final evidence matrix linking final experiments to blockers and expected artifacts
 - machine-readable roadmap status for milestone evidence and planned final-scale work
 - repository doctor for environment, config, and final-input readiness checks
 - paper tables, figures, bundles, audits, and drafts
@@ -93,6 +94,7 @@ stable-asr final-config --config configs/final/paper_final.json --audit-voicewor
 stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands
 stable-asr final-config --config configs/final/paper_final.json --prepare-asr-transcript-conversions
 stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md
+stable-asr paper-evidence-matrix --output runs/final/FINAL_EVIDENCE_MATRIX.md
 stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only

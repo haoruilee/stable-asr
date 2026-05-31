@@ -30,6 +30,7 @@ The smoke run writes:
 - final-run scaffold for directories and README hints without fake data
 - final-run file audit showing which real paper inputs are still missing
 - final-run action plan showing the remaining data-staging and experiment commands
+- final evidence matrix linking final experiments to blockers, commands, success criteria, and artifacts
 - optional NanoTurn checkpoint and metrics
 - streaming ASR fixture metrics
 
@@ -65,6 +66,7 @@ stable-asr final-config --config configs/final/paper_final.json --prepare-asr-tr
 # Expected to report NOT_READY until final corpora, splits, external predictions, real VoiceWorld, and raw ASR exports exist.
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md
+stable-asr paper-evidence-matrix --output runs/final/FINAL_EVIDENCE_MATRIX.md
 stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
 stable-asr leaderboard-export --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/leaderboard.jsonl
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only
@@ -84,7 +86,7 @@ baseline/adapter registry, ASR reference collection, paper-reference, BibTeX, an
 case-study JSON/Markdown artifacts that link failure examples back to source
 records, a paper parity audit that separates smoke-level structural evidence
 from final-scale paper gaps, a final-scale experiment runbook, a final-run
-configuration template, a final-run file audit/action plan, a roadmap status report, and a claim evidence matrix
+configuration template, a final-run file audit/action plan, a final evidence matrix, a roadmap status report, and a claim evidence matrix
 that links platform-paper claims to files, result keys, artifacts, and
 reproduction commands. `PAPER_STATUS.md` summarizes these signals in one page.
 
