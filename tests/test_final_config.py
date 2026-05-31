@@ -6,6 +6,7 @@ from stable_asr.paper.final_config import (
     final_run_file_audit_markdown,
     final_run_config_markdown,
     load_final_run_config,
+    prepare_final_external_predictions,
     prepare_final_corpora,
     scaffold_final_run,
     validate_final_run_config,
@@ -204,3 +205,54 @@ def test_bootstrap_final_turn_splits_from_prepared_asr_manifest(tmp_path: Path) 
     assert (tmp_path / "runs/final/turn_train.jsonl").exists()
     assert (tmp_path / "runs/final/final_turn_bootstrap_summary.json").exists()
     assert "voiceworld_real remains" in report.to_text()
+
+
+def test_prepare_final_external_predictions_converts_and_validates(tmp_path: Path) -> None:
+    test_path = tmp_path / "runs/final/turn_test.jsonl"
+    raw_path = tmp_path / "runs/final/external/smartturn_raw.jsonl"
+    test_path.parent.mkdir(parents=True)
+    raw_path.parent.mkdir(parents=True)
+    test_path.write_text(
+        (
+            '{"id":"turn1","audio":"audio/1.wav","sample_rate":16000,"start":0.0,"end":1.0,'
+            '"turn_label":"complete","action_label":"take_turn","assistant_speaking":false,'
+            '"overlap":false,"language":"en","source":"unit"}\n'
+            '{"id":"turn2","audio":"audio/2.wav","sample_rate":16000,"start":0.0,"end":1.0,'
+            '"turn_label":"incomplete","action_label":"keep_listening","assistant_speaking":false,'
+            '"overlap":false,"language":"en","source":"unit"}\n'
+        ),
+        encoding="utf-8",
+    )
+    raw_path.write_text(
+        (
+            '{"id":"turn1","complete_probability":0.9}\n'
+            '{"id":"turn2","complete_probability":0.2}\n'
+        ),
+        encoding="utf-8",
+    )
+    config = load_final_run_config()
+    config["external_turn_predictions"] = [
+        {
+            "id": "smart_turn",
+            "schema": "smart_turn",
+            "raw": "runs/final/external/smartturn_raw.jsonl",
+            "converted": "runs/final/external/smartturn_predictions.jsonl",
+        },
+        {
+            "id": "missing_easy_turn",
+            "schema": "easyturn",
+            "raw": "runs/final/external/easyturn_raw.jsonl",
+            "converted": "runs/final/external/easyturn_predictions.jsonl",
+        },
+    ]
+
+    report = prepare_final_external_predictions(config, repo_root=tmp_path)
+
+    assert report.ok
+    assert report.dataset_records == 2
+    assert report.prepared_count == 1
+    assert report.skipped_count == 1
+    assert report.entries[0].coverage_checked
+    assert report.entries[0].missing_ids == 0
+    assert (tmp_path / "runs/final/external/smartturn_predictions.jsonl").exists()
+    assert "final_external_predictions_prepare: READY" in report.to_text()

@@ -270,6 +270,7 @@ is provided in `mkdocs.yaml`.
 - `final-config --check-files` for reporting which final paper inputs are still missing before expensive runs
 - `final-config --prepare-corpora` for preparing configured public ASR manifests from local corpus directories
 - `final-config --bootstrap-turn-splits` for creating weak train/dev/test turn splits from prepared final ASR manifests
+- `final-config --prepare-external-predictions` for normalizing configured SmartTurn/EasyTurn-style prediction exports
 - `leaderboard-export` for JSONL/CSV metric rows
 - machine-readable benchmark suite definition in `configs/benchmarks/stable_asr_v0.json`
 - `benchmark-suite` for validating and rendering benchmark suite definitions

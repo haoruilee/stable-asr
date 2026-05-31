@@ -62,6 +62,7 @@ from stable_asr.paper.final_config import (
     final_run_file_audit_markdown,
     final_run_config_markdown,
     load_final_run_config,
+    prepare_final_external_predictions,
     prepare_final_corpora,
     scaffold_final_run,
     validate_final_run_config,
@@ -832,6 +833,21 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-incomplete-turns",
         action="store_true",
         help="With --bootstrap-turn-splits, emit complete weak-turn records only.",
+    )
+    final_config_parser.add_argument(
+        "--prepare-external-predictions",
+        action="store_true",
+        help="Normalize configured external turn prediction exports and validate test coverage when possible.",
+    )
+    final_config_parser.add_argument(
+        "--require-all-predictions",
+        action="store_true",
+        help="With --prepare-external-predictions, fail if any raw prediction export is missing.",
+    )
+    final_config_parser.add_argument(
+        "--allow-extra-predictions",
+        action="store_true",
+        help="With --prepare-external-predictions, allow prediction rows outside the test split.",
     )
 
     leaderboard_parser = subparsers.add_parser(
@@ -2047,6 +2063,18 @@ def main(argv: list[str] | None = None) -> int:
                     config,
                     repo_root=args.repo_root,
                     include_incomplete=not args.no_incomplete_turns,
+                )
+                if args.json:
+                    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(report.to_text())
+                return 0 if report.ok else 1
+            if args.prepare_external_predictions:
+                report = prepare_final_external_predictions(
+                    config,
+                    repo_root=args.repo_root,
+                    require_all=args.require_all_predictions,
+                    allow_extra=args.allow_extra_predictions,
                 )
                 if args.json:
                     print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))

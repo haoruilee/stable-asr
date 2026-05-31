@@ -46,6 +46,7 @@ stable-asr reproduce-paper --config configs/paper/paper_smoke.json
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
 stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits
+stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts

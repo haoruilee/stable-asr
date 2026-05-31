@@ -81,6 +81,7 @@ stable-asr final-config --config configs/final/paper_final.json --output runs/pa
 stable-asr final-config --config configs/final/paper_final.json --scaffold
 stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
 stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits
+stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --results runs/paper/smoke/paper_results.json --validate-only

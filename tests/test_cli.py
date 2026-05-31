@@ -944,6 +944,55 @@ def test_final_config_cli_bootstrap_turn_splits(tmp_path, capsys) -> None:
     assert (tmp_path / "runs/final/turn_train.jsonl").exists()
 
 
+def test_final_config_cli_prepare_external_predictions(tmp_path, capsys) -> None:
+    test_path = tmp_path / "runs/final/turn_test.jsonl"
+    raw_path = tmp_path / "runs/final/external/smartturn_raw.jsonl"
+    test_path.parent.mkdir(parents=True)
+    raw_path.parent.mkdir(parents=True)
+    test_path.write_text(
+        (
+            '{"id":"turn1","audio":"audio/1.wav","sample_rate":16000,"start":0.0,"end":1.0,'
+            '"turn_label":"complete","action_label":"take_turn","assistant_speaking":false,'
+            '"overlap":false,"language":"en","source":"unit"}\n'
+        ),
+        encoding="utf-8",
+    )
+    raw_path.write_text('{"id":"turn1","complete_probability":0.9}\n', encoding="utf-8")
+    config = tmp_path / "paper_final.json"
+    config.write_text(
+        (
+            '{"id":"stable_asr_final_run_v0","version":"0.1.0","title":"Final",'
+            '"output_dir":"runs/final","seed":0,'
+            '"public_corpora":[{"id":"librispeech_dev_clean","language":"en","corpus":"librispeech",'
+            '"input_dir":"data/librispeech/LibriSpeech/dev-clean",'
+            '"manifest":"runs/final/librispeech_dev_clean/asr_manifest.jsonl",'
+            '"sample_rate":16000,"license":"test"}],'
+            '"turn_splits":{"train":"runs/final/turn_train.jsonl","dev":"runs/final/turn_dev.jsonl",'
+            '"test":"runs/final/turn_test.jsonl","voiceworld_real":"runs/final/voiceworld_real.jsonl"},'
+            '"external_turn_predictions":[{"id":"smart_turn","schema":"smart_turn",'
+            '"raw":"runs/final/external/smartturn_raw.jsonl",'
+            '"converted":"runs/final/external/smartturn_predictions.jsonl"}],'
+            '"asr_command_config":"configs/final/asr_command_compare.json",'
+            '"nanoturn":{"model":"nanoturn_pico","checkpoint":"runs/final/nanoturn/checkpoint.pt",'
+            '"metrics":"runs/final/nanoturn/metrics.json","onnx":"runs/final/nanoturn/nanoturn.onnx"},'
+            '"artifacts":{"paper_results":"runs/final/paper_results.json","bundle_dir":"runs/final/artifacts",'
+            '"markdown_draft":"runs/final/PAPER_DRAFT.md","latex_draft":"runs/final/paper.tex",'
+            '"dataset_card":"runs/final/DATASET_CARD.md","experiment_card":"runs/final/EXPERIMENT_CARD.md"},'
+            '"commands":["stable-asr final-config --validate-only"]}\n'
+        ),
+        encoding="utf-8",
+    )
+
+    code = main(
+        ["final-config", "--config", str(config), "--repo-root", str(tmp_path), "--prepare-external-predictions"]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "final_external_predictions_prepare: READY" in captured.out
+    assert (tmp_path / "runs/final/external/smartturn_predictions.jsonl").exists()
+
+
 def test_adapter_registry_cli(tmp_path, capsys) -> None:
     output = tmp_path / "ADAPTERS.md"
     code = main(["adapter-registry", "--output", str(output)])

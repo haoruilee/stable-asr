@@ -9,10 +9,11 @@ from typing import Any
 
 from stable_asr.data.asr_manifest import load_asr_manifest, summarize_asr_records
 from stable_asr.data.recipes import prepare_asr_manifest, prepare_public_asr_manifest
-from stable_asr.data.registry import summarize_records, write_turn_records
+from stable_asr.data.registry import load_turn_records, summarize_records, write_turn_records
 from stable_asr.data.split import SPLIT_NAMES, TurnSplitConfig, split_turn_records
 from stable_asr.data.turn_from_asr import ASRToTurnConfig, asr_records_to_turn_records
 from stable_asr.eval.report import dict_table
+from stable_asr.models.adapters import convert_turn_prediction_jsonl, validate_turn_prediction_jsonl
 from stable_asr.resources import resolve_platform_path
 
 
@@ -115,6 +116,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr prepare-public-asr --corpus wenetspeech --input-dir data/wenetspeech/WenetSpeech --split dev --output runs/final/wenetspeech_dev/asr_manifest.jsonl",
         "stable-asr prepare-public-asr --corpus common_voice --input-dir data/common_voice/en --split dev --output runs/final/common_voice_en_dev/asr_manifest.jsonl",
         "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits",
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
@@ -324,6 +326,98 @@ class FinalTurnBootstrapReport:
         ]
         for name in SPLIT_NAMES:
             lines.append(f"- {name}: {self.split_counts.get(name, 0)} record(s) -> {self.split_paths.get(name, '')}")
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class FinalExternalPredictionEntry:
+    id: str
+    schema: str
+    raw: str
+    converted: str
+    converted_records: int
+    ok: bool
+    skipped: bool
+    coverage_checked: bool
+    missing_ids: int
+    extra_ids: int
+    detail: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "id": self.id,
+            "schema": self.schema,
+            "raw": self.raw,
+            "converted": self.converted,
+            "converted_records": self.converted_records,
+            "ok": self.ok,
+            "skipped": self.skipped,
+            "coverage_checked": self.coverage_checked,
+            "missing_ids": self.missing_ids,
+            "extra_ids": self.extra_ids,
+            "detail": self.detail,
+        }
+
+
+@dataclass(frozen=True)
+class FinalExternalPredictionReport:
+    ok: bool
+    dataset_path: str
+    dataset_records: int
+    require_all: bool
+    entries: list[FinalExternalPredictionEntry]
+
+    @property
+    def prepared_count(self) -> int:
+        return sum(1 for entry in self.entries if entry.ok and not entry.skipped)
+
+    @property
+    def skipped_count(self) -> int:
+        return sum(1 for entry in self.entries if entry.skipped)
+
+    @property
+    def failed_count(self) -> int:
+        return sum(1 for entry in self.entries if not entry.ok and not entry.skipped)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "dataset_path": self.dataset_path,
+            "dataset_records": self.dataset_records,
+            "require_all": self.require_all,
+            "prepared_count": self.prepared_count,
+            "skipped_count": self.skipped_count,
+            "failed_count": self.failed_count,
+            "entries": [entry.to_dict() for entry in self.entries],
+        }
+
+    def to_text(self) -> str:
+        if self.ok and self.prepared_count:
+            status = "READY"
+        elif self.ok:
+            status = "NO_INPUTS"
+        else:
+            status = "FAILED"
+        lines = [
+            f"final_external_predictions_prepare: {status}",
+            f"- dataset: {self.dataset_path}",
+            f"- dataset_records: {self.dataset_records}",
+            f"- prepared: {self.prepared_count}",
+            f"- skipped: {self.skipped_count}",
+            f"- failed: {self.failed_count}",
+        ]
+        for entry in self.entries:
+            if entry.ok and not entry.skipped:
+                entry_status = "PREPARED"
+            elif entry.skipped:
+                entry_status = "SKIPPED"
+            else:
+                entry_status = "FAILED"
+            coverage = "coverage checked" if entry.coverage_checked else "coverage skipped"
+            lines.append(
+                f"- {entry_status} {entry.id}: {entry.converted_records} record(s) -> "
+                f"{entry.converted} ({coverage}; {entry.detail})"
+            )
         return "\n".join(lines)
 
 
@@ -800,6 +894,109 @@ def bootstrap_final_turn_splits(
         split_paths={name: str(path) for name, path in split_paths.items()},
         split_counts=split_counts,
         detail=f"summary written to {summary_path}; voiceworld_real remains a required real scenario input",
+    )
+
+
+def prepare_final_external_predictions(
+    config: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+    require_all: bool = False,
+    allow_extra: bool = False,
+) -> FinalExternalPredictionReport:
+    """Normalize configured external turn prediction exports and validate coverage when possible."""
+
+    validation = validate_final_run_config(config)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    root = Path(repo_root)
+    dataset_path = _resolve(str(config["turn_splits"]["test"]), root=root)
+    dataset_records = load_turn_records(dataset_path, format="jsonl") if dataset_path.exists() else []
+    entries: list[FinalExternalPredictionEntry] = []
+
+    for prediction in config.get("external_turn_predictions", []):
+        prediction_id = str(prediction["id"])
+        schema = str(prediction["schema"])
+        raw_path = _resolve(str(prediction["raw"]), root=root)
+        converted_path = _resolve(str(prediction["converted"]), root=root)
+        if not raw_path.exists():
+            entries.append(
+                FinalExternalPredictionEntry(
+                    id=prediction_id,
+                    schema=schema,
+                    raw=str(raw_path),
+                    converted=str(converted_path),
+                    converted_records=0,
+                    ok=not require_all,
+                    skipped=True,
+                    coverage_checked=False,
+                    missing_ids=0,
+                    extra_ids=0,
+                    detail="missing raw prediction export",
+                )
+            )
+            continue
+        try:
+            converted_count = convert_turn_prediction_jsonl(raw_path, converted_path, schema=schema)
+            coverage_checked = False
+            missing_ids = 0
+            extra_ids = 0
+            detail = "converted"
+            ok = True
+            if dataset_records:
+                coverage = validate_turn_prediction_jsonl(
+                    dataset_records,
+                    converted_path,
+                    allow_extra=allow_extra,
+                    dataset_path=dataset_path,
+                )
+                coverage_checked = True
+                missing_ids = len(coverage.missing_ids)
+                extra_ids = len(coverage.extra_ids)
+                ok = coverage.ok
+                detail = "converted and coverage checked" if coverage.ok else "coverage validation failed"
+            else:
+                detail = "converted; coverage skipped because turn_test is missing"
+            entries.append(
+                FinalExternalPredictionEntry(
+                    id=prediction_id,
+                    schema=schema,
+                    raw=str(raw_path),
+                    converted=str(converted_path),
+                    converted_records=converted_count,
+                    ok=ok,
+                    skipped=False,
+                    coverage_checked=coverage_checked,
+                    missing_ids=missing_ids,
+                    extra_ids=extra_ids,
+                    detail=detail,
+                )
+            )
+        except (OSError, ValueError) as exc:
+            entries.append(
+                FinalExternalPredictionEntry(
+                    id=prediction_id,
+                    schema=schema,
+                    raw=str(raw_path),
+                    converted=str(converted_path),
+                    converted_records=0,
+                    ok=False,
+                    skipped=False,
+                    coverage_checked=False,
+                    missing_ids=0,
+                    extra_ids=0,
+                    detail=str(exc),
+                )
+            )
+
+    ok = all(entry.ok for entry in entries) and (not require_all or not any(entry.skipped for entry in entries))
+    return FinalExternalPredictionReport(
+        ok=ok,
+        dataset_path=str(dataset_path),
+        dataset_records=len(dataset_records),
+        require_all=require_all,
+        entries=entries,
     )
 
 
