@@ -118,6 +118,11 @@ from stable_asr.paper.parity import (
     paper_parity_markdown,
     validate_paper_parity_checklist,
 )
+from stable_asr.paper.platform_parity import (
+    audit_platform_parity,
+    load_platform_parity,
+    validate_platform_parity,
+)
 from stable_asr.paper.scenario_pack import build_scenario_pack
 from stable_asr.paper.status import paper_status, write_paper_status_markdown
 from stable_asr.paper.submissions import build_streaming_submission, build_turn_submission, index_submission_directory
@@ -1039,6 +1044,16 @@ def build_parser() -> argparse.ArgumentParser:
     parity_parser.add_argument("--json", action="store_true")
     parity_parser.add_argument("--validate-only", action="store_true")
     parity_parser.add_argument("--require-final", action="store_true", help="Fail if final-scale requirements remain.")
+
+    platform_parity_parser = subparsers.add_parser(
+        "platform-parity",
+        help="Audit Stable-ASR repository structure against the stable-worldmodel-style platform shape.",
+    )
+    platform_parity_parser.add_argument("--registry", type=Path, help="Optional platform parity registry JSON path.")
+    platform_parity_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    platform_parity_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    platform_parity_parser.add_argument("--json", action="store_true")
+    platform_parity_parser.add_argument("--validate-only", action="store_true")
 
     final_experiments_parser = subparsers.add_parser(
         "final-experiments",
@@ -2743,6 +2758,31 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         return 0 if report.ok and (report.final_ready or not args.require_final) else 1
+
+    if args.command == "platform-parity":
+        try:
+            registry = load_platform_parity(args.registry)
+            validation = validate_platform_parity(registry)
+            if not validation.ok:
+                print(validation.to_text(), file=sys.stderr)
+                return 1
+            if args.validate_only:
+                print(f"OK: {registry['id']} ({len(registry['items'])} item(s))")
+                return 0
+            report = audit_platform_parity(registry, repo_root=args.repo_root)
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(report.to_markdown() + "\n", encoding="utf-8")
+            if args.json:
+                print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            else:
+                print(report.to_text())
+                if args.output:
+                    print(f"platform_parity_markdown: {args.output}")
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0 if report.ok else 1
 
     if args.command == "final-experiments":
         try:

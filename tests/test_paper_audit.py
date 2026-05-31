@@ -18,6 +18,8 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "paper_audit: OK" in report.to_text()
     assert "results:json" in report.to_text()
     assert "benchmark_suite:required_artifacts" in report.to_text()
+    assert "platform_parity:json" in report.to_text()
+    assert "platform_parity:markdown" in report.to_text()
     assert "leaderboard_report:markdown" in report.to_text()
     assert "artifact_integrity:sha256" in report.to_text()
     assert "provenance:json" in report.to_text()
@@ -123,6 +125,7 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "scenario/scenario_suite_schema" in text
     assert "adapter/adapter_registry_schema" in text
     assert "paper/paper_parity_schema" in text
+    assert "OK software/platform_parity_checklist" in text
     assert "paper/final_experiments_schema" in text
     assert "paper/final_run_config_schema" in text
     assert "reference/asr_collections_schema" in text

@@ -13,6 +13,7 @@ def test_doctor_accepts_repository_configs() -> None:
     assert any(check.name == "schema_registry" and check.ok for check in report.checks)
     assert any(check.name == "asr_collections" and check.ok for check in report.checks)
     assert any(check.name == "turn_collections" and check.ok for check in report.checks)
+    assert any(check.name == "platform_parity" and check.ok for check in report.checks)
     assert any(check.name == "final_run" and check.ok for check in report.checks)
 
 

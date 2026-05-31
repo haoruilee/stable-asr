@@ -15,6 +15,7 @@ from stable_asr.models.adapters.registry import load_adapter_registry, validate_
 from stable_asr.paper.final_config import audit_final_run_files, load_final_run_config, validate_final_run_config
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
 from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_parity_checklist
+from stable_asr.paper.platform_parity import load_platform_parity, validate_platform_parity
 from stable_asr.paper.suites import load_benchmark_suite, validate_benchmark_suite
 from stable_asr.references import (
     load_asr_collections,
@@ -234,6 +235,12 @@ def _config_checks(repo_root: Path) -> list[DoctorCheck]:
             "paper_parity",
             repo_root / "configs" / "paper" / "paper_parity_checklist.json",
             lambda path: validate_paper_parity_checklist(load_paper_parity_checklist(path)).to_text(),
+        ),
+        _schema_check(
+            "config",
+            "platform_parity",
+            repo_root / "configs" / "platform" / "stable_worldmodel_parity.json",
+            lambda path: validate_platform_parity(load_platform_parity(path)).to_text(),
         ),
         _schema_check(
             "config",

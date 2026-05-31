@@ -59,6 +59,12 @@ from stable_asr.paper.provenance import (
     write_paper_provenance,
 )
 from stable_asr.paper.release_smoke import PaperReleaseSmokeResult, run_paper_release_smoke
+from stable_asr.paper.platform_parity import (
+    PlatformParityReport,
+    audit_platform_parity,
+    load_platform_parity,
+    validate_platform_parity,
+)
 from stable_asr.paper.scenario_pack import ScenarioPackReport, build_scenario_pack
 from stable_asr.paper.submissions import SubmissionIndexReport, index_submission_directory
 from stable_asr.paper.suites import (
@@ -97,6 +103,7 @@ __all__ = [
     "PaperReleaseAuditCheck",
     "PaperReleaseAuditReport",
     "PaperReleaseSmokeResult",
+    "PlatformParityReport",
     "PaperRunResult",
     "FinalResultsAssemblyReport",
     "FinalRunActionPlan",
@@ -114,6 +121,7 @@ __all__ = [
     "artifact_integrity_manifest",
     "audit_paper_artifacts",
     "audit_paper_release",
+    "audit_platform_parity",
     "build_final_run_action_plan",
     "build_adapter_pack",
     "build_benchmark_pack",
@@ -142,6 +150,7 @@ __all__ = [
     "final_evidence_matrix",
     "final_input_collection_report",
     "load_final_input_collections",
+    "load_platform_parity",
     "paper_figure",
     "paper_latex",
     "paper_table",
@@ -150,6 +159,7 @@ __all__ = [
     "validate_benchmark_suite",
     "validate_leaderboard_jsonl",
     "validate_final_input_collections",
+    "validate_platform_parity",
     "verify_artifact_integrity",
     "verify_paper_artifact_archive",
     "write_artifact_integrity",

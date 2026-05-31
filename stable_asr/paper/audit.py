@@ -620,6 +620,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
         "issue_template_benchmark_submission": ".github/ISSUE_TEMPLATE/benchmark_submission.yml",
         "paper_config": "configs/paper/paper_smoke.json",
         "paper_parity_checklist": "configs/paper/paper_parity_checklist.json",
+        "platform_parity_checklist": "configs/platform/stable_worldmodel_parity.json",
         "final_experiments": "configs/paper/final_experiments.json",
         "final_run_config": "configs/final/paper_final.json",
         "final_asr_command_config": "configs/final/asr_command_compare.json",
@@ -711,6 +712,7 @@ def _wheel_data_files_check(path: Path) -> PaperReleaseAuditCheck:
         "share/stable-asr/configs/datasets",
         "share/stable-asr/configs/final",
         "share/stable-asr/configs/paper",
+        "share/stable-asr/configs/platform",
         "share/stable-asr/configs/references",
         "share/stable-asr/configs/roadmap",
         "share/stable-asr/configs/scenarios",
@@ -741,6 +743,7 @@ def _ci_wheel_smoke_check(path: Path) -> PaperReleaseAuditCheck:
         "python -m venv",
         "stable-asr-wheel-venv/bin/stable-asr doctor",
         "stable-asr-wheel-venv/bin/stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only",
+        "stable-asr-wheel-venv/bin/stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only",
         "stable-asr-wheel-venv/bin/stable-asr asr-collections --registry configs/references/asr_collections.json --audit-coverage",
         "stable-asr-wheel-venv/bin/stable-asr turn-collections --registry configs/references/turn_collections.json --audit-coverage",
         "stable-asr-wheel-venv/bin/stable-asr paper-release-smoke --output-dir /tmp/stable-asr-wheel-release-smoke --episodes 9 --seed 6 --skip-train",
@@ -1144,6 +1147,8 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("case_studies:markdown", artifacts_dir / "CASE_STUDIES.md"))
     checks.append(_exists_check("paper_parity:json", artifacts_dir / "paper_parity.json"))
     checks.append(_exists_check("paper_parity:markdown", artifacts_dir / "PAPER_PARITY.md"))
+    checks.append(_exists_check("platform_parity:json", artifacts_dir / "platform_parity.json"))
+    checks.append(_exists_check("platform_parity:markdown", artifacts_dir / "PLATFORM_PARITY.md"))
     checks.append(_exists_check("final_experiments:json", artifacts_dir / "final_experiments.json"))
     checks.append(_exists_check("final_experiments:markdown", artifacts_dir / "FINAL_EXPERIMENTS.md"))
     checks.append(_exists_check("final_input_collections:json", artifacts_dir / "final_input_collections.json"))

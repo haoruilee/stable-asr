@@ -59,6 +59,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert set(bundle.scenario_suite) == {"json", "markdown"}
     assert set(bundle.case_studies) == {"json", "markdown"}
     assert set(bundle.paper_parity) == {"json", "markdown"}
+    assert set(bundle.platform_parity) == {"json", "markdown"}
     assert set(bundle.final_experiments) == {"json", "markdown"}
     assert set(bundle.final_input_collections) == {"json", "audit_json", "markdown"}
     assert set(bundle.final_run_config) == {"json", "markdown"}
@@ -120,6 +121,10 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR VoiceWorld v0 Scenario Suite" in Path(bundle.scenario_suite["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Case Studies" in Path(bundle.case_studies["markdown"]).read_text(encoding="utf-8")
     assert "final-scale ready" in Path(bundle.paper_parity["markdown"]).read_text(encoding="utf-8")
+    assert "Stable-ASR Stable-WorldModel Repository Parity" in Path(bundle.platform_parity["markdown"]).read_text(
+        encoding="utf-8"
+    )
+    assert "repository_identity" in Path(bundle.platform_parity["json"]).read_text(encoding="utf-8")
     assert "real_data_layer_benchmark" in Path(bundle.final_experiments["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Final Input Collections" in Path(bundle.final_input_collections["markdown"]).read_text(encoding="utf-8")
     assert "stable_asr_final_input_collections_v0" in Path(bundle.final_input_collections["json"]).read_text(encoding="utf-8")
@@ -130,6 +135,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "final_run_action_plan" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "final_input_collections" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "final_evidence_matrix" in Path(bundle.manifest_path).read_text(encoding="utf-8")
+    assert "platform_parity" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "model_cards" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "schema_registry" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "turn_collections" in Path(bundle.manifest_path).read_text(encoding="utf-8")

@@ -15,7 +15,9 @@ nav:
   - Quick Start: quick_start.md
   - CLI: cli.md
   - Baselines: baselines.md
+  - VoiceWorld: voiceworld.md
   - Data Schema: schema.md
+  - Platform Parity: platform_parity.md
   - Paper Pipeline: paper_pipeline.md
   - Release Gates: release_gates.md
   - Final Inputs: final_inputs.md

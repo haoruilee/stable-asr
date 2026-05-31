@@ -28,6 +28,7 @@ def test_doctor_cli(capsys) -> None:
     assert "config/schema_registry" in captured.out
     assert "config/asr_collections" in captured.out
     assert "config/turn_collections" in captured.out
+    assert "config/platform_parity" in captured.out
 
 
 def test_doctor_cli_with_final_file_check(capsys) -> None:
@@ -83,6 +84,23 @@ def test_roadmap_status_cli(capsys, tmp_path) -> None:
     assert "Stable-ASR Platform Roadmap" in captured.out
     assert output.exists()
     assert "m2_data_reference_layer" in output.read_text(encoding="utf-8")
+
+
+def test_platform_parity_cli(capsys, tmp_path) -> None:
+    code = main(["platform-parity", "--registry", "configs/platform/stable_worldmodel_parity.json", "--validate-only"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "stable_asr_stable_worldmodel_parity_v0" in captured.out
+
+    output = tmp_path / "PLATFORM_PARITY.md"
+    code = main(["platform-parity", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "platform_parity_audit: OK" in captured.out
+    assert output.exists()
+    assert "Stable-ASR Stable-WorldModel Repository Parity" in output.read_text(encoding="utf-8")
 
 
 def test_schema_registry_cli(capsys, tmp_path) -> None:

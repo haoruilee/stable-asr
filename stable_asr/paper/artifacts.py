@@ -38,6 +38,7 @@ from stable_asr.paper.final_inputs import (
 from stable_asr.paper.integrity import artifact_integrity_manifest, write_artifact_integrity
 from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_report, validate_leaderboard_jsonl
 from stable_asr.paper.parity import audit_paper_parity, load_paper_parity_checklist, paper_parity_markdown
+from stable_asr.paper.platform_parity import audit_platform_parity
 from stable_asr.paper.provenance import paper_bundle_provenance, write_paper_provenance
 from stable_asr.paper.status import paper_status, write_paper_status_json, write_paper_status_markdown
 from stable_asr.paper.suites import benchmark_suite_markdown, load_benchmark_suite, write_benchmark_suite_json
@@ -99,6 +100,7 @@ class PaperArtifactBundle:
     scenario_suite: dict[str, str]
     case_studies: dict[str, str]
     paper_parity: dict[str, str]
+    platform_parity: dict[str, str]
     final_experiments: dict[str, str]
     final_input_collections: dict[str, str]
     final_run_config: dict[str, str]
@@ -134,6 +136,7 @@ class PaperArtifactBundle:
             "scenario_suite": self.scenario_suite,
             "case_studies": self.case_studies,
             "paper_parity": self.paper_parity,
+            "platform_parity": self.platform_parity,
             "final_experiments": self.final_experiments,
             "final_input_collections": self.final_input_collections,
             "final_run_config": self.final_run_config,
@@ -362,6 +365,16 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         encoding="utf-8",
     )
     Path(paper_parity["markdown"]).write_text(paper_parity_markdown(parity_report), encoding="utf-8")
+    platform_report = audit_platform_parity(repo_root=Path("."))
+    platform_parity = {
+        "json": str(output_dir / "platform_parity.json"),
+        "markdown": str(output_dir / "PLATFORM_PARITY.md"),
+    }
+    Path(platform_parity["json"]).write_text(
+        json.dumps(platform_report.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(platform_parity["markdown"]).write_text(platform_report.to_markdown(), encoding="utf-8")
     final_experiment_registry = load_final_experiments()
     final_experiments = {
         "json": write_final_experiments_json(output_dir / "final_experiments.json", final_experiment_registry),
@@ -468,6 +481,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         scenario_suite=scenario_suite,
         case_studies=case_studies,
         paper_parity=paper_parity,
+        platform_parity=platform_parity,
         final_experiments=final_experiments,
         final_input_collections=final_input_collections,
         final_run_config=final_run_config,
@@ -509,6 +523,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         scenario_suite=scenario_suite,
         case_studies=case_studies,
         paper_parity=paper_parity,
+        platform_parity=platform_parity,
         final_experiments=final_experiments,
         final_input_collections=final_input_collections,
         final_run_config=final_run_config,
@@ -594,6 +609,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
     lines.extend(["", "## Paper Parity", ""])
     for name, path in bundle.paper_parity.items():
         lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Platform Parity", ""])
+    for name, path in bundle.platform_parity.items():
+        lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Final Experiments", ""])
     for name, path in bundle.final_experiments.items():
         lines.append(f"- `{name}`: `{path}`")
@@ -676,6 +694,7 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.scenario_suite,
         bundle.case_studies,
         bundle.paper_parity,
+        bundle.platform_parity,
         bundle.final_experiments,
         bundle.final_input_collections,
         bundle.final_run_config,

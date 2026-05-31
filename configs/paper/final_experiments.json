@@ -219,6 +219,7 @@
       "metrics": [
         "paper_release_audit",
         "paper_parity_audit",
+        "platform_parity_audit",
         "benchmark_suite_coverage",
         "claim_audit"
       ],
@@ -229,6 +230,8 @@
         "artifact_hashes.json",
         "PROVENANCE.md",
         "PAPER_PARITY.md",
+        "PLATFORM_PARITY.md",
+        "platform_parity.json",
         "FINAL_INPUT_COLLECTIONS.md",
         "CLAIMS.md",
         "MODEL_CARD.md",

@@ -58,6 +58,7 @@ python -m pip install -e ".[lance,train]"  # paper-release-smoke READY path
 ```bash
 # 1. Inspect data and compare turn-taking baselines
 stable-asr doctor
+stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only
 stable-asr validate-manifest examples/data/turn_demo.jsonl
 stable-asr compare-turn \
   --dataset examples/data/turn_demo.jsonl \
@@ -164,7 +165,7 @@ stable-asr paper-release-audit \
 
 `paper-release-smoke` writes `paper_results.json`, tables, figures, starter packs, registry
 artifacts, a copied `paper_results.json`, artifact hash manifests, provenance
-manifests, case studies, final-run audits/action plans, final input collection
+manifests, case studies, paper/platform parity audits, final-run audits/action plans, final input collection
 status, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
 dataset/experiment/model cards, `artifacts.tar.gz`, and
 `RELEASE_AUDIT.md`.
@@ -191,6 +192,8 @@ is provided in `mkdocs.yaml`.
 - `doctor` command for environment, optional dependency, config, and final-input readiness checks
 - machine-readable roadmap registry in `configs/roadmap/stable_asr_roadmap.json`
 - `roadmap-status` for validating and rendering current milestone evidence without claiming final-scale completion
+- machine-readable stable-worldmodel-style repository parity registry in `configs/platform/stable_worldmodel_parity.json`
+- `platform-parity` for auditing install, data, scenarios, baselines, paper/release, contributor, and reference-collection repository surfaces
 - JSONL turn manifest validation
 - canonical turn/action labels
 - core turn dataclasses
@@ -297,6 +300,8 @@ is provided in `mkdocs.yaml`.
 - `paper-evidence-matrix` for mapping final experiments to blockers, commands, expected artifacts, and success criteria
 - machine-readable stable-worldmodel-style paper parity checklist in `configs/paper/paper_parity_checklist.json`
 - `paper-parity-audit` for separating smoke-level structural evidence from final-scale paper gaps
+- machine-readable stable-worldmodel-style platform parity registry in `configs/platform/stable_worldmodel_parity.json`
+- platform parity JSON/Markdown artifacts in `paper-bundle`
 - roadmap status JSON/Markdown artifacts in `paper-bundle`
 - machine-readable final-scale experiment runbook in `configs/paper/final_experiments.json`
 - `final-experiments` for rendering final paper experiment inputs, commands, metrics, artifacts, and success criteria

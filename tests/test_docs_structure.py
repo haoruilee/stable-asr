@@ -8,7 +8,9 @@ def test_mkdocs_nav_targets_exist() -> None:
         "docs/quick_start.md",
         "docs/cli.md",
         "docs/baselines.md",
+        "docs/voiceworld.md",
         "docs/schema.md",
+        "docs/platform_parity.md",
         "docs/paper_pipeline.md",
         "docs/release_gates.md",
         "docs/final_inputs.md",
@@ -34,6 +36,8 @@ def test_docs_index_links_platform_sections() -> None:
     assert "quick_start.md" in text
     assert "cli.md" in text
     assert "baselines.md" in text
+    assert "voiceworld.md" in text
+    assert "platform_parity.md" in text
     assert "final_inputs.md" in text
     assert "turn_collections.md" in text
     assert "api/data.md" in text

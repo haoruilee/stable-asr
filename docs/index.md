@@ -36,6 +36,7 @@ streaming ASR and voice-agent control:
 - machine-readable roadmap status for milestone evidence and planned final-scale work
 - repository doctor for environment, config, and final-input readiness checks
 - paper tables, figures, bundles, audits, and drafts
+- repository-level platform parity audit against the stable-worldmodel-style platform shape
 
 Stable-ASR is not intended to replace full ASR toolkits such as ESPnet, FunASR,
 WeNet, or NeMo. It provides the missing reproducibility layer for comparing
@@ -48,6 +49,8 @@ stable-asr doctor
 stable-asr doctor --check-release-env
 stable-asr doctor --check-final-files
 stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
+stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only
+stable-asr platform-parity --output runs/PLATFORM_PARITY.md
 stable-asr validate-manifest examples/data/turn_demo.jsonl
 stable-asr convert examples/data/turn_demo.jsonl runs/turn_demo.lance
 stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report runs/turn_profile.md
@@ -137,6 +140,8 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --resul
 - [Quick start](quick_start.md)
 - [CLI](cli.md)
 - [Baselines](baselines.md)
+- [VoiceWorld](voiceworld.md)
+- [Platform parity](platform_parity.md)
 - [Paper pipeline](paper_pipeline.md)
 - [Release gates](release_gates.md)
 - [Final inputs](final_inputs.md)

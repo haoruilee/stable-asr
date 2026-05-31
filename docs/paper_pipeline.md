@@ -55,6 +55,7 @@ stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifact
 stable-asr paper-case-studies --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output-dir runs/paper/smoke/artifacts
 stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
+stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --output runs/paper/smoke/artifacts/PLATFORM_PARITY.md
 stable-asr final-experiments --registry configs/paper/final_experiments.json --output runs/paper/smoke/artifacts/FINAL_EXPERIMENTS.md
 stable-asr final-config --config configs/final/paper_final.json --output runs/paper/smoke/artifacts/FINAL_RUN_CONFIG.md
 stable-asr final-config --config configs/final/paper_final.json --scaffold
@@ -100,7 +101,8 @@ machine-readable benchmark suite definition, a data source registry, a
 baseline/adapter registry, ASR and turn/full-duplex reference collections, paper-reference, BibTeX, coverage artifacts, readiness artifacts, acquisition plans, a VoiceWorld scenario suite definition, and
 case-study JSON/Markdown artifacts that link failure examples back to source
 records, a paper parity audit that separates smoke-level structural evidence
-from final-scale paper gaps, a final-scale experiment runbook, a final-run
+from final-scale paper gaps, a repository-level stable-worldmodel platform
+parity audit, a final-scale experiment runbook, a final-run
 configuration template, a final-run file audit/action plan, a final evidence matrix, a roadmap status report, and a claim evidence matrix
 that links platform-paper claims to files, result keys, artifacts, and
 reproduction commands. `PAPER_STATUS.md` summarizes these signals in one page.
@@ -123,6 +125,10 @@ benchmark artifact requirements. `paper-release-audit` checks whether the
 repository has enough evidence for a platform paper release. `paper-parity-audit`
 checks whether each stable-worldmodel-style paper element has structural
 evidence and lists the remaining final-scale experiment requirements.
+`platform-parity` checks whether the repository has the stable-worldmodel-style
+platform surfaces expected by Stable-ASR: install/CLI, data formats,
+VoiceWorld scenarios, baseline/solver zoo, release artifacts, contributor
+packs, and reference collections.
 `paper-release-smoke` runs the full smoke pipeline, creates drafts and cards,
 and writes `release_audit.json` plus `RELEASE_AUDIT.md` in one command. Use
 `--skip-train` for a faster structural check that does not train NanoTurn, and
