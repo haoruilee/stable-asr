@@ -33,3 +33,20 @@ def test_final_evidence_matrix_artifact_checks_are_serializable(tmp_path: Path) 
         for experiment in payload["experiments"]
         for artifact in experiment["expected_artifacts"]
     )
+
+
+def test_final_evidence_matrix_maps_archive_to_final_config_path() -> None:
+    report = final_evidence_matrix()
+    reproducibility = next(experiment for experiment in report.experiments if experiment.id == "final_reproducibility_bundle")
+    archive = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "artifacts.tar.gz")
+
+    assert archive.path == "runs/final/artifacts.tar.gz"
+
+
+def test_final_evidence_matrix_maps_archive_next_to_explicit_artifacts_dir(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "artifacts"
+    report = final_evidence_matrix(artifacts_dir=artifact_root)
+    reproducibility = next(experiment for experiment in report.experiments if experiment.id == "final_reproducibility_bundle")
+    archive = next(artifact for artifact in reproducibility.expected_artifacts if artifact.name == "artifacts.tar.gz")
+
+    assert archive.path == str(tmp_path / "artifacts.tar.gz")

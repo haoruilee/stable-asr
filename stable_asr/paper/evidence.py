@@ -277,7 +277,11 @@ def _artifact_path(
         "MODEL_CARD.md": config["artifacts"].get("model_card"),
         "paper.tex": config["artifacts"].get("latex_draft"),
         "PAPER_DRAFT.md": config["artifacts"].get("markdown_draft"),
+        "artifacts.tar.gz": config["artifacts"].get("artifact_archive"),
+        "artifacts.tar.gz.sha256": _archive_sha256_path(config["artifacts"].get("artifact_archive")),
     }
+    if artifact_root is not None and name in {"artifacts.tar.gz", "artifacts.tar.gz.sha256"}:
+        return artifact_root.parent / name
     if name in artifact_map and artifact_map[name]:
         return _resolve(str(artifact_map[name]), root=root)
     if artifact_root is not None:
@@ -286,6 +290,12 @@ def _artifact_path(
     if isinstance(bundle_dir, str) and bundle_dir:
         return _resolve(bundle_dir, root=root) / name
     return None
+
+
+def _archive_sha256_path(archive_path: Any) -> str | None:
+    if not isinstance(archive_path, str) or not archive_path:
+        return None
+    return archive_path + ".sha256"
 
 
 def _experiment_markdown(experiment: FinalEvidenceExperiment) -> list[str]:
