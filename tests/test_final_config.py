@@ -2,6 +2,7 @@ from pathlib import Path
 
 from stable_asr.paper.final_config import (
     audit_final_run_files,
+    bootstrap_final_turn_splits,
     final_run_file_audit_markdown,
     final_run_config_markdown,
     load_final_run_config,
@@ -165,3 +166,41 @@ def test_prepare_final_corpora_require_all_fails_on_missing_input(tmp_path: Path
     assert report.prepared_count == 0
     assert report.skipped_count == 1
     assert "final_corpora_prepare: FAILED" in report.to_text()
+
+
+def test_bootstrap_final_turn_splits_from_prepared_asr_manifest(tmp_path: Path) -> None:
+    chapter = tmp_path / "data/librispeech/LibriSpeech/dev-clean/84/121123"
+    chapter.mkdir(parents=True)
+    (chapter / "84-121123.trans.txt").write_text(
+        "84-121123-0000 WHAT IS THE WEATHER\n"
+        "84-121123-0001 TURN ON THE LIGHTS\n"
+        "84-121123-0002 OPEN THE DOOR\n"
+        "84-121123-0003 CLOSE THE WINDOW\n",
+        encoding="utf-8",
+    )
+    for index in range(4):
+        (chapter / f"84-121123-000{index}.flac").write_bytes(b"")
+    config = load_final_run_config()
+    config["public_corpora"] = [
+        {
+            "id": "librispeech_dev_clean",
+            "language": "en",
+            "corpus": "librispeech",
+            "input_dir": "data/librispeech/LibriSpeech/dev-clean",
+            "manifest": "runs/final/librispeech_dev_clean/asr_manifest.jsonl",
+            "sample_rate": 16000,
+            "license": "test",
+        }
+    ]
+
+    prepare_report = prepare_final_corpora(config, repo_root=tmp_path)
+    report = bootstrap_final_turn_splits(config, repo_root=tmp_path)
+
+    assert prepare_report.ok
+    assert report.ok
+    assert report.asr_records == 4
+    assert report.turn_records == 8
+    assert report.split_counts["train"] > 0
+    assert (tmp_path / "runs/final/turn_train.jsonl").exists()
+    assert (tmp_path / "runs/final/final_turn_bootstrap_summary.json").exists()
+    assert "voiceworld_real remains" in report.to_text()

@@ -7,7 +7,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from stable_asr.data.asr_manifest import load_asr_manifest, summarize_asr_records
 from stable_asr.data.recipes import prepare_asr_manifest, prepare_public_asr_manifest
+from stable_asr.data.registry import summarize_records, write_turn_records
+from stable_asr.data.split import SPLIT_NAMES, TurnSplitConfig, split_turn_records
+from stable_asr.data.turn_from_asr import ASRToTurnConfig, asr_records_to_turn_records
 from stable_asr.eval.report import dict_table
 from stable_asr.resources import resolve_platform_path
 
@@ -110,6 +114,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl",
         "stable-asr prepare-public-asr --corpus wenetspeech --input-dir data/wenetspeech/WenetSpeech --split dev --output runs/final/wenetspeech_dev/asr_manifest.jsonl",
         "stable-asr prepare-public-asr --corpus common_voice --input-dir data/common_voice/en --split dev --output runs/final/common_voice_en_dev/asr_manifest.jsonl",
+        "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
@@ -281,6 +286,44 @@ class FinalCorpusPrepareReport:
             lines.append(
                 f"- {entry_status} {entry.id}: {entry.records} record(s) -> {entry.manifest} ({entry.detail})"
             )
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class FinalTurnBootstrapReport:
+    ok: bool
+    input_manifests: list[str]
+    skipped_manifests: list[str]
+    asr_records: int
+    turn_records: int
+    split_paths: dict[str, str]
+    split_counts: dict[str, int]
+    detail: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "input_manifests": self.input_manifests,
+            "skipped_manifests": self.skipped_manifests,
+            "asr_records": self.asr_records,
+            "turn_records": self.turn_records,
+            "split_paths": self.split_paths,
+            "split_counts": self.split_counts,
+            "detail": self.detail,
+        }
+
+    def to_text(self) -> str:
+        status = "READY" if self.ok else "NOT_READY"
+        lines = [
+            f"final_turn_bootstrap: {status}",
+            f"- input_manifests: {len(self.input_manifests)}",
+            f"- skipped_manifests: {len(self.skipped_manifests)}",
+            f"- asr_records: {self.asr_records}",
+            f"- turn_records: {self.turn_records}",
+            f"- detail: {self.detail}",
+        ]
+        for name in SPLIT_NAMES:
+            lines.append(f"- {name}: {self.split_counts.get(name, 0)} record(s) -> {self.split_paths.get(name, '')}")
         return "\n".join(lines)
 
 
@@ -677,6 +720,87 @@ def prepare_final_corpora(
             )
     ok = all(entry.ok for entry in entries) and (not require_all or not any(entry.skipped for entry in entries))
     return FinalCorpusPrepareReport(ok=ok, require_all=require_all, entries=entries)
+
+
+def bootstrap_final_turn_splits(
+    config: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+    include_incomplete: bool = True,
+    seed: int | None = None,
+) -> FinalTurnBootstrapReport:
+    """Bootstrap weak final train/dev/test turn splits from prepared ASR manifests."""
+
+    validation = validate_final_run_config(config)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    root = Path(repo_root)
+    records = []
+    input_manifests: list[str] = []
+    skipped_manifests: list[str] = []
+    for corpus in config.get("public_corpora", []):
+        manifest_path = _resolve(str(corpus["manifest"]), root=root)
+        if not manifest_path.exists():
+            skipped_manifests.append(str(manifest_path))
+            continue
+        corpus_records = load_asr_manifest(manifest_path)
+        if corpus_records:
+            input_manifests.append(str(manifest_path))
+            records.extend(corpus_records)
+
+    if not records:
+        return FinalTurnBootstrapReport(
+            ok=False,
+            input_manifests=input_manifests,
+            skipped_manifests=skipped_manifests,
+            asr_records=0,
+            turn_records=0,
+            split_paths={name: str(_resolve(str(config["turn_splits"][name]), root=root)) for name in SPLIT_NAMES},
+            split_counts={name: 0 for name in SPLIT_NAMES},
+            detail="no prepared ASR manifests found",
+        )
+
+    turn_result = asr_records_to_turn_records(
+        records,
+        config=ASRToTurnConfig(include_incomplete=include_incomplete, source="final_asr_weak_turn_v0"),
+    )
+    split_result = split_turn_records(
+        turn_result.records,
+        config=TurnSplitConfig(seed=int(config.get("seed", 0) if seed is None else seed), group_by="metadata.asr_record_id"),
+    )
+    split_paths = {
+        name: _resolve(str(config["turn_splits"][name]), root=root)
+        for name in SPLIT_NAMES
+    }
+    split_counts: dict[str, int] = {}
+    for name, path in split_paths.items():
+        split_records = split_result.split(name)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        write_turn_records(path, split_records, format="jsonl")
+        split_counts[name] = len(split_records)
+
+    summary_path = _resolve(str(config["output_dir"]), root=root) / "final_turn_bootstrap_summary.json"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_payload = {
+        "asr_summary": summarize_asr_records(records),
+        "turn_summary": summarize_records(turn_result.records),
+        "splits": split_result.to_dict()["splits"],
+        "input_manifests": input_manifests,
+        "skipped_manifests": skipped_manifests,
+    }
+    summary_path.write_text(json.dumps(summary_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    return FinalTurnBootstrapReport(
+        ok=True,
+        input_manifests=input_manifests,
+        skipped_manifests=skipped_manifests,
+        asr_records=len(records),
+        turn_records=len(turn_result.records),
+        split_paths={name: str(path) for name, path in split_paths.items()},
+        split_counts=split_counts,
+        detail=f"summary written to {summary_path}; voiceworld_real remains a required real scenario input",
+    )
 
 
 def _corpus_rows(config: dict[str, Any]) -> list[dict[str, object]]:

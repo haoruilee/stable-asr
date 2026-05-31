@@ -58,6 +58,7 @@ from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.experiments import run_paper_smoke
 from stable_asr.paper.final_config import (
     audit_final_run_files,
+    bootstrap_final_turn_splits,
     final_run_file_audit_markdown,
     final_run_config_markdown,
     load_final_run_config,
@@ -821,6 +822,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--require-all-corpora",
         action="store_true",
         help="With --prepare-corpora, fail if any configured corpus input is missing.",
+    )
+    final_config_parser.add_argument(
+        "--bootstrap-turn-splits",
+        action="store_true",
+        help="Create weak train/dev/test turn splits from prepared final ASR manifests.",
+    )
+    final_config_parser.add_argument(
+        "--no-incomplete-turns",
+        action="store_true",
+        help="With --bootstrap-turn-splits, emit complete weak-turn records only.",
     )
 
     leaderboard_parser = subparsers.add_parser(
@@ -2025,6 +2036,17 @@ def main(argv: list[str] | None = None) -> int:
                     config,
                     repo_root=args.repo_root,
                     require_all=args.require_all_corpora,
+                )
+                if args.json:
+                    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(report.to_text())
+                return 0 if report.ok else 1
+            if args.bootstrap_turn_splits:
+                report = bootstrap_final_turn_splits(
+                    config,
+                    repo_root=args.repo_root,
+                    include_incomplete=not args.no_incomplete_turns,
                 )
                 if args.json:
                     print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
