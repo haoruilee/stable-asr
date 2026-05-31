@@ -53,6 +53,7 @@ ready.
 - external ASR transcript conversion includes at least two schemas
 - NanoTurn is included as a checkpoint-backed baseline
 - paper bundle, Markdown draft, and LaTeX draft exist
+- `paper_results.json` is copied into the artifact bundle and matches the audited source results file
 - dataset and experiment cards are provided
 - leaderboard-ready JSONL/CSV exports are included in the artifact bundle
 - leaderboard validation JSON/Markdown files are included in the artifact bundle

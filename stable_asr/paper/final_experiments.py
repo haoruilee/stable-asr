@@ -169,6 +169,7 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
             "commands": [
                 "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
                 "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
+                "stable-asr paper-artifact-integrity --manifest runs/final/artifacts/artifact_hashes.json --root runs/final/artifacts",
                 "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
                 "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --markdown-draft runs/final/PAPER_DRAFT.md --latex-draft runs/final/paper.tex --dataset-card runs/final/DATASET_CARD.md --experiment-card runs/final/EXPERIMENT_CARD.md"
             ],

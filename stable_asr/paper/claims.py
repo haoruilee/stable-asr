@@ -162,6 +162,7 @@ DEFAULT_CLAIMS: list[dict[str, Any]] = [
         "result_keys": ["meta.artifact_version"],
         "artifact_paths": [
             "ARTIFACT_INDEX.md",
+            "paper_results.json",
             "artifact_manifest.json",
             "artifact_hashes.json",
             "ARTIFACT_HASHES.md",

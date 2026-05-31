@@ -16,6 +16,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
 
     assert report.ok
     assert "paper_audit: OK" in report.to_text()
+    assert "results:json" in report.to_text()
     assert "artifact_integrity:sha256" in report.to_text()
     assert "provenance:json" in report.to_text()
     assert report.to_dict()["ok"] is True
@@ -40,6 +41,18 @@ def test_paper_audit_rejects_tampered_artifact_bundle(tmp_path: Path) -> None:
     assert not report.ok
     assert "artifact_integrity:sha256" in report.to_text()
     assert "mismatched: tables/baselines.md" in report.to_text()
+
+
+def test_paper_audit_rejects_tampered_results_copy(tmp_path: Path) -> None:
+    result = run_paper_smoke(tmp_path / "paper", episodes=9, seed=6, train_model=False)
+    bundle = paper_artifact_bundle(result.results_path, tmp_path / "artifacts")
+    Path(bundle.results["json"]).write_text("{}\n", encoding="utf-8")
+
+    report = audit_paper_artifacts(result.results_path, bundle.output_dir)
+
+    assert not report.ok
+    assert "results:json" in report.to_text()
+    assert "hash mismatch" in report.to_text()
 
 
 def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> None:

@@ -13,7 +13,7 @@ drafts/cards, and then runs `paper-release-audit`.
 Expected outputs:
 
 - `paper/paper_results.json`
-- `artifacts/` with tables, figures, hash manifests, and provenance manifests
+- `artifacts/` with copied paper results, tables, figures, hash manifests, and provenance manifests
 - `PAPER_DRAFT.md`
 - `paper.tex`
 - `DATASET_CARD.md`

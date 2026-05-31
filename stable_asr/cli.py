@@ -2123,6 +2123,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(f"artifact_index: {bundle.index_path}")
             print(f"manifest: {bundle.manifest_path}")
+            print(f"results: {len(bundle.results)}")
             print(f"tables: {len(bundle.tables)}")
             print(f"figures: {len(bundle.figures)}")
             print(f"leaderboards: {len(bundle.leaderboards)}")

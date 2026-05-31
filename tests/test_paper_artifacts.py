@@ -12,6 +12,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
 
     assert Path(bundle.index_path).exists()
     assert Path(bundle.manifest_path).exists()
+    assert set(bundle.results) == {"json"}
     assert set(bundle.tables) == set(PAPER_TABLES)
     assert set(bundle.figures) == set(PAPER_FIGURES)
     assert set(bundle.leaderboards) == {"jsonl", "csv"}
@@ -41,6 +42,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert set(bundle.roadmap_status) == {"json", "markdown"}
     assert set(bundle.claims) == {"json", "markdown"}
     assert "Stable-ASR Paper Artifact Index" in Path(bundle.index_path).read_text(encoding="utf-8")
+    assert Path(bundle.results["json"]).read_text(encoding="utf-8") == Path(result.results_path).read_text(encoding="utf-8")
+    assert "## Results" in Path(bundle.index_path).read_text(encoding="utf-8")
     assert "rule_endpoint" in Path(bundle.tables["baselines"]).read_text(encoding="utf-8")
     assert "Stable-ASR Platform Architecture" in Path(bundle.figures["architecture"]).read_text(encoding="utf-8")
     assert "Baseline Macro F1" in Path(bundle.figures["baselines"]).read_text(encoding="utf-8")

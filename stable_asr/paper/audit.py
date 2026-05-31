@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -96,7 +97,7 @@ def audit_paper_artifacts(results_path: str | Path, artifacts_dir: str | Path | 
 
     checks.extend(_results_checks(results))
     if artifacts_dir is not None:
-        checks.extend(_artifact_checks(Path(artifacts_dir)))
+        checks.extend(_artifact_checks(Path(artifacts_dir), results_path=results_path))
 
     return PaperAuditReport(ok=all(check.ok for check in checks), checks=checks)
 
@@ -907,10 +908,11 @@ def _release_result_checks(
     return checks
 
 
-def _artifact_checks(artifacts_dir: Path) -> list[PaperAuditCheck]:
+def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAuditCheck]:
     checks: list[PaperAuditCheck] = []
     checks.append(_exists_check("artifact_index", artifacts_dir / "ARTIFACT_INDEX.md"))
     checks.append(_exists_check("artifact_manifest", artifacts_dir / "artifact_manifest.json"))
+    checks.append(_results_copy_check(results_path=Path(results_path), artifacts_dir=artifacts_dir))
     for table in PAPER_TABLES:
         checks.append(_exists_check(f"table:{table}", artifacts_dir / "tables" / f"{table}.md"))
     for figure in PAPER_FIGURES:
@@ -965,6 +967,21 @@ def _exists_check(name: str, path: Path) -> PaperAuditCheck:
     return PaperAuditCheck(name, path.exists(), str(path))
 
 
+def _results_copy_check(*, results_path: Path, artifacts_dir: Path) -> PaperAuditCheck:
+    artifact_path = artifacts_dir / "paper_results.json"
+    if not artifact_path.exists():
+        return PaperAuditCheck("results:json", False, f"missing: {artifact_path}")
+    if not results_path.exists():
+        return PaperAuditCheck("results:json", False, f"source missing: {results_path}")
+    source_sha = _sha256_file(results_path)
+    artifact_sha = _sha256_file(artifact_path)
+    return PaperAuditCheck(
+        "results:json",
+        source_sha == artifact_sha,
+        str(artifact_path) if source_sha == artifact_sha else f"hash mismatch: {artifact_path}",
+    )
+
+
 def _integrity_check(artifacts_dir: Path) -> PaperAuditCheck:
     manifest = artifacts_dir / "artifact_hashes.json"
     if not manifest.exists():
@@ -983,6 +1000,14 @@ def _integrity_check(artifacts_dir: Path) -> PaperAuditCheck:
             parts.append("mismatched: " + ", ".join(report.mismatched[:3]))
         detail = "; ".join(parts)
     return PaperAuditCheck("artifact_integrity:sha256", report.ok, detail)
+
+
+def _sha256_file(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
 
 
 def _optional_path_check(gate: str, name: str, path: str | Path | None) -> PaperReleaseAuditCheck:

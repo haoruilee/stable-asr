@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -53,6 +54,7 @@ class PaperArtifactBundle:
     output_dir: str
     index_path: str
     manifest_path: str
+    results: dict[str, str]
     artifact_integrity: dict[str, str]
     provenance: dict[str, str]
     tables: dict[str, str]
@@ -80,6 +82,7 @@ class PaperArtifactBundle:
             "output_dir": self.output_dir,
             "index_path": self.index_path,
             "manifest_path": self.manifest_path,
+            "results": self.results,
             "artifact_integrity": self.artifact_integrity,
             "provenance": self.provenance,
             "tables": self.tables,
@@ -113,6 +116,9 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     figures_dir = output_dir / "figures"
     tables_dir.mkdir(parents=True, exist_ok=True)
     figures_dir.mkdir(parents=True, exist_ok=True)
+
+    results_artifacts = {"json": str(output_dir / "paper_results.json")}
+    _copy_results(results_path, Path(results_artifacts["json"]))
 
     tables: dict[str, str] = {}
     for name in PAPER_TABLES:
@@ -299,6 +305,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         output_dir=str(output_dir),
         index_path=str(index_path),
         manifest_path=str(manifest_path),
+        results=results_artifacts,
         artifact_integrity=artifact_integrity,
         provenance=provenance,
         tables=tables,
@@ -332,6 +339,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         output_dir=str(output_dir),
         index_path=str(index_path),
         manifest_path=str(manifest_path),
+        results=results_artifacts,
         artifact_integrity=artifact_integrity,
         provenance=provenance,
         tables=tables,
@@ -367,9 +375,12 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         "",
         f"Results source: `{results_path}`",
         "",
-        "## Tables",
+        "## Results",
         "",
     ]
+    for name, path in bundle.results.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Tables", ""])
     for name, path in bundle.tables.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Figures", ""])
@@ -468,6 +479,7 @@ def _write_bundle_provenance(results_path: Path, bundle: PaperArtifactBundle) ->
 def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
     paths = [bundle.index_path, bundle.manifest_path]
     sections = (
+        bundle.results,
         bundle.provenance,
         bundle.tables,
         bundle.figures,
@@ -492,3 +504,10 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
     for section in sections:
         paths.extend(section.values())
     return paths
+
+
+def _copy_results(results_path: Path, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if results_path.resolve() == output_path.resolve():
+        return
+    shutil.copyfile(results_path, output_path)
