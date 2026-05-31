@@ -153,6 +153,7 @@ DEFAULT_CLAIMS: list[dict[str, Any]] = [
             "stable_asr/paper/final_config.py",
             "stable_asr/paper/final_experiments.py",
             "stable_asr/paper/parity.py",
+            "stable_asr/roadmap.py",
         ],
         "result_keys": ["meta.artifact_version"],
         "artifact_paths": [
@@ -172,6 +173,8 @@ DEFAULT_CLAIMS: list[dict[str, Any]] = [
             "FINAL_RUN_FILE_AUDIT.md",
             "paper_status.json",
             "PAPER_STATUS.md",
+            "roadmap_status.json",
+            "ROADMAP_STATUS.md",
         ],
         "commands": [
             "stable-asr reproduce-paper --config configs/paper/paper_smoke.json",

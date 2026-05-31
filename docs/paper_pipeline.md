@@ -72,7 +72,7 @@ baseline/adapter registry, a VoiceWorld scenario suite definition, and
 case-study JSON/Markdown artifacts that link failure examples back to source
 records, a paper parity audit that separates smoke-level structural evidence
 from final-scale paper gaps, a final-scale experiment runbook, a final-run
-configuration template, a final-run file audit, and a claim evidence matrix
+configuration template, a final-run file audit, a roadmap status report, and a claim evidence matrix
 that links platform-paper claims to files, result keys, artifacts, and
 reproduction commands. `PAPER_STATUS.md` summarizes these signals in one page.
 

@@ -32,6 +32,7 @@ from stable_asr.models.adapters.registry import (
     load_adapter_registry,
     write_adapter_registry_json,
 )
+from stable_asr.roadmap import load_roadmap, roadmap_status
 from stable_asr.scenarios.suites import scenario_suite_markdown, load_scenario_suite, write_scenario_suite_json
 
 
@@ -53,6 +54,7 @@ class PaperArtifactBundle:
     final_run_config: dict[str, str]
     final_run_file_audit: dict[str, str]
     paper_status: dict[str, str]
+    roadmap_status: dict[str, str]
     claims: dict[str, str]
 
     def to_dict(self) -> dict[str, object]:
@@ -73,6 +75,7 @@ class PaperArtifactBundle:
             "final_run_config": self.final_run_config,
             "final_run_file_audit": self.final_run_file_audit,
             "paper_status": self.paper_status,
+            "roadmap_status": self.roadmap_status,
             "claims": self.claims,
         }
 
@@ -185,6 +188,16 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "json": write_paper_status_json(status_report, output_dir / "paper_status.json"),
         "markdown": write_paper_status_markdown(status_report, output_dir / "PAPER_STATUS.md"),
     }
+    roadmap_report = roadmap_status(load_roadmap(), repo_root=Path("."))
+    roadmap_status_artifacts = {
+        "json": str(output_dir / "roadmap_status.json"),
+        "markdown": str(output_dir / "ROADMAP_STATUS.md"),
+    }
+    Path(roadmap_status_artifacts["json"]).write_text(
+        json.dumps(roadmap_report.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(roadmap_status_artifacts["markdown"]).write_text(roadmap_report.to_markdown(), encoding="utf-8")
 
     # Create provisional bundle files so the claim audit can verify that the
     # paper reproducibility artifacts exist. They are rewritten below with the
@@ -206,6 +219,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         final_run_config=final_run_config,
         final_run_file_audit=final_run_file_audit,
         paper_status=paper_status_artifacts,
+        roadmap_status=roadmap_status_artifacts,
         claims={},
     )
     manifest_path.write_text(json.dumps(provisional.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -230,6 +244,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         final_run_config=final_run_config,
         final_run_file_audit=final_run_file_audit,
         paper_status=paper_status_artifacts,
+        roadmap_status=roadmap_status_artifacts,
         claims=claims,
     )
     manifest_path.write_text(json.dumps(bundle.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -283,6 +298,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Paper Status", ""])
     for name, path in bundle.paper_status.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Roadmap Status", ""])
+    for name, path in bundle.roadmap_status.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Claims", ""])
     for name, path in bundle.claims.items():

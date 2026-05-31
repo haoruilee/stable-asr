@@ -1818,6 +1818,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"final_run_config: {len(bundle.final_run_config)}")
             print(f"final_run_file_audit: {len(bundle.final_run_file_audit)}")
             print(f"paper_status: {len(bundle.paper_status)}")
+            print(f"roadmap_status: {len(bundle.roadmap_status)}")
             print(f"claims: {len(bundle.claims)}")
         return 0
 

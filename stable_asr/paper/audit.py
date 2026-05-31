@@ -759,6 +759,8 @@ def _artifact_checks(artifacts_dir: Path) -> list[PaperAuditCheck]:
     checks.append(_exists_check("final_run_file_audit:markdown", artifacts_dir / "FINAL_RUN_FILE_AUDIT.md"))
     checks.append(_exists_check("paper_status:json", artifacts_dir / "paper_status.json"))
     checks.append(_exists_check("paper_status:markdown", artifacts_dir / "PAPER_STATUS.md"))
+    checks.append(_exists_check("roadmap_status:json", artifacts_dir / "roadmap_status.json"))
+    checks.append(_exists_check("roadmap_status:markdown", artifacts_dir / "ROADMAP_STATUS.md"))
     checks.append(_exists_check("claims:json", artifacts_dir / "claims.json"))
     checks.append(_exists_check("claims:markdown", artifacts_dir / "CLAIMS.md"))
     return checks

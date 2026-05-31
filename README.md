@@ -227,6 +227,7 @@ Current M0 functionality:
 - `paper-status` for a single-page summary of smoke, structural, final-input, and final-paper readiness
 - machine-readable stable-worldmodel-style paper parity checklist in `configs/paper/paper_parity_checklist.json`
 - `paper-parity-audit` for separating smoke-level structural evidence from final-scale paper gaps
+- roadmap status JSON/Markdown artifacts in `paper-bundle`
 - machine-readable final-scale experiment runbook in `configs/paper/final_experiments.json`
 - `final-experiments` for rendering final paper experiment inputs, commands, metrics, artifacts, and success criteria
 - final run configuration template in `configs/final/paper_final.json`

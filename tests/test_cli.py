@@ -1585,6 +1585,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert "data_sources:" in captured.out
     assert "scenario_suite:" in captured.out
     assert "case_studies:" in captured.out
+    assert "roadmap_status:" in captured.out
     assert "claims:" in captured.out
     assert (output_dir / "ARTIFACT_INDEX.md").exists()
     assert (output_dir / "tables" / "baselines.md").exists()
