@@ -13,6 +13,25 @@ stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause
 stable-asr scenario-pack --output-dir runs/scenario_pack
 ```
 
+Python API:
+
+```python
+import stable_asr as sasr
+from stable_asr.models.baselines import TextTurnBaseline
+
+world = sasr.World("stable_asr_voiceworld_v0", num_envs=4, seed=0)
+records = world.collect("runs/voiceworld_demo.jsonl", episodes=100)
+report = world.evaluate(TextTurnBaseline(), dataset="runs/voiceworld_demo.jsonl")
+
+print(world.spec.to_dict())
+print(report.to_markdown())
+```
+
+`World(...)` is the Stable-ASR counterpart to stable-worldmodel's environment
+entrypoint. It gives researchers one object for scenario sampling, manifest
+collection, and policy/model evaluation without replacing lower-level dataset
+or evaluator APIs.
+
 ## Scenario Coverage
 
 - normal question

@@ -10,6 +10,7 @@ from stable_asr.scenarios.voice_world import (
     evaluate_voice_world,
     evaluate_voice_world_records,
 )
+from stable_asr.scenarios.world import VoiceWorld, World, WorldSpec
 from stable_asr.scenarios.suites import (
     DEFAULT_SCENARIO_SUITE,
     ScenarioSuiteValidation,
@@ -24,6 +25,9 @@ __all__ = [
     "ScenarioEvalReport",
     "ScenarioSuiteValidation",
     "DEFAULT_SCENARIO_SUITE",
+    "VoiceWorld",
+    "World",
+    "WorldSpec",
     "evaluate_voice_world",
     "evaluate_voice_world_records",
     "generate_synthetic_turn_records",

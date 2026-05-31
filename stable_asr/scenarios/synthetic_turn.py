@@ -90,12 +90,14 @@ def write_synthetic_turn_manifest(
     *,
     seed: int = 0,
     language: str = "zh",
+    source: str = "synthetic_turn_v0",
     write_audio: bool = False,
 ) -> list[TurnManifestRecord]:
     records = generate_synthetic_turn_records(
         episodes,
         seed=seed,
         language=language,
+        source=source,
         audio_format="wav" if write_audio else "flac",
     )
     if write_audio:

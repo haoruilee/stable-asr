@@ -81,7 +81,7 @@ remaining specific to speech systems.
 | stable-worldmodel | Stable-ASR target |
 | --- | --- |
 | World models | Real-time ASR systems and turn-action models |
-| `World(...)` environments | `VoiceWorld(...)` scenarios |
+| `World(...)` environments | `stable_asr.World(...)` / `VoiceWorld(...)` scenarios |
 | Lance-based video/robot data layer | Lance/Parquet/JSONL/HF audio and stream-trace data layer |
 | MP4, HDF5, LeRobot conversion | WAV, FLAC, WebDataset, HF, EasyTurn, Full-Duplex-Bench conversion |
 | World model baselines | NanoTurn, VAD endpointing, SmartTurn/EasyTurn/VAP adapters, ASR adapters |
@@ -109,7 +109,7 @@ benchmarks, tables, and figures.
 | --- | --- |
 | Fragmentation problem statement | show that ASR, VAD, endpointing, turn-taking, streaming metrics, and voice-agent control are evaluated in separate pipelines |
 | Data bottleneck evidence | benchmark JSONL/audio-folder, Parquet, Lance, and remote/object-storage reads for random speech windows and stream traces |
-| Unified abstraction | define `TurnManifestRecord`, `VoiceWorld`, `TurnPolicy`, ASR adapters, and paper result artifacts |
+| Unified abstraction | define `TurnManifestRecord`, `stable_asr.World`, `VoiceWorld`, `TurnPolicy`, ASR adapters, and paper result artifacts |
 | Baseline zoo | run rule/VAD baselines, NanoTurn, external turn adapters, and streaming ASR adapters through the same interface and registry |
 | Solver layer | show cost-sensitive threshold search, hysteresis, calibration, and barge-in policies improve interaction metrics |
 | Controllable FoV suite | evaluate noise, reverb, speaking rate, overlap offset, language, accent, ASR error, assistant state, and network jitter |

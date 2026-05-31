@@ -687,6 +687,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
         "final_results_assembler": "stable_asr/paper/final_results.py",
         "final_whisper_export_bridge": "scripts/export_whisper_streaming.py",
         "final_funasr_export_bridge": "scripts/export_funasr_streaming.py",
+        "voiceworld_world_api": "stable_asr/scenarios/world.py",
         "benchmark_suite": "configs/benchmarks/stable_asr_v0.json",
         "schema_registry": "configs/schemas/stable_asr_schemas.json",
         "data_sources": "configs/datasets/stable_asr_sources.json",

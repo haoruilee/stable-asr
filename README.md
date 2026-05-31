@@ -122,6 +122,14 @@ stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.jso
 stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause --report runs/scenario.md
 ```
 
+```python
+import stable_asr as sasr
+
+world = sasr.World("sdx/zh-full-duplex-mini-v1", num_envs=8, seed=0)
+world.collect("runs/voiceworld_demo.jsonl", episodes=100)
+report = world.evaluate(baseline="vad_pause", dataset="runs/voiceworld_demo.jsonl")
+```
+
 ## Baselines And Adapters
 
 | System | Type | Purpose |

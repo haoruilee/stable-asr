@@ -14,6 +14,7 @@ from stable_asr.data.manifest import (
     load_manifest,
     validate_manifest,
 )
+from stable_asr.scenarios import VoiceWorld, World, WorldSpec
 from stable_asr.turn.policy import TurnPolicy, TurnPolicyConfig
 from stable_asr.turn.types import TurnAction, TurnPrediction, TurnWindow
 
@@ -29,6 +30,9 @@ __all__ = [
     "TurnManifestRecord",
     "TurnPrediction",
     "TurnWindow",
+    "VoiceWorld",
+    "World",
+    "WorldSpec",
     "load_asr_manifest",
     "load_manifest",
     "validate_asr_manifest",

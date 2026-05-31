@@ -45,6 +45,7 @@
       "id": "scenario_environment_suite",
       "stable_worldmodel_reference": "Registered environments with factors of variation and reproducible evaluation entrypoints.",
       "required_paths": [
+        "stable_asr/scenarios/world.py",
         "stable_asr/scenarios/voice_world.py",
         "stable_asr/scenarios/suites.py",
         "stable_asr/scenarios/synthetic_turn.py",
@@ -53,7 +54,7 @@
       ],
       "required_commands": ["stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only", "stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause", "stable-asr scenario-pack --output-dir runs/scenario_pack"],
       "required_markers": [
-        {"path": "README.md", "contains": ["VoiceWorld Scenarios", "Factors of variation"]}
+        {"path": "README.md", "contains": ["VoiceWorld Scenarios", "Factors of variation", "sasr.World"]}
       ]
     },
     {

@@ -37,6 +37,8 @@ ready.
 - final Whisper and FunASR raw-export bridge scripts exist under `scripts/` and validate manifest coverage before writing normalized streaming rows
 - `final-config --prepare-asr-transcript-conversions` can convert configured normalized ASR outputs into the final transcript-conversion result input
 - final results assembly is available through `stable-asr final-results` so final-scale JSON outputs have one audited path into `paper_results.json`
+- VoiceWorld exposes a stable-worldmodel-style Python `World(...)` API for
+  scenario sampling, manifest collection, and model/policy evaluation
 - benchmark suite JSON exists in `configs/benchmarks/stable_asr_v0.json`
 - benchmark suite task/system/metric coverage is verified against leaderboard rows
 - benchmark suite required artifacts are verified against the generated bundle
