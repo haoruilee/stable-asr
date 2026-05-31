@@ -44,6 +44,7 @@ stable-asr eval-asr-command --name my_asr --command "python your_export.py --out
 ```bash
 stable-asr reproduce-paper --config configs/paper/paper_smoke.json
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
+stable-asr final-config --config configs/final/paper_final.json --prepare-inputs
 stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
 stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits
 stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions

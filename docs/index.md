@@ -79,6 +79,7 @@ stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.j
 stable-asr final-experiments --registry configs/paper/final_experiments.json --output runs/paper/smoke/artifacts/FINAL_EXPERIMENTS.md
 stable-asr final-config --config configs/final/paper_final.json --output runs/paper/smoke/artifacts/FINAL_RUN_CONFIG.md
 stable-asr final-config --config configs/final/paper_final.json --scaffold
+stable-asr final-config --config configs/final/paper_final.json --prepare-inputs
 stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
 stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits
 stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions

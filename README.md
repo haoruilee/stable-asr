@@ -268,6 +268,7 @@ is provided in `mkdocs.yaml`.
 - `final-config` for validating final paper run directories, corpora, splits, adapter config, and artifact paths
 - `final-config --scaffold` for creating final-run directories and README hints without fabricating data
 - `final-config --check-files` for reporting which final paper inputs are still missing before expensive runs
+- `final-config --prepare-inputs` for running final corpus, weak split, prediction, and file-audit preparation in sequence
 - `final-config --prepare-corpora` for preparing configured public ASR manifests from local corpus directories
 - `final-config --bootstrap-turn-splits` for creating weak train/dev/test turn splits from prepared final ASR manifests
 - `final-config --prepare-external-predictions` for normalizing configured SmartTurn/EasyTurn-style prediction exports

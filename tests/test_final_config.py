@@ -8,6 +8,7 @@ from stable_asr.paper.final_config import (
     load_final_run_config,
     prepare_final_external_predictions,
     prepare_final_corpora,
+    prepare_final_inputs,
     scaffold_final_run,
     validate_final_run_config,
     write_final_run_config_json,
@@ -256,3 +257,50 @@ def test_prepare_final_external_predictions_converts_and_validates(tmp_path: Pat
     assert report.entries[0].missing_ids == 0
     assert (tmp_path / "runs/final/external/smartturn_predictions.jsonl").exists()
     assert "final_external_predictions_prepare: READY" in report.to_text()
+
+
+def test_prepare_final_inputs_runs_sequence_and_audit(tmp_path: Path) -> None:
+    chapter = tmp_path / "data/librispeech/LibriSpeech/dev-clean/84/121123"
+    chapter.mkdir(parents=True)
+    (chapter / "84-121123.trans.txt").write_text(
+        "84-121123-0000 WHAT IS THE WEATHER\n"
+        "84-121123-0001 TURN ON THE LIGHTS\n"
+        "84-121123-0002 OPEN THE DOOR\n",
+        encoding="utf-8",
+    )
+    for index in range(3):
+        (chapter / f"84-121123-000{index}.flac").write_bytes(b"")
+    voiceworld = tmp_path / "runs/final/voiceworld_real.jsonl"
+    voiceworld.parent.mkdir(parents=True)
+    voiceworld.write_text(
+        '{"id":"real1","audio":"audio/1.wav","sample_rate":16000,"start":0.0,"end":1.0,'
+        '"turn_label":"complete","action_label":"take_turn","assistant_speaking":false,'
+        '"overlap":false,"language":"en","source":"real"}\n',
+        encoding="utf-8",
+    )
+    asr_config = tmp_path / "configs/final/asr_command_compare.json"
+    asr_config.parent.mkdir(parents=True)
+    asr_config.write_text('{"systems":[]}\n', encoding="utf-8")
+    config = load_final_run_config()
+    config["public_corpora"] = [
+        {
+            "id": "librispeech_dev_clean",
+            "language": "en",
+            "corpus": "librispeech",
+            "input_dir": "data/librispeech/LibriSpeech/dev-clean",
+            "manifest": "runs/final/librispeech_dev_clean/asr_manifest.jsonl",
+            "sample_rate": 16000,
+            "license": "test",
+        }
+    ]
+    config["external_turn_predictions"] = []
+
+    report = prepare_final_inputs(config, repo_root=tmp_path)
+
+    assert report.ok
+    assert report.corpora.prepared_count == 1
+    assert report.turn_splits.turn_records == 6
+    assert report.external_predictions.prepared_count == 0
+    assert report.missing_required == []
+    assert (tmp_path / "runs/final/turn_train.jsonl").exists()
+    assert "final_inputs_prepare: READY" in report.to_text()

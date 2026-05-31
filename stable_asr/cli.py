@@ -64,6 +64,7 @@ from stable_asr.paper.final_config import (
     load_final_run_config,
     prepare_final_external_predictions,
     prepare_final_corpora,
+    prepare_final_inputs,
     scaffold_final_run,
     validate_final_run_config,
 )
@@ -818,6 +819,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--prepare-corpora",
         action="store_true",
         help="Prepare configured public ASR corpus manifests for local inputs that exist.",
+    )
+    final_config_parser.add_argument(
+        "--prepare-inputs",
+        action="store_true",
+        help="Run final corpus, weak turn split, external prediction preparation, then audit required inputs.",
     )
     final_config_parser.add_argument(
         "--require-all-corpora",
@@ -2047,6 +2053,20 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     print(report.to_text())
                 return 0
+            if args.prepare_inputs:
+                report = prepare_final_inputs(
+                    config,
+                    repo_root=args.repo_root,
+                    require_all_corpora=args.require_all_corpora,
+                    require_all_predictions=args.require_all_predictions,
+                    allow_extra_predictions=args.allow_extra_predictions,
+                    include_incomplete=not args.no_incomplete_turns,
+                )
+                if args.json:
+                    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(report.to_text())
+                return 0 if report.ok else 1
             if args.prepare_corpora:
                 report = prepare_final_corpora(
                     config,

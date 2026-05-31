@@ -110,6 +110,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
     },
     "commands": [
         "stable-asr final-config --config configs/final/paper_final.json --validate-only",
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-inputs",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-corpora",
         "stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl",
         "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl",
@@ -418,6 +419,57 @@ class FinalExternalPredictionReport:
                 f"- {entry_status} {entry.id}: {entry.converted_records} record(s) -> "
                 f"{entry.converted} ({coverage}; {entry.detail})"
             )
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class FinalInputPrepareReport:
+    ok: bool
+    corpora: FinalCorpusPrepareReport
+    turn_splits: FinalTurnBootstrapReport
+    external_predictions: FinalExternalPredictionReport
+    file_audit: FinalRunFileAudit
+
+    @property
+    def missing_required(self) -> list[str]:
+        return [
+            check.path
+            for check in self.file_audit.checks
+            if check.required and not check.ok
+        ]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "corpora": self.corpora.to_dict(),
+            "turn_splits": self.turn_splits.to_dict(),
+            "external_predictions": self.external_predictions.to_dict(),
+            "file_audit": self.file_audit.to_dict(),
+            "missing_required": self.missing_required,
+        }
+
+    def to_text(self) -> str:
+        status = "READY" if self.ok else "NOT_READY"
+        lines = [
+            f"final_inputs_prepare: {status}",
+            f"- corpora_prepared: {self.corpora.prepared_count}",
+            f"- turn_records: {self.turn_splits.turn_records}",
+            f"- external_predictions_prepared: {self.external_predictions.prepared_count}",
+            f"- missing_required: {len(self.missing_required)}",
+        ]
+        lines.extend(f"  - {path}" for path in self.missing_required)
+        lines.extend(
+            [
+                "",
+                self.corpora.to_text(),
+                "",
+                self.turn_splits.to_text(),
+                "",
+                self.external_predictions.to_text(),
+                "",
+                self.file_audit.to_text(),
+            ]
+        )
         return "\n".join(lines)
 
 
@@ -997,6 +1049,44 @@ def prepare_final_external_predictions(
         dataset_records=len(dataset_records),
         require_all=require_all,
         entries=entries,
+    )
+
+
+def prepare_final_inputs(
+    config: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+    require_all_corpora: bool = False,
+    require_all_predictions: bool = False,
+    allow_extra_predictions: bool = False,
+    include_incomplete: bool = True,
+) -> FinalInputPrepareReport:
+    """Run the final input preparation sequence and audit remaining required inputs."""
+
+    corpus_report = prepare_final_corpora(
+        config,
+        repo_root=repo_root,
+        require_all=require_all_corpora,
+    )
+    turn_report = bootstrap_final_turn_splits(
+        config,
+        repo_root=repo_root,
+        include_incomplete=include_incomplete,
+    )
+    prediction_report = prepare_final_external_predictions(
+        config,
+        repo_root=repo_root,
+        require_all=require_all_predictions,
+        allow_extra=allow_extra_predictions,
+    )
+    file_audit = audit_final_run_files(config, repo_root=repo_root)
+    ok = corpus_report.ok and turn_report.ok and prediction_report.ok and file_audit.ok
+    return FinalInputPrepareReport(
+        ok=ok,
+        corpora=corpus_report,
+        turn_splits=turn_report,
+        external_predictions=prediction_report,
+        file_audit=file_audit,
     )
 
 
