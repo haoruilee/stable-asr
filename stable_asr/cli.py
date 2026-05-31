@@ -1312,6 +1312,11 @@ def build_parser() -> argparse.ArgumentParser:
     paper_release_audit_parser.add_argument("--dataset-card", type=Path)
     paper_release_audit_parser.add_argument("--experiment-card", type=Path)
     paper_release_audit_parser.add_argument("--model-card", type=Path)
+    paper_release_audit_parser.add_argument(
+        "--require-final-ready",
+        action="store_true",
+        help="Fail unless final inputs and final-scale paper parity are READY.",
+    )
     paper_release_audit_parser.add_argument("--json", action="store_true", help="Print release audit as JSON.")
 
     paper_release_smoke_parser = subparsers.add_parser(
@@ -3276,6 +3281,7 @@ def main(argv: list[str] | None = None) -> int:
             dataset_card=args.dataset_card,
             experiment_card=args.experiment_card,
             model_card=getattr(args, "model_card", None),
+            require_final_ready=args.require_final_ready,
         )
         if args.json:
             print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))

@@ -104,6 +104,7 @@ python -m pip install -e ".[lance,train]"
 stable-asr doctor --check-release-env
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke --strict
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke --require-final-ready
+stable-asr paper-release-audit --repo-root . --require-final-ready
 ```
 
 ## Typical Command

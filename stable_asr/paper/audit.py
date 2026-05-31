@@ -11,12 +11,12 @@ from typing import Any
 from stable_asr.data.sources import load_data_sources, validate_data_sources
 from stable_asr.models.adapters.registry import load_adapter_registry, validate_adapter_registry
 from stable_asr.models.registry import load_model_registry, validate_model_registry
-from stable_asr.paper.final_config import load_final_run_config, validate_final_run_config
+from stable_asr.paper.final_config import audit_final_run_files, load_final_run_config, validate_final_run_config
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
 from stable_asr.paper.final_inputs import load_final_input_collections, validate_final_input_collections
 from stable_asr.paper.figures import PAPER_FIGURES
 from stable_asr.paper.integrity import verify_artifact_integrity
-from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_parity_checklist
+from stable_asr.paper.parity import audit_paper_parity, load_paper_parity_checklist, validate_paper_parity_checklist
 from stable_asr.paper.suites import (
     audit_benchmark_required_artifacts,
     audit_benchmark_suite_coverage,
@@ -128,6 +128,7 @@ def audit_paper_release(
     dataset_card: str | Path | None = None,
     experiment_card: str | Path | None = None,
     model_card: str | Path | None = None,
+    require_final_ready: bool = False,
 ) -> PaperReleaseAuditReport:
     """Audit whether the repository has enough evidence for a platform paper release."""
 
@@ -438,8 +439,44 @@ def audit_paper_release(
     docs_path = _repo_or_platform_path(repo_root, "docs")
     checks.append(_release_check("paper", "citation", citation_path.exists(), _display_repo_path(repo_root, citation_path)))
     checks.append(_release_check("software", "docs_site", docs_path.exists(), _display_repo_path(repo_root, docs_path)))
+    if require_final_ready:
+        checks.extend(
+            _final_ready_release_checks(
+                repo_root=repo_root,
+                results_path=results_path,
+                artifacts_dir=artifacts_dir,
+            )
+        )
 
     return PaperReleaseAuditReport(ok=all(check.ok for check in checks), checks=checks)
+
+
+def _final_ready_release_checks(
+    *,
+    repo_root: Path,
+    results_path: Path | None,
+    artifacts_dir: str | Path | None,
+) -> list[PaperReleaseAuditCheck]:
+    checks: list[PaperReleaseAuditCheck] = []
+    try:
+        config = load_final_run_config(repo_root / "configs" / "final" / "paper_final.json")
+        file_report = audit_final_run_files(config, repo_root=repo_root)
+        missing = [check.path for check in file_report.checks if check.required and not check.ok]
+        detail = "all required final inputs exist" if file_report.ok else "missing: " + ", ".join(missing[:8])
+        if len(missing) > 8:
+            detail += f"; ... {len(missing) - 8} more"
+        checks.append(_release_check("final", "final_inputs_ready", file_report.ok, detail))
+    except (OSError, ValueError) as exc:
+        checks.append(_release_check("final", "final_inputs_ready", False, str(exc)))
+
+    try:
+        parity = audit_paper_parity(repo_root=repo_root, results_path=results_path, artifacts_dir=artifacts_dir)
+        final_gaps = sum(len(check.final_scale_requirements) for check in parity.checks)
+        detail = "final-scale parity ready" if parity.final_ready else f"{final_gaps} final-scale gap(s)"
+        checks.append(_release_check("final", "final_scale_ready", parity.final_ready, detail))
+    except (OSError, ValueError) as exc:
+        checks.append(_release_check("final", "final_scale_ready", False, str(exc)))
+    return checks
 
 
 def _results_checks(results: dict[str, object]) -> list[PaperAuditCheck]:

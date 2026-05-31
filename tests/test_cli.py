@@ -3156,6 +3156,16 @@ def test_paper_release_audit_cli_reports_not_ready(tmp_path, capsys) -> None:
     assert "baseline/nanoturn_release_baseline" in captured.out
 
 
+def test_paper_release_audit_cli_can_require_final_ready(capsys) -> None:
+    code = main(["paper-release-audit", "--repo-root", ".", "--require-final-ready"])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "paper_release_audit: NOT_READY" in captured.out
+    assert "final/final_inputs_ready" in captured.out
+    assert "final/final_scale_ready" in captured.out
+
+
 def test_paper_release_smoke_cli(tmp_path, capsys) -> None:
     code = main(
         [

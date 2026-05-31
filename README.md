@@ -162,6 +162,7 @@ stable-asr paper-release-audit \
   --repo-root . \
   --results runs/paper/smoke/paper_results.json \
   --artifacts-dir runs/paper/smoke/artifacts
+stable-asr paper-release-audit --repo-root . --require-final-ready
 ```
 
 `paper-release-smoke` writes `paper_results.json`, tables, figures, starter packs, registry
