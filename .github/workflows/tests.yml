@@ -22,6 +22,12 @@ jobs:
         run: python -m pytest
       - name: Smoke test CLI
         run: |
+          stable-asr doctor
           stable-asr validate-manifest examples/data/turn_demo.jsonl
+          stable-asr labels
+          stable-asr split-turn-data --input examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-splits --train-ratio 0.5 --dev-ratio 0.25 --test-ratio 0.25 --seed 7
+          stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
+          stable-asr asr-collections --audit-coverage
+          stable-asr make-synthetic-turn-data --output /tmp/stable-asr-synth.jsonl --episodes 3 --write-audio
+          stable-asr audit-audio --kind turn --manifest /tmp/stable-asr-synth.jsonl
           stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause
-
