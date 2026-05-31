@@ -108,7 +108,7 @@ from stable_asr.paper.leaderboard import (
     validate_leaderboard_jsonl,
 )
 from stable_asr.paper.latex import paper_latex
-from stable_asr.paper.acquisition_pack import build_final_acquisition_pack
+from stable_asr.paper.acquisition_pack import audit_acquisition_assignments, build_final_acquisition_pack
 from stable_asr.paper.adapter_pack import build_adapter_pack
 from stable_asr.paper.benchmark_pack import build_benchmark_pack
 from stable_asr.paper.contributor_pack import build_contributor_pack
@@ -1285,6 +1285,17 @@ def build_parser() -> argparse.ArgumentParser:
     final_acquisition_pack_parser.add_argument("--input-collections", type=Path, help="Optional final input collection JSON path.")
     final_acquisition_pack_parser.add_argument("--repo-root", type=Path, default=Path("."))
     final_acquisition_pack_parser.add_argument("--json", action="store_true")
+
+    final_assignment_audit_parser = subparsers.add_parser(
+        "final-assignment-audit",
+        help="Audit a filled final acquisition assignment tracker for owners, due dates, and release blockers.",
+    )
+    final_assignment_audit_parser.add_argument("--input", type=Path, required=True)
+    final_assignment_audit_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    final_assignment_audit_parser.add_argument("--require-owner", action="store_true")
+    final_assignment_audit_parser.add_argument("--require-due-date", action="store_true")
+    final_assignment_audit_parser.add_argument("--require-ready", action="store_true")
+    final_assignment_audit_parser.add_argument("--json", action="store_true")
 
     final_handoff_template_parser = subparsers.add_parser(
         "final-handoff-template",
@@ -3256,11 +3267,26 @@ def main(argv: list[str] | None = None) -> int:
             print(f"final_acquisition_pack: {'OK' if report.ok else 'FAILED'}")
             print(f"collections: {report.collections}")
             print(f"checklist_rows: {report.checklist_rows}")
+            print(f"assignment_rows: {report.assignment_rows}")
             print(f"missing_required: {len(report.missing_required)}")
             print(f"license_review_items: {report.license_review_items}")
             print(f"output_dir: {report.output_dir}")
             print(f"readme: {report.files.get('readme')}")
             print(f"commands: {report.files.get('commands_markdown')}")
+        return 0 if report.ok else 1
+
+    if args.command == "final-assignment-audit":
+        report = audit_acquisition_assignments(
+            args.input,
+            require_owner=args.require_owner,
+            require_due_date=args.require_due_date,
+            require_ready=args.require_ready,
+        )
+        text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+        print(text)
         return 0 if report.ok else 1
 
     if args.command == "final-handoff-template":

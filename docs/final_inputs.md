@@ -60,3 +60,16 @@ without inventing placeholder evidence. Use `final-handoff-audit` on a filled
 handoff JSON before treating the staged inputs as final release evidence.
 `paper-release-audit --require-final-ready` now checks that this filled handoff
 exists and audits cleanly.
+
+Before handoff, use `final-assignment-audit` on the generated
+`acquisition/assignments.json` file. The default audit reports unassigned
+owners, missing due dates, and release blockers; strict mode can require
+owners, due dates, and no blocking collections:
+
+```bash
+stable-asr final-assignment-audit \
+  --input runs/final_acquisition_pack/acquisition/assignments.json \
+  --require-owner \
+  --require-due-date \
+  --require-ready
+```

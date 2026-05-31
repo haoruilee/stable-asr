@@ -238,6 +238,35 @@ def test_final_acquisition_pack_cli(capsys, tmp_path) -> None:
     assert (output_dir / "acquisition" / "LICENSE_REVIEW.md").exists()
 
 
+def test_final_assignment_audit_cli(capsys, tmp_path) -> None:
+    output_dir = tmp_path / "final_acquisition_pack"
+    assert main(["final-acquisition-pack", "--output-dir", str(output_dir), "--repo-root", str(tmp_path)]) == 0
+
+    assignments = output_dir / "acquisition" / "assignments.json"
+    audit_output = tmp_path / "ASSIGNMENT_AUDIT.md"
+    code = main(["final-assignment-audit", "--input", str(assignments), "--output", str(audit_output)])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    assert "Stable-ASR Final Assignment Audit" in captured.out
+    assert "blocking_release" in captured.out
+    assert audit_output.exists()
+
+    strict_code = main(
+        [
+            "final-assignment-audit",
+            "--input",
+            str(assignments),
+            "--require-owner",
+            "--require-due-date",
+            "--require-ready",
+        ]
+    )
+    strict_captured = capsys.readouterr()
+    assert strict_code == 1
+    assert "owner:unassigned" in strict_captured.out
+
+
 def test_final_handoff_template_and_audit_cli(capsys, tmp_path) -> None:
     template = tmp_path / "handoff.json"
     code = main(["final-handoff-template", "--output", str(template)])

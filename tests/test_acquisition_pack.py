@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from stable_asr.paper.acquisition_pack import build_final_acquisition_pack
+from stable_asr.paper.acquisition_pack import audit_acquisition_assignments, build_final_acquisition_pack
 
 
 def test_build_final_acquisition_pack_writes_staging_checklists(tmp_path: Path) -> None:
@@ -59,4 +59,29 @@ def test_build_final_acquisition_pack_writes_staging_checklists(tmp_path: Path) 
     assert "stable_asr_final_handoff_v0" in handoff
     assert "librispeech_dev_clean" in handoff
     commands = (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
+    assert "final-assignment-audit" in commands
     assert "final-handoff-audit" in commands
+
+
+def test_audit_acquisition_assignments_flags_coordination_gaps(tmp_path: Path) -> None:
+    report = build_final_acquisition_pack(tmp_path / "acquisition_pack", repo_root=tmp_path)
+    assignments_path = Path(report.files["assignments_json"])
+
+    audit = audit_acquisition_assignments(assignments_path)
+    assert audit.ok
+    assert audit.rows == report.collections
+    assert audit.blocking_release
+    assert audit.unassigned
+    assert audit.missing_due_dates
+    assert audit.warnings
+
+    strict = audit_acquisition_assignments(
+        assignments_path,
+        require_owner=True,
+        require_due_date=True,
+        require_ready=True,
+    )
+    assert not strict.ok
+    assert "librispeech_dev_clean:owner:unassigned" in strict.errors
+    assert "librispeech_dev_clean:due_date:missing" in strict.errors
+    assert "librispeech_dev_clean:blocking_release" in strict.errors

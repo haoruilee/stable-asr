@@ -27,6 +27,7 @@ streaming ASR and voice-agent control:
 - final-run action plan for the remaining data-staging and experiment commands
 - final-run starter pack that bundles configs, audits, runbooks, references, and scaffold directories without fake evidence
 - final acquisition pack that turns M5 inputs into collaborator-facing staging, owner assignment, license/consent, recording, and handoff checklists
+- final assignment audit for owner, due-date, and release-blocker tracking before handoff
 - final evidence matrix linking final experiments to blockers and expected artifacts
 - leaderboard validation for external JSONL benchmark submissions
 - benchmark starter packs for external contributors
@@ -71,6 +72,7 @@ stable-asr adapter-pack --output-dir runs/adapter_pack
 stable-asr scenario-pack --output-dir runs/scenario_pack
 stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json
 stable-asr contributor-pack --output-dir runs/contributor_pack
 stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only
 stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output runs/asr_manifest.jsonl --audio-root examples/data --sample-rate 16000

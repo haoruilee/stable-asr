@@ -195,6 +195,61 @@ class FinalAcquisitionPackReport:
         return "\n".join(lines)
 
 
+@dataclass(frozen=True)
+class FinalAssignmentAuditReport:
+    ok: bool
+    path: str
+    rows: int
+    blocking_release: list[str]
+    unassigned: list[str]
+    missing_due_dates: list[str]
+    errors: list[str]
+    warnings: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "path": self.path,
+            "rows": self.rows,
+            "blocking_release": self.blocking_release,
+            "unassigned": self.unassigned,
+            "missing_due_dates": self.missing_due_dates,
+            "errors": self.errors,
+            "warnings": self.warnings,
+        }
+
+    def to_markdown(self) -> str:
+        rows = [
+            {"check": "rows", "value": self.rows},
+            {"check": "blocking_release", "value": len(self.blocking_release)},
+            {"check": "unassigned", "value": len(self.unassigned)},
+            {"check": "missing_due_dates", "value": len(self.missing_due_dates)},
+            {"check": "errors", "value": len(self.errors)},
+            {"check": "warnings", "value": len(self.warnings)},
+        ]
+        lines = [
+            "# Stable-ASR Final Assignment Audit",
+            "",
+            f"- status: `{'OK' if self.ok else 'FAILED'}`",
+            f"- assignments: `{self.path}`",
+            "",
+            dict_table(rows),
+            "",
+            "## Blocking Release",
+            "",
+        ]
+        lines.extend(f"- `{item}`" for item in self.blocking_release) if self.blocking_release else lines.append("- none")
+        lines.extend(["", "## Unassigned", ""])
+        lines.extend(f"- `{item}`" for item in self.unassigned) if self.unassigned else lines.append("- none")
+        lines.extend(["", "## Missing Due Dates", ""])
+        lines.extend(f"- `{item}`" for item in self.missing_due_dates) if self.missing_due_dates else lines.append("- none")
+        lines.extend(["", "## Errors", ""])
+        lines.extend(f"- `{item}`" for item in self.errors) if self.errors else lines.append("- none")
+        lines.extend(["", "## Warnings", ""])
+        lines.extend(f"- `{item}`" for item in self.warnings) if self.warnings else lines.append("- none")
+        return "\n".join(lines) + "\n"
+
+
 def build_final_acquisition_pack(
     output_dir: str | Path,
     *,
@@ -324,6 +379,124 @@ def build_final_acquisition_pack(
     files["readme"] = _write_text(output_dir / "README.md", final_report.to_markdown())
     _write_json(output_dir / "manifest.json", final_report.to_dict())
     return final_report
+
+
+def audit_acquisition_assignments(
+    path: str | Path,
+    *,
+    require_owner: bool = False,
+    require_due_date: bool = False,
+    require_ready: bool = False,
+) -> FinalAssignmentAuditReport:
+    """Audit a filled final-acquisition assignment tracker."""
+
+    assignment_path = Path(path)
+    errors: list[str] = []
+    warnings: list[str] = []
+    blocking_release: list[str] = []
+    unassigned: list[str] = []
+    missing_due_dates: list[str] = []
+
+    try:
+        payload = json.loads(assignment_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return FinalAssignmentAuditReport(
+            ok=False,
+            path=str(assignment_path),
+            rows=0,
+            blocking_release=[],
+            unassigned=[],
+            missing_due_dates=[],
+            errors=[str(exc)],
+            warnings=[],
+        )
+
+    rows = payload.get("rows") if isinstance(payload, dict) else None
+    if not isinstance(rows, list) or not rows:
+        errors.append("rows must be a non-empty list")
+        rows = []
+
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            errors.append(f"row {index}: must be an object")
+            continue
+        _audit_assignment_row(
+            index,
+            row,
+            require_owner=require_owner,
+            require_due_date=require_due_date,
+            require_ready=require_ready,
+            blocking_release=blocking_release,
+            unassigned=unassigned,
+            missing_due_dates=missing_due_dates,
+            errors=errors,
+            warnings=warnings,
+        )
+
+    return FinalAssignmentAuditReport(
+        ok=not errors,
+        path=str(assignment_path),
+        rows=len(rows),
+        blocking_release=blocking_release,
+        unassigned=unassigned,
+        missing_due_dates=missing_due_dates,
+        errors=errors,
+        warnings=warnings,
+    )
+
+
+def _audit_assignment_row(
+    index: int,
+    row: dict[str, Any],
+    *,
+    require_owner: bool,
+    require_due_date: bool,
+    require_ready: bool,
+    blocking_release: list[str],
+    unassigned: list[str],
+    missing_due_dates: list[str],
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    collection_id = row.get("collection_id")
+    if not isinstance(collection_id, str) or not collection_id.strip():
+        errors.append(f"row {index}:collection_id:missing")
+        collection_id = f"row_{index}"
+    label = str(collection_id)
+
+    status = row.get("status")
+    if not isinstance(status, str) or not status.strip():
+        errors.append(f"{label}:status:missing")
+    owner = str(row.get("owner", "")).strip()
+    if not owner or owner == "unassigned":
+        unassigned.append(label)
+        message = f"{label}:owner:unassigned"
+        if require_owner:
+            errors.append(message)
+        else:
+            warnings.append(message)
+    due_date = str(row.get("due_date", "")).strip()
+    if not due_date:
+        missing_due_dates.append(label)
+        message = f"{label}:due_date:missing"
+        if require_due_date:
+            errors.append(message)
+        else:
+            warnings.append(message)
+
+    row_blocking = bool(row.get("blocking_release"))
+    if row_blocking:
+        blocking_release.append(label)
+        message = f"{label}:blocking_release"
+        if require_ready:
+            errors.append(message)
+        else:
+            warnings.append(message)
+
+    for field in ("missing_required_paths", "pending_generated_paths", "source_urls"):
+        value = row.get(field, [])
+        if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+            errors.append(f"{label}:{field}:invalid")
 
 
 def _checklist_rows(registry: dict[str, Any], *, repo_root: Path) -> list[AcquisitionChecklistRow]:
@@ -697,6 +870,7 @@ def _starter_commands() -> list[str]:
         f"stable-asr final-inputs --registry {PACK_FINAL_INPUTS_PATH} --config {PACK_FINAL_CONFIG_PATH} --repo-root . --output reports/FINAL_INPUT_COLLECTIONS_CURRENT.md",
         f"stable-asr final-config --config {PACK_FINAL_CONFIG_PATH} --repo-root . --plan-missing --output reports/FINAL_RUN_ACTION_PLAN_CURRENT.md",
         f"stable-asr final-config --config {PACK_FINAL_CONFIG_PATH} --repo-root . --check-files --output reports/FINAL_RUN_FILE_AUDIT_CURRENT.md || true",
+        "stable-asr final-assignment-audit --input acquisition/assignments.json --output reports/FINAL_ASSIGNMENT_AUDIT.md || true",
         "stable-asr final-handoff-audit --input acquisition/handoff_template.json --repo-root . --output reports/FINAL_HANDOFF_AUDIT.md || true",
     ]
 
