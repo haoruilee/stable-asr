@@ -16,6 +16,7 @@ from stable_asr.paper.final_config import audit_final_run_files, load_final_run_
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
 from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_parity_checklist
 from stable_asr.paper.suites import load_benchmark_suite, validate_benchmark_suite
+from stable_asr.roadmap import load_roadmap, validate_roadmap
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
 
 
@@ -133,6 +134,12 @@ def _config_checks(repo_root: Path) -> list[DoctorCheck]:
             "benchmark_suite",
             repo_root / "configs" / "benchmarks" / "stable_asr_v0.json",
             lambda path: validate_benchmark_suite(load_benchmark_suite(path)).to_text(),
+        ),
+        _schema_check(
+            "config",
+            "roadmap",
+            repo_root / "configs" / "roadmap" / "stable_asr_roadmap.json",
+            lambda path: validate_roadmap(load_roadmap(path)).to_text(),
         ),
         _schema_check(
             "config",

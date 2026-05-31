@@ -6,6 +6,7 @@ def test_doctor_accepts_repository_configs() -> None:
 
     assert report.ok
     assert any(check.name == "benchmark_suite" and check.ok for check in report.checks)
+    assert any(check.name == "roadmap" and check.ok for check in report.checks)
     assert any(check.name == "final_run" and check.ok for check in report.checks)
 
 

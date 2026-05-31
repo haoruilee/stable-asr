@@ -22,6 +22,7 @@ def test_doctor_cli(capsys) -> None:
     assert code == 0
     assert "stable_asr_doctor: OK" in captured.out
     assert "config/benchmark_suite" in captured.out
+    assert "config/roadmap" in captured.out
 
 
 def test_doctor_cli_with_final_file_check(capsys) -> None:
