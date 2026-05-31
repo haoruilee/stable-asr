@@ -137,6 +137,43 @@ def test_predict_turn_cli_writes_prediction_manifest(tmp_path, capsys) -> None:
     assert "accuracy: 1.0000" in eval_output.out
 
 
+def test_validate_turn_predictions_cli(tmp_path, capsys) -> None:
+    report = tmp_path / "prediction_validation.md"
+    code = main(
+        [
+            "validate-turn-predictions",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--predictions",
+            "tests/fixtures/turn_predictions_sample.jsonl",
+            "--report",
+            str(report),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "OK: turn prediction manifest validation" in captured.out
+    assert report.exists()
+    assert "Stable-ASR Turn Prediction Validation" in report.read_text(encoding="utf-8")
+
+    bad_predictions = tmp_path / "bad_predictions.jsonl"
+    bad_predictions.write_text(json.dumps({"id": "zh_turn_000001", "label": "complete"}) + "\n", encoding="utf-8")
+    bad_code = main(
+        [
+            "validate-turn-predictions",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--predictions",
+            str(bad_predictions),
+        ]
+    )
+
+    bad_output = capsys.readouterr()
+    assert bad_code == 1
+    assert "missing_ids: 3" in bad_output.out
+
+
 def test_compare_turn_cli_with_baselines_and_predictions(tmp_path, capsys) -> None:
     report = tmp_path / "turn_compare.md"
     code = main(

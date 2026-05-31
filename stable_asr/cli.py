@@ -47,6 +47,7 @@ from stable_asr.models.adapters import (
     load_adapter_registry,
     load_streaming_transcript_jsonl,
     validate_adapter_registry,
+    validate_turn_prediction_jsonl,
 )
 from stable_asr.paper.artifacts import paper_artifact_bundle
 from stable_asr.paper.audit import audit_paper_artifacts, audit_paper_release
@@ -201,6 +202,17 @@ def build_parser() -> argparse.ArgumentParser:
     predict_turn_parser.add_argument("--audio-root", type=Path)
     predict_turn_parser.add_argument("--complete-pause-ms", type=int, default=700)
     predict_turn_parser.add_argument("--json", action="store_true")
+
+    validate_predictions_parser = subparsers.add_parser(
+        "validate-turn-predictions",
+        help="Validate turn prediction JSONL coverage, duplicate IDs, and row schema.",
+    )
+    validate_predictions_parser.add_argument("--dataset", type=Path, required=True, help="Path to a turn manifest.")
+    validate_predictions_parser.add_argument("--predictions", type=Path, required=True, help="Prediction JSONL path.")
+    validate_predictions_parser.add_argument("--format", choices=TURN_FORMATS.names(), help="Optional dataset format.")
+    validate_predictions_parser.add_argument("--allow-extra", action="store_true", help="Allow predictions for IDs absent from the dataset.")
+    validate_predictions_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
+    validate_predictions_parser.add_argument("--json", action="store_true")
 
     compare_turn_parser = subparsers.add_parser(
         "compare-turn",
@@ -907,6 +919,28 @@ def main(argv: list[str] | None = None) -> int:
             print(f"predictions: {args.output}")
             print(f"records: {len(rows)}")
         return 0
+
+    if args.command == "validate-turn-predictions":
+        try:
+            report = validate_turn_prediction_jsonl(
+                load_turn_records(args.dataset, format=args.format),
+                args.predictions,
+                allow_extra=args.allow_extra,
+                dataset_path=args.dataset,
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.report:
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(report.to_markdown(), encoding="utf-8")
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(report.to_text())
+            if args.report:
+                print(f"report: {args.report}")
+        return 0 if report.ok else 1
 
     if args.command == "compare-turn":
         try:

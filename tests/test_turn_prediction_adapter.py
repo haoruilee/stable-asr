@@ -9,6 +9,7 @@ from stable_asr.models.adapters import (
     convert_turn_prediction_jsonl,
     export_turn_predictions_jsonl,
     load_turn_prediction_jsonl,
+    validate_turn_prediction_jsonl,
 )
 from stable_asr.models.baselines import TextTurnBaseline
 
@@ -94,3 +95,63 @@ def test_export_turn_predictions_jsonl_roundtrip(tmp_path: Path) -> None:
     assert output.exists()
     assert adapter.predict(records[0]).label == "complete"
     assert adapter.predict(records[2]).label == "backchannel"
+
+
+def test_validate_turn_prediction_jsonl_accepts_matching_manifest() -> None:
+    records = load_manifest("examples/data/turn_demo.jsonl")
+
+    report = validate_turn_prediction_jsonl(
+        records,
+        "tests/fixtures/turn_predictions_sample.jsonl",
+        dataset_path="examples/data/turn_demo.jsonl",
+    )
+
+    assert report.ok
+    assert report.dataset_records == 4
+    assert report.prediction_rows == 4
+    assert report.valid_prediction_rows == 4
+    assert report.to_dict()["ok"] is True
+    assert "OK: turn prediction manifest validation" in report.to_text()
+
+
+def test_validate_turn_prediction_jsonl_reports_missing_and_extra_ids(tmp_path: Path) -> None:
+    records = load_manifest("examples/data/turn_demo.jsonl")
+    path = tmp_path / "predictions.jsonl"
+    write_jsonl(
+        path,
+        [
+            {"id": records[0].id, "label": "complete"},
+            {"id": records[1].id, "label": "incomplete"},
+            {"id": "extra_prediction", "label": "wait"},
+        ],
+    )
+
+    report = validate_turn_prediction_jsonl(records, path)
+    allowed_report = validate_turn_prediction_jsonl(records[:2], path, allow_extra=True)
+
+    assert not report.ok
+    assert report.missing_ids == [records[2].id, records[3].id]
+    assert report.extra_ids == ["extra_prediction"]
+    assert "missing_ids: 2" in report.to_text()
+    assert allowed_report.ok
+    assert allowed_report.extra_ids == ["extra_prediction"]
+
+
+def test_validate_turn_prediction_jsonl_reports_invalid_rows_and_duplicates(tmp_path: Path) -> None:
+    records = load_manifest("examples/data/turn_demo.jsonl")
+    path = tmp_path / "predictions.jsonl"
+    write_jsonl(
+        path,
+        [
+            {"id": records[0].id, "label": "complete"},
+            {"id": records[0].id, "label": "complete"},
+            {"id": records[1].id, "probs": {"complete": -1.0}},
+        ],
+    )
+
+    report = validate_turn_prediction_jsonl(records, path)
+
+    assert not report.ok
+    assert report.duplicate_prediction_ids == [records[0].id]
+    assert len(report.invalid_rows) == 1
+    assert "probability for complete must be non-negative" in report.invalid_rows[0]

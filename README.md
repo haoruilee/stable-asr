@@ -46,6 +46,7 @@ stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_paus
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl
 stable-asr predict-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --output /tmp/stable-asr-text-turn-predictions.jsonl
+stable-asr validate-turn-predictions --dataset examples/data/turn_demo.jsonl --predictions /tmp/stable-asr-text-turn-predictions.jsonl
 stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl --report /tmp/stable-asr-turn-compare.md
 stable-asr compare-turn-splits --train /tmp/stable-asr-splits/turn_train.jsonl --dev /tmp/stable-asr-splits/turn_dev.jsonl --test /tmp/stable-asr-splits/turn_test.jsonl --baseline vad_pause --baseline text_turn --report /tmp/stable-asr-turn-splits.md
 stable-asr make-synthetic-turn-data --output /tmp/stable-asr-synth.jsonl --episodes 10 --seed 42 --write-audio
@@ -154,6 +155,7 @@ Current M0 functionality:
 - Markdown report helper
 - `eval-turn` baseline evaluation command
 - `predict-turn` for exporting baseline/checkpoint predictions in the shared prediction manifest schema
+- `validate-turn-predictions` for checking prediction schema, ID coverage, duplicate IDs, and extra predictions before benchmark submission
 - `compare-turn` for same-dataset turn baseline/checkpoint/prediction comparison reports
 - `compare-turn-splits` for train/dev/test turn benchmark comparison reports
 - rule endpoint and VAD pause baselines

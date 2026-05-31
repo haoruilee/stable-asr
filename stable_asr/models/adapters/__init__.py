@@ -16,6 +16,10 @@ from stable_asr.models.adapters.registry import (
     validate_adapter_registry,
     write_adapter_registry_json,
 )
+from stable_asr.models.adapters.prediction_audit import (
+    TurnPredictionValidationReport,
+    validate_turn_prediction_jsonl,
+)
 from stable_asr.models.adapters.transcript import (
     TranscriptJSONLAdapter,
     load_streaming_transcript_jsonl,
@@ -40,6 +44,7 @@ __all__ = [
     "TranscriptJSONLAdapter",
     "TurnPredictionManifestAdapter",
     "TurnPredictionRow",
+    "TurnPredictionValidationReport",
     "adapter_registry_markdown",
     "convert_turn_prediction_jsonl",
     "command_streaming_asr_adapter",
@@ -49,5 +54,6 @@ __all__ = [
     "load_turn_prediction_jsonl",
     "transcript_jsonl_adapter",
     "validate_adapter_registry",
+    "validate_turn_prediction_jsonl",
     "write_adapter_registry_json",
 ]
