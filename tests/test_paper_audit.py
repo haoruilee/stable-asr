@@ -49,6 +49,8 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     text = report.to_text()
     assert not report.ok
     assert "paper_release_audit: NOT_READY" in text
+    assert "OK software/license" in text
+    assert "OK software/contributing" in text
     assert "OK data/external_data_sources" in text
     assert "data/lance_data_layer" in text
     assert "baseline/failure_case_mining" in text

@@ -440,6 +440,8 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
     required = {
         "pyproject": repo_root / "pyproject.toml",
         "readme": repo_root / "README.md",
+        "license": repo_root / "LICENSE",
+        "contributing": repo_root / "CONTRIBUTING.md",
         "roadmap": repo_root / "ROADMAP.md",
         "roadmap_registry": repo_root / "configs" / "roadmap" / "stable_asr_roadmap.json",
         "ci_workflow": repo_root / ".github" / "workflows" / "tests.yml",
