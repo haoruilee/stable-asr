@@ -237,6 +237,7 @@ is provided in `mkdocs.yaml`.
 - machine-readable VoiceWorld scenario suite in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - `scenario-suite` for validating and rendering scenario suite definitions
 - `scenario-pack` for generating a VoiceWorld scenario contribution kit with suite metadata, editable annotations, and runnable evaluation commands
+- `final-pack` for generating a final-scale run starter kit with final configs, input collection plans, experiment runbooks, evidence audits, and scaffold directories
 - utterance-level ASR manifest schema and metadata-table recipe via `prepare-asr-manifest`
 - `validate-asr-manifest` and `inspect-asr-manifest` for public ASR corpus manifests
 - `prepare-public-asr` recipes for local LibriSpeech, AISHELL-1, Common Voice, and WenetSpeech directories
@@ -274,7 +275,7 @@ is provided in `mkdocs.yaml`.
 - `paper-table policy` extraction
 - `paper-figure` SVG generation for platform diagrams plus baseline, latency, data, streaming, scenario, and policy figures
 - `paper-bundle` generation for paper results, tables, figures, artifact index, and artifact manifest
-- contributor benchmark, adapter, and VoiceWorld scenario starter packs in `paper-bundle`
+- contributor benchmark, adapter, VoiceWorld scenario, and final-run starter packs in `paper-bundle`
 - schema registry JSON/Markdown artifacts in `paper-bundle`
 - paper bundle sha256 integrity manifests and `paper-artifact-integrity` verification
 - paper bundle provenance manifests that record Stable-ASR version, git commit, input result hashes, and config hashes

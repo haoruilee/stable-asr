@@ -24,6 +24,7 @@ streaming ASR and voice-agent control:
 - final-run scaffold for directories and README hints without fake data
 - final-run file audit for missing real paper inputs
 - final-run action plan for the remaining data-staging and experiment commands
+- final-run starter pack that bundles configs, audits, runbooks, references, and scaffold directories without fake evidence
 - final evidence matrix linking final experiments to blockers and expected artifacts
 - leaderboard validation for external JSONL benchmark submissions
 - benchmark starter packs for external contributors
@@ -57,6 +58,7 @@ stable-asr asr-collections --audit-readiness
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr adapter-pack --output-dir runs/adapter_pack
 stable-asr scenario-pack --output-dir runs/scenario_pack
+stable-asr final-pack --output-dir runs/final_pack
 stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only
 stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output runs/asr_manifest.jsonl --audio-root examples/data --sample-rate 16000
 stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl
@@ -88,6 +90,7 @@ stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause
 stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/scenarios.json
 stable-asr reproduce-paper --config configs/paper/paper_smoke.json
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
+stable-asr final-pack --output-dir runs/final_pack
 stable-asr leaderboard-validate --input runs/paper/smoke/artifacts/leaderboard.jsonl --output runs/paper/smoke/artifacts/LEADERBOARD_VALIDATION.md
 stable-asr leaderboard-report --input runs/paper/smoke/artifacts/leaderboard.jsonl --output runs/paper/smoke/artifacts/LEADERBOARD_REPORT.md
 stable-asr leaderboard-merge --input runs/submissions/oracle_fixture/leaderboard.jsonl --input runs/submissions/streaming_fixture/leaderboard.jsonl --output runs/community_leaderboard.jsonl --validation-output runs/COMMUNITY_LEADERBOARD_VALIDATION.md --report-output runs/COMMUNITY_LEADERBOARD_REPORT.md

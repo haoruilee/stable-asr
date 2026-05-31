@@ -9,6 +9,7 @@ from pathlib import Path
 
 from stable_asr.paper.adapter_pack import build_adapter_pack
 from stable_asr.paper.benchmark_pack import build_benchmark_pack
+from stable_asr.paper.final_pack import build_final_pack
 from stable_asr.paper.scenario_pack import build_scenario_pack
 from stable_asr.paper.case_studies import paper_case_studies
 from stable_asr.paper.claims import paper_claims
@@ -657,11 +658,13 @@ def _write_starter_packs(output_dir: Path) -> dict[str, str]:
     benchmark = build_benchmark_pack(packs_dir / "benchmark_pack")
     adapter = build_adapter_pack(packs_dir / "adapter_pack")
     scenario = build_scenario_pack(packs_dir / "scenario_pack")
+    final = build_final_pack(packs_dir / "final_pack")
     paths: dict[str, str] = {}
     for prefix, files in (
         ("benchmark_pack", benchmark.files),
         ("adapter_pack", adapter.files),
         ("scenario_pack", scenario.files),
+        ("final_pack", final.files),
     ):
         for name, path in sorted(files.items()):
             paths[f"{prefix}:{name}"] = path

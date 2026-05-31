@@ -48,6 +48,7 @@ stable-asr paper-table streaming_failures --results runs/paper/smoke/paper_resul
 stable-asr paper-table asr_transcript_conversions --results runs/paper/smoke/paper_results.json
 stable-asr paper-figure architecture --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/figures/architecture.svg
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
+stable-asr final-pack --output-dir runs/final_pack
 stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/artifacts/PAPER_STATUS.md
 stable-asr paper-case-studies --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output-dir runs/paper/smoke/artifacts

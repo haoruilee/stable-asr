@@ -31,6 +31,7 @@ from stable_asr.paper.final_inputs import (
     load_final_input_collections,
     validate_final_input_collections,
 )
+from stable_asr.paper.final_pack import FinalPackReport, build_final_pack
 from stable_asr.paper.final_results import FinalResultsAssemblyReport, assemble_final_paper_results
 from stable_asr.paper.integrity import (
     ArtifactDigest,
@@ -98,6 +99,7 @@ __all__ = [
     "FinalRunActionPlan",
     "FinalInputCollectionReport",
     "FinalEvidenceMatrixReport",
+    "FinalPackReport",
     "LeaderboardMergeReport",
     "SubmissionIndexReport",
     "ScenarioPackReport",
@@ -111,6 +113,7 @@ __all__ = [
     "build_final_run_action_plan",
     "build_adapter_pack",
     "build_benchmark_pack",
+    "build_final_pack",
     "build_scenario_pack",
     "dataset_card",
     "experiment_card",

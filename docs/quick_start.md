@@ -50,6 +50,7 @@ stable-asr scenario-pack --output-dir runs/scenario_pack
 # 4. Generate paper-facing evidence
 stable-asr doctor --check-release-env
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
+stable-asr final-pack --output-dir runs/final_pack
 ```
 
 ## What The Smoke Run Produces

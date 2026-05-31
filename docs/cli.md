@@ -58,6 +58,19 @@ cd runs/scenario_pack
 bash commands.sh
 ```
 
+## Final Run Pack
+
+```bash
+stable-asr final-pack --output-dir runs/final_pack
+cd runs/final_pack
+bash commands.sh
+```
+
+The generated pack collects the final run config, final input collection plan,
+final experiment runbook, ASR references, VoiceWorld suite, evidence matrix,
+file audit, action plan, and scaffold directories. It does not create real
+corpora, prediction manifests, checkpoints, or final benchmark results.
+
 ## Streaming ASR
 
 ```bash
@@ -93,6 +106,7 @@ stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READIN
 ```bash
 stable-asr reproduce-paper --config configs/paper/paper_smoke.json
 stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
+stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-config --config configs/final/paper_final.json --prepare-inputs
 stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
 stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest

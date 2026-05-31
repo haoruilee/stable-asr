@@ -95,6 +95,7 @@ from stable_asr.paper.final_inputs import (
     load_final_input_collections,
     validate_final_input_collections,
 )
+from stable_asr.paper.final_pack import build_final_pack
 from stable_asr.paper.final_results import assemble_final_paper_results
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.archive import paper_artifact_archive, verify_paper_artifact_archive
@@ -1209,6 +1210,17 @@ def build_parser() -> argparse.ArgumentParser:
     scenario_pack_parser.add_argument("--output-dir", type=Path, required=True)
     scenario_pack_parser.add_argument("--suite", type=Path, help="Optional scenario suite JSON path.")
     scenario_pack_parser.add_argument("--json", action="store_true")
+
+    final_pack_parser = subparsers.add_parser(
+        "final-pack",
+        help="Create a final-scale run starter pack with configs, audits, runbooks, and scaffold directories.",
+    )
+    final_pack_parser.add_argument("--output-dir", type=Path, required=True)
+    final_pack_parser.add_argument("--config", type=Path, help="Optional final run config JSON path.")
+    final_pack_parser.add_argument("--input-collections", type=Path, help="Optional final input collection JSON path.")
+    final_pack_parser.add_argument("--final-experiments", type=Path, help="Optional final experiment registry JSON path.")
+    final_pack_parser.add_argument("--scenario-suite", type=Path, help="Optional scenario suite JSON path.")
+    final_pack_parser.add_argument("--json", action="store_true")
 
     paper_audit_parser = subparsers.add_parser(
         "paper-audit",
@@ -3035,6 +3047,29 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
         else:
             print(f"scenario_pack: {'OK' if report.ok else 'FAILED'}")
+            print(f"output_dir: {report.output_dir}")
+            print(f"readme: {report.files.get('readme')}")
+            print(f"commands: {report.files.get('commands_markdown')}")
+        return 0 if report.ok else 1
+
+    if args.command == "final-pack":
+        try:
+            report = build_final_pack(
+                args.output_dir,
+                config_path=args.config,
+                input_collections_path=args.input_collections,
+                final_experiments_path=args.final_experiments,
+                scenario_suite_path=args.scenario_suite,
+            )
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(f"final_pack: {'OK' if report.ok else 'FAILED'}")
+            print(f"final_ready: {'READY' if report.final_ready else 'NOT_READY'}")
+            print(f"missing_required: {len(report.missing_required)}")
             print(f"output_dir: {report.output_dir}")
             print(f"readme: {report.files.get('readme')}")
             print(f"commands: {report.files.get('commands_markdown')}")
