@@ -67,3 +67,4 @@ jobs:
         run: |
           stable-asr doctor
           stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-data-backends --formats jsonl parquet lance --sample-count 16
+          stable-asr paper-release-smoke --output-dir /tmp/stable-asr-lance-release-smoke --episodes 9 --seed 6 --skip-train

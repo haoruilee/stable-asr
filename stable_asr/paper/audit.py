@@ -617,6 +617,7 @@ def _ci_lance_smoke_check(path: Path) -> PaperReleaseAuditCheck:
         "optional-data-backends",
         "python -m pip install -e \".[lance]\"",
         "stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir /tmp/stable-asr-data-backends --formats jsonl parquet lance --sample-count 16",
+        "stable-asr paper-release-smoke --output-dir /tmp/stable-asr-lance-release-smoke --episodes 9 --seed 6 --skip-train",
     )
     if not path.exists():
         return _release_check("software", "ci_lance_smoke", False, f"missing: {path}")

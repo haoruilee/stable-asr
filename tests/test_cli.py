@@ -1,4 +1,5 @@
 import json
+import importlib.util
 import sys
 
 import pytest
@@ -1798,6 +1799,31 @@ def test_paper_release_smoke_cli(tmp_path, capsys) -> None:
     assert "release_audit_json:" in captured.out
     assert (tmp_path / "release_smoke" / "release_audit.json").exists()
     assert (tmp_path / "release_smoke" / "RELEASE_AUDIT.md").exists()
+
+
+def test_paper_release_smoke_default_trains_nanoturn_when_torch_available(tmp_path, capsys) -> None:
+    if importlib.util.find_spec("torch") is None:
+        pytest.skip("torch is not installed")
+
+    code = main(
+        [
+            "paper-release-smoke",
+            "--output-dir",
+            str(tmp_path / "release_smoke_train"),
+            "--episodes",
+            "9",
+            "--seed",
+            "6",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "paper_release_smoke: NOT_READY" in captured.out
+    audit = json.loads((tmp_path / "release_smoke_train" / "release_audit.json").read_text(encoding="utf-8"))
+    failed = {f"{check['gate']}/{check['name']}" for check in audit["checks"] if not check["ok"]}
+    assert "baseline/nanoturn_release_baseline" not in failed
+    assert "data/lance_data_layer" in failed
 
 
 def test_make_card_cli(tmp_path, capsys) -> None:
