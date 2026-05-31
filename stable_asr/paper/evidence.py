@@ -274,6 +274,8 @@ def _artifact_path(
     run_root_artifacts = {
         "DATASET_CARD.md",
         "EXPERIMENT_CARD.md",
+        "FINAL_HANDOFF_AUDIT.md",
+        "FINAL_INPUT_HANDOFF.json",
         "MODEL_CARD.md",
         "paper.tex",
         "PAPER_DRAFT.md",
@@ -285,6 +287,8 @@ def _artifact_path(
     artifact_map = {
         "DATASET_CARD.md": config["artifacts"].get("dataset_card"),
         "EXPERIMENT_CARD.md": config["artifacts"].get("experiment_card"),
+        "FINAL_HANDOFF_AUDIT.md": config["artifacts"].get("handoff_audit"),
+        "FINAL_INPUT_HANDOFF.json": config["artifacts"].get("handoff"),
         "MODEL_CARD.md": config["artifacts"].get("model_card"),
         "paper.tex": config["artifacts"].get("latex_draft"),
         "PAPER_DRAFT.md": config["artifacts"].get("markdown_draft"),

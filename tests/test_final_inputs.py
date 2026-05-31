@@ -16,6 +16,7 @@ def test_final_input_collections_validate_and_report_missing_inputs() -> None:
     assert validation.ok
     assert not report.ok
     assert "data/librispeech/LibriSpeech/dev-clean" in report.missing_required
+    assert "runs/final/FINAL_INPUT_HANDOFF.json" in report.missing_required
     assert "final_input_collections: NOT_READY" in report.to_text()
 
 

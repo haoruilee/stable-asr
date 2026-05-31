@@ -30,6 +30,9 @@ ready.
 - paper parity checklist JSON exists in `configs/paper/paper_parity_checklist.json`
 - final-scale experiment registry JSON exists in `configs/paper/final_experiments.json`
 - final-run config JSON exists in `configs/final/paper_final.json`
+- `paper-release-audit --require-final-ready` audits the filled
+  `runs/final/FINAL_INPUT_HANDOFF.json` and fails until
+  `runs/final/FINAL_HANDOFF_AUDIT.md` can be produced without handoff errors
 - final ASR command comparison config exists in `configs/final/asr_command_compare.json` and `compare-asr-commands --validate-only --require-input-manifest` audits shared manifests, raw exports, output placeholders, and at least two adapters
 - final Whisper and FunASR raw-export bridge scripts exist under `scripts/` and validate manifest coverage before writing normalized streaming rows
 - `final-config --prepare-asr-transcript-conversions` can convert configured normalized ASR outputs into the final transcript-conversion result input
@@ -82,6 +85,8 @@ ready.
 - paper parity JSON/Markdown files are included in the artifact bundle
 - final experiment JSON/Markdown files are included in the artifact bundle
 - final input collection JSON/status/Markdown files are included in the artifact bundle
+- final handoff JSON/Markdown audit evidence is included in the final
+  reproducibility bundle
 - final-run config JSON/Markdown files are included in the artifact bundle
 - final-run file audit JSON/Markdown files are included in the artifact bundle
 - final-run action plan JSON/Markdown files are included in the artifact bundle
@@ -92,9 +97,10 @@ ready.
 - `docs/` exists
 
 The release audit is expected to remain `NOT_READY` for runs that skip
-NanoTurn training or omit the optional Lance data benchmark. A paper-facing run
-should install `stable-asr[lance]`, include a checkpoint-backed NanoTurn row,
-and then scale the smoke fixtures into the final benchmark suite.
+NanoTurn training, omit the optional Lance data benchmark, or do not provide a
+filled final handoff. A paper-facing run should install `stable-asr[lance]`,
+include a checkpoint-backed NanoTurn row, stage real final inputs with handoff
+evidence, and then scale the smoke fixtures into the final benchmark suite.
 
 Use `doctor --check-release-env` to fail early when the local environment cannot
 produce a READY smoke audit:

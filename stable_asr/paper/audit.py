@@ -15,6 +15,7 @@ from stable_asr.paper.final_config import audit_final_run_files, load_final_run_
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
 from stable_asr.paper.final_inputs import load_final_input_collections, validate_final_input_collections
 from stable_asr.paper.figures import PAPER_FIGURES
+from stable_asr.paper.handoff import audit_final_handoff
 from stable_asr.paper.integrity import verify_artifact_integrity
 from stable_asr.paper.parity import audit_paper_parity, load_paper_parity_checklist, validate_paper_parity_checklist
 from stable_asr.paper.suites import (
@@ -458,6 +459,7 @@ def _final_ready_release_checks(
     artifacts_dir: str | Path | None,
 ) -> list[PaperReleaseAuditCheck]:
     checks: list[PaperReleaseAuditCheck] = []
+    config: dict[str, Any] | None = None
     try:
         config = load_final_run_config(repo_root / "configs" / "final" / "paper_final.json")
         file_report = audit_final_run_files(config, repo_root=repo_root)
@@ -470,6 +472,20 @@ def _final_ready_release_checks(
         checks.append(_release_check("final", "final_inputs_ready", False, str(exc)))
 
     try:
+        handoff_path = _final_handoff_path(config, repo_root=repo_root)
+        if not handoff_path.exists():
+            checks.append(_release_check("final", "final_handoff_audit", False, f"missing: {handoff_path}"))
+        else:
+            handoff = audit_final_handoff(handoff_path, repo_root=repo_root)
+            detail = (
+                f"{handoff.entries} entries, {len(handoff.checked_paths)} staged path(s), "
+                f"{len(handoff.errors)} error(s), {len(handoff.warnings)} warning(s)"
+            )
+            checks.append(_release_check("final", "final_handoff_audit", handoff.ok, detail))
+    except (OSError, ValueError) as exc:
+        checks.append(_release_check("final", "final_handoff_audit", False, str(exc)))
+
+    try:
         parity = audit_paper_parity(repo_root=repo_root, results_path=results_path, artifacts_dir=artifacts_dir)
         final_gaps = sum(len(check.final_scale_requirements) for check in parity.checks)
         detail = "final-scale parity ready" if parity.final_ready else f"{final_gaps} final-scale gap(s)"
@@ -477,6 +493,13 @@ def _final_ready_release_checks(
     except (OSError, ValueError) as exc:
         checks.append(_release_check("final", "final_scale_ready", False, str(exc)))
     return checks
+
+
+def _final_handoff_path(config: dict[str, Any] | None, *, repo_root: Path) -> Path:
+    artifacts = config.get("artifacts", {}) if isinstance(config, dict) else {}
+    handoff = artifacts.get("handoff", "runs/final/FINAL_INPUT_HANDOFF.json") if isinstance(artifacts, dict) else None
+    path = Path(str(handoff or "runs/final/FINAL_INPUT_HANDOFF.json"))
+    return path if path.is_absolute() else repo_root / path
 
 
 def _results_checks(results: dict[str, object]) -> list[PaperAuditCheck]:

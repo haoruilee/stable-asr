@@ -162,20 +162,23 @@ stable-asr paper-release-audit \
   --repo-root . \
   --results runs/paper/smoke/paper_results.json \
   --artifacts-dir runs/paper/smoke/artifacts
+stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json
+stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md
 stable-asr paper-release-audit --repo-root . --require-final-ready
 ```
 
 `paper-release-smoke` writes `paper_results.json`, tables, figures, starter packs, registry
 artifacts, a copied `paper_results.json`, artifact hash manifests, provenance
 manifests, case studies, paper/platform parity audits, final-run audits/action plans, final input collection
-status, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
+status, final handoff templates/audits, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
 dataset/experiment/model cards, `artifacts.tar.gz`, and
 `RELEASE_AUDIT.md`.
 
 The smoke path can be `READY` while final paper-scale evidence is still
 `NOT_READY`; `paper-release-smoke` prints `final_scale_ready`, and
 `--require-final-ready` fails until real corpora, external predictions, and
-final artifacts are present.
+final artifacts are present. Final-ready gates also require a filled
+`runs/final/FINAL_INPUT_HANDOFF.json` that passes `final-handoff-audit`.
 
 Use `stable-asr doctor --check-release-env` before strict release smoke. A
 READY smoke audit needs both the optional Lance backend and NanoTurn training
@@ -328,6 +331,7 @@ is provided in `mkdocs.yaml`.
 - `final-config --prepare-asr-transcript-conversions` for turning configured ASR adapter outputs into the final transcript-conversion result input
 - `final-config --plan-missing` for turning the final-run file audit into an actionable data-staging and experiment runbook
 - `final-inputs` for validating and rendering the final-scale input collection plan in `configs/final/input_collections.json`
+- `final-handoff-template` and `final-handoff-audit` for turning real final-scale staged inputs into auditable owner, license/consent, verification, path, and checksum evidence
 - `final-results` for assembling audited final-scale JSON outputs into `runs/final/paper_results.json`
 - `--json-output` on core evaluators so final runbooks can write machine-readable result inputs without shell redirection
 - `leaderboard-export` for JSONL/CSV metric rows

@@ -165,9 +165,11 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
                 "dataset cards",
                 "experiment cards",
                 "model cards",
+                "filled final input handoff with owner, license/consent, verification, and checksum evidence",
                 "exact model checkpoints or adapter prediction manifests"
             ],
             "commands": [
+                "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md",
                 "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
                 "stable-asr final-inputs --registry configs/final/input_collections.json --output runs/final/FINAL_INPUT_COLLECTIONS.md",
                 "stable-asr make-card model --input configs/models/stable_asr_models.json --model-id nanoturn_pico --metrics runs/final/nanoturn/metrics.json --output runs/final/MODEL_CARD.md",
@@ -176,16 +178,20 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
                 "stable-asr paper-archive --artifacts-dir runs/final/artifacts --output runs/final/artifacts.tar.gz",
                 "stable-asr paper-archive-verify --archive runs/final/artifacts.tar.gz",
                 "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
-                "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --markdown-draft runs/final/PAPER_DRAFT.md --latex-draft runs/final/paper.tex --dataset-card runs/final/DATASET_CARD.md --experiment-card runs/final/EXPERIMENT_CARD.md --model-card runs/final/MODEL_CARD.md"
+                "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --markdown-draft runs/final/PAPER_DRAFT.md --latex-draft runs/final/paper.tex --dataset-card runs/final/DATASET_CARD.md --experiment-card runs/final/EXPERIMENT_CARD.md --model-card runs/final/MODEL_CARD.md --require-final-ready"
             ],
-            "metrics": ["paper_release_audit", "paper_parity_audit", "benchmark_suite_coverage", "claim_audit"],
+            "metrics": ["paper_release_audit", "paper_parity_audit", "platform_parity_audit", "benchmark_suite_coverage", "claim_audit"],
             "expected_artifacts": [
                 "ARTIFACT_INDEX.md",
                 "paper_results.json",
                 "artifact_manifest.json",
                 "artifact_hashes.json",
                 "PROVENANCE.md",
+                "FINAL_INPUT_HANDOFF.json",
+                "FINAL_HANDOFF_AUDIT.md",
                 "PAPER_PARITY.md",
+                "PLATFORM_PARITY.md",
+                "platform_parity.json",
                 "FINAL_INPUT_COLLECTIONS.md",
                 "CLAIMS.md",
                 "MODEL_CARD.md",

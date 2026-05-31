@@ -38,6 +38,8 @@ Expected P0 collection groups:
 - SmartTurn and EasyTurn raw prediction exports.
 - Command-backed ASR output reports for external ASR systems.
 - NanoTurn final checkpoint, metrics, ONNX export, and model card.
+- Filled `FINAL_INPUT_HANDOFF.json` plus `FINAL_HANDOFF_AUDIT.md` proving
+  owner, license/consent, verification, staged paths, and checksum evidence.
 - Final `paper_results.json`, artifact bundle, archive, and release gates.
 
 Use this together with:
@@ -55,4 +57,6 @@ plan. It writes a TSV/JSON staging checklist, license and consent review sheet,
 VoiceWorld recording checklist, and structured handoff template so real corpora
 and external model outputs can be collected without inventing placeholder
 evidence. Use `final-handoff-audit` on a filled handoff JSON before treating the
-staged inputs as final release evidence.
+staged inputs as final release evidence. `paper-release-audit
+--require-final-ready` now checks that this filled handoff exists and audits
+cleanly.

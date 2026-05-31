@@ -95,7 +95,9 @@
     "latex_draft": "runs/final/paper.tex",
     "dataset_card": "runs/final/DATASET_CARD.md",
     "experiment_card": "runs/final/EXPERIMENT_CARD.md",
-    "model_card": "runs/final/MODEL_CARD.md"
+    "model_card": "runs/final/MODEL_CARD.md",
+    "handoff": "runs/final/FINAL_INPUT_HANDOFF.json",
+    "handoff_audit": "runs/final/FINAL_HANDOFF_AUDIT.md"
   },
   "result_inputs": {
     "data_benchmark": "runs/final/reports/data_benchmark.json",
@@ -123,6 +125,8 @@
     "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json",
     "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
     "stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md",
+    "stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json",
+    "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md",
     "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
     "stable-asr benchmark-data --dataset runs/final/turn_train.jsonl --output-dir runs/final/data_bench --formats jsonl parquet lance --sample-count 10000 --json-output runs/final/reports/data_benchmark.json",
     "stable-asr compare-turn --dataset runs/final/turn_test.jsonl --baseline rule_endpoint --baseline vad_pause --baseline text_turn --predictions smart_turn=runs/final/external/smartturn_predictions.jsonl --predictions easy_turn=runs/final/external/easyturn_predictions.jsonl --checkpoint nanoturn=runs/final/nanoturn/checkpoint.pt --report runs/final/reports/baselines.md --json-output runs/final/reports/baselines.json",
@@ -138,6 +142,7 @@
     "stable-asr paper-artifact-integrity --manifest runs/final/artifacts/artifact_hashes.json --root runs/final/artifacts",
     "stable-asr paper-archive --artifacts-dir runs/final/artifacts --output runs/final/artifacts.tar.gz",
     "stable-asr paper-archive-verify --archive runs/final/artifacts.tar.gz",
-    "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final"
+    "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
+    "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --model-card runs/final/MODEL_CARD.md --require-final-ready"
   ]
 }

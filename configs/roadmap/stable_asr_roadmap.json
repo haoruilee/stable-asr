@@ -213,6 +213,8 @@
         {"path": "runs/final/asr_commands/funasr_streaming.jsonl", "required_now": false},
         {"path": "runs/final/reports/asr_transcript_conversions.json", "required_now": false},
         {"path": "runs/final/nanoturn/checkpoint.pt", "required_now": false},
+        {"path": "runs/final/FINAL_INPUT_HANDOFF.json", "required_now": false},
+        {"path": "runs/final/FINAL_HANDOFF_AUDIT.md", "required_now": false},
         {"path": "runs/final/paper_results.json", "required_now": false},
         {"path": "runs/final/artifacts", "required_now": false}
       ],
@@ -225,13 +227,16 @@
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-transcript-conversions",
+        "stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json",
+        "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md",
         "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
         "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
-        "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts"
+        "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final-ready"
       ],
       "success_criteria": [
         "final corpora and splits are real, auditable files",
         "external prediction manifests pass validation and coverage checks",
+        "filled final handoff passes owner, license/consent, path, verification, and checksum audit",
         "final parity audit has no remaining final-scale gaps"
       ]
     }

@@ -126,6 +126,8 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "dataset_card": "runs/final/DATASET_CARD.md",
         "experiment_card": "runs/final/EXPERIMENT_CARD.md",
         "model_card": "runs/final/MODEL_CARD.md",
+        "handoff": "runs/final/FINAL_INPUT_HANDOFF.json",
+        "handoff_audit": "runs/final/FINAL_HANDOFF_AUDIT.md",
     },
     "result_inputs": {
         "data_benchmark": "runs/final/reports/data_benchmark.json",
@@ -153,6 +155,8 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md",
+        "stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json",
+        "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md --json-output runs/final/reports/asr_command_compare.json",
         "stable-asr sweep-streaming-asr --input runs/final/asr_commands/whisper_streaming.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160 320 --report runs/final/reports/whisper_sweep.md --json-output runs/final/reports/whisper_sweep.json",
@@ -2072,6 +2076,8 @@ def _final_artifacts_action(
         str(config["artifacts"]["bundle_dir"]),
         str(config["artifacts"].get("artifact_archive", "runs/final/artifacts.tar.gz")),
         str(config["artifacts"].get("model_card", "runs/final/MODEL_CARD.md")),
+        str(config["artifacts"].get("handoff", "runs/final/FINAL_INPUT_HANDOFF.json")),
+        str(config["artifacts"].get("handoff_audit", "runs/final/FINAL_HANDOFF_AUDIT.md")),
     ]
     return FinalRunActionItem(
         id="assemble_final_artifacts",
@@ -2080,13 +2086,14 @@ def _final_artifacts_action(
         blockers=blockers,
         commands=[
             f"stable-asr final-results --config {config_path} --output {config['artifacts']['paper_results']}",
+            f"stable-asr final-handoff-audit --input {config['artifacts'].get('handoff', 'runs/final/FINAL_INPUT_HANDOFF.json')} --repo-root . --output {config['artifacts'].get('handoff_audit', 'runs/final/FINAL_HANDOFF_AUDIT.md')}",
             f"stable-asr paper-bundle --results {config['artifacts']['paper_results']} --output-dir {config['artifacts']['bundle_dir']}",
             f"stable-asr make-card model --input configs/models/stable_asr_models.json --model-id {config.get('nanoturn', {}).get('model', 'nanoturn_pico')} --metrics {config.get('nanoturn', {}).get('metrics', 'runs/final/nanoturn/metrics.json')} --output {config['artifacts'].get('model_card', 'runs/final/MODEL_CARD.md')}",
             f"stable-asr paper-artifact-integrity --manifest {config['artifacts']['bundle_dir']}/artifact_hashes.json --root {config['artifacts']['bundle_dir']}",
             f"stable-asr paper-archive --artifacts-dir {config['artifacts']['bundle_dir']} --output {config['artifacts'].get('artifact_archive', 'runs/final/artifacts.tar.gz')}",
             f"stable-asr paper-archive-verify --archive {config['artifacts'].get('artifact_archive', 'runs/final/artifacts.tar.gz')}",
             f"stable-asr paper-parity-audit --results {config['artifacts']['paper_results']} --artifacts-dir {config['artifacts']['bundle_dir']} --require-final",
-            f"stable-asr paper-release-audit --repo-root . --results {config['artifacts']['paper_results']} --artifacts-dir {config['artifacts']['bundle_dir']} --model-card {config['artifacts'].get('model_card', 'runs/final/MODEL_CARD.md')}",
+            f"stable-asr paper-release-audit --repo-root . --results {config['artifacts']['paper_results']} --artifacts-dir {config['artifacts']['bundle_dir']} --model-card {config['artifacts'].get('model_card', 'runs/final/MODEL_CARD.md')} --require-final-ready",
         ],
         artifacts=artifacts,
         detail="Only run this as a final gate after real corpora, external predictions, VoiceWorld records, and ASR outputs exist.",
