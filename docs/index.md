@@ -23,6 +23,7 @@ streaming ASR and voice-agent control:
 - final-run config template for paper-scale directory, corpus, and artifact planning
 - final-run scaffold for directories and README hints without fake data
 - final-run file audit for missing real paper inputs
+- machine-readable roadmap status for milestone evidence and planned final-scale work
 - repository doctor for environment, config, and final-input readiness checks
 - paper tables, figures, bundles, audits, and drafts
 
@@ -35,6 +36,7 @@ real-time behavior, latency, policies, and interaction failures.
 ```bash
 stable-asr doctor
 stable-asr doctor --check-final-files
+stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
 stable-asr validate-manifest examples/data/turn_demo.jsonl
 stable-asr convert examples/data/turn_demo.jsonl runs/turn_demo.lance
 stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report runs/turn_profile.md

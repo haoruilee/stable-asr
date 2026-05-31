@@ -40,6 +40,7 @@ python -m pip install -e ".[train]"  # optional: NanoTurn training
 python -m pip install -e ".[lance]"  # optional: Lance data backend
 stable-asr doctor
 stable-asr doctor --check-final-files
+stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
 stable-asr validate-manifest examples/data/turn_demo.jsonl
 stable-asr labels
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause
@@ -130,6 +131,7 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --valid
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --results /tmp/stable-asr-paper/paper_results.json --validate-only
 stable-asr benchmark-suite --output /tmp/stable-asr-paper/BENCHMARK_SUITE.md
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
+stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only
 stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --validate-only
 stable-asr final-experiments --registry configs/paper/final_experiments.json --validate-only
 stable-asr final-config --config configs/final/paper_final.json --validate-only
@@ -147,6 +149,8 @@ Current M0 functionality:
 - installable package
 - `stable-asr` CLI
 - `doctor` command for environment, optional dependency, config, and final-input readiness checks
+- machine-readable roadmap registry in `configs/roadmap/stable_asr_roadmap.json`
+- `roadmap-status` for validating and rendering current milestone evidence without claiming final-scale completion
 - JSONL turn manifest validation
 - canonical turn/action labels
 - core turn dataclasses

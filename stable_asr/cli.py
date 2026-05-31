@@ -92,6 +92,7 @@ from stable_asr.references import (
     load_asr_collections,
     validate_asr_collections,
 )
+from stable_asr.roadmap import load_roadmap, roadmap_status, validate_roadmap
 from stable_asr.scenarios.voice_world import evaluate_voice_world
 from stable_asr.scenarios.synthetic_turn import generate_synthetic_turn_records, write_synthetic_turn_manifest
 from stable_asr.scenarios.suites import (
@@ -451,6 +452,16 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["p0", "p1", "p2"],
         help="Reference priority required by --audit-coverage. Defaults to p0.",
     )
+
+    roadmap_parser = subparsers.add_parser(
+        "roadmap-status",
+        help="Validate and summarize the machine-readable Stable-ASR roadmap.",
+    )
+    roadmap_parser.add_argument("--roadmap", type=Path, help="Optional roadmap registry JSON path.")
+    roadmap_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    roadmap_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    roadmap_parser.add_argument("--json", action="store_true")
+    roadmap_parser.add_argument("--validate-only", action="store_true")
 
     prepare_asr_parser = subparsers.add_parser(
         "prepare-asr-manifest",
@@ -1324,6 +1335,27 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         return 0
+
+    if args.command == "roadmap-status":
+        try:
+            roadmap = load_roadmap(args.roadmap)
+            validation = validate_roadmap(roadmap)
+            if not validation.ok:
+                print(validation.to_text(), file=sys.stderr)
+                return 1
+            if args.validate_only:
+                print(f"OK: {roadmap['id']} ({len(roadmap['milestones'])} milestone(s))")
+                return 0
+            report = roadmap_status(roadmap, repo_root=args.repo_root)
+            text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+            print(text)
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0 if report.ok else 1
 
     if args.command == "prepare-asr-manifest":
         try:

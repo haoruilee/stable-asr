@@ -1,0 +1,178 @@
+{
+  "id": "stable_asr_roadmap_v0",
+  "version": "0.1.0",
+  "title": "Stable-ASR Platform Roadmap",
+  "description": "Machine-readable roadmap for turning Stable-ASR into a stable-worldmodel-style platform for reproducible real-time ASR and full-duplex turn-taking research.",
+  "milestones": [
+    {
+      "id": "m0_platform_foundation",
+      "title": "Platform Foundation",
+      "status": "complete",
+      "objective": "Provide an installable package, CLI, documentation entrypoint, CI, and release audit surface.",
+      "artifacts": [
+        {"path": "pyproject.toml", "required_now": true},
+        {"path": "README.md", "required_now": true},
+        {"path": "ROADMAP.md", "required_now": true},
+        {"path": "docs/index.md", "required_now": true},
+        {"path": ".github/workflows/tests.yml", "required_now": true},
+        {"path": "stable_asr/cli.py", "required_now": true},
+        {"path": "CITATION.cff", "required_now": true}
+      ],
+      "commands": [
+        "stable-asr doctor",
+        "python3 -m pytest -q"
+      ],
+      "success_criteria": [
+        "package installs locally",
+        "CLI smoke commands run in CI",
+        "release audit can inspect required repository files"
+      ]
+    },
+    {
+      "id": "m1_turn_suite",
+      "title": "Turn Suite And NanoTurn Baselines",
+      "status": "complete",
+      "objective": "Make turn-taking, endpointing, prediction manifests, and NanoTurn checkpoints reproducible under one interface.",
+      "artifacts": [
+        {"path": "stable_asr/data/manifest.py", "required_now": true},
+        {"path": "stable_asr/turn/nanoturn.py", "required_now": true},
+        {"path": "stable_asr/models/baselines/vad_pause.py", "required_now": true},
+        {"path": "stable_asr/models/baselines/rule_endpoint.py", "required_now": true},
+        {"path": "stable_asr/models/baselines/text_turn.py", "required_now": true},
+        {"path": "stable_asr/models/adapters/turn_prediction.py", "required_now": true},
+        {"path": "stable_asr/models/adapters/prediction_audit.py", "required_now": true},
+        {"path": "stable_asr/eval/turn_eval.py", "required_now": true},
+        {"path": "stable_asr/eval/turn_compare.py", "required_now": true},
+        {"path": "stable_asr/train/turn_trainer.py", "required_now": true},
+        {"path": "tests/fixtures/turn_predictions_sample.jsonl", "required_now": true}
+      ],
+      "commands": [
+        "stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause",
+        "stable-asr predict-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --output /tmp/stable-asr-text-turn-predictions.jsonl",
+        "stable-asr validate-turn-predictions --dataset examples/data/turn_demo.jsonl --predictions /tmp/stable-asr-text-turn-predictions.jsonl",
+        "stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl"
+      ],
+      "success_criteria": [
+        "built-in baselines and external prediction manifests share one evaluator",
+        "prediction manifests are coverage-checked before benchmark use",
+        "NanoTurn checkpoints can be trained, evaluated, benchmarked, and exported"
+      ]
+    },
+    {
+      "id": "m2_data_reference_layer",
+      "title": "Data And Reference Layer",
+      "status": "complete",
+      "objective": "Standardize turn/ASR manifests, data conversions, ASR reference collections, and adapter planning around top open-source ASR systems.",
+      "artifacts": [
+        {"path": "configs/datasets/stable_asr_sources.json", "required_now": true},
+        {"path": "configs/references/asr_collections.json", "required_now": true},
+        {"path": "configs/adapters/stable_asr_adapters.json", "required_now": true},
+        {"path": "docs/asr_collections.md", "required_now": true},
+        {"path": "stable_asr/data/asr_manifest.py", "required_now": true},
+        {"path": "stable_asr/data/recipes/asr_folder.py", "required_now": true},
+        {"path": "stable_asr/data/turn_from_asr.py", "required_now": true},
+        {"path": "stable_asr/data/bootstrap.py", "required_now": true},
+        {"path": "stable_asr/references/collections.py", "required_now": true}
+      ],
+      "commands": [
+        "stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only",
+        "stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only",
+        "stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only",
+        "stable-asr asr-collections --audit-coverage"
+      ],
+      "success_criteria": [
+        "P0 ASR references have adapter or bridge evidence",
+        "public ASR metadata can be normalized into canonical ASR manifests",
+        "ASR manifests can bootstrap weak turn windows and leakage-audited splits"
+      ]
+    },
+    {
+      "id": "m3_streaming_voiceworld",
+      "title": "Streaming ASR And VoiceWorld",
+      "status": "complete",
+      "objective": "Evaluate streaming ASR traces and controllable full-duplex VoiceWorld scenarios beyond static WER/CER.",
+      "artifacts": [
+        {"path": "configs/scenarios/stable_asr_voiceworld_v0.json", "required_now": true},
+        {"path": "stable_asr/streaming/metrics.py", "required_now": true},
+        {"path": "stable_asr/streaming/compare.py", "required_now": true},
+        {"path": "stable_asr/streaming/sweep.py", "required_now": true},
+        {"path": "stable_asr/streaming/command_compare.py", "required_now": true},
+        {"path": "stable_asr/scenarios/voice_world.py", "required_now": true},
+        {"path": "stable_asr/scenarios/synthetic_turn.py", "required_now": true},
+        {"path": "tests/fixtures/streaming_asr_sample.jsonl", "required_now": true},
+        {"path": "examples/configs/asr_command_compare_demo.json", "required_now": true}
+      ],
+      "commands": [
+        "stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl",
+        "stable-asr compare-streaming-asr --input balanced=tests/fixtures/streaming_asr_sample.jsonl --input fast_unstable=tests/fixtures/streaming_asr_fast_unstable_sample.jsonl",
+        "stable-asr sweep-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160",
+        "stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause"
+      ],
+      "success_criteria": [
+        "streaming traces report latency, stability, endpoint, timestamp, WER, and CER metrics",
+        "scenario suites cover incomplete pauses, interruptions, backchannels, side speech, ambient speech, noise, and code switching",
+        "external ASR commands can be compared without importing heavyweight ASR dependencies"
+      ]
+    },
+    {
+      "id": "m4_paper_and_release_pipeline",
+      "title": "Paper And Release Pipeline",
+      "status": "active",
+      "objective": "Keep paper artifacts, parity audits, release gates, final runbooks, and leaderboard exports reproducible from checked-in configs.",
+      "artifacts": [
+        {"path": "configs/paper/paper_smoke.json", "required_now": true},
+        {"path": "configs/paper/paper_parity_checklist.json", "required_now": true},
+        {"path": "configs/paper/final_experiments.json", "required_now": true},
+        {"path": "configs/final/paper_final.json", "required_now": true},
+        {"path": "configs/final/asr_command_compare.json", "required_now": true},
+        {"path": "configs/benchmarks/stable_asr_v0.json", "required_now": true},
+        {"path": "stable_asr/paper/artifacts.py", "required_now": true},
+        {"path": "stable_asr/paper/audit.py", "required_now": true},
+        {"path": "stable_asr/paper/parity.py", "required_now": true},
+        {"path": "stable_asr/paper/final_experiments.py", "required_now": true},
+        {"path": "stable_asr/paper/final_config.py", "required_now": true},
+        {"path": "scripts/reproduce_paper.py", "required_now": true}
+      ],
+      "commands": [
+        "stable-asr reproduce-paper --config configs/paper/paper_smoke.json",
+        "stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts",
+        "stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts",
+        "stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts"
+      ],
+      "success_criteria": [
+        "smoke artifacts have stable tables, figures, claim audits, and bundle manifests",
+        "release audit separates structural readiness from final-scale missing evidence",
+        "leaderboard exports are generated from paper result artifacts"
+      ]
+    },
+    {
+      "id": "m5_final_scale_evidence",
+      "title": "Final-Scale Evidence",
+      "status": "planned",
+      "objective": "Run real corpora, external ASR systems, external turn models, and VoiceWorld robustness experiments at paper scale.",
+      "artifacts": [
+        {"path": "runs/final/librispeech_dev_clean/asr_manifest.jsonl", "required_now": false},
+        {"path": "runs/final/aishell1_dev/asr_manifest.jsonl", "required_now": false},
+        {"path": "runs/final/turn_train.jsonl", "required_now": false},
+        {"path": "runs/final/turn_dev.jsonl", "required_now": false},
+        {"path": "runs/final/turn_test.jsonl", "required_now": false},
+        {"path": "runs/final/external/smartturn_predictions.jsonl", "required_now": false},
+        {"path": "runs/final/external/easyturn_predictions.jsonl", "required_now": false},
+        {"path": "runs/final/nanoturn/checkpoint.pt", "required_now": false},
+        {"path": "runs/final/paper_results.json", "required_now": false},
+        {"path": "runs/final/artifacts", "required_now": false}
+      ],
+      "commands": [
+        "stable-asr final-config --config configs/final/paper_final.json --check-files",
+        "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
+        "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
+        "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts"
+      ],
+      "success_criteria": [
+        "final corpora and splits are real, auditable files",
+        "external prediction manifests pass validation and coverage checks",
+        "final parity audit has no remaining final-scale gaps"
+      ]
+    }
+  ]
+}

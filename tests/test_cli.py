@@ -41,6 +41,23 @@ def test_paper_status_cli(capsys) -> None:
     assert "final_inputs_ready" in captured.out
 
 
+def test_roadmap_status_cli(capsys, tmp_path) -> None:
+    code = main(["roadmap-status", "--validate-only"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "stable_asr_roadmap_v0" in captured.out
+
+    output = tmp_path / "ROADMAP_STATUS.md"
+    code = main(["roadmap-status", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Platform Roadmap" in captured.out
+    assert output.exists()
+    assert "m2_data_reference_layer" in output.read_text(encoding="utf-8")
+
+
 def test_labels_cli(capsys) -> None:
     code = main(["labels"])
 

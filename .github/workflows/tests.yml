@@ -23,6 +23,7 @@ jobs:
       - name: Smoke test CLI
         run: |
           stable-asr doctor
+          stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only
           stable-asr validate-manifest examples/data/turn_demo.jsonl
           stable-asr labels
           stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report /tmp/stable-asr-turn-profile.md

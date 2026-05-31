@@ -16,6 +16,7 @@ ready.
 
 - source package and CI exist
 - paper config and reproduction script exist
+- roadmap registry exists and `roadmap-status` can separate current milestone evidence from planned final-scale work
 - `stable-asr doctor` reports required config schemas as OK
 - paper parity checklist JSON exists in `configs/paper/paper_parity_checklist.json`
 - final-scale experiment registry JSON exists in `configs/paper/final_experiments.json`

@@ -441,6 +441,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
         "pyproject": repo_root / "pyproject.toml",
         "readme": repo_root / "README.md",
         "roadmap": repo_root / "ROADMAP.md",
+        "roadmap_registry": repo_root / "configs" / "roadmap" / "stable_asr_roadmap.json",
         "ci_workflow": repo_root / ".github" / "workflows" / "tests.yml",
         "paper_config": repo_root / "configs" / "paper" / "paper_smoke.json",
         "paper_parity_checklist": repo_root / "configs" / "paper" / "paper_parity_checklist.json",

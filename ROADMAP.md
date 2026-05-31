@@ -19,6 +19,22 @@ real-time ASR and voice-agent interaction research.
 
 Reference target: https://arxiv.org/abs/2605.21800
 
+## Machine-Readable Roadmap
+
+This document is mirrored by `configs/roadmap/stable_asr_roadmap.json`, which
+tracks milestones, required repository artifacts, representative commands, and
+success criteria. Use it as a lightweight project audit:
+
+```bash
+stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
+stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only
+```
+
+`roadmap-status` is intentionally not a paper-completion gate. It checks whether
+the current repository contains the milestone evidence that should exist now,
+while final-scale corpora, external predictions, and final paper artifacts
+remain planned until real data and experiments are present.
+
 ## Positioning
 
 Stable-ASR is not another all-in-one ASR toolkit. ESPnet, FunASR, WeNet, NeMo,
