@@ -1,0 +1,124 @@
+{
+  "id": "stable_asr_v0",
+  "version": "0.1.0",
+  "title": "Stable-ASR v0 Paper Benchmark Suite",
+  "description": "A reproducible smoke-to-paper benchmark suite covering turn-taking quality, latency, data-layer behavior, ASR manifest recipes, VoiceWorld scenarios, policy search, streaming ASR metrics, and external ASR transcript conversion.",
+  "leaderboard_suite": "stable_asr_v0",
+  "required_artifacts": [
+    "paper_results.json",
+    "artifact_manifest.json",
+    "ARTIFACT_INDEX.md",
+    "benchmark_suite.json",
+    "BENCHMARK_SUITE.md",
+    "leaderboard.jsonl",
+    "leaderboard.csv"
+  ],
+  "tasks": [
+    {
+      "id": "turn_quality",
+      "title": "Turn-Taking Quality",
+      "coverage": "system_slice_metric",
+      "systems": ["rule_endpoint", "vad_pause", "text_turn", "prediction_manifest", "nanoturn_pico"],
+      "slices": ["overall"],
+      "metrics": [
+        {"name": "accuracy", "unit": "rate", "higher_is_better": true},
+        {"name": "macro_f1", "unit": "rate", "higher_is_better": true},
+        {"name": "false_complete_rate", "unit": "rate", "higher_is_better": false},
+        {"name": "missed_interrupt_rate", "unit": "rate", "higher_is_better": false}
+      ]
+    },
+    {
+      "id": "turn_latency",
+      "title": "Turn Predictor Latency",
+      "coverage": "system_slice_metric",
+      "systems": ["rule_endpoint", "vad_pause", "text_turn", "prediction_manifest", "nanoturn_pico"],
+      "slices": ["overall"],
+      "metrics": [
+        {"name": "avg_latency_ms", "unit": "ms", "higher_is_better": false},
+        {"name": "p95_latency_ms", "unit": "ms", "higher_is_better": false},
+        {"name": "rtf", "unit": "ratio", "higher_is_better": false},
+        {"name": "throughput_predictions_per_sec", "unit": "pred/s", "higher_is_better": true},
+        {"name": "artifact_bytes", "unit": "bytes", "higher_is_better": false}
+      ]
+    },
+    {
+      "id": "data_layer",
+      "title": "Data Layer",
+      "systems": ["jsonl", "parquet", "lance"],
+      "slices": ["random_sampling"],
+      "metrics": [
+        {"name": "write_seconds", "unit": "s", "higher_is_better": false},
+        {"name": "read_seconds", "unit": "s", "higher_is_better": false},
+        {"name": "size_bytes", "unit": "bytes", "higher_is_better": false},
+        {"name": "samples_per_second", "unit": "samples/s", "higher_is_better": true}
+      ]
+    },
+    {
+      "id": "asr_manifest_recipe",
+      "title": "ASR Manifest Recipe",
+      "systems": ["metadata_table"],
+      "slices": ["asr_fixture"],
+      "metrics": [
+        {"name": "records", "unit": "count", "higher_is_better": true},
+        {"name": "valid", "unit": "bool", "higher_is_better": true},
+        {"name": "total_duration_sec", "unit": "s", "higher_is_better": true},
+        {"name": "speakers", "unit": "count", "higher_is_better": true}
+      ]
+    },
+    {
+      "id": "voiceworld",
+      "title": "VoiceWorld Scenario Robustness",
+      "coverage": "system_slice_metric",
+      "systems": ["scenario_evaluator"],
+      "slices": ["incomplete_pause", "backchannel", "wait_stop", "user_interruption", "side_conversation", "ambient_speech", "noisy_farfield", "code_switching"],
+      "metrics": [
+        {"name": "accuracy", "unit": "rate", "higher_is_better": true},
+        {"name": "macro_f1", "unit": "rate", "higher_is_better": true},
+        {"name": "false_complete_rate", "unit": "rate", "higher_is_better": false},
+        {"name": "missed_interrupt_rate", "unit": "rate", "higher_is_better": false}
+      ]
+    },
+    {
+      "id": "policy_search",
+      "title": "Cost-Sensitive Policy Search",
+      "coverage": "system_slice_metric",
+      "systems": ["best_policy"],
+      "slices": ["overall"],
+      "metrics": [
+        {"name": "objective_score", "unit": "cost", "higher_is_better": false}
+      ]
+    },
+    {
+      "id": "streaming_asr",
+      "title": "Streaming ASR",
+      "systems": ["balanced_fixture", "fast_unstable_fixture", "schedule_sweep", "command_fixture"],
+      "slices": ["adapter", "chunk/lookahead"],
+      "metrics": [
+        {"name": "wer", "unit": "rate", "higher_is_better": false},
+        {"name": "cer", "unit": "rate", "higher_is_better": false},
+        {"name": "rtf", "unit": "ratio", "higher_is_better": false},
+        {"name": "first_partial_latency", "unit": "s", "higher_is_better": false},
+        {"name": "final_latency", "unit": "s", "higher_is_better": false},
+        {"name": "endpoint_delay", "unit": "s", "higher_is_better": false},
+        {"name": "partial_revision_rate", "unit": "rate", "higher_is_better": false},
+        {"name": "stable_prefix_ratio", "unit": "rate", "higher_is_better": true},
+        {"name": "timestamp_drift", "unit": "s", "higher_is_better": false}
+      ]
+    },
+    {
+      "id": "asr_transcript_conversion",
+      "title": "External ASR Transcript Conversion",
+      "coverage": "system_slice_metric",
+      "systems": ["whisper", "funasr"],
+      "slices": ["converted_schema"],
+      "metrics": [
+        {"name": "wer", "unit": "rate", "higher_is_better": false},
+        {"name": "cer", "unit": "rate", "higher_is_better": false},
+        {"name": "rtf", "unit": "ratio", "higher_is_better": false},
+        {"name": "endpoint_delay", "unit": "s", "higher_is_better": false},
+        {"name": "partial_revision_rate", "unit": "rate", "higher_is_better": false},
+        {"name": "timestamp_drift", "unit": "s", "higher_is_better": false}
+      ]
+    }
+  ]
+}

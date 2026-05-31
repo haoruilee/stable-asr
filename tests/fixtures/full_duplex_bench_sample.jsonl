@@ -1,0 +1,4 @@
+{"episode_id":"fdb_001","audio":"audio/fdb_001.wav","scenario":"user_interruption","start_time":0.0,"end_time":1.2,"transcript":"wait that's not it","expected_action":"stop_tts_and_listen","lang":"en"}
+{"episode_id":"fdb_002","audio":"audio/fdb_002.wav","scenario":"listener_backchannel","duration_sec":0.5,"transcript":"mhm","lang":"en"}
+{"episode_id":"fdb_003","audio":"audio/fdb_003.wav","scenario":"side_conversation","duration_sec":2.0,"transcript":"talking to someone else","lang":"en"}
+

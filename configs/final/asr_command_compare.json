@@ -1,0 +1,29 @@
+{
+  "timeout_sec": 900,
+  "adapters": [
+    {
+      "name": "whisper_final",
+      "command": [
+        "python",
+        "scripts/export_whisper_streaming.py",
+        "--manifest",
+        "runs/final/asr_eval_manifest.jsonl",
+        "--output",
+        "{output}"
+      ],
+      "output": "runs/final/asr_commands/whisper_streaming.jsonl"
+    },
+    {
+      "name": "funasr_final",
+      "command": [
+        "python",
+        "scripts/export_funasr_streaming.py",
+        "--manifest",
+        "runs/final/asr_eval_manifest.jsonl",
+        "--output",
+        "{output}"
+      ],
+      "output": "runs/final/asr_commands/funasr_streaming.jsonl"
+    }
+  ]
+}

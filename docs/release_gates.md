@@ -1,0 +1,74 @@
+# Release Gates
+
+Stable-ASR uses two levels of paper readiness checks.
+
+## Artifact Audit
+
+`paper-audit` verifies that one run contains the required result sections,
+tables, figures, artifact index, and manifest.
+
+This is a structural check. Passing it does not mean the platform paper is
+ready.
+
+## Release Audit
+
+`paper-release-audit` checks stricter platform-paper gates:
+
+- source package and CI exist
+- paper config and reproduction script exist
+- `stable-asr doctor` reports required config schemas as OK
+- paper parity checklist JSON exists in `configs/paper/paper_parity_checklist.json`
+- final-scale experiment registry JSON exists in `configs/paper/final_experiments.json`
+- final-run config JSON exists in `configs/final/paper_final.json`
+- final ASR command comparison config exists in `configs/final/asr_command_compare.json`
+- benchmark suite JSON exists in `configs/benchmarks/stable_asr_v0.json`
+- benchmark suite task/system/metric coverage is verified against leaderboard rows
+- data source registry JSON exists in `configs/datasets/stable_asr_sources.json`
+- adapter registry JSON exists in `configs/adapters/stable_asr_adapters.json`
+- VoiceWorld scenario suite JSON exists in `configs/scenarios/stable_asr_voiceworld_v0.json`
+- ASR manifest schema and metadata-table recipe exist
+- data benchmark sections exist
+- data benchmark rows include random sampling throughput
+- at least three external data source conversions are represented
+- ASR manifest recipe results validate at least one utterance-level corpus manifest
+- baseline, latency, scenario, policy, and streaming metrics exist
+- baseline failure-case mining exists for paper case studies
+- streaming ASR comparison includes at least two adapter rows
+- streaming ASR failure mining exists for real-time case studies
+- streaming ASR schedule sweep includes chunk/lookahead rows
+- command-backed streaming ASR adapter fixture exists
+- external ASR transcript conversion includes at least two schemas
+- NanoTurn is included as a checkpoint-backed baseline
+- paper bundle, Markdown draft, and LaTeX draft exist
+- dataset and experiment cards are provided
+- leaderboard-ready JSONL/CSV exports are included in the artifact bundle
+- benchmark suite JSON/Markdown files are included in the artifact bundle
+- data source registry JSON/Markdown files are included in the artifact bundle
+- adapter registry JSON/Markdown files are included in the artifact bundle
+- scenario suite JSON/Markdown files are included in the artifact bundle
+- case-study JSON/Markdown files are included in the artifact bundle
+- paper parity JSON/Markdown files are included in the artifact bundle
+- final experiment JSON/Markdown files are included in the artifact bundle
+- final-run config JSON/Markdown files are included in the artifact bundle
+- final-run file audit JSON/Markdown files are included in the artifact bundle
+- claim evidence JSON/Markdown files are included in the artifact bundle
+- `CITATION.cff` exists
+- `docs/` exists
+
+The release audit is expected to remain `NOT_READY` for runs that skip
+NanoTurn training or omit the optional Lance data benchmark. A paper-facing run
+should install `stable-asr[lance]`, include a checkpoint-backed NanoTurn row,
+and then scale the smoke fixtures into the final benchmark suite.
+
+## Typical Command
+
+```bash
+stable-asr paper-release-audit \
+  --repo-root . \
+  --results runs/paper/smoke/paper_results.json \
+  --artifacts-dir runs/paper/smoke/artifacts \
+  --markdown-draft runs/paper/smoke/PAPER_DRAFT.md \
+  --latex-draft runs/paper/smoke/paper.tex \
+  --dataset-card runs/paper/smoke/DATASET_CARD.md \
+  --experiment-card runs/paper/smoke/EXPERIMENT_CARD.md
+```

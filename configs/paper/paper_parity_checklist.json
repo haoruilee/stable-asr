@@ -1,0 +1,166 @@
+{
+  "id": "stable_asr_paper_parity_v0",
+  "version": "0.1.0",
+  "title": "Stable-ASR Platform Paper Parity Checklist",
+  "description": "A stable-worldmodel-style paper checklist that maps platform-paper claims to repository files, result keys, paper artifacts, reproduction commands, and final-scale experiment gaps.",
+  "target_paper": "Stable-ASR: A Platform for Reproducible Real-Time ASR and Full-Duplex Turn-Taking Research and Evaluation",
+  "items": [
+    {
+      "id": "problem_and_scope",
+      "title": "Fragmentation Problem And Scope",
+      "paper_section": "Introduction",
+      "stable_worldmodel_analogy": "fragmented world-model codebases, data pipelines, and evaluation protocols",
+      "repo_paths": ["README.md", "ROADMAP.md", "docs/index.md"],
+      "result_keys": ["meta.artifact_version"],
+      "artifact_paths": ["ARTIFACT_INDEX.md", "artifact_manifest.json"],
+      "commands": ["stable-asr paper-draft --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/PAPER_DRAFT.md"],
+      "final_scale_requirements": [
+        "write the final related-work comparison against ASR toolkits, streaming ASR evaluation, turn-taking models, and full-duplex benchmarks",
+        "include a limitation statement that separates structural smoke evidence from final benchmark claims"
+      ]
+    },
+    {
+      "id": "data_layer",
+      "title": "Unified Data Layer",
+      "paper_section": "Data Layer",
+      "stable_worldmodel_analogy": "Lance-backed multi-format data layer for reproducible sequence-window sampling",
+      "repo_paths": [
+        "stable_asr/data/manifest.py",
+        "stable_asr/data/asr_manifest.py",
+        "stable_asr/data/registry.py",
+        "stable_asr/data/formats/lance.py",
+        "configs/datasets/stable_asr_sources.json"
+      ],
+      "result_keys": ["data.benchmark", "data.asr_manifest_recipe", "data.external_conversions"],
+      "artifact_paths": ["tables/data.md", "tables/asr_manifest_recipe.md", "DATA_SOURCES.md", "data_sources.json"],
+      "commands": [
+        "stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir runs/data_bench --formats jsonl parquet lance --sample-count 16",
+        "stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output runs/asr_manifest.jsonl"
+      ],
+      "final_scale_requirements": [
+        "run JSONL, Parquet, and Lance benchmarks on at least one real public ASR corpus",
+        "measure random audio-window sampling throughput on NVMe and object storage",
+        "report conversion time, storage size, read throughput, and multi-worker dataloader utilization"
+      ]
+    },
+    {
+      "id": "baseline_zoo",
+      "title": "Baseline Zoo And Adapter Registry",
+      "paper_section": "Baselines and Adapters",
+      "stable_worldmodel_analogy": "modern baselines exposed through one training/evaluation interface",
+      "repo_paths": [
+        "stable_asr/models/baselines/rule_endpoint.py",
+        "stable_asr/models/baselines/vad_pause.py",
+        "stable_asr/models/baselines/text_turn.py",
+        "stable_asr/turn/nanoturn.py",
+        "stable_asr/models/adapters/registry.py",
+        "configs/adapters/stable_asr_adapters.json"
+      ],
+      "result_keys": ["baselines", "turn_benchmarks", "nanoturn"],
+      "artifact_paths": ["tables/baselines.md", "tables/turn_benchmark.md", "ADAPTERS.md", "adapter_registry.json"],
+      "commands": [
+        "stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause",
+        "stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only"
+      ],
+      "final_scale_requirements": [
+        "run at least two external turn systems through prediction-manifest or command-backed adapters",
+        "include NanoTurn checkpoint-backed results trained on non-toy data",
+        "report CPU and ONNX latency for every paper baseline"
+      ]
+    },
+    {
+      "id": "voiceworld_scenarios",
+      "title": "Controllable VoiceWorld Scenario Suite",
+      "paper_section": "Scenario Suite",
+      "stable_worldmodel_analogy": "environment suite with controllable factors of variation",
+      "repo_paths": [
+        "stable_asr/scenarios/synthetic_turn.py",
+        "stable_asr/scenarios/voice_world.py",
+        "stable_asr/scenarios/suites.py",
+        "configs/scenarios/stable_asr_voiceworld_v0.json"
+      ],
+      "result_keys": ["scenarios.by_scenario", "scenarios.factor_summary"],
+      "artifact_paths": ["tables/scenarios.md", "SCENARIO_SUITE.md", "scenario_suite.json", "figures/robustness_heatmap.svg"],
+      "commands": ["stable-asr eval-scenario --episodes 21 --seed 0 --baseline vad_pause"],
+      "final_scale_requirements": [
+        "compose or collect real audio examples for interruption, backchannel, side speech, ambient speech, far-field noise, and code-switching",
+        "run scenario robustness across held-out speakers, languages, accents, SNR, reverb, and overlap offsets",
+        "include qualitative case studies with audio snippets or reproducible record ids"
+      ]
+    },
+    {
+      "id": "policy_solver",
+      "title": "Policy Solver And Cost-Sensitive Decisions",
+      "paper_section": "Policy Layer",
+      "stable_worldmodel_analogy": "planning and solver layer separated from learned model outputs",
+      "repo_paths": ["stable_asr/turn/policy.py", "stable_asr/turn/solver.py"],
+      "result_keys": ["policy_search.best", "policy_search.trials"],
+      "artifact_paths": ["tables/policy.md", "figures/policy_state_machine.svg"],
+      "commands": ["stable-asr optimize-policy --dataset examples/data/turn_demo.jsonl --baseline vad_pause"],
+      "final_scale_requirements": [
+        "sweep cost matrices for false complete, missed interruption, false interruption, backchannel break, and latency",
+        "evaluate policy transfer from synthetic scenarios to held-out real interaction traces",
+        "plot false-complete versus latency and missed-interruption versus false-interruption trade-offs"
+      ]
+    },
+    {
+      "id": "streaming_asr_eval",
+      "title": "Streaming ASR Evaluation Beyond WER",
+      "paper_section": "Streaming ASR Evaluation",
+      "stable_worldmodel_analogy": "evaluation protocol that exposes behavior hidden by static metrics",
+      "repo_paths": [
+        "stable_asr/streaming/metrics.py",
+        "stable_asr/streaming/compare.py",
+        "stable_asr/streaming/sweep.py",
+        "stable_asr/streaming/failures.py"
+      ],
+      "result_keys": [
+        "streaming_asr.metrics",
+        "streaming_asr.adapter_comparison",
+        "streaming_asr.schedule_sweep",
+        "streaming_asr.command_adapter"
+      ],
+      "artifact_paths": ["tables/streaming.md", "tables/streaming_failures.md", "tables/streaming_sweep.md"],
+      "commands": [
+        "stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl",
+        "stable-asr compare-asr-commands --config examples/configs/asr_command_compare_demo.json"
+      ],
+      "final_scale_requirements": [
+        "evaluate at least two real ASR systems under the same streaming trace schema",
+        "run chunk-size and lookahead sweeps on real streaming outputs",
+        "report WER/CER together with RTF, first partial latency, final latency, endpoint delay, partial revisions, stable prefix, and timestamp drift"
+      ]
+    },
+    {
+      "id": "paper_artifacts",
+      "title": "One-Command Paper Artifacts",
+      "paper_section": "Reproducibility",
+      "stable_worldmodel_analogy": "reproducible platform release with scripts, reports, figures, and benchmark assets",
+      "repo_paths": [
+        "configs/paper/paper_smoke.json",
+        "scripts/reproduce_paper.py",
+        "stable_asr/paper/artifacts.py",
+        "stable_asr/paper/audit.py",
+        "stable_asr/paper/draft.py",
+        "stable_asr/paper/latex.py"
+      ],
+      "result_keys": ["meta.artifact_version"],
+      "artifact_paths": [
+        "ARTIFACT_INDEX.md",
+        "artifact_manifest.json",
+        "leaderboard.jsonl",
+        "BENCHMARK_SUITE.md"
+      ],
+      "commands": [
+        "stable-asr reproduce-paper --config configs/paper/paper_smoke.json",
+        "stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts",
+        "stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts"
+      ],
+      "final_scale_requirements": [
+        "archive the final benchmark result bundle and exact configs used for the paper",
+        "publish dataset and experiment cards for every non-toy dataset and trained model",
+        "run a clean reproduction from a fresh environment before submission"
+      ]
+    }
+  ]
+}

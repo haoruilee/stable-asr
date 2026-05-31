@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stable-asr"
+version = "0.0.0"
+description = "Reproducible research platform for real-time ASR systems and full-duplex turn-taking."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Stable-ASR Contributors" }
+]
+keywords = [
+  "asr",
+  "speech",
+  "streaming-asr",
+  "turn-taking",
+  "endpointing",
+  "full-duplex",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = []
+
+[project.optional-dependencies]
+train = [
+  "torch>=2.0",
+]
+data = [
+  "pyarrow>=14",
+]
+lance = [
+  "pyarrow>=14",
+  "pylance>=0.39.0",
+]
+export = [
+  "torch>=2.0",
+  "onnx>=1.15",
+]
+all = [
+  "torch>=2.0",
+  "onnx>=1.15",
+  "pyarrow>=14",
+  "pylance>=0.39.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/stable-asr/stable-asr"
+Roadmap = "https://github.com/stable-asr/stable-asr/blob/main/ROADMAP.md"
+
+[project.scripts]
+stable-asr = "stable_asr.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["stable_asr*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

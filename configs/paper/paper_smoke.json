@@ -1,0 +1,7 @@
+{
+  "output_dir": "runs/paper/smoke",
+  "episodes": 25,
+  "seed": 0,
+  "train_model": true
+}
+

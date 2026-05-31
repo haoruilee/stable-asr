@@ -1,0 +1,4 @@
+{"id":"zh_turn_000001","probs":{"complete":0.90,"incomplete":0.05,"backchannel":0.03,"wait":0.02},"timestamp":2.0}
+{"id":"zh_turn_000002","label":"incomplete","confidence":0.90,"timestamp":2.0}
+{"id":"zh_turn_000003","probs":{"complete":0.02,"incomplete":0.03,"backchannel":0.92,"wait":0.03},"timestamp":1.0}
+{"id":"zh_turn_000004","label":"wait","confidence":0.88,"timestamp":1.5}

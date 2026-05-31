@@ -1,0 +1,3 @@
+{"id":"smart_001","audio":"audio/smart_001.wav","sample_rate":16000,"duration_sec":1.4,"text":"what time is it","completion_probability":0.91,"language":"en"}
+{"id":"smart_002","audio":"audio/smart_002.wav","sample_rate":16000,"duration_sec":1.1,"text":"I was wondering if","completion_probability":0.17,"language":"en"}
+{"id":"smart_003","audio":"audio/smart_003.wav","sample_rate":16000,"duration_sec":1.8,"text":"talking to somebody else","scenario":"side_conversation","completion_probability":0.12,"language":"en"}

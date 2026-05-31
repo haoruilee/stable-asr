@@ -1,0 +1,226 @@
+{
+  "id": "stable_asr_final_experiments_v0",
+  "version": "0.1.0",
+  "title": "Stable-ASR Final-Scale Experiment Plan",
+  "description": "Machine-readable runbook for turning the smoke-level Stable-ASR platform artifacts into final-scale paper experiments. These entries are planned experiments, not completed benchmark claims.",
+  "experiments": [
+    {
+      "id": "real_data_layer_benchmark",
+      "title": "Real Corpus Data-Layer Benchmark",
+      "research_question": "RQ1",
+      "paper_section": "Data Layer",
+      "status": "planned",
+      "priority": "P0",
+      "required_inputs": [
+        "one public ASR corpus manifest, for example LibriSpeech, AISHELL-1, WenetSpeech, or Common Voice",
+        "local audio root on NVMe",
+        "optional object-storage mirror for remote-read experiments"
+      ],
+      "commands": [
+        "stable-asr prepare-asr-manifest --input data/<corpus>/metadata.tsv --output runs/final/<corpus>/asr_manifest.jsonl --audio-root data/<corpus>/audio --sample-rate 16000",
+        "stable-asr benchmark-data --dataset runs/final/<corpus>/turn_or_asr_windows.jsonl --output-dir runs/final/data_bench --formats jsonl parquet lance --sample-count 10000"
+      ],
+      "metrics": [
+        "write_seconds",
+        "read_seconds",
+        "size_bytes",
+        "samples_per_second",
+        "conversion_seconds"
+      ],
+      "expected_artifacts": [
+        "tables/data.md",
+        "figures/data.svg",
+        "DATASET_CARD.md"
+      ],
+      "success_criteria": [
+        "JSONL, Parquet, and Lance rows are present",
+        "random sampling throughput is reported for at least 10000 sampled windows",
+        "storage size and conversion time are reported for the same input corpus"
+      ]
+    },
+    {
+      "id": "external_turn_baselines",
+      "title": "External Turn-Taking Baseline Comparison",
+      "research_question": "RQ2",
+      "paper_section": "Baselines and Adapters",
+      "status": "planned",
+      "priority": "P0",
+      "required_inputs": [
+        "held-out Stable-ASR turn manifest",
+        "SmartTurn-style predictions or command export",
+        "EasyTurn-style predictions or command export",
+        "VAP-style predictions when available"
+      ],
+      "commands": [
+        "stable-asr convert-predictions --schema smart_turn --input runs/final/smartturn_raw.jsonl --output runs/final/smartturn_predictions.jsonl",
+        "stable-asr convert-predictions --schema easyturn --input runs/final/easyturn_raw.jsonl --output runs/final/easyturn_predictions.jsonl",
+        "stable-asr eval-turn --dataset runs/final/turn_test.jsonl --predictions runs/final/smartturn_predictions.jsonl --report runs/final/reports/smartturn.md",
+        "stable-asr benchmark-turn --dataset runs/final/turn_test.jsonl --predictions runs/final/easyturn_predictions.jsonl --report runs/final/reports/easyturn_latency.md"
+      ],
+      "metrics": [
+        "macro_f1",
+        "false_complete_rate",
+        "missed_interrupt_rate",
+        "backchannel_precision",
+        "avg_latency_ms",
+        "p95_latency_ms"
+      ],
+      "expected_artifacts": [
+        "tables/baselines.md",
+        "tables/turn_benchmark.md",
+        "ADAPTERS.md"
+      ],
+      "success_criteria": [
+        "at least two external turn systems are compared through the shared evaluator",
+        "NanoTurn checkpoint-backed results are present on the same split",
+        "latency and interaction metrics are reported for every system"
+      ]
+    },
+    {
+      "id": "real_voiceworld_scenarios",
+      "title": "Real-Audio VoiceWorld Scenario Evaluation",
+      "research_question": "RQ4",
+      "paper_section": "VoiceWorld Scenario Suite",
+      "status": "planned",
+      "priority": "P0",
+      "required_inputs": [
+        "curated real-audio or licensed scenario manifest",
+        "scenario tags for interruption, backchannel, side speech, ambient speech, noisy far-field, and code-switching",
+        "factor annotations for SNR, reverb, accent, overlap offset, assistant state, and language"
+      ],
+      "commands": [
+        "stable-asr validate-manifest runs/final/voiceworld_real.jsonl",
+        "stable-asr eval-turn --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --report runs/final/reports/nanoturn_voiceworld.md",
+        "stable-asr paper-table scenarios --results runs/final/paper_results.json --output runs/final/artifacts/tables/scenarios.md"
+      ],
+      "metrics": [
+        "accuracy",
+        "macro_f1",
+        "false_complete_rate",
+        "missed_interrupt_rate",
+        "premature_response_rate"
+      ],
+      "expected_artifacts": [
+        "SCENARIO_SUITE.md",
+        "tables/scenarios.md",
+        "figures/robustness_heatmap.svg",
+        "CASE_STUDIES.md"
+      ],
+      "success_criteria": [
+        "all v0 scenario ids have real or licensed examples",
+        "scenario metrics are broken down by controllable factors",
+        "case studies cite source record ids and failure categories"
+      ]
+    },
+    {
+      "id": "policy_transfer",
+      "title": "Policy Search And Transfer",
+      "research_question": "RQ3",
+      "paper_section": "Policy Layer",
+      "status": "planned",
+      "priority": "P1",
+      "required_inputs": [
+        "development turn manifest for threshold search",
+        "held-out scenario manifest for transfer evaluation",
+        "cost matrix covering false complete, missed interruption, false interruption, backchannel break, and latency"
+      ],
+      "commands": [
+        "stable-asr optimize-policy --dataset runs/final/turn_dev.jsonl --baseline vad_pause --output runs/final/policy_search.json",
+        "stable-asr eval-turn --dataset runs/final/turn_test.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --report runs/final/reports/policy_transfer.md"
+      ],
+      "metrics": [
+        "objective_score",
+        "false_complete_rate",
+        "missed_interrupt_rate",
+        "decision_latency_ms"
+      ],
+      "expected_artifacts": [
+        "tables/policy.md",
+        "figures/policy_state_machine.svg"
+      ],
+      "success_criteria": [
+        "policy is selected on development data only",
+        "transfer metrics are reported on held-out scenarios",
+        "threshold/latency trade-offs are plotted or tabulated"
+      ]
+    },
+    {
+      "id": "real_streaming_asr_systems",
+      "title": "Real Streaming ASR System Comparison",
+      "research_question": "RQ5",
+      "paper_section": "Streaming ASR Evaluation",
+      "status": "planned",
+      "priority": "P0",
+      "required_inputs": [
+        "command-backed exports for at least two ASR systems, for example Whisper, FunASR, WeNet, or NeMo",
+        "shared reference transcript manifest",
+        "streaming partial hypotheses and timestamp outputs"
+      ],
+      "commands": [
+        "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
+        "stable-asr sweep-streaming-asr --input runs/final/whisper_streaming.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160 320 --report runs/final/reports/whisper_sweep.md"
+      ],
+      "metrics": [
+        "wer",
+        "cer",
+        "rtf",
+        "first_partial_latency",
+        "final_latency",
+        "endpoint_delay",
+        "partial_revision_rate",
+        "stable_prefix_ratio",
+        "timestamp_drift"
+      ],
+      "expected_artifacts": [
+        "tables/streaming.md",
+        "tables/streaming_sweep.md",
+        "tables/streaming_failures.md",
+        "leaderboard.jsonl"
+      ],
+      "success_criteria": [
+        "at least two real ASR systems have comparable rows",
+        "chunk/lookahead sensitivity is reported for at least one system",
+        "failure mining identifies record-level streaming failures"
+      ]
+    },
+    {
+      "id": "final_reproducibility_bundle",
+      "title": "Final Reproducibility Bundle",
+      "research_question": "RQ6",
+      "paper_section": "Reproducibility",
+      "status": "planned",
+      "priority": "P0",
+      "required_inputs": [
+        "final experiment config",
+        "final paper_results.json",
+        "dataset cards",
+        "experiment cards",
+        "exact model checkpoints or adapter prediction manifests"
+      ],
+      "commands": [
+        "stable-asr reproduce-paper --config configs/final/paper_final.json",
+        "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
+        "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
+        "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --markdown-draft runs/final/PAPER_DRAFT.md --latex-draft runs/final/paper.tex --dataset-card runs/final/DATASET_CARD.md --experiment-card runs/final/EXPERIMENT_CARD.md"
+      ],
+      "metrics": [
+        "paper_release_audit",
+        "paper_parity_audit",
+        "benchmark_suite_coverage",
+        "claim_audit"
+      ],
+      "expected_artifacts": [
+        "ARTIFACT_INDEX.md",
+        "artifact_manifest.json",
+        "PAPER_PARITY.md",
+        "CLAIMS.md",
+        "paper.tex"
+      ],
+      "success_criteria": [
+        "clean reproduction from a fresh environment succeeds",
+        "paper parity audit has no remaining final-scale gaps",
+        "all benchmark claims point to archived configs and artifacts"
+      ]
+    }
+  ]
+}

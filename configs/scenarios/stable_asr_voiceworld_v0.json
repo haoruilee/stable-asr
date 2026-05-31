@@ -1,0 +1,199 @@
+{
+  "id": "stable_asr_voiceworld_v0",
+  "version": "0.1.0",
+  "title": "Stable-ASR VoiceWorld v0 Scenario Suite",
+  "description": "Seedable full-duplex turn-taking and streaming-ASR-control scenarios for incomplete pauses, backchannels, wait/hold commands, interruptions, side speech, ambient speech, noisy far-field speech, and code-switching.",
+  "generator": "stable_asr.scenarios.synthetic_turn.generate_synthetic_turn_records",
+  "seed_protocol": "Scenario id is selected by episode_index % len(scenarios); factors are sampled from a local random.Random(seed).",
+  "sample_rate": 16000,
+  "scenarios": [
+    {
+      "id": "normal_question",
+      "title": "Normal User Question",
+      "turn_label": "complete",
+      "action_label": "take_turn",
+      "assistant_speaking": false,
+      "overlap": false,
+      "expected_behavior": "assistant should take the turn after the user finishes"
+    },
+    {
+      "id": "incomplete_pause",
+      "title": "Incomplete Mid-Utterance Pause",
+      "turn_label": "incomplete",
+      "action_label": "keep_listening",
+      "assistant_speaking": false,
+      "overlap": false,
+      "expected_behavior": "assistant should keep listening and avoid premature response"
+    },
+    {
+      "id": "backchannel",
+      "title": "Listener Backchannel",
+      "turn_label": "backchannel",
+      "action_label": "continue_speaking",
+      "assistant_speaking": true,
+      "overlap": true,
+      "expected_behavior": "assistant should treat short acknowledgement as flow-preserving"
+    },
+    {
+      "id": "wait_stop",
+      "title": "Wait Or Hold Command",
+      "turn_label": "wait",
+      "action_label": "hold",
+      "assistant_speaking": false,
+      "overlap": false,
+      "expected_behavior": "assistant should hold instead of answering immediately"
+    },
+    {
+      "id": "user_interruption",
+      "title": "User Interruption",
+      "turn_label": "complete",
+      "action_label": "stop_tts_and_listen",
+      "assistant_speaking": true,
+      "overlap": true,
+      "expected_behavior": "assistant should stop speaking and listen to the user"
+    },
+    {
+      "id": "side_conversation",
+      "title": "Side Conversation",
+      "turn_label": "wait",
+      "action_label": "ignore",
+      "assistant_speaking": false,
+      "overlap": true,
+      "expected_behavior": "assistant should ignore speech not addressed to it"
+    },
+    {
+      "id": "ambient_speech",
+      "title": "Ambient Speech",
+      "turn_label": "wait",
+      "action_label": "ignore",
+      "assistant_speaking": false,
+      "overlap": true,
+      "expected_behavior": "assistant should reject background speech"
+    },
+    {
+      "id": "noisy_farfield",
+      "title": "Noisy Far-Field User Speech",
+      "turn_label": "complete",
+      "action_label": "take_turn",
+      "assistant_speaking": false,
+      "overlap": false,
+      "expected_behavior": "assistant should still take the turn under noise and distance"
+    },
+    {
+      "id": "code_switching",
+      "title": "Chinese-English Code Switching",
+      "turn_label": "complete",
+      "action_label": "take_turn",
+      "assistant_speaking": false,
+      "overlap": false,
+      "expected_behavior": "assistant should handle mixed-language completion"
+    }
+  ],
+  "factors": [
+    {
+      "name": "pause_ms",
+      "type": "integer_range",
+      "values": "scenario_specific"
+    },
+    {
+      "name": "vad_pause_ms",
+      "type": "integer_range",
+      "values": "pause_ms +/- 40"
+    },
+    {
+      "name": "duration_ms",
+      "type": "integer_range",
+      "values": "scenario_specific"
+    },
+    {
+      "name": "snr_db",
+      "type": "choice",
+      "values": [
+        -12,
+        -8,
+        -5,
+        0,
+        5,
+        10,
+        20
+      ]
+    },
+    {
+      "name": "reverb",
+      "type": "choice",
+      "values": [
+        "none",
+        "small_room",
+        "large_room",
+        "hallway"
+      ]
+    },
+    {
+      "name": "speaking_rate",
+      "type": "choice",
+      "values": [
+        0.8,
+        1.0,
+        1.2,
+        1.5
+      ]
+    },
+    {
+      "name": "overlap_offset_ms",
+      "type": "choice",
+      "values": [
+        0,
+        100,
+        300,
+        500
+      ]
+    },
+    {
+      "name": "network_jitter_ms",
+      "type": "choice",
+      "values": [
+        0,
+        50,
+        100,
+        300
+      ]
+    },
+    {
+      "name": "farfield_distance_m",
+      "type": "choice",
+      "values": [
+        0.5,
+        2.0,
+        3.5,
+        5.0
+      ]
+    },
+    {
+      "name": "code_switch_ratio",
+      "type": "choice",
+      "values": [
+        0.0,
+        0.25,
+        0.4,
+        0.55
+      ]
+    },
+    {
+      "name": "accent",
+      "type": "choice",
+      "values": [
+        "standard",
+        "regional",
+        "non_native"
+      ]
+    }
+  ],
+  "metrics": [
+    "accuracy",
+    "macro_f1",
+    "false_complete_rate",
+    "premature_response_rate",
+    "missed_interrupt_rate",
+    "failure_case_mining"
+  ]
+}

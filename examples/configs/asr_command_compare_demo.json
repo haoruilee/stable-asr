@@ -1,0 +1,29 @@
+{
+  "timeout_sec": 30,
+  "adapters": [
+    {
+      "name": "balanced_command",
+      "command": [
+        "python3",
+        "examples/commands/copy_streaming_transcript.py",
+        "--input",
+        "tests/fixtures/streaming_asr_sample.jsonl",
+        "--output",
+        "{output}"
+      ],
+      "output": "runs/asr_command_compare/balanced.jsonl"
+    },
+    {
+      "name": "fast_unstable_command",
+      "command": [
+        "python3",
+        "examples/commands/copy_streaming_transcript.py",
+        "--input",
+        "tests/fixtures/streaming_asr_fast_unstable_sample.jsonl",
+        "--output",
+        "{output}"
+      ],
+      "output": "runs/asr_command_compare/fast_unstable.jsonl"
+    }
+  ]
+}

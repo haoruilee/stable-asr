@@ -1,0 +1,193 @@
+# Data Schema
+
+The first stable data format is a JSONL turn/action manifest. Each line
+represents one training or evaluation window.
+
+## Required Fields
+
+```json
+{
+  "id": "turn_000001",
+  "audio": "audio/turn_000001.wav",
+  "sample_rate": 16000,
+  "start": 0.0,
+  "end": 2.0,
+  "turn_label": "complete",
+  "action_label": "take_turn",
+  "assistant_speaking": false,
+  "overlap": false,
+  "language": "en",
+  "source": "example"
+}
+```
+
+## Optional Fields
+
+```json
+{
+  "text": "what is the weather",
+  "asr_text": "what is the weather",
+  "scenario": "normal_question",
+  "metadata": {
+    "pause_ms": 850,
+    "snr_db": 20,
+    "reverb": "none",
+    "speaking_rate": 1.0
+  }
+}
+```
+
+## Registered Backends
+
+- JSONL: built in
+- Parquet: install `stable-asr[data]`
+- Lance: install `stable-asr[lance]`
+
+## VoiceWorld Scenario Names
+
+The seedable synthetic suite currently includes:
+
+- `normal_question`
+- `incomplete_pause`
+- `backchannel`
+- `wait_stop`
+- `user_interruption`
+- `side_conversation`
+- `ambient_speech`
+- `noisy_farfield`
+- `code_switching`
+
+The scenario suite is also versioned as machine-readable JSON:
+
+```bash
+stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.json --validate-only
+stable-asr scenario-suite --output runs/SCENARIO_SUITE.md
+```
+
+This file records expected turn/action labels, assistant-speaking state, overlap
+state, factors of variation, and paper-facing metrics for each VoiceWorld
+scenario.
+
+## Turn Labels
+
+- `complete`
+- `incomplete`
+- `backchannel`
+- `wait`
+
+## Action Labels
+
+- `take_turn`
+- `keep_listening`
+- `continue_speaking`
+- `stop_tts_and_listen`
+- `hold`
+- `ignore`
+- `light_ack`
+
+## External Conversions
+
+Stable-ASR currently supports JSONL conversion for:
+
+- EasyTurn-style manifests
+- Full-Duplex-Bench-style manifests
+- SmartTurn-style manifests
+
+## Data Source Registry
+
+Stable-ASR keeps a machine-readable source registry at
+`configs/datasets/stable_asr_sources.json`. It separates implemented sources
+from planned public-corpus recipes and can be rendered or validated:
+
+```bash
+stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only
+stable-asr data-sources --output runs/DATA_SOURCES.md
+```
+
+## ASR Corpus Manifest
+
+Public ASR corpora usually start as utterance metadata rather than turn/action
+windows. Stable-ASR therefore has a separate ASR manifest schema for local
+corpus preparation:
+
+```json
+{
+  "id": "asr_demo_0001",
+  "audio": "audio/asr_demo_0001.wav",
+  "sample_rate": 16000,
+  "text": "what is the weather",
+  "language": "en",
+  "source": "librispeech",
+  "duration": 2.1,
+  "split": "dev",
+  "speaker_id": "spk_a",
+  "metadata": {
+    "domain": "assistant_query"
+  }
+}
+```
+
+Create and validate this manifest from TSV/CSV/JSONL metadata:
+
+```bash
+stable-asr prepare-asr-manifest \
+  --input examples/data/asr_metadata.tsv \
+  --output runs/asr_manifest.jsonl \
+  --audio-root examples/data \
+  --sample-rate 16000
+
+stable-asr validate-asr-manifest runs/asr_manifest.jsonl
+stable-asr inspect-asr-manifest runs/asr_manifest.jsonl
+```
+
+Supported input aliases include `utt_id`/`key`, `audio_path`/`wav`,
+`transcript`/`reference`, `duration_sec`, `speaker_id`, `split`, `source`, and
+`language`. This recipe is the v0 bridge from public corpora such as
+LibriSpeech, AISHELL-1, WenetSpeech, and Common Voice into the paper data layer.
+
+## Streaming ASR Fixture Schema
+
+`eval-streaming-asr` accepts JSONL records with final transcript, partial
+hypotheses, endpoint timing, and optional word timestamps:
+
+```json
+{
+  "id": "utt_001",
+  "reference": "what is the weather",
+  "final_text": "what is the weather",
+  "audio_duration": 2.0,
+  "processing_time": 0.5,
+  "speech_end_time": 1.8,
+  "endpoint_time": 2.1,
+  "reference_word_timestamps": [
+    {"word": "what", "start": 0.10, "end": 0.35}
+  ],
+  "word_timestamps": [
+    {"word": "what", "start": 0.12, "end": 0.36}
+  ],
+  "partials": [
+    {"time": 0.4, "text": "what"},
+    {"time": 2.1, "text": "what is the weather", "is_final": true}
+  ]
+}
+```
+
+`compare-streaming-asr` wraps these files in `TranscriptJSONLAdapter` objects.
+`convert-asr-transcript` normalizes external transcript JSONL into this schema:
+
+```bash
+stable-asr convert-asr-transcript \
+  --schema whisper \
+  --input tests/fixtures/whisper_transcript_sample.jsonl \
+  --output /tmp/stable-asr-whisper-streaming.jsonl
+
+stable-asr convert-asr-transcript \
+  --schema funasr \
+  --input tests/fixtures/funasr_transcript_sample.jsonl \
+  --output /tmp/stable-asr-funasr-streaming.jsonl
+```
+
+Supported external schemas currently include Whisper-style `segments`/`words`
+and FunASR-style `sentence_info`/`timestamp` rows. Future WeNet, NeMo, and
+ESPnet adapters should implement the same `StreamingASRAdapter.load_records()`
+evaluation protocol.

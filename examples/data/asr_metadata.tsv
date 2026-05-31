@@ -1,0 +1,4 @@
+utt_id	audio_path	transcript	duration_sec	speaker_id	split	source	language	domain
+asr_demo_0001	audio/asr_demo_0001.wav	what is the weather	2.10	spk_a	dev	librispeech	en	assistant_query
+asr_demo_0002	audio/asr_demo_0002.wav	turn on the lights	2.40	spk_b	dev	librispeech	en	smart_home
+asr_demo_0003	audio/asr_demo_0003.wav	我想问一下今天北京的天气	2.80	spk_c	test	aishell1	zh	assistant_query

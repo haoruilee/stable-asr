@@ -1,0 +1,4 @@
+{"utterance_id":"zh_turn_000001","prob_complete":0.94,"prob_incomplete":0.02,"prob_backchannel":0.02,"prob_wait":0.02,"timestamp":2.0}
+{"utterance_id":"zh_turn_000002","label":"incomplete","confidence":0.90,"timestamp":2.0}
+{"utterance_id":"zh_turn_000003","probabilities":{"prob_complete":0.02,"prob_incomplete":0.02,"prob_backchannel":0.94,"prob_wait":0.02},"timestamp":1.0}
+{"utterance_id":"zh_turn_000004","state":"hold","confidence":0.88,"timestamp":1.5}
