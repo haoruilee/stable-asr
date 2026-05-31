@@ -30,7 +30,7 @@ DEFAULT_PARITY_CHECKLIST: dict[str, Any] = {
             "stable_worldmodel_analogy": "fragmented world-model codebases, data pipelines, and evaluation protocols",
             "repo_paths": ["README.md", "ROADMAP.md", "docs/index.md"],
             "result_keys": ["meta.artifact_version"],
-            "artifact_paths": ["ARTIFACT_INDEX.md", "artifact_manifest.json"],
+            "artifact_paths": ["ARTIFACT_INDEX.md", "artifact_manifest.json", "PROVENANCE.md"],
             "commands": ["stable-asr paper-draft --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/PAPER_DRAFT.md"],
             "final_scale_requirements": [
                 "write the final related-work comparison against ASR toolkits, streaming ASR evaluation, turn-taking models, and full-duplex benchmarks",
@@ -159,6 +159,7 @@ DEFAULT_PARITY_CHECKLIST: dict[str, Any] = {
                 "scripts/reproduce_paper.py",
                 "stable_asr/paper/artifacts.py",
                 "stable_asr/paper/audit.py",
+                "stable_asr/paper/provenance.py",
                 "stable_asr/paper/draft.py",
                 "stable_asr/paper/latex.py"
             ],
@@ -166,6 +167,8 @@ DEFAULT_PARITY_CHECKLIST: dict[str, Any] = {
             "artifact_paths": [
                 "ARTIFACT_INDEX.md",
                 "artifact_manifest.json",
+                "artifact_hashes.json",
+                "PROVENANCE.md",
                 "leaderboard.jsonl",
                 "BENCHMARK_SUITE.md"
             ],

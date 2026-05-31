@@ -157,6 +157,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-transcript-conversions",
         "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
+        "stable-asr paper-artifact-integrity --manifest runs/final/artifacts/artifact_hashes.json --root runs/final/artifacts",
         "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
     ],
 }
@@ -2070,6 +2071,7 @@ def _final_artifacts_action(
         commands=[
             f"stable-asr final-results --config {config_path} --output {config['artifacts']['paper_results']}",
             f"stable-asr paper-bundle --results {config['artifacts']['paper_results']} --output-dir {config['artifacts']['bundle_dir']}",
+            f"stable-asr paper-artifact-integrity --manifest {config['artifacts']['bundle_dir']}/artifact_hashes.json --root {config['artifacts']['bundle_dir']}",
             f"stable-asr paper-parity-audit --results {config['artifacts']['paper_results']} --artifacts-dir {config['artifacts']['bundle_dir']} --require-final",
             f"stable-asr paper-release-audit --repo-root . --results {config['artifacts']['paper_results']} --artifacts-dir {config['artifacts']['bundle_dir']}",
         ],

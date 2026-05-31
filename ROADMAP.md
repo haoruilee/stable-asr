@@ -154,6 +154,7 @@ Paper artifacts:
 - ASR corpus manifest recipe table, smoke implementation via `paper-table asr_manifest_recipe`
 - data format registry diagram, smoke implementation via `paper-figure data_registry`
 - paper parity checklist artifact, implemented with `stable-asr paper-parity-audit`
+- artifact integrity and provenance manifests for git/config/result traceability
 - final-scale experiment runbook, implemented with `stable-asr final-experiments`
 - final-run config template, implemented with `stable-asr final-config`
 - reproducible benchmark script

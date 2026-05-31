@@ -17,6 +17,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert set(bundle.leaderboards) == {"jsonl", "csv"}
     assert set(bundle.leaderboard_validation) == {"json", "markdown"}
     assert set(bundle.artifact_integrity) == {"json", "markdown"}
+    assert set(bundle.provenance) == {"json", "markdown"}
     assert set(bundle.benchmark_suite) == {"json", "markdown"}
     assert set(bundle.data_sources) == {"json", "markdown"}
     assert set(bundle.adapter_registry) == {"json", "markdown"}
@@ -49,6 +50,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR Artifact Integrity" in Path(bundle.artifact_integrity["markdown"]).read_text(encoding="utf-8")
     assert "sha256" in Path(bundle.artifact_integrity["json"]).read_text(encoding="utf-8")
     assert "Artifact Integrity" in Path(bundle.index_path).read_text(encoding="utf-8")
+    assert "Stable-ASR Paper Provenance" in Path(bundle.provenance["markdown"]).read_text(encoding="utf-8")
+    assert "generated_at_utc" in Path(bundle.provenance["json"]).read_text(encoding="utf-8")
+    assert "Provenance" in Path(bundle.index_path).read_text(encoding="utf-8")
     assert "asr_transcript_conversion" in Path(bundle.benchmark_suite["markdown"]).read_text(encoding="utf-8")
     assert "synthetic_voiceworld" in Path(bundle.data_sources["markdown"]).read_text(encoding="utf-8")
     assert "command_streaming_asr" in Path(bundle.adapter_registry["markdown"]).read_text(encoding="utf-8")
@@ -68,6 +72,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "final_run_action_plan" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "final_evidence_matrix" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "artifact_integrity" in Path(bundle.manifest_path).read_text(encoding="utf-8")
+    assert "provenance" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "Stable-ASR Paper Status" in Path(bundle.paper_status["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Platform Roadmap" in Path(bundle.roadmap_status["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Claim Evidence Matrix" in Path(bundle.claims["markdown"]).read_text(encoding="utf-8")

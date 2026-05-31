@@ -17,6 +17,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert report.ok
     assert "paper_audit: OK" in report.to_text()
     assert "artifact_integrity:sha256" in report.to_text()
+    assert "provenance:json" in report.to_text()
     assert report.to_dict()["ok"] is True
 
 

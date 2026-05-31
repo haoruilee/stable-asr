@@ -129,6 +129,8 @@
         {"path": "configs/benchmarks/stable_asr_v0.json", "required_now": true},
         {"path": "stable_asr/paper/artifacts.py", "required_now": true},
         {"path": "stable_asr/paper/audit.py", "required_now": true},
+        {"path": "stable_asr/paper/provenance.py", "required_now": true},
+        {"path": "stable_asr/paper/integrity.py", "required_now": true},
         {"path": "stable_asr/paper/parity.py", "required_now": true},
         {"path": "stable_asr/paper/final_experiments.py", "required_now": true},
         {"path": "stable_asr/paper/final_config.py", "required_now": true},
@@ -142,7 +144,7 @@
         "stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts"
       ],
       "success_criteria": [
-        "smoke artifacts have stable tables, figures, claim audits, and bundle manifests",
+        "smoke artifacts have stable tables, figures, claim audits, bundle manifests, provenance, and integrity hashes",
         "release audit separates structural readiness from final-scale missing evidence",
         "leaderboard exports are generated from paper result artifacts"
       ]

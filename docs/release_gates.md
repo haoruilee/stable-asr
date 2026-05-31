@@ -5,8 +5,8 @@ Stable-ASR uses two levels of paper readiness checks.
 ## Artifact Audit
 
 `paper-audit` verifies that one run contains the required result sections,
-tables, figures, artifact index, manifest, and sha256 artifact integrity
-manifest.
+tables, figures, artifact index, manifest, sha256 artifact integrity manifest,
+and provenance manifest.
 
 This is a structural check. Passing it does not mean the platform paper is
 ready.
@@ -57,6 +57,7 @@ ready.
 - leaderboard-ready JSONL/CSV exports are included in the artifact bundle
 - leaderboard validation JSON/Markdown files are included in the artifact bundle
 - artifact integrity JSON/Markdown files are included and pass sha256 verification
+- provenance JSON/Markdown files record git, version, result hash, and config hashes
 - benchmark suite JSON/Markdown files are included in the artifact bundle
 - data source registry JSON/Markdown files are included in the artifact bundle
 - adapter registry JSON/Markdown files are included in the artifact bundle

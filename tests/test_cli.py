@@ -2294,6 +2294,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert code == 0
     assert "artifact_index:" in captured.out
     assert "benchmark_suite:" in captured.out
+    assert "provenance:" in captured.out
     assert "data_sources:" in captured.out
     assert "leaderboard_validation:" in captured.out
     assert "asr_collections:" in captured.out
@@ -2306,6 +2307,8 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert (output_dir / "ARTIFACT_INDEX.md").exists()
     assert (output_dir / "ARTIFACT_HASHES.md").exists()
     assert (output_dir / "artifact_hashes.json").exists()
+    assert (output_dir / "PROVENANCE.md").exists()
+    assert (output_dir / "provenance.json").exists()
     assert (output_dir / "tables" / "baselines.md").exists()
     assert (output_dir / "figures" / "baselines.svg").exists()
     assert (output_dir / "LEADERBOARD_VALIDATION.md").exists()

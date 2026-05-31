@@ -219,6 +219,8 @@
       "expected_artifacts": [
         "ARTIFACT_INDEX.md",
         "artifact_manifest.json",
+        "artifact_hashes.json",
+        "PROVENANCE.md",
         "PAPER_PARITY.md",
         "CLAIMS.md",
         "paper.tex"

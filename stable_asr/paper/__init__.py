@@ -26,6 +26,13 @@ from stable_asr.paper.integrity import (
 )
 from stable_asr.paper.latex import paper_latex
 from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
+from stable_asr.paper.provenance import (
+    GitProvenance,
+    PaperProvenanceReport,
+    ProvenanceFile,
+    paper_bundle_provenance,
+    write_paper_provenance,
+)
 from stable_asr.paper.release_smoke import PaperReleaseSmokeResult, run_paper_release_smoke
 from stable_asr.paper.suites import (
     DEFAULT_BENCHMARK_SUITE,
@@ -59,6 +66,9 @@ __all__ = [
     "FinalResultsAssemblyReport",
     "FinalRunActionPlan",
     "FinalEvidenceMatrixReport",
+    "GitProvenance",
+    "PaperProvenanceReport",
+    "ProvenanceFile",
     "assemble_final_paper_results",
     "artifact_integrity_manifest",
     "audit_paper_artifacts",
@@ -71,6 +81,7 @@ __all__ = [
     "benchmark_suite_markdown",
     "load_benchmark_suite",
     "load_artifact_integrity",
+    "paper_bundle_provenance",
     "paper_artifact_bundle",
     "paper_draft",
     "final_evidence_matrix",
@@ -84,4 +95,5 @@ __all__ = [
     "verify_artifact_integrity",
     "write_artifact_integrity",
     "write_benchmark_suite_json",
+    "write_paper_provenance",
 ]

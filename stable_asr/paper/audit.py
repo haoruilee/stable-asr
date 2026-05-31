@@ -922,6 +922,8 @@ def _artifact_checks(artifacts_dir: Path) -> list[PaperAuditCheck]:
     checks.append(_exists_check("artifact_integrity:json", artifacts_dir / "artifact_hashes.json"))
     checks.append(_exists_check("artifact_integrity:markdown", artifacts_dir / "ARTIFACT_HASHES.md"))
     checks.append(_integrity_check(artifacts_dir))
+    checks.append(_exists_check("provenance:json", artifacts_dir / "provenance.json"))
+    checks.append(_exists_check("provenance:markdown", artifacts_dir / "PROVENANCE.md"))
     checks.append(_exists_check("benchmark_suite:json", artifacts_dir / "benchmark_suite.json"))
     checks.append(_exists_check("benchmark_suite:markdown", artifacts_dir / "BENCHMARK_SUITE.md"))
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))

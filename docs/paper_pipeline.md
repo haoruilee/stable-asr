@@ -31,6 +31,7 @@ The smoke run writes:
 - final-run file audit showing which real paper inputs are still missing
 - final-run action plan showing the remaining data-staging and experiment commands
 - final evidence matrix linking final experiments to blockers, commands, success criteria, and artifacts
+- paper bundle provenance recording git commit, Stable-ASR version, input result hash, and config hashes
 - optional NanoTurn checkpoint and metrics
 - streaming ASR fixture metrics
 
@@ -83,7 +84,8 @@ data registry, VoiceWorld timelines, policy state transitions, baseline quality,
 latency, ASR manifest recipe summaries, failure-case taxonomy, streaming metrics,
 streaming failure taxonomy, external ASR transcript conversion, scenario
 robustness, policy search, leaderboard-ready JSONL/CSV metric rows, a
-leaderboard validation report, sha256 artifact integrity manifests,
+leaderboard validation report, sha256 artifact integrity manifests, provenance
+manifests for git/config/result traceability,
 machine-readable benchmark suite definition, a data source registry, a
 baseline/adapter registry, ASR reference collection, paper-reference, BibTeX, and coverage artifacts, a VoiceWorld scenario suite definition, and
 case-study JSON/Markdown artifacts that link failure examples back to source
@@ -102,7 +104,7 @@ stable-asr paper-draft --results runs/paper/smoke/paper_results.json --artifacts
 stable-asr paper-latex --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/paper.tex
 ```
 
-`paper-audit` checks artifact shape and verifies the bundle hash manifest.
+`paper-audit` checks artifact shape, provenance files, and verifies the bundle hash manifest.
 `paper-artifact-integrity` can be run directly to re-check `artifact_hashes.json`
 after moving or publishing a bundle. `paper-release-audit` checks whether the
 repository has enough evidence for a platform paper release. `paper-parity-audit`

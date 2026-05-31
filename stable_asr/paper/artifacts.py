@@ -26,6 +26,7 @@ from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.integrity import artifact_integrity_manifest, write_artifact_integrity
 from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
 from stable_asr.paper.parity import audit_paper_parity, load_paper_parity_checklist, paper_parity_markdown
+from stable_asr.paper.provenance import paper_bundle_provenance, write_paper_provenance
 from stable_asr.paper.status import paper_status, write_paper_status_json, write_paper_status_markdown
 from stable_asr.paper.suites import benchmark_suite_markdown, load_benchmark_suite, write_benchmark_suite_json
 from stable_asr.paper.tables import PAPER_TABLES, paper_table
@@ -53,6 +54,7 @@ class PaperArtifactBundle:
     index_path: str
     manifest_path: str
     artifact_integrity: dict[str, str]
+    provenance: dict[str, str]
     tables: dict[str, str]
     figures: dict[str, str]
     leaderboards: dict[str, str]
@@ -79,6 +81,7 @@ class PaperArtifactBundle:
             "index_path": self.index_path,
             "manifest_path": self.manifest_path,
             "artifact_integrity": self.artifact_integrity,
+            "provenance": self.provenance,
             "tables": self.tables,
             "figures": self.figures,
             "leaderboards": self.leaderboards,
@@ -197,6 +200,10 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "json": str(output_dir / "artifact_hashes.json"),
         "markdown": str(output_dir / "ARTIFACT_HASHES.md"),
     }
+    provenance = {
+        "json": str(output_dir / "provenance.json"),
+        "markdown": str(output_dir / "PROVENANCE.md"),
+    }
     # Seed these files before the parity audit, which checks that the paper
     # bundle contains an artifact index and manifest. They are rewritten below
     # with the final bundle payload.
@@ -293,6 +300,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         index_path=str(index_path),
         manifest_path=str(manifest_path),
         artifact_integrity=artifact_integrity,
+        provenance=provenance,
         tables=tables,
         figures=figures,
         leaderboards=leaderboards,
@@ -315,6 +323,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     )
     manifest_path.write_text(json.dumps(provisional.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     index_path.write_text(_artifact_index(results_path, provisional), encoding="utf-8")
+    _write_bundle_provenance(results_path, provisional)
     _write_bundle_integrity(provisional)
 
     claim_artifacts = paper_claims(results_path, output_dir)
@@ -324,6 +333,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         index_path=str(index_path),
         manifest_path=str(manifest_path),
         artifact_integrity=artifact_integrity,
+        provenance=provenance,
         tables=tables,
         figures=figures,
         leaderboards=leaderboards,
@@ -346,6 +356,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     )
     manifest_path.write_text(json.dumps(bundle.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     index_path.write_text(_artifact_index(results_path, bundle), encoding="utf-8")
+    _write_bundle_provenance(results_path, bundle)
     _write_bundle_integrity(bundle)
     return bundle
 
@@ -372,6 +383,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Artifact Integrity", ""])
     for name, path in bundle.artifact_integrity.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Provenance", ""])
+    for name, path in bundle.provenance.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Benchmark Suite", ""])
     for name, path in bundle.benchmark_suite.items():
@@ -442,9 +456,19 @@ def _write_bundle_integrity(bundle: PaperArtifactBundle) -> dict[str, str]:
     )
 
 
+def _write_bundle_provenance(results_path: Path, bundle: PaperArtifactBundle) -> dict[str, str]:
+    report = paper_bundle_provenance(results_path, bundle.output_dir)
+    return write_paper_provenance(
+        report,
+        bundle.provenance["json"],
+        bundle.provenance["markdown"],
+    )
+
+
 def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
     paths = [bundle.index_path, bundle.manifest_path]
     sections = (
+        bundle.provenance,
         bundle.tables,
         bundle.figures,
         bundle.leaderboards,

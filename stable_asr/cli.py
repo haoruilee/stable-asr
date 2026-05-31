@@ -2128,6 +2128,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"leaderboards: {len(bundle.leaderboards)}")
             print(f"leaderboard_validation: {len(bundle.leaderboard_validation)}")
             print(f"benchmark_suite: {len(bundle.benchmark_suite)}")
+            print(f"provenance: {len(bundle.provenance)}")
             print(f"data_sources: {len(bundle.data_sources)}")
             print(f"adapter_registry: {len(bundle.adapter_registry)}")
             print(f"asr_collections: {len(bundle.asr_collections)}")
