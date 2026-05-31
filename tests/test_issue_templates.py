@@ -30,3 +30,13 @@ def test_github_issue_templates_cover_contribution_tracks() -> None:
     submission = (ISSUE_TEMPLATE_DIR / "benchmark_submission.yml").read_text(encoding="utf-8")
     assert "stable-asr benchmark-pack" in submission
     assert "leaderboard-validate" in submission
+
+
+def test_pull_request_template_requires_evidence_and_final_scale_context() -> None:
+    template = Path(".github/PULL_REQUEST_TEMPLATE.md").read_text(encoding="utf-8")
+
+    assert "Commands run" in template
+    assert "Data, License, And Provenance" in template
+    assert "Final-Scale Impact" in template
+    assert "final-acquisition-pack" in template
+    assert "paper-release-smoke" in template

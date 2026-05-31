@@ -21,6 +21,7 @@ ready.
 - CI builds a wheel, installs it into a clean virtual environment, and runs platform commands from an empty working directory
 - CI installs `stable-asr[lance]` and runs JSONL/Parquet/Lance data backend smoke benchmarks plus a Lance-enabled release smoke pass
 - `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, and `CODE_OF_CONDUCT.md` exist
+- A pull request template exists for evidence commands, data/license notes, and final-scale impact checks
 - GitHub issue templates exist for final data acquisition, ASR adapters, VoiceWorld scenarios, and benchmark submissions
 - paper config and reproduction script exist
 - roadmap registry exists and `roadmap-status` can separate current milestone evidence from planned final-scale work

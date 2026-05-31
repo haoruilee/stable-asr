@@ -573,6 +573,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
         "roadmap": "ROADMAP.md",
         "roadmap_registry": "configs/roadmap/stable_asr_roadmap.json",
         "ci_workflow": ".github/workflows/tests.yml",
+        "pull_request_template": ".github/PULL_REQUEST_TEMPLATE.md",
         "issue_template_config": ".github/ISSUE_TEMPLATE/config.yml",
         "issue_template_final_data": ".github/ISSUE_TEMPLATE/final_data_acquisition.yml",
         "issue_template_asr_adapter": ".github/ISSUE_TEMPLATE/asr_adapter.yml",

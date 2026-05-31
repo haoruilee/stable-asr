@@ -104,6 +104,7 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "OK software/schema_registry" in text
     assert "OK software/ci_wheel_smoke" in text
     assert "OK software/ci_lance_smoke" in text
+    assert "OK software/pull_request_template" in text
     assert "OK software/issue_template_final_data" in text
     assert "OK software/issue_template_asr_adapter" in text
     assert "OK software/issue_template_voiceworld" in text
@@ -140,6 +141,7 @@ def test_paper_release_audit_resolves_platform_assets_from_empty_repo_root(tmp_p
     assert "OK software/manifest_in" in text
     assert "OK software/mkdocs_config" in text
     assert "OK software/ci_workflow" in text
+    assert "OK software/pull_request_template" in text
     assert "OK software/issue_template_final_data" in text
     assert "OK software/asr_manifest_schema" in text
     assert "OK paper/citation" in text

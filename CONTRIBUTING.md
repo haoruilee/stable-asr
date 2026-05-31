@@ -53,3 +53,5 @@ stable-asr benchmark-pack --output-dir runs/benchmark_pack
 - Update `ROADMAP.md` when a milestone changes status.
 - Link the relevant issue template and include the commands that generated or
   validated the submitted artifact.
+- Fill out `.github/PULL_REQUEST_TEMPLATE.md`, including data/license notes and
+  final-scale impact.
