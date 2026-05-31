@@ -26,7 +26,7 @@ streaming ASR and voice-agent control:
 - final-run file audit for missing real paper inputs
 - final-run action plan for the remaining data-staging and experiment commands
 - final-run starter pack that bundles configs, audits, runbooks, references, and scaffold directories without fake evidence
-- final acquisition pack that turns M5 inputs into collaborator-facing staging, license/consent, recording, and handoff checklists
+- final acquisition pack that turns M5 inputs into collaborator-facing staging, owner assignment, license/consent, recording, and handoff checklists
 - final evidence matrix linking final experiments to blockers and expected artifacts
 - leaderboard validation for external JSONL benchmark submissions
 - benchmark starter packs for external contributors

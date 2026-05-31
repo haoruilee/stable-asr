@@ -53,10 +53,10 @@ stable-asr paper-status --repo-root .
 ```
 
 `final-acquisition-pack` is the collaborator-facing version of the final input
-plan. It writes a TSV/JSON staging checklist, license and consent review sheet,
-VoiceWorld recording checklist, and structured handoff template so real corpora
-and external model outputs can be collected without inventing placeholder
-evidence. Use `final-handoff-audit` on a filled handoff JSON before treating the
-staged inputs as final release evidence. `paper-release-audit
---require-final-ready` now checks that this filled handoff exists and audits
-cleanly.
+plan. It writes a TSV/JSON staging checklist, owner assignment tracker, license
+and consent review sheet, VoiceWorld recording checklist, and structured
+handoff template so real corpora and external model outputs can be collected
+without inventing placeholder evidence. Use `final-handoff-audit` on a filled
+handoff JSON before treating the staged inputs as final release evidence.
+`paper-release-audit --require-final-ready` now checks that this filled handoff
+exists and audits cleanly.

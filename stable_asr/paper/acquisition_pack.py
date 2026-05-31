@@ -65,12 +65,57 @@ class AcquisitionChecklistRow:
 
 
 @dataclass(frozen=True)
+class AcquisitionAssignmentRow:
+    collection_id: str
+    title: str
+    category: str
+    priority: str
+    required: bool
+    owner: str
+    due_date: str
+    status: str
+    blocking_release: bool
+    missing_required_paths: list[str]
+    pending_generated_paths: list[str]
+    license: str
+    license_review_required: bool
+    handoff_required: bool
+    source_urls: list[str]
+    next_command: str
+    verification: str
+    notes: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "collection_id": self.collection_id,
+            "title": self.title,
+            "category": self.category,
+            "priority": self.priority,
+            "required": self.required,
+            "owner": self.owner,
+            "due_date": self.due_date,
+            "status": self.status,
+            "blocking_release": self.blocking_release,
+            "missing_required_paths": self.missing_required_paths,
+            "pending_generated_paths": self.pending_generated_paths,
+            "license": self.license,
+            "license_review_required": self.license_review_required,
+            "handoff_required": self.handoff_required,
+            "source_urls": self.source_urls,
+            "next_command": self.next_command,
+            "verification": self.verification,
+            "notes": self.notes,
+        }
+
+
+@dataclass(frozen=True)
 class FinalAcquisitionPackReport:
     output_dir: str
     files: dict[str, str]
     commands: list[str]
     collections: int
     checklist_rows: int
+    assignment_rows: int
     missing_required: list[str]
     license_review_items: int
     config_ok: bool
@@ -83,6 +128,7 @@ class FinalAcquisitionPackReport:
             and self.input_collections_ok
             and self.collections > 0
             and self.checklist_rows > 0
+            and self.assignment_rows > 0
             and bool(self.commands)
         )
 
@@ -95,6 +141,7 @@ class FinalAcquisitionPackReport:
             "commands": self.commands,
             "collections": self.collections,
             "checklist_rows": self.checklist_rows,
+            "assignment_rows": self.assignment_rows,
             "missing_required": self.missing_required,
             "license_review_items": self.license_review_items,
             "config_ok": self.config_ok,
@@ -106,6 +153,7 @@ class FinalAcquisitionPackReport:
             {"check": "pack_build", "status": "OK" if self.ok else "FAILED"},
             {"check": "collections", "status": str(self.collections)},
             {"check": "checklist_rows", "status": str(self.checklist_rows)},
+            {"check": "assignment_rows", "status": str(self.assignment_rows)},
             {"check": "missing_required", "status": str(len(self.missing_required))},
             {"check": "license_review_items", "status": str(self.license_review_items)},
         ]
@@ -210,6 +258,7 @@ def build_final_acquisition_pack(
     )
 
     checklist = _checklist_rows(registry, repo_root=repo_root)
+    assignments = _assignment_rows(registry, checklist)
     files["checklist_json"] = _write_json(
         output_dir / "acquisition" / "staging_checklist.json",
         {"rows": [row.to_dict() for row in checklist]},
@@ -221,6 +270,18 @@ def build_final_acquisition_pack(
     files["acquisition_markdown"] = _write_text(
         output_dir / "acquisition" / "DATA_ACQUISITION.md",
         _acquisition_markdown(registry, checklist),
+    )
+    files["assignments_json"] = _write_json(
+        output_dir / "acquisition" / "assignments.json",
+        {"rows": [row.to_dict() for row in assignments]},
+    )
+    files["assignments_tsv"] = _write_text(
+        output_dir / "acquisition" / "assignments.tsv",
+        _assignments_tsv(assignments),
+    )
+    files["assignments_markdown"] = _write_text(
+        output_dir / "acquisition" / "ASSIGNMENTS.md",
+        _assignments_markdown(assignments),
     )
     license_items = _license_review_rows(registry)
     files["license_review_markdown"] = _write_text(
@@ -254,6 +315,7 @@ def build_final_acquisition_pack(
         commands=commands,
         collections=len(registry["collections"]),
         checklist_rows=len(checklist),
+        assignment_rows=len(assignments),
         missing_required=report.missing_required,
         license_review_items=len(license_items),
         config_ok=config_validation.ok,
@@ -302,19 +364,73 @@ def _checklist_rows(registry: dict[str, Any], *, repo_root: Path) -> list[Acquis
     return rows
 
 
+def _assignment_rows(
+    registry: dict[str, Any],
+    checklist: list[AcquisitionChecklistRow],
+) -> list[AcquisitionAssignmentRow]:
+    grouped: dict[str, list[AcquisitionChecklistRow]] = {}
+    for row in checklist:
+        grouped.setdefault(row.collection_id, []).append(row)
+
+    rows: list[AcquisitionAssignmentRow] = []
+    for collection in registry["collections"]:
+        collection_id = str(collection["id"])
+        path_rows = grouped.get(collection_id, [])
+        missing_required = [
+            row.path for row in path_rows if row.path_kind == "required_input" and row.status != "present"
+        ]
+        pending_generated = [
+            row.path for row in path_rows if row.path_kind == "generated_artifact" and row.status != "present"
+        ]
+        required = bool(collection["required"])
+        blocking_release = required and (bool(missing_required) or bool(pending_generated))
+        rows.append(
+            AcquisitionAssignmentRow(
+                collection_id=collection_id,
+                title=str(collection["title"]),
+                category=str(collection["category"]),
+                priority=str(collection["priority"]),
+                required=required,
+                owner=str(collection.get("owner", "unassigned")),
+                due_date=str(collection.get("due_date", "")),
+                status=_assignment_status(
+                    required=required,
+                    missing_required=missing_required,
+                    pending_generated=pending_generated,
+                ),
+                blocking_release=blocking_release,
+                missing_required_paths=missing_required,
+                pending_generated_paths=pending_generated,
+                license=str(collection["license"]),
+                license_review_required=_needs_license_review(str(collection["license"])),
+                handoff_required=required or bool(missing_required) or bool(pending_generated),
+                source_urls=list(collection.get("source_urls", [])),
+                next_command=_first_string(collection.get("commands", [])),
+                verification=_first_string(collection.get("verification", [])),
+                notes=str(collection.get("notes", "")),
+            )
+        )
+    return rows
+
+
+def _assignment_status(
+    *,
+    required: bool,
+    missing_required: list[str],
+    pending_generated: list[str],
+) -> str:
+    if missing_required:
+        return "blocked_missing_required_input" if required else "optional_missing_required_input"
+    if pending_generated:
+        return "pending_generated_artifacts" if required else "optional_pending_generated_artifacts"
+    return "ready_for_handoff" if required else "optional_ready_for_handoff"
+
+
 def _license_review_rows(registry: dict[str, Any]) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
-    needs_review = {
-        "see_upstream",
-        "depends_on_external_system",
-        "project_or_recording_consent",
-        "derived_from_upstream_inputs",
-        "depends_on_input_audio",
-        "depends_on_input_predictions",
-    }
     for collection in registry["collections"]:
         license_name = str(collection["license"])
-        if license_name in needs_review or license_name.startswith("depends_on"):
+        if _needs_license_review(license_name):
             rows.append(
                 {
                     "collection_id": str(collection["id"]),
@@ -327,6 +443,18 @@ def _license_review_rows(registry: dict[str, Any]) -> list[dict[str, str]]:
     return rows
 
 
+def _needs_license_review(license_name: str) -> bool:
+    needs_review = {
+        "see_upstream",
+        "depends_on_external_system",
+        "project_or_recording_consent",
+        "derived_from_upstream_inputs",
+        "depends_on_input_audio",
+        "depends_on_input_predictions",
+    }
+    return license_name in needs_review or license_name.startswith("depends_on")
+
+
 def _license_action(license_name: str) -> str:
     if license_name == "project_or_recording_consent":
         return "record consent, speaker permission, and redistribution constraints before publishing manifests"
@@ -337,6 +465,12 @@ def _license_action(license_name: str) -> str:
     if license_name.startswith("depends_on"):
         return "document the external system or input-data license in the final handoff"
     return "review before release"
+
+
+def _first_string(values: object) -> str:
+    if isinstance(values, list) and values:
+        return str(values[0])
+    return ""
 
 
 def _path_status(path: str, *, repo_root: Path, missing: str) -> str:
@@ -374,6 +508,86 @@ def _checklist_tsv(rows: list[AcquisitionChecklistRow]) -> str:
             values.append(_tsv_cell(text))
         lines.append("\t".join(values))
     return "\n".join(lines) + "\n"
+
+
+def _assignments_tsv(rows: list[AcquisitionAssignmentRow]) -> str:
+    headers = [
+        "collection_id",
+        "title",
+        "category",
+        "priority",
+        "required",
+        "owner",
+        "due_date",
+        "status",
+        "blocking_release",
+        "missing_required_paths",
+        "pending_generated_paths",
+        "license",
+        "license_review_required",
+        "handoff_required",
+        "source_urls",
+        "next_command",
+        "verification",
+        "notes",
+    ]
+    lines = ["\t".join(headers)]
+    for row in rows:
+        payload = row.to_dict()
+        values: list[str] = []
+        for header in headers:
+            value = payload[header]
+            if isinstance(value, list):
+                text = "; ".join(str(item) for item in value)
+            else:
+                text = str(value)
+            values.append(_tsv_cell(text))
+        lines.append("\t".join(values))
+    return "\n".join(lines) + "\n"
+
+
+def _assignments_markdown(rows: list[AcquisitionAssignmentRow]) -> str:
+    table_rows = []
+    for row in rows:
+        table_rows.append(
+            {
+                "collection_id": row.collection_id,
+                "priority": row.priority,
+                "required": str(row.required),
+                "owner": row.owner,
+                "due_date": row.due_date or "TBD",
+                "status": row.status,
+                "blocking_release": str(row.blocking_release),
+                "missing_required_paths": "; ".join(row.missing_required_paths) or "none",
+                "pending_generated_paths": "; ".join(row.pending_generated_paths) or "none",
+                "license_review_required": str(row.license_review_required),
+            }
+        )
+    blocking = [row for row in rows if row.blocking_release]
+    lines = [
+        "# Stable-ASR Final Acquisition Assignments",
+        "",
+        (
+            "Use this tracker to assign owners and due dates for final-scale inputs. "
+            "It is intentionally separate from the evidence handoff: update this "
+            "file while coordinating work, then use `HANDOFF_TEMPLATE.md` or "
+            "`handoff_template.json` for the final verified submission."
+        ),
+        "",
+        f"- collections: `{len(rows)}`",
+        f"- blocking_release: `{len(blocking)}`",
+        "",
+        dict_table(table_rows),
+        "",
+        "## Owner Workflow",
+        "",
+        "1. Set `owner` and `due_date` in `assignments.json` or this Markdown copy.",
+        "2. Stage the required paths and generated artifacts listed for the collection.",
+        "3. Run the collection verification command from `DATA_ACQUISITION.md`.",
+        "4. Fill `handoff_template.json` and run `stable-asr final-handoff-audit`.",
+        "",
+    ]
+    return "\n".join(lines)
 
 
 def _acquisition_markdown(registry: dict[str, Any], rows: list[AcquisitionChecklistRow]) -> str:
