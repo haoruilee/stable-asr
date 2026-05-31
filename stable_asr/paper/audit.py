@@ -28,6 +28,7 @@ from stable_asr.paper.suites import (
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results
 from stable_asr.references import (
     audit_asr_collection_coverage,
+    audit_asr_collection_licenses,
     audit_asr_collection_readiness,
     audit_turn_collection_coverage,
     load_asr_collections,
@@ -360,6 +361,19 @@ def audit_paper_release(
                         "asr_collections_readiness",
                         readiness.ok,
                         f"{len(readiness.rows)} reference(s), {len(readiness.warnings)} warning(s)",
+                    )
+                )
+                license_review = audit_asr_collection_licenses(
+                    asr_collections,
+                    required_priorities=("p0", "p1"),
+                )
+                needs_review = [row for row in license_review.rows if row.review_required]
+                checks.append(
+                    _release_check(
+                        "reference",
+                        "asr_collections_license_review",
+                        license_review.ok,
+                        f"{len(needs_review)} reference(s) require manual license review before vendoring or redistribution",
                     )
                 )
         except (OSError, ValueError) as exc:
@@ -1283,6 +1297,8 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("asr_collections:paper_markdown", artifacts_dir / "ASR_REFERENCES.md"))
     checks.append(_exists_check("asr_collections:bibtex", artifacts_dir / "ASR_REFERENCES.bib"))
     checks.append(_exists_check("asr_collections:acquisition_markdown", artifacts_dir / "ASR_COLLECTION_ACQUISITION.md"))
+    checks.append(_exists_check("asr_collection_license_review:json", artifacts_dir / "asr_collection_license_review.json"))
+    checks.append(_exists_check("asr_collection_license_review:markdown", artifacts_dir / "ASR_COLLECTION_LICENSE_REVIEW.md"))
     checks.append(_exists_check("asr_collection_coverage:json", artifacts_dir / "asr_collection_coverage.json"))
     checks.append(_exists_check("asr_collection_coverage:markdown", artifacts_dir / "ASR_COLLECTION_COVERAGE.md"))
     checks.append(_exists_check("asr_collection_readiness:json", artifacts_dir / "asr_collection_readiness.json"))

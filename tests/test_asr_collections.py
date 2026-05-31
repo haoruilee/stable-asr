@@ -7,6 +7,7 @@ from stable_asr.references import (
     asr_collections_markdown,
     asr_collections_reference_markdown,
     audit_asr_collection_coverage,
+    audit_asr_collection_licenses,
     audit_asr_collection_readiness,
     load_asr_collections,
     validate_asr_collections,
@@ -56,6 +57,26 @@ def test_asr_collections_acquisition_markdown_renders_collection_plan() -> None:
     assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in markdown
     assert "runs/collections/lhotse/DATA_BRIDGE.md" in markdown
     assert "license_review" in markdown
+    assert "--audit-licenses" in markdown
+
+
+def test_asr_collection_license_report_marks_review_needed_projects() -> None:
+    report = audit_asr_collection_licenses(load_asr_collections())
+    markdown = report.to_markdown()
+
+    assert report.ok
+    assert "# ASR Collection License Review" in markdown
+    assert "link_or_command_adapter_until_reviewed" in markdown
+    assert any(row.reference_id == "funasr" and row.review_required for row in report.rows)
+    assert any(row.reference_id == "whisper" and not row.review_required for row in report.rows)
+    assert "runs/collections/funasr/LICENSE_REVIEW.md" in report.to_text()
+
+
+def test_asr_collection_license_report_can_require_resolved_reviews() -> None:
+    report = audit_asr_collection_licenses(load_asr_collections(), require_resolved=True)
+
+    assert not report.ok
+    assert "required reference license review unresolved: funasr" in report.to_text()
 
 
 def test_asr_collection_coverage_requires_p0_references() -> None:

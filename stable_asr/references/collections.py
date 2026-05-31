@@ -214,6 +214,112 @@ class ASRCollectionReadinessReport:
         return "\n".join(lines)
 
 
+@dataclass(frozen=True)
+class ASRCollectionLicenseRow:
+    reference_id: str
+    name: str
+    category: str
+    priority: str
+    required: bool
+    license: str
+    review_required: bool
+    policy: str
+    review_target: str
+    warnings: list[str]
+    ok: bool
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "reference_id": self.reference_id,
+            "name": self.name,
+            "category": self.category,
+            "priority": self.priority,
+            "required": self.required,
+            "license": self.license,
+            "review_required": self.review_required,
+            "policy": self.policy,
+            "review_target": self.review_target,
+            "warnings": self.warnings,
+            "ok": self.ok,
+        }
+
+
+@dataclass(frozen=True)
+class ASRCollectionLicenseReport:
+    ok: bool
+    required_priorities: tuple[str, ...]
+    require_resolved: bool
+    rows: list[ASRCollectionLicenseRow]
+    errors: list[str]
+    warnings: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "required_priorities": list(self.required_priorities),
+            "require_resolved": self.require_resolved,
+            "rows": [row.to_dict() for row in self.rows],
+            "errors": self.errors,
+            "warnings": self.warnings,
+        }
+
+    def to_markdown(self) -> str:
+        rows = [
+            {
+                "reference": row.reference_id,
+                "priority": row.priority,
+                "required": "yes" if row.required else "no",
+                "license": row.license,
+                "review_required": "yes" if row.review_required else "no",
+                "policy": row.policy,
+                "review_target": row.review_target,
+                "warnings": ", ".join(row.warnings),
+            }
+            for row in self.rows
+        ]
+        review_rows = [row for row in self.rows if row.review_required]
+        lines = [
+            "# ASR Collection License Review",
+            "",
+            f"- status: `{'OK' if self.ok else 'FAILED'}`",
+            f"- required_priorities: `{', '.join(self.required_priorities)}`",
+            f"- require_resolved: `{'yes' if self.require_resolved else 'no'}`",
+            f"- review_required: `{len(review_rows)}`",
+            f"- errors: `{len(self.errors)}`",
+            f"- warnings: `{len(self.warnings)}`",
+            "",
+            dict_table(rows),
+            "",
+            "## Policy",
+            "",
+            (
+                "Registry entries are attribution and interoperability evidence. "
+                "Stable-ASR should use link-only references or command adapters for projects that need license review, "
+                "and should not vendor code, weights, or generated artifacts from those projects until the review target is filled."
+            ),
+        ]
+        if self.errors:
+            lines.extend(["", "## Errors", ""])
+            lines.extend(f"- {error}" for error in self.errors)
+        if self.warnings:
+            lines.extend(["", "## Warnings", ""])
+            lines.extend(f"- {warning}" for warning in self.warnings)
+        return "\n".join(lines)
+
+    def to_text(self) -> str:
+        lines = [
+            f"asr_collection_license_review: {'OK' if self.ok else 'FAILED'}",
+            f"required_priorities: {', '.join(self.required_priorities)}",
+            f"require_resolved: {self.require_resolved}",
+        ]
+        lines.extend(f"- ERROR {error}" for error in self.errors)
+        lines.extend(f"- WARN {warning}" for warning in self.warnings)
+        for row in self.rows:
+            marker = "OK" if row.ok else "REVIEW"
+            lines.append(f"- {marker} {row.reference_id} ({row.license}; {row.policy}; {row.review_target})")
+        return "\n".join(lines)
+
+
 def load_asr_collections(path: str | Path | None = None) -> dict[str, Any]:
     registry_path = resolve_platform_path(Path(path) if path else DEFAULT_ASR_COLLECTIONS_PATH)
     with registry_path.open("r", encoding="utf-8") as handle:
@@ -420,6 +526,64 @@ def audit_asr_collection_readiness(
     )
 
 
+def audit_asr_collection_licenses(
+    collections: dict[str, Any],
+    *,
+    required_priorities: tuple[str, ...] = ("p0", "p1"),
+    require_resolved: bool = False,
+) -> ASRCollectionLicenseReport:
+    """Audit reuse policy and license-review targets for ASR references."""
+
+    validation = validate_asr_collections(collections)
+    errors = list(validation.errors)
+    warnings: list[str] = []
+    rows: list[ASRCollectionLicenseRow] = []
+    entries = collections.get("entries", [])
+    if isinstance(entries, list):
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            priority = str(entry.get("priority", ""))
+            required = priority in required_priorities
+            license_name = str(entry.get("license", ""))
+            review_required = _license_review_required(license_name)
+            policy = _license_policy(license_name)
+            review_target = _license_review_target(entry)
+            row_warnings: list[str] = []
+            if review_required:
+                row_warnings.append("license_review_required")
+            if required and review_required:
+                row_warnings.append("required_reference_requires_review")
+            row_ok = not (require_resolved and required and review_required)
+            reference_id = str(entry.get("id", ""))
+            if not row_ok:
+                errors.append(f"required reference license review unresolved: {reference_id}")
+            warnings.extend(f"{reference_id}: {warning}" for warning in row_warnings)
+            rows.append(
+                ASRCollectionLicenseRow(
+                    reference_id=reference_id,
+                    name=str(entry.get("name", "")),
+                    category=str(entry.get("category", "")),
+                    priority=priority,
+                    required=required,
+                    license=license_name,
+                    review_required=review_required,
+                    policy=policy,
+                    review_target=review_target,
+                    warnings=row_warnings,
+                    ok=row_ok,
+                )
+            )
+    return ASRCollectionLicenseReport(
+        ok=not errors and all(row.ok for row in rows),
+        required_priorities=required_priorities,
+        require_resolved=require_resolved,
+        rows=rows,
+        errors=errors,
+        warnings=warnings,
+    )
+
+
 def asr_collections_markdown(registry: dict[str, Any]) -> str:
     rows = []
     entries = registry.get("entries", [])
@@ -565,6 +729,8 @@ def asr_collections_acquisition_markdown(registry: dict[str, Any]) -> str:
             "a command adapter output, transcript converter, recipe bridge note, data bridge note, "
             "or explicit license review. Registry presence alone is not evidence."
         ),
+        "",
+        "Run `stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE_REVIEW.md` before copying code, weights, generated fixtures, or extended snippets from upstream projects.",
     ]
     return "\n".join(lines)
 
@@ -612,6 +778,24 @@ def _coverage_evidence(entry: dict[str, Any], adapters: list[Any]) -> list[str]:
         if any(variant and variant in text for variant in variants):
             evidence.append(f"adapter:{adapter.get('id', '')}")
     return evidence
+
+
+def _license_review_required(license_name: str) -> bool:
+    return license_name not in {"Apache-2.0", "MIT", "BSD-4-Clause", "BSD-3-Clause", "BSD-2-Clause"}
+
+
+def _license_policy(license_name: str) -> str:
+    if license_name in {"Apache-2.0", "MIT", "BSD-4-Clause", "BSD-3-Clause", "BSD-2-Clause"}:
+        return "permissive_with_notice"
+    if license_name == "see_upstream":
+        return "link_or_command_adapter_until_reviewed"
+    if not license_name:
+        return "manual_review_before_use"
+    return "manual_review_before_copy_or_distribution"
+
+
+def _license_review_target(entry: dict[str, Any]) -> str:
+    return f"runs/collections/{entry.get('id', 'unknown')}/LICENSE_REVIEW.md"
 
 
 def _parse_review_date(value: str) -> date | None:

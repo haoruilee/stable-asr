@@ -141,6 +141,7 @@ from stable_asr.references import (
     asr_collections_markdown,
     asr_collections_reference_markdown,
     audit_asr_collection_coverage,
+    audit_asr_collection_licenses,
     audit_asr_collection_readiness,
     audit_turn_collection_coverage,
     load_asr_collections,
@@ -580,12 +581,13 @@ def build_parser() -> argparse.ArgumentParser:
     asr_collections_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     asr_collections_parser.add_argument(
         "--format",
-        choices=["registry-markdown", "paper-markdown", "bibtex", "acquisition-markdown"],
+        choices=["registry-markdown", "paper-markdown", "bibtex", "acquisition-markdown", "license-markdown"],
         default="registry-markdown",
         help="Output format when not using --json or audit flags.",
     )
     asr_collections_parser.add_argument("--validate-only", action="store_true")
     asr_collections_parser.add_argument("--audit-coverage", action="store_true")
+    asr_collections_parser.add_argument("--audit-licenses", action="store_true")
     asr_collections_parser.add_argument("--audit-readiness", action="store_true")
     asr_collections_parser.add_argument(
         "--adapter-registry",
@@ -603,7 +605,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         default=None,
         choices=["p0", "p1", "p2"],
-        help="Reference priority required by --audit-coverage. Defaults to p0.",
+        help="Reference priority required by collection audits. Defaults to p0 for coverage and p0+p1 for readiness/license audits.",
+    )
+    asr_collections_parser.add_argument(
+        "--require-license-reviewed",
+        action="store_true",
+        help="Fail --audit-licenses when required references still need manual license review.",
     )
 
     turn_collections_parser = subparsers.add_parser(
@@ -2017,6 +2024,22 @@ def main(argv: list[str] | None = None) -> int:
                     args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
                 print(text)
                 return 0 if readiness.ok else 1
+            if args.audit_licenses:
+                licenses = audit_asr_collection_licenses(
+                    registry,
+                    required_priorities=tuple(args.require_priority or ["p0", "p1"]),
+                    require_resolved=args.require_license_reviewed,
+                )
+                text = (
+                    json.dumps(licenses.to_dict(), ensure_ascii=False, indent=2)
+                    if args.json
+                    else licenses.to_markdown()
+                )
+                if args.output:
+                    args.output.parent.mkdir(parents=True, exist_ok=True)
+                    args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+                print(text)
+                return 0 if licenses.ok else 1
             if args.validate_only:
                 print(f"OK: {registry['id']} ({len(registry['entries'])} reference(s))")
                 return 0
@@ -2028,6 +2051,12 @@ def main(argv: list[str] | None = None) -> int:
                 text = asr_collections_bibtex(registry)
             elif args.format == "acquisition-markdown":
                 text = asr_collections_acquisition_markdown(registry)
+            elif args.format == "license-markdown":
+                text = audit_asr_collection_licenses(
+                    registry,
+                    required_priorities=tuple(args.require_priority or ["p0", "p1"]),
+                    require_resolved=args.require_license_reviewed,
+                ).to_markdown()
             else:
                 text = asr_collections_markdown(registry)
             if args.output:

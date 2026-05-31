@@ -1,8 +1,10 @@
 """Reference registries for external ASR projects."""
 
 from stable_asr.references.collections import (
+    ASRCollectionLicenseReport,
     ASRCollectionReadinessReport,
     audit_asr_collection_coverage,
+    audit_asr_collection_licenses,
     audit_asr_collection_readiness,
     asr_collections_acquisition_markdown,
     asr_collections_bibtex,
@@ -24,8 +26,10 @@ from stable_asr.references.turn_collections import (
 
 __all__ = [
     "ASRCollectionReadinessReport",
+    "ASRCollectionLicenseReport",
     "TurnCollectionCoverageReport",
     "audit_asr_collection_coverage",
+    "audit_asr_collection_licenses",
     "audit_asr_collection_readiness",
     "audit_turn_collection_coverage",
     "asr_collections_acquisition_markdown",

@@ -148,6 +148,7 @@ Reference coverage is tracked in `configs/references/asr_collections.json`,
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
+stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE_REVIEW.md
 stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1 --output runs/TURN_COLLECTION_COVERAGE.md
@@ -263,6 +264,7 @@ is provided in `mkdocs.yaml`.
 - `asr-collections --format acquisition-markdown` for turning the upstream ASR registry into a concrete collection and evidence-staging plan
 - `asr-collections --audit-coverage` for checking P0 reference coverage in the adapter registry
 - `asr-collections --audit-readiness` for checking review freshness, P0/P1 adapter evidence, action plans, and license-review warnings
+- `asr-collections --audit-licenses` for producing reuse policy and manual license-review targets before copying upstream code, weights, fixtures, or long snippets
 - machine-readable turn/full-duplex reference collection in `configs/references/turn_collections.json`
 - `turn-collections` for validating Smart Turn, Easy Turn, VAP, Full-Duplex-Bench, VAD, and voice-agent framework references
 - machine-readable VoiceWorld scenario suite in `configs/scenarios/stable_asr_voiceworld_v0.json`
@@ -314,10 +316,11 @@ is provided in `mkdocs.yaml`.
 - contributor benchmark, adapter, VoiceWorld scenario, final-run, final-input acquisition, and unified contributor starter packs in `paper-bundle`
 - schema registry JSON/Markdown artifacts in `paper-bundle`
 - ASR and turn/full-duplex reference collection artifacts in `paper-bundle`
+- ASR license/reuse review artifacts in `paper-bundle`
 - paper bundle sha256 integrity manifests and `paper-artifact-integrity` verification
 - paper bundle provenance manifests that record Stable-ASR version, git commit, input result hashes, and config hashes
 - `paper-archive` and `paper-archive-verify` for publishable tar.gz artifact archives with SHA256 and embedded bundle checks
-- ASR and turn/full-duplex reference collection, coverage, readiness, acquisition, paper-reference, and BibTeX artifacts in `paper-bundle`
+- ASR and turn/full-duplex reference collection, coverage, readiness, license review, acquisition, paper-reference, and BibTeX artifacts in `paper-bundle`
 - final evidence matrix artifacts in `paper-bundle`
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
 - `paper-claim-audit` for mapping platform-paper claims to concrete files, result keys, commands, and artifacts

@@ -49,6 +49,7 @@ ready.
 - ASR reference collection JSON exists in `configs/references/asr_collections.json`
 - required P0 and P1 ASR references have adapter or bridge coverage evidence
 - ASR reference collection readiness checks review freshness, Stable-ASR action plans, adapter evidence, and license-review warnings
+- ASR reference license review records link/command-adapter-only projects and the manual review files required before vendoring or redistribution
 - ASR reference collection exports paper Markdown notes and BibTeX attribution artifacts
 - ASR reference collection exports an acquisition plan that maps upstream projects to evidence targets
 - turn/full-duplex reference collection JSON exists in `configs/references/turn_collections.json`

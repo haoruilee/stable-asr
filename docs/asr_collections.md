@@ -13,6 +13,8 @@ stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLE
 stable-asr asr-collections --audit-coverage --output runs/ASR_COLLECTION_COVERAGE.md
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
+stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE_REVIEW.md
+stable-asr asr-collections --audit-licenses --require-license-reviewed
 ```
 
 The registry is not a vendoring list. It records what each upstream project is
@@ -26,6 +28,13 @@ without maintaining a separate manual reference list.
 `--format acquisition-markdown` turns the registry into a concrete collection
 plan: P0 acquisition order, adapter or bridge track, license-review flag, and
 the expected evidence artifact for each upstream reference.
+
+`--audit-licenses` renders the reuse policy for each reference and names the
+manual review file to fill before copying upstream code, weights, fixtures, or
+long snippets. Without `--require-license-reviewed`, this is an advisory report
+that keeps `see_upstream` projects usable through link-only notes or command
+adapters. With `--require-license-reviewed`, unresolved P0/P1 reviews fail the
+gate for final release or vendoring decisions.
 
 ## Initial Coverage
 
@@ -57,3 +66,7 @@ the registry review date, P0/P1 adapter evidence, Stable-ASR action plans, and
 license-review warnings such as `see_upstream` entries. The warnings are kept
 visible in paper bundles so adapters can interoperate with upstream projects
 without accidentally implying that Stable-ASR vendors or relicenses them.
+
+`asr-collections --audit-licenses` is narrower: it records whether each entry is
+currently permissive-with-notice or link/command-adapter-only until a human
+license review is staged at `runs/collections/<reference>/LICENSE_REVIEW.md`.
