@@ -372,6 +372,28 @@ def test_asr_collections_cli_writes_markdown(tmp_path, capsys) -> None:
     assert "OpenAI Whisper" in output.read_text(encoding="utf-8")
 
 
+def test_asr_collections_cli_writes_bibtex(tmp_path, capsys) -> None:
+    output = tmp_path / "ASR_REFERENCES.bib"
+    code = main(["asr-collections", "--format", "bibtex", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "@misc{stableasr_ref_funasr" in captured.out
+    assert output.exists()
+    assert "\\url{https://github.com/modelscope/FunASR}" in output.read_text(encoding="utf-8")
+
+
+def test_asr_collections_cli_writes_paper_markdown(tmp_path, capsys) -> None:
+    output = tmp_path / "ASR_REFERENCES.md"
+    code = main(["asr-collections", "--format", "paper-markdown", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Paper Reference Notes" in captured.out
+    assert output.exists()
+    assert "stableasr_ref_funasr" in output.read_text(encoding="utf-8")
+
+
 def test_asr_collections_cli_audits_p0_coverage(tmp_path, capsys) -> None:
     output = tmp_path / "ASR_COLLECTION_COVERAGE.md"
     code = main(["asr-collections", "--audit-coverage", "--output", str(output)])

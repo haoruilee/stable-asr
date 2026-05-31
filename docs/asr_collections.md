@@ -7,6 +7,8 @@ ASR ecosystem projects. The curated registry lives at
 ```bash
 stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
 stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
+stable-asr asr-collections --format paper-markdown --output runs/ASR_REFERENCES.md
+stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr asr-collections --audit-coverage --output runs/ASR_COLLECTION_COVERAGE.md
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 ```
@@ -14,6 +16,10 @@ stable-asr asr-collections --audit-coverage --require-priority p0 --require-prio
 The registry is not a vendoring list. It records what each upstream project is
 useful for, how Stable-ASR should learn from it, and which adapters or
 benchmarks deserve priority.
+
+`--format paper-markdown` and `--format bibtex` turn the same curated registry
+into related-work drafting artifacts, so the paper can cite upstream projects
+without maintaining a separate manual reference list.
 
 ## Initial Coverage
 

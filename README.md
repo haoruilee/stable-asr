@@ -138,6 +138,7 @@ Reference coverage is tracked in `configs/references/asr_collections.json` and
 ```bash
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
+stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr compare-asr-commands --config examples/configs/asr_vendor_adapter_demo.json --report runs/asr_vendor_adapter.md
 stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2
 ```
@@ -220,6 +221,7 @@ is provided in `mkdocs.yaml`.
 - `adapter-registry` for validating and rendering baseline, converter, command-backed, and external-system adapter entries
 - machine-readable upstream ASR reference collection in `configs/references/asr_collections.json`
 - `asr-collections` for validating and rendering top ASR project references
+- `asr-collections --format paper-markdown|bibtex` for paper-ready related-work reference artifacts
 - `asr-collections --audit-coverage` for checking P0 reference coverage in the adapter registry
 - machine-readable VoiceWorld scenario suite in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - `scenario-suite` for validating and rendering scenario suite definitions
@@ -259,7 +261,7 @@ is provided in `mkdocs.yaml`.
 - `paper-table policy` extraction
 - `paper-figure` SVG generation for platform diagrams plus baseline, latency, data, streaming, scenario, and policy figures
 - `paper-bundle` generation for paper tables, figures, artifact index, and artifact manifest
-- ASR reference collection and P0 coverage artifacts in `paper-bundle`
+- ASR reference collection, paper-reference, BibTeX, and P0/P1 coverage artifacts in `paper-bundle`
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
 - `paper-claim-audit` for mapping platform-paper claims to concrete files, result keys, commands, and artifacts
 - `paper-status` for a single-page summary of smoke, structural, final-input, and final-paper readiness

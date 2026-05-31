@@ -245,6 +245,68 @@ def asr_collections_markdown(registry: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def asr_collections_reference_markdown(registry: dict[str, Any]) -> str:
+    """Render paper-oriented reference notes from the curated ASR collection."""
+
+    validation = validate_asr_collections(registry)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    rows = []
+    for entry in sorted(registry["entries"], key=lambda item: (item["priority"], item["category"], item["id"])):
+        rows.append(
+            {
+                "citation_key": _citation_key(entry),
+                "project": f"[{entry['name']}]({entry['source_url']})",
+                "priority": entry["priority"],
+                "category": entry["category"],
+                "license": entry["license"],
+                "paper_use": entry["reference_use"],
+            }
+        )
+
+    lines = [
+        "# Stable-ASR Paper Reference Notes",
+        "",
+        (
+            "These references are generated from the curated ASR collections registry. "
+            "They are intended for related-work drafting, adapter planning, and artifact attribution; "
+            "they are not benchmark claims."
+        ),
+        "",
+        f"- registry id: `{registry['id']}`",
+        f"- reviewed_at: `{registry['reviewed_at']}`",
+        f"- entries: `{len(rows)}`",
+        "",
+        dict_table(rows),
+    ]
+    return "\n".join(lines)
+
+
+def asr_collections_bibtex(registry: dict[str, Any]) -> str:
+    """Render a lightweight BibTeX file for upstream project attribution."""
+
+    validation = validate_asr_collections(registry)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    year = _review_year(registry)
+    entries = []
+    for entry in sorted(registry["entries"], key=lambda item: item["id"]):
+        note = f"{entry['category']}; priority {entry['priority']}; license: {entry['license']}"
+        fields = [
+            f"  title = {{{{{_bibtex_escape(str(entry['name']))}}}}},",
+            f"  howpublished = {{\\url{{{_bibtex_escape(str(entry['source_url']))}}}}},",
+            f"  note = {{{_bibtex_escape(note)}}},",
+            f"  year = {{{year}}},",
+        ]
+        docs_url = str(entry.get("docs_url", ""))
+        if docs_url and docs_url != entry["source_url"]:
+            fields.insert(2, f"  url = {{{_bibtex_escape(docs_url)}}},")
+        entries.append("@misc{" + _citation_key(entry) + ",\n" + "\n".join(fields) + "\n}")
+    return "\n\n".join(entries) + "\n"
+
+
 def _coverage_evidence(entry: dict[str, Any], adapters: list[Any]) -> list[str]:
     evidence: list[str] = []
     variants = _reference_variants(entry)
@@ -279,3 +341,18 @@ def _reference_variants(entry: dict[str, Any]) -> set[str]:
 
 def _normalize_reference_text(value: str) -> str:
     return value.lower().replace("-", "_").replace(" ", "_")
+
+
+def _citation_key(entry: dict[str, Any]) -> str:
+    return "stableasr_ref_" + _normalize_reference_text(str(entry.get("id", "unknown")))
+
+
+def _review_year(registry: dict[str, Any]) -> str:
+    reviewed_at = str(registry.get("reviewed_at", ""))
+    if len(reviewed_at) >= 4 and reviewed_at[:4].isdigit():
+        return reviewed_at[:4]
+    return "2026"
+
+
+def _bibtex_escape(value: str) -> str:
+    return value.replace("\\", "\\textbackslash{}").replace("{", "\\{").replace("}", "\\}")

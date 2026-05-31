@@ -1,6 +1,8 @@
 from stable_asr.models.adapters import load_adapter_registry
 from stable_asr.references import (
+    asr_collections_bibtex,
     asr_collections_markdown,
+    asr_collections_reference_markdown,
     audit_asr_collection_coverage,
     load_asr_collections,
     validate_asr_collections,
@@ -27,6 +29,19 @@ def test_asr_collections_markdown_mentions_core_projects() -> None:
     assert "Qwen3-ASR" in markdown
     assert "FireRedASR2S" in markdown
     assert "sherpa-onnx" in markdown
+
+
+def test_asr_collections_reference_markdown_and_bibtex_render() -> None:
+    registry = load_asr_collections()
+    markdown = asr_collections_reference_markdown(registry)
+    bibtex = asr_collections_bibtex(registry)
+
+    assert "# Stable-ASR Paper Reference Notes" in markdown
+    assert "stableasr_ref_funasr" in markdown
+    assert "adapter planning" in markdown
+    assert "@misc{stableasr_ref_funasr" in bibtex
+    assert "\\url{https://github.com/modelscope/FunASR}" in bibtex
+    assert "@misc{stableasr_ref_lhotse" in bibtex
 
 
 def test_asr_collection_coverage_requires_p0_references() -> None:

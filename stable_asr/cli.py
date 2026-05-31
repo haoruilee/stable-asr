@@ -105,6 +105,8 @@ from stable_asr.paper.suites import (
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results, paper_table
 from stable_asr.references import (
     asr_collections_markdown,
+    asr_collections_bibtex,
+    asr_collections_reference_markdown,
     audit_asr_collection_coverage,
     load_asr_collections,
     validate_asr_collections,
@@ -471,6 +473,12 @@ def build_parser() -> argparse.ArgumentParser:
     asr_collections_parser.add_argument("--registry", type=Path, help="Optional ASR collections JSON path.")
     asr_collections_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     asr_collections_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
+    asr_collections_parser.add_argument(
+        "--format",
+        choices=["registry-markdown", "paper-markdown", "bibtex"],
+        default="registry-markdown",
+        help="Output format when not using --json or --audit-coverage.",
+    )
     asr_collections_parser.add_argument("--validate-only", action="store_true")
     asr_collections_parser.add_argument("--audit-coverage", action="store_true")
     asr_collections_parser.add_argument("--adapter-registry", type=Path, help="Adapter registry used by --audit-coverage.")
@@ -1516,7 +1524,14 @@ def main(argv: list[str] | None = None) -> int:
             if args.validate_only:
                 print(f"OK: {registry['id']} ({len(registry['entries'])} reference(s))")
                 return 0
-            text = json.dumps(registry, ensure_ascii=False, indent=2) if args.json else asr_collections_markdown(registry)
+            if args.json:
+                text = json.dumps(registry, ensure_ascii=False, indent=2)
+            elif args.format == "paper-markdown":
+                text = asr_collections_reference_markdown(registry)
+            elif args.format == "bibtex":
+                text = asr_collections_bibtex(registry)
+            else:
+                text = asr_collections_markdown(registry)
             if args.output:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")

@@ -34,7 +34,9 @@ from stable_asr.models.adapters.registry import (
     write_adapter_registry_json,
 )
 from stable_asr.references import (
+    asr_collections_bibtex,
     asr_collections_markdown,
+    asr_collections_reference_markdown,
     audit_asr_collection_coverage,
     load_asr_collections,
     write_asr_collections_json,
@@ -135,14 +137,25 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     }
     Path(adapter_registry["markdown"]).write_text(adapter_registry_markdown(adapters), encoding="utf-8")
     asr_reference_registry = load_asr_collections()
-    asr_reference_coverage = audit_asr_collection_coverage(asr_reference_registry, adapters)
+    asr_reference_coverage = audit_asr_collection_coverage(
+        asr_reference_registry,
+        adapters,
+        required_priorities=("p0", "p1"),
+    )
     asr_collections = {
         "json": write_asr_collections_json(output_dir / "asr_collections.json", asr_reference_registry),
         "markdown": str(output_dir / "ASR_COLLECTIONS.md"),
+        "paper_markdown": str(output_dir / "ASR_REFERENCES.md"),
+        "bibtex": str(output_dir / "ASR_REFERENCES.bib"),
         "coverage_json": str(output_dir / "asr_collection_coverage.json"),
         "coverage_markdown": str(output_dir / "ASR_COLLECTION_COVERAGE.md"),
     }
     Path(asr_collections["markdown"]).write_text(asr_collections_markdown(asr_reference_registry), encoding="utf-8")
+    Path(asr_collections["paper_markdown"]).write_text(
+        asr_collections_reference_markdown(asr_reference_registry),
+        encoding="utf-8",
+    )
+    Path(asr_collections["bibtex"]).write_text(asr_collections_bibtex(asr_reference_registry), encoding="utf-8")
     Path(asr_collections["coverage_json"]).write_text(
         json.dumps(asr_reference_coverage.to_dict(), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",

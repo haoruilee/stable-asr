@@ -924,6 +924,8 @@ def _artifact_checks(artifacts_dir: Path) -> list[PaperAuditCheck]:
     checks.append(_exists_check("adapter_registry:markdown", artifacts_dir / "ADAPTERS.md"))
     checks.append(_exists_check("asr_collections:json", artifacts_dir / "asr_collections.json"))
     checks.append(_exists_check("asr_collections:markdown", artifacts_dir / "ASR_COLLECTIONS.md"))
+    checks.append(_exists_check("asr_collections:paper_markdown", artifacts_dir / "ASR_REFERENCES.md"))
+    checks.append(_exists_check("asr_collections:bibtex", artifacts_dir / "ASR_REFERENCES.bib"))
     checks.append(_exists_check("asr_collection_coverage:json", artifacts_dir / "asr_collection_coverage.json"))
     checks.append(_exists_check("asr_collection_coverage:markdown", artifacts_dir / "ASR_COLLECTION_COVERAGE.md"))
     checks.append(_exists_check("scenario_suite:json", artifacts_dir / "scenario_suite.json"))
