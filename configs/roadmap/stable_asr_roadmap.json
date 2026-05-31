@@ -164,7 +164,7 @@
       "commands": [
         "stable-asr reproduce-paper --config configs/paper/paper_smoke.json",
         "stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts",
-        "stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts",
+        "stable-asr paper-status --release-dir runs/paper/smoke",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only",
         "stable-asr validate-schema-file --input examples/data/turn_demo.jsonl --schema-id stable_asr.turn_manifest_record.v0",

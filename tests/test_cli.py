@@ -60,6 +60,22 @@ def test_paper_status_cli(capsys) -> None:
     assert "final_assignment_ready" in captured.out
 
 
+def test_paper_status_cli_accepts_release_dir(tmp_path, capsys) -> None:
+    from stable_asr.paper.artifacts import paper_artifact_bundle
+    from stable_asr.paper.experiments import run_paper_smoke
+
+    release_dir = tmp_path / "release"
+    result = run_paper_smoke(release_dir / "paper", episodes=8, seed=11, train_model=False)
+    paper_artifact_bundle(result.results_path, release_dir / "artifacts")
+
+    code = main(["paper-status", "--release-dir", str(release_dir)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "smoke_ready" in captured.out
+    assert "READY" in captured.out
+
+
 def test_paper_evidence_matrix_cli_writes_markdown(tmp_path, capsys) -> None:
     output = tmp_path / "FINAL_EVIDENCE_MATRIX.md"
     code = main(["paper-evidence-matrix", "--output", str(output)])

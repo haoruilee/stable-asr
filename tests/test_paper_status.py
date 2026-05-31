@@ -28,6 +28,18 @@ def test_paper_status_summarizes_smoke_and_final_gaps(tmp_path: Path) -> None:
     assert "data/librispeech/LibriSpeech/dev-clean" in markdown
 
 
+def test_paper_status_infers_release_smoke_paths(tmp_path: Path) -> None:
+    release_dir = tmp_path / "release"
+    result = run_paper_smoke(release_dir / "paper", episodes=8, seed=11, train_model=False)
+    paper_artifact_bundle(result.results_path, release_dir / "artifacts")
+
+    report = paper_status(release_dir=release_dir)
+
+    assert report.smoke_ready
+    assert report.structural_ready
+    assert not report.final_ready
+
+
 def test_paper_status_without_results_is_not_smoke_ready() -> None:
     report = paper_status()
 

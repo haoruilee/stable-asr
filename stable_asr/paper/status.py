@@ -125,10 +125,17 @@ class PaperStatusReport:
 def paper_status(
     *,
     repo_root: str | Path = ".",
+    release_dir: str | Path | None = None,
     results_path: str | Path | None = None,
     artifacts_dir: str | Path | None = None,
 ) -> PaperStatusReport:
     repo_root = Path(repo_root)
+    if release_dir is not None:
+        release_dir = Path(release_dir)
+        if results_path is None:
+            results_path = release_dir / "paper" / "paper_results.json"
+        if artifacts_dir is None:
+            artifacts_dir = release_dir / "artifacts"
     from stable_asr.doctor import run_doctor
 
     doctor = run_doctor(repo_root=repo_root, check_final_files=True)

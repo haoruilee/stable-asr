@@ -1003,6 +1003,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Summarize smoke, structural, and final paper readiness in one report.",
     )
     paper_status_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    paper_status_parser.add_argument(
+        "--release-dir",
+        type=Path,
+        help="Paper release-smoke output directory; infers paper/paper_results.json and artifacts/.",
+    )
     paper_status_parser.add_argument("--results", type=Path)
     paper_status_parser.add_argument("--artifacts-dir", type=Path)
     paper_status_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
@@ -2703,6 +2708,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             report = paper_status(
                 repo_root=args.repo_root,
+                release_dir=args.release_dir,
                 results_path=args.results,
                 artifacts_dir=args.artifacts_dir,
             )

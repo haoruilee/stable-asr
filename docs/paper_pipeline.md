@@ -51,7 +51,7 @@ stable-asr paper-bundle --results runs/paper/smoke/paper_results.json --output-d
 stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
 stable-asr contributor-pack --output-dir runs/contributor_pack
-stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/artifacts/PAPER_STATUS.md
+stable-asr paper-status --release-dir runs/paper/smoke --output runs/paper/smoke/artifacts/PAPER_STATUS.md
 stable-asr paper-case-studies --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output-dir runs/paper/smoke/artifacts
 stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts

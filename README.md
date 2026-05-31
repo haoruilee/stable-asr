@@ -170,6 +170,7 @@ stable-asr paper-release-audit \
   --repo-root . \
   --results runs/paper/smoke/paper_results.json \
   --artifacts-dir runs/paper/smoke/artifacts
+stable-asr paper-status --release-dir runs/paper/release_smoke
 stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json
 stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md
 stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_HANDOFF_AUDIT.md

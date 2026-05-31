@@ -114,7 +114,7 @@ stable-asr leaderboard-merge --input runs/submissions/oracle_fixture/leaderboard
 stable-asr paper-artifact-integrity --manifest runs/paper/smoke/artifacts/artifact_hashes.json --root runs/paper/smoke/artifacts
 stable-asr paper-archive --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/artifacts.tar.gz
 stable-asr paper-archive-verify --archive runs/paper/smoke/artifacts.tar.gz
-stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
+stable-asr paper-status --release-dir runs/paper/smoke
 stable-asr paper-case-studies --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output-dir runs/paper/smoke/artifacts
 stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
