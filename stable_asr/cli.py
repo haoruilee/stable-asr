@@ -200,6 +200,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print the evaluation report as JSON.",
     )
+    eval_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     predict_turn_parser = subparsers.add_parser(
         "predict-turn",
@@ -228,6 +229,7 @@ def build_parser() -> argparse.ArgumentParser:
     validate_predictions_parser.add_argument("--allow-extra", action="store_true", help="Allow predictions for IDs absent from the dataset.")
     validate_predictions_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     validate_predictions_parser.add_argument("--json", action="store_true")
+    validate_predictions_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     compare_turn_parser = subparsers.add_parser(
         "compare-turn",
@@ -258,6 +260,7 @@ def build_parser() -> argparse.ArgumentParser:
     compare_turn_parser.add_argument("--complete-pause-ms", type=int, default=700)
     compare_turn_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     compare_turn_parser.add_argument("--json", action="store_true")
+    compare_turn_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     compare_turn_splits_parser = subparsers.add_parser(
         "compare-turn-splits",
@@ -278,6 +281,7 @@ def build_parser() -> argparse.ArgumentParser:
     compare_turn_splits_parser.add_argument("--complete-pause-ms", type=int, default=700)
     compare_turn_splits_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     compare_turn_splits_parser.add_argument("--json", action="store_true")
+    compare_turn_splits_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     benchmark_turn_parser = subparsers.add_parser(
         "benchmark-turn",
@@ -305,6 +309,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     benchmark_turn_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     benchmark_turn_parser.add_argument("--json", action="store_true")
+    benchmark_turn_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     synth_parser = subparsers.add_parser(
         "make-synthetic-turn-data",
@@ -430,6 +435,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     benchmark_parser.add_argument("--seed", type=int, default=0, help="Random seed for sampling benchmark.")
     benchmark_parser.add_argument("--json", action="store_true")
+    benchmark_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     data_sources_parser = subparsers.add_parser(
         "data-sources",
@@ -597,6 +603,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     streaming_parser.add_argument("--input", type=Path, required=True)
     streaming_parser.add_argument("--json", action="store_true")
+    streaming_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     streaming_compare_parser = subparsers.add_parser(
         "compare-streaming-asr",
@@ -611,6 +618,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     streaming_compare_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     streaming_compare_parser.add_argument("--json", action="store_true")
+    streaming_compare_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     streaming_sweep_parser = subparsers.add_parser(
         "sweep-streaming-asr",
@@ -621,6 +629,7 @@ def build_parser() -> argparse.ArgumentParser:
     streaming_sweep_parser.add_argument("--lookahead-ms", type=int, nargs="+", default=[0, 160, 320])
     streaming_sweep_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     streaming_sweep_parser.add_argument("--json", action="store_true")
+    streaming_sweep_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     command_asr_parser = subparsers.add_parser(
         "eval-asr-command",
@@ -637,6 +646,7 @@ def build_parser() -> argparse.ArgumentParser:
     command_asr_parser.add_argument("--cwd", type=Path)
     command_asr_parser.add_argument("--timeout", type=float, default=300.0)
     command_asr_parser.add_argument("--json", action="store_true")
+    command_asr_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     command_compare_parser = subparsers.add_parser(
         "compare-asr-commands",
@@ -645,6 +655,7 @@ def build_parser() -> argparse.ArgumentParser:
     command_compare_parser.add_argument("--config", type=Path, required=True)
     command_compare_parser.add_argument("--report", type=Path, help="Optional Markdown report output path.")
     command_compare_parser.add_argument("--json", action="store_true")
+    command_compare_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
     command_compare_parser.add_argument("--validate-only", action="store_true", help="Audit config without executing commands.")
     command_compare_parser.add_argument("--repo-root", type=Path, default=Path("."))
     command_compare_parser.add_argument("--min-adapters", type=int, default=1)
@@ -664,6 +675,7 @@ def build_parser() -> argparse.ArgumentParser:
     scenario_parser.add_argument("--checkpoint", type=Path)
     scenario_parser.add_argument("--report", type=Path)
     scenario_parser.add_argument("--json", action="store_true")
+    scenario_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     scenario_suite_parser = subparsers.add_parser(
         "scenario-suite",
@@ -1021,8 +1033,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")
+        payload = report.to_dict()
+        _write_json_output(args.json_output, payload)
         if args.json:
-            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
             print(
                 "\n".join(
@@ -1069,8 +1083,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")
+        payload = report.to_dict()
+        _write_json_output(args.json_output, payload)
         if args.json:
-            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
             print(report.to_text())
             if args.report:
@@ -1093,8 +1109,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")
+        payload = report.to_dict()
+        _write_json_output(args.json_output, payload)
         if args.json:
-            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
             for row in report.rows:
                 print(
@@ -1133,8 +1151,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")
+        payload = report.to_dict()
+        _write_json_output(args.json_output, payload)
         if args.json:
-            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
             for row in report.rows():
                 print(
@@ -1366,6 +1386,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         payload = [row.to_dict() for row in rows]
+        _write_json_output(args.json_output, payload)
         if args.json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
@@ -1657,6 +1678,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "eval-streaming-asr":
         report = evaluate_streaming_records(load_streaming_transcript_jsonl(args.input))
         payload = report.to_dict()
+        _write_json_output(args.json_output, payload)
         if args.json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
@@ -1684,6 +1706,7 @@ def main(argv: list[str] | None = None) -> int:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")
         payload = report.to_dict()
+        _write_json_output(args.json_output, payload)
         if args.json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
@@ -1719,6 +1742,7 @@ def main(argv: list[str] | None = None) -> int:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")
         payload = report.to_dict()
+        _write_json_output(args.json_output, payload)
         if args.json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
@@ -1753,6 +1777,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         payload = {"adapter": args.name, "output": str(args.output), **report.to_dict()}
+        _write_json_output(args.json_output, payload)
         if args.json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
@@ -1772,6 +1797,7 @@ def main(argv: list[str] | None = None) -> int:
                     min_adapters=args.min_adapters,
                     require_input_manifest=args.require_input_manifest,
                 )
+                _write_json_output(args.json_output, audit.to_dict())
                 if args.json:
                     print(json.dumps(audit.to_dict(), ensure_ascii=False, indent=2))
                 else:
@@ -1785,6 +1811,7 @@ def main(argv: list[str] | None = None) -> int:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")
         payload = report.to_dict()
+        _write_json_output(args.json_output, payload)
         if args.json:
             print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
@@ -1820,8 +1847,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")
+        payload = report.to_dict()
+        _write_json_output(args.json_output, payload)
         if args.json:
-            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
             print(f"suite: {report.suite}")
             print(f"records: {len(report.overall.examples)}")
@@ -2409,6 +2438,13 @@ def _resolve_config_path(value: object, *, repo_root: Path) -> Path:
     if path.is_absolute():
         return path
     return repo_root / path
+
+
+def _write_json_output(path: Path | None, payload: object) -> None:
+    if path is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

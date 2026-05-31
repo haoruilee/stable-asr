@@ -195,15 +195,17 @@ def _build_results(
             "external_conversion": {},
             "external_conversions": [],
         },
-        "baselines": _dict(payloads.get("baselines")),
-        "turn_benchmarks": _dict(payloads.get("turn_benchmarks")),
+        "baselines": _baseline_results(payloads.get("baselines")),
+        "turn_benchmarks": _turn_benchmarks(payloads.get("turn_benchmarks")),
         "scenarios": _scenario_results(payloads.get("scenarios")),
         "policy_search": _dict(payloads.get("policy_search")),
         "streaming_asr": {
             "metrics": _first_streaming_metrics(payloads.get("streaming_comparison")),
             "adapter_comparison": _dict(payloads.get("streaming_comparison")),
             "schedule_sweep": _dict(payloads.get("streaming_sweep")),
-            "asr_transcript_conversions": _list(payloads.get("asr_transcript_conversions")),
+            "asr_transcript_conversions": _asr_transcript_conversions(
+                payloads.get("asr_transcript_conversions")
+            ),
             "command_adapter": {},
         },
         "nanoturn": {
@@ -241,6 +243,43 @@ def _scenario_results(payload: Any) -> dict[str, Any]:
     return result
 
 
+def _baseline_results(payload: Any) -> dict[str, Any]:
+    payload = _dict(payload)
+    reports = payload.get("reports")
+    if isinstance(reports, dict):
+        return {str(name): _dict(report) for name, report in reports.items()}
+    return payload
+
+
+def _turn_benchmarks(payload: Any) -> dict[str, Any]:
+    payload = _dict(payload)
+    if "avg_latency_ms" in payload:
+        name = str(payload.get("name", payload.get("baseline", "system")))
+        return {name: payload}
+    return payload
+
+
+def _asr_transcript_conversions(payload: Any) -> list[dict[str, Any]]:
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    payload = _dict(payload)
+    rows = payload.get("rows", [])
+    if isinstance(rows, list):
+        conversions = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            conversions.append(
+                {
+                    "schema": str(row.get("schema", row.get("adapter", "unknown"))),
+                    "records": int(row.get("records", 0)),
+                    "metrics": dict(row),
+                }
+            )
+        return conversions
+    return []
+
+
 def _load_json(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -256,10 +295,6 @@ def _missing_check(name: str, path: Path, detail: str) -> FinalResultsInputCheck
 
 def _dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
-
-
-def _list(value: Any) -> list[Any]:
-    return value if isinstance(value, list) else []
 
 
 def _resolve(value: str, *, root: Path) -> Path:

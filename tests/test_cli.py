@@ -1621,15 +1621,27 @@ def test_compare_asr_commands_cli(tmp_path, capsys) -> None:
     }
     config_path = tmp_path / "commands.json"
     report_path = tmp_path / "commands.md"
+    json_path = tmp_path / "commands.json.out"
     config_path.write_text(json.dumps(config), encoding="utf-8")
 
-    code = main(["compare-asr-commands", "--config", str(config_path), "--report", str(report_path)])
+    code = main(
+        [
+            "compare-asr-commands",
+            "--config",
+            str(config_path),
+            "--report",
+            str(report_path),
+            "--json-output",
+            str(json_path),
+        ]
+    )
 
     captured = capsys.readouterr()
     assert code == 0
     assert "adapter=balanced_cmd" in captured.out
     assert "adapter=fast_cmd" in captured.out
     assert report_path.exists()
+    assert len(json.loads(json_path.read_text(encoding="utf-8"))["rows"]) == 2
 
 
 def test_compare_asr_commands_validate_only_cli(tmp_path, capsys) -> None:
@@ -1674,6 +1686,54 @@ def test_compare_asr_commands_validate_only_cli(tmp_path, capsys) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "asr_command_config_audit: READY" in captured.out
+
+
+def test_core_eval_commands_write_json_output(tmp_path, capsys) -> None:
+    eval_output = tmp_path / "eval_turn.json"
+    code = main(
+        [
+            "eval-turn",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--json-output",
+            str(eval_output),
+        ]
+    )
+    assert code == 0
+    assert json.loads(eval_output.read_text(encoding="utf-8"))["classification"]["accuracy"] >= 0.0
+
+    data_output = tmp_path / "data_benchmark.json"
+    code = main(
+        [
+            "benchmark-data",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--output-dir",
+            str(tmp_path / "data_bench"),
+            "--formats",
+            "jsonl",
+            "--json-output",
+            str(data_output),
+        ]
+    )
+    assert code == 0
+    assert json.loads(data_output.read_text(encoding="utf-8"))[0]["format"] == "jsonl"
+
+    streaming_output = tmp_path / "streaming_compare.json"
+    code = main(
+        [
+            "compare-streaming-asr",
+            "--input",
+            "balanced=tests/fixtures/streaming_asr_sample.jsonl",
+            "--input",
+            "fast=tests/fixtures/streaming_asr_fast_unstable_sample.jsonl",
+            "--json-output",
+            str(streaming_output),
+        ]
+    )
+    assert code == 0
+    assert len(json.loads(streaming_output.read_text(encoding="utf-8"))["rows"]) == 2
+    capsys.readouterr()
 
 
 def test_final_config_cli_prepare_asr_eval_manifest(tmp_path, capsys) -> None:

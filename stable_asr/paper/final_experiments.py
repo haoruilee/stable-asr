@@ -38,7 +38,7 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
                 "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl",
                 "stable-asr prepare-public-asr --corpus wenetspeech --input-dir data/wenetspeech/WenetSpeech --split dev --output runs/final/wenetspeech_dev/asr_manifest.jsonl",
                 "stable-asr prepare-public-asr --corpus common_voice --input-dir data/common_voice/en --split dev --output runs/final/common_voice_en_dev/asr_manifest.jsonl",
-                "stable-asr benchmark-data --dataset runs/final/<corpus>/turn_or_asr_windows.jsonl --output-dir runs/final/data_bench --formats jsonl parquet lance --sample-count 10000"
+                "stable-asr benchmark-data --dataset runs/final/turn_train.jsonl --output-dir runs/final/data_bench --formats jsonl parquet lance --sample-count 10000 --json-output runs/final/reports/data_benchmark.json"
             ],
             "metrics": ["write_seconds", "read_seconds", "size_bytes", "samples_per_second", "conversion_seconds"],
             "expected_artifacts": ["tables/data.md", "figures/data.svg", "DATASET_CARD.md"],
@@ -64,8 +64,8 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
             "commands": [
                 "stable-asr convert-predictions --schema smart_turn --input runs/final/smartturn_raw.jsonl --output runs/final/smartturn_predictions.jsonl",
                 "stable-asr convert-predictions --schema easyturn --input runs/final/easyturn_raw.jsonl --output runs/final/easyturn_predictions.jsonl",
-                "stable-asr eval-turn --dataset runs/final/turn_test.jsonl --predictions runs/final/smartturn_predictions.jsonl --report runs/final/reports/smartturn.md",
-                "stable-asr benchmark-turn --dataset runs/final/turn_test.jsonl --predictions runs/final/easyturn_predictions.jsonl --report runs/final/reports/easyturn_latency.md"
+                "stable-asr compare-turn --dataset runs/final/turn_test.jsonl --baseline rule_endpoint --baseline vad_pause --baseline text_turn --predictions smart_turn=runs/final/external/smartturn_predictions.jsonl --predictions easy_turn=runs/final/external/easyturn_predictions.jsonl --checkpoint nanoturn=runs/final/nanoturn/checkpoint.pt --report runs/final/reports/baselines.md --json-output runs/final/reports/baselines.json",
+                "stable-asr benchmark-turn --dataset runs/final/turn_test.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --artifact runs/final/nanoturn/checkpoint.pt --artifact runs/final/nanoturn/metrics.json --report runs/final/reports/turn_benchmarks.md --json-output runs/final/reports/turn_benchmarks.json"
             ],
             "metrics": ["macro_f1", "false_complete_rate", "missed_interrupt_rate", "backchannel_precision", "avg_latency_ms", "p95_latency_ms"],
             "expected_artifacts": ["tables/baselines.md", "tables/turn_benchmark.md", "ADAPTERS.md"],
@@ -113,7 +113,7 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
                 "cost matrix covering false complete, missed interruption, false interruption, backchannel break, and latency"
             ],
             "commands": [
-                "stable-asr optimize-policy --dataset runs/final/turn_dev.jsonl --baseline vad_pause --output runs/final/policy_search.json",
+                "stable-asr optimize-policy --dataset runs/final/turn_dev.jsonl --baseline vad_pause --output runs/final/reports/policy_search.json",
                 "stable-asr eval-turn --dataset runs/final/turn_test.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --report runs/final/reports/policy_transfer.md"
             ],
             "metrics": ["objective_score", "false_complete_rate", "missed_interrupt_rate", "decision_latency_ms"],
@@ -139,8 +139,9 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
             "commands": [
                 "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
                 "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
-                "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md",
-                "stable-asr sweep-streaming-asr --input runs/final/whisper_streaming.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160 320 --report runs/final/reports/whisper_sweep.md"
+                "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md --json-output runs/final/reports/asr_command_compare.json",
+                "stable-asr sweep-streaming-asr --input runs/final/asr_commands/whisper_streaming.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160 320 --report runs/final/reports/whisper_sweep.md --json-output runs/final/reports/whisper_sweep.json",
+                "stable-asr compare-streaming-asr --input whisper=runs/final/asr_commands/whisper_streaming.jsonl --input funasr=runs/final/asr_commands/funasr_streaming.jsonl --json-output runs/final/reports/asr_transcript_conversions.json"
             ],
             "metrics": ["wer", "cer", "rtf", "first_partial_latency", "final_latency", "endpoint_delay", "partial_revision_rate", "stable_prefix_ratio", "timestamp_drift"],
             "expected_artifacts": ["tables/streaming.md", "tables/streaming_sweep.md", "tables/streaming_failures.md", "leaderboard.jsonl"],
