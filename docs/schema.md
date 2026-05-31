@@ -158,12 +158,35 @@ stable-asr prepare-asr-manifest \
 
 stable-asr validate-asr-manifest runs/asr_manifest.jsonl
 stable-asr inspect-asr-manifest runs/asr_manifest.jsonl
+stable-asr audit-audio --kind asr --manifest runs/asr_manifest.jsonl
 ```
 
 Supported input aliases include `utt_id`/`key`, `audio_path`/`wav`,
 `transcript`/`reference`, `duration_sec`, `speaker_id`, `split`, `source`, and
 `language`. This recipe is the v0 bridge from public corpora such as
 LibriSpeech, AISHELL-1, WenetSpeech, and Common Voice into the paper data layer.
+
+## Audio Audit
+
+Field validation does not prove the referenced audio exists. Use `audit-audio`
+before training or benchmarking:
+
+```bash
+stable-asr audit-audio \
+  --kind turn \
+  --manifest runs/splits/turn_train.jsonl \
+  --audio-root data/turn_audio
+
+stable-asr audit-audio \
+  --kind asr \
+  --manifest runs/asr_manifest.jsonl \
+  --duration-tolerance-sec 0.10
+```
+
+The built-in reader inspects WAV files for sample-rate and duration mismatch.
+Non-WAV files such as FLAC are checked for existence by default; add
+`--require-inspectable` when every record must be inspectable by the built-in
+WAV reader.
 
 ## Streaming ASR Fixture Schema
 

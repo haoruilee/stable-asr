@@ -14,6 +14,7 @@ streaming ASR and voice-agent control:
 - streaming ASR metrics
 - streaming ASR failure mining
 - utterance-level ASR corpus manifests and metadata-table recipes
+- audio file audits for turn and ASR manifests
 - adapter registry for baselines, converters, command-backed ASR wrappers, and external-system templates
 - curated upstream ASR reference collections for adapter and benchmark planning
 - policy search
@@ -44,6 +45,7 @@ stable-asr scenario-suite --suite configs/scenarios/stable_asr_voiceworld_v0.jso
 stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output runs/asr_manifest.jsonl --audio-root examples/data --sample-rate 16000
 stable-asr validate-asr-manifest runs/asr_manifest.jsonl
 stable-asr inspect-asr-manifest runs/asr_manifest.jsonl
+stable-asr audit-audio --kind asr --manifest runs/asr_manifest.jsonl
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause
 stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl

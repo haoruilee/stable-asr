@@ -5,7 +5,35 @@ from __future__ import annotations
 import math
 import struct
 import wave
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class WavInfo:
+    path: str
+    sample_rate: int
+    channels: int
+    sample_width: int
+    frames: int
+
+    @property
+    def duration_sec(self) -> float:
+        return self.frames / self.sample_rate if self.sample_rate else 0.0
+
+
+def inspect_wav(path: str | Path) -> WavInfo:
+    """Read basic WAV container metadata without loading samples."""
+
+    path = Path(path)
+    with wave.open(str(path), "rb") as handle:
+        return WavInfo(
+            path=str(path),
+            sample_rate=handle.getframerate(),
+            channels=handle.getnchannels(),
+            sample_width=handle.getsampwidth(),
+            frames=handle.getnframes(),
+        )
 
 
 def load_wav_mono(path: str | Path) -> tuple[list[float], int]:
@@ -63,4 +91,3 @@ def synth_tone(
         tone = amplitude * math.sin(2.0 * math.pi * frequency * index / sample_rate)
         samples.append(tone + pseudo_noise)
     return samples
-

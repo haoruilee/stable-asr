@@ -1,4 +1,4 @@
-from stable_asr.data.audio import load_wav_mono, synth_tone, write_wav_mono
+from stable_asr.data.audio import inspect_wav, load_wav_mono, synth_tone, write_wav_mono
 
 
 def test_wav_roundtrip(tmp_path) -> None:
@@ -12,3 +12,7 @@ def test_wav_roundtrip(tmp_path) -> None:
     assert len(loaded) == len(samples)
     assert max(abs(sample) for sample in loaded) > 0.0
 
+    info = inspect_wav(path)
+    assert info.sample_rate == 16000
+    assert info.channels == 1
+    assert info.duration_sec > 0

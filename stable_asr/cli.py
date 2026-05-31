@@ -9,6 +9,7 @@ from pathlib import Path
 
 from stable_asr import __version__
 from stable_asr.data.asr_manifest import load_asr_manifest, summarize_asr_records, validate_asr_manifest
+from stable_asr.data.audio_audit import audit_audio_records
 from stable_asr.data.manifest import load_manifest, validate_manifest
 from stable_asr.data.benchmark import benchmark_data_formats
 from stable_asr.data.converters import (
@@ -355,6 +356,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     inspect_asr_parser.add_argument("path", type=Path)
     inspect_asr_parser.add_argument("--json", action="store_true")
+
+    audit_audio_parser = subparsers.add_parser(
+        "audit-audio",
+        help="Check manifest audio paths, WAV sample rates, and WAV durations.",
+    )
+    audit_audio_parser.add_argument("--kind", choices=["turn", "asr"], required=True)
+    audit_audio_parser.add_argument("--manifest", type=Path, required=True)
+    audit_audio_parser.add_argument("--audio-root", type=Path)
+    audit_audio_parser.add_argument("--duration-tolerance-sec", type=float, default=0.05)
+    audit_audio_parser.add_argument(
+        "--require-inspectable",
+        action="store_true",
+        help="Fail non-WAV files whose metadata cannot be inspected by the built-in WAV reader.",
+    )
+    audit_audio_parser.add_argument("--report", type=Path, help="Optional text report output path.")
+    audit_audio_parser.add_argument("--json", action="store_true")
 
     streaming_parser = subparsers.add_parser(
         "eval-streaming-asr",
@@ -1007,6 +1024,31 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"  {name}: {count}")
             print(f"speakers: {summary['speakers']}")
         return 0
+
+    if args.command == "audit-audio":
+        try:
+            records = load_manifest(args.manifest) if args.kind == "turn" else load_asr_manifest(args.manifest)
+            report = audit_audio_records(
+                records,
+                kind=args.kind,
+                audio_root=args.audio_root,
+                manifest_path=args.manifest,
+                duration_tolerance_sec=args.duration_tolerance_sec,
+                require_inspectable=args.require_inspectable,
+            )
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.report:
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(report.to_text() + "\n", encoding="utf-8")
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(report.to_text())
+            if args.report:
+                print(f"report: {args.report}")
+        return 0 if report.ok else 1
 
     if args.command == "eval-streaming-asr":
         report = evaluate_streaming_records(load_streaming_transcript_jsonl(args.input))

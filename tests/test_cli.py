@@ -205,6 +205,21 @@ def test_asr_collections_cli_writes_markdown(tmp_path, capsys) -> None:
     assert "OpenAI Whisper" in output.read_text(encoding="utf-8")
 
 
+def test_audit_audio_cli_with_generated_turn_wavs(tmp_path, capsys) -> None:
+    manifest = tmp_path / "turn.jsonl"
+    code = main(["make-synthetic-turn-data", "--output", str(manifest), "--episodes", "2", "--write-audio"])
+    assert code == 0
+    capsys.readouterr()
+
+    report = tmp_path / "audio_audit.txt"
+    code = main(["audit-audio", "--kind", "turn", "--manifest", str(manifest), "--report", str(report)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "audio_audit: OK" in captured.out
+    assert report.exists()
+
+
 def test_convert_predictions_cli(tmp_path, capsys) -> None:
     output = tmp_path / "easyturn_predictions.jsonl"
     code = main(
