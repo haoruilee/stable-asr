@@ -278,8 +278,8 @@ def turn_collections_acquisition_markdown(registry: dict[str, Any]) -> str:
             "```bash",
             "stable-asr turn-collections --audit-coverage --require-priority p0 --output runs/TURN_COLLECTION_COVERAGE.md",
             "stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md",
-            "stable-asr convert-external --schema smart_turn --input <raw.jsonl> --output runs/final/turn_smart_turn.jsonl",
-            "stable-asr convert-predictions --schema easyturn --input <raw.jsonl> --output runs/final/external/easyturn_predictions.jsonl",
+            "stable-asr convert-predictions --schema smart_turn --input runs/final/external/smartturn_raw.jsonl --output runs/final/external/smartturn_predictions.jsonl",
+            "stable-asr convert-predictions --schema easyturn --input runs/final/external/easyturn_raw.jsonl --output runs/final/external/easyturn_predictions.jsonl",
             "stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/scenarios.json",
             "```",
             "",
@@ -366,4 +366,12 @@ def _acquisition_evidence_target(entry: dict[str, Any], track: str) -> str:
         return f"runs/collections/{reference_id}/VAD_ADAPTER.md"
     if track == "turn prediction objective bridge":
         return f"runs/collections/{reference_id}/PREDICTION_OBJECTIVE.md"
-    return f"runs/final/external/{reference_id}_raw.jsonl"
+    return f"runs/final/external/{_final_prediction_stem(reference_id)}_raw.jsonl"
+
+
+def _final_prediction_stem(reference_id: str) -> str:
+    stems = {
+        "smart_turn": "smartturn",
+        "easy_turn": "easyturn",
+    }
+    return stems.get(reference_id, reference_id)

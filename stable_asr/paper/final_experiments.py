@@ -62,8 +62,8 @@ DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
                 "VAP-style predictions when available"
             ],
             "commands": [
-                "stable-asr convert-predictions --schema smart_turn --input runs/final/smartturn_raw.jsonl --output runs/final/smartturn_predictions.jsonl",
-                "stable-asr convert-predictions --schema easyturn --input runs/final/easyturn_raw.jsonl --output runs/final/easyturn_predictions.jsonl",
+                "stable-asr convert-predictions --schema smart_turn --input runs/final/external/smartturn_raw.jsonl --output runs/final/external/smartturn_predictions.jsonl",
+                "stable-asr convert-predictions --schema easyturn --input runs/final/external/easyturn_raw.jsonl --output runs/final/external/easyturn_predictions.jsonl",
                 "stable-asr compare-turn --dataset runs/final/turn_test.jsonl --baseline rule_endpoint --baseline vad_pause --baseline text_turn --predictions smart_turn=runs/final/external/smartturn_predictions.jsonl --predictions easy_turn=runs/final/external/easyturn_predictions.jsonl --checkpoint nanoturn=runs/final/nanoturn/checkpoint.pt --report runs/final/reports/baselines.md --json-output runs/final/reports/baselines.json",
                 "stable-asr benchmark-turn --dataset runs/final/turn_test.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --artifact runs/final/nanoturn/checkpoint.pt --artifact runs/final/nanoturn/metrics.json --report runs/final/reports/turn_benchmarks.md --json-output runs/final/reports/turn_benchmarks.json"
             ],

@@ -655,7 +655,7 @@ def test_turn_collections_cli_writes_acquisition_markdown(tmp_path, capsys) -> N
     assert code == 0
     assert "Stable-ASR Turn Collection Acquisition Plan" in captured.out
     assert output.exists()
-    assert "runs/final/external/smart_turn_raw.jsonl" in output.read_text(encoding="utf-8")
+    assert "runs/final/external/smartturn_raw.jsonl" in output.read_text(encoding="utf-8")
 
 
 def test_audit_audio_cli_with_generated_turn_wavs(tmp_path, capsys) -> None:

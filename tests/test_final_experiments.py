@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from stable_asr.paper.final_config import load_final_run_config
 from stable_asr.paper.final_experiments import (
     final_experiments_markdown,
     load_final_experiments,
@@ -28,6 +29,19 @@ def test_final_experiments_markdown_and_json_roundtrip(tmp_path: Path) -> None:
     assert "real_data_layer_benchmark" in markdown
     assert "real_streaming_asr_systems" in markdown
     assert "stable-asr benchmark-data" in markdown
+
+
+def test_external_turn_commands_match_final_config_prediction_paths() -> None:
+    registry = load_final_experiments()
+    config = load_final_run_config()
+    experiment = next(item for item in registry["experiments"] if item["id"] == "external_turn_baselines")
+    commands = "\n".join(experiment["commands"])
+
+    for prediction in config["external_turn_predictions"]:
+        assert prediction["raw"] in commands
+        assert prediction["converted"] in commands
+    assert "runs/final/smartturn_raw.jsonl" not in commands
+    assert "runs/final/easyturn_raw.jsonl" not in commands
 
 
 def test_final_experiments_validation_rejects_duplicate_id() -> None:
