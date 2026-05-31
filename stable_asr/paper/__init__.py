@@ -16,6 +16,14 @@ from stable_asr.paper.experiments import PaperRunResult, run_paper_smoke
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
 from stable_asr.paper.final_config import FinalRunActionPlan, build_final_run_action_plan
 from stable_asr.paper.final_results import FinalResultsAssemblyReport, assemble_final_paper_results
+from stable_asr.paper.integrity import (
+    ArtifactDigest,
+    ArtifactIntegrityReport,
+    artifact_integrity_manifest,
+    load_artifact_integrity,
+    verify_artifact_integrity,
+    write_artifact_integrity,
+)
 from stable_asr.paper.latex import paper_latex
 from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
 from stable_asr.paper.release_smoke import PaperReleaseSmokeResult, run_paper_release_smoke
@@ -40,6 +48,8 @@ __all__ = [
     "BenchmarkSuiteCoverage",
     "BenchmarkSuiteValidation",
     "PaperArtifactBundle",
+    "ArtifactDigest",
+    "ArtifactIntegrityReport",
     "PaperAuditCheck",
     "PaperAuditReport",
     "PaperReleaseAuditCheck",
@@ -50,6 +60,7 @@ __all__ = [
     "FinalRunActionPlan",
     "FinalEvidenceMatrixReport",
     "assemble_final_paper_results",
+    "artifact_integrity_manifest",
     "audit_paper_artifacts",
     "audit_paper_release",
     "build_final_run_action_plan",
@@ -59,6 +70,7 @@ __all__ = [
     "audit_benchmark_suite_coverage",
     "benchmark_suite_markdown",
     "load_benchmark_suite",
+    "load_artifact_integrity",
     "paper_artifact_bundle",
     "paper_draft",
     "final_evidence_matrix",
@@ -69,5 +81,7 @@ __all__ = [
     "run_paper_smoke",
     "validate_benchmark_suite",
     "validate_leaderboard_jsonl",
+    "verify_artifact_integrity",
+    "write_artifact_integrity",
     "write_benchmark_suite_json",
 ]

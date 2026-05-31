@@ -149,6 +149,7 @@ DEFAULT_CLAIMS: list[dict[str, Any]] = [
             "scripts/reproduce_paper.py",
             "stable_asr/paper/artifacts.py",
             "stable_asr/paper/audit.py",
+            "stable_asr/paper/integrity.py",
             "stable_asr/paper/draft.py",
             "stable_asr/paper/latex.py",
             "stable_asr/paper/final_config.py",
@@ -161,6 +162,8 @@ DEFAULT_CLAIMS: list[dict[str, Any]] = [
         "artifact_paths": [
             "ARTIFACT_INDEX.md",
             "artifact_manifest.json",
+            "artifact_hashes.json",
+            "ARTIFACT_HASHES.md",
             "leaderboard.jsonl",
             "benchmark_suite.json",
             "data_sources.json",

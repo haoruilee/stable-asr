@@ -2302,7 +2302,10 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert "final_evidence_matrix:" in captured.out
     assert "roadmap_status:" in captured.out
     assert "claims:" in captured.out
+    assert "artifact_integrity:" in captured.out
     assert (output_dir / "ARTIFACT_INDEX.md").exists()
+    assert (output_dir / "ARTIFACT_HASHES.md").exists()
+    assert (output_dir / "artifact_hashes.json").exists()
     assert (output_dir / "tables" / "baselines.md").exists()
     assert (output_dir / "figures" / "baselines.svg").exists()
     assert (output_dir / "LEADERBOARD_VALIDATION.md").exists()
@@ -2311,6 +2314,58 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert (output_dir / "CASE_STUDIES.md").exists()
     assert (output_dir / "FINAL_EVIDENCE_MATRIX.md").exists()
     assert (output_dir / "CLAIMS.md").exists()
+
+
+def test_paper_artifact_integrity_cli(tmp_path, capsys) -> None:
+    main(
+        [
+            "reproduce-paper",
+            "--output-dir",
+            str(tmp_path / "paper"),
+            "--episodes",
+            "10",
+            "--skip-train",
+        ]
+    )
+    output_dir = tmp_path / "artifacts"
+    main(
+        [
+            "paper-bundle",
+            "--results",
+            str(tmp_path / "paper" / "paper_results.json"),
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+    code = main(
+        [
+            "paper-artifact-integrity",
+            "--manifest",
+            str(output_dir / "artifact_hashes.json"),
+            "--root",
+            str(output_dir),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Artifact Integrity" in captured.out
+    assert "status: `OK`" in captured.out
+
+    (output_dir / "tables" / "baselines.md").write_text("tampered\n", encoding="utf-8")
+    code = main(
+        [
+            "paper-artifact-integrity",
+            "--manifest",
+            str(output_dir / "artifact_hashes.json"),
+            "--root",
+            str(output_dir),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "Mismatched" in captured.out
 
 
 def test_paper_audit_cli(tmp_path, capsys) -> None:

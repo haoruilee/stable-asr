@@ -87,6 +87,7 @@ from stable_asr.paper.final_experiments import (
 )
 from stable_asr.paper.final_results import assemble_final_paper_results
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
+from stable_asr.paper.integrity import verify_artifact_integrity
 from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
 from stable_asr.paper.latex import paper_latex
 from stable_asr.paper.release_smoke import run_paper_release_smoke
@@ -814,6 +815,15 @@ def build_parser() -> argparse.ArgumentParser:
     paper_bundle_parser.add_argument("--results", type=Path, required=True)
     paper_bundle_parser.add_argument("--output-dir", type=Path, required=True)
     paper_bundle_parser.add_argument("--json", action="store_true", help="Print bundle paths as JSON.")
+
+    integrity_parser = subparsers.add_parser(
+        "paper-artifact-integrity",
+        help="Verify a paper bundle artifact_hashes.json manifest.",
+    )
+    integrity_parser.add_argument("--manifest", type=Path, required=True)
+    integrity_parser.add_argument("--root", type=Path, help="Artifact root. Defaults to the root stored in the manifest.")
+    integrity_parser.add_argument("--output", type=Path, help="Optional Markdown or JSON report output path.")
+    integrity_parser.add_argument("--json", action="store_true")
 
     paper_status_parser = subparsers.add_parser(
         "paper-status",
@@ -2132,7 +2142,21 @@ def main(argv: list[str] | None = None) -> int:
             print(f"paper_status: {len(bundle.paper_status)}")
             print(f"roadmap_status: {len(bundle.roadmap_status)}")
             print(f"claims: {len(bundle.claims)}")
+            print(f"artifact_integrity: {len(bundle.artifact_integrity)}")
         return 0
+
+    if args.command == "paper-artifact-integrity":
+        try:
+            report = verify_artifact_integrity(args.manifest, root=args.root)
+        except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+        print(text)
+        return 0 if report.ok else 1
 
     if args.command == "paper-status":
         try:

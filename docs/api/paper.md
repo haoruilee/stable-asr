@@ -6,6 +6,7 @@ Core entry points:
 
 - `stable_asr.paper.experiments.run_paper_smoke`
 - `stable_asr.paper.artifacts.paper_artifact_bundle`
+- `stable_asr.paper.integrity.verify_artifact_integrity`
 - `stable_asr.paper.release_smoke.run_paper_release_smoke`
 - `stable_asr.paper.audit.audit_paper_release`
 - `stable_asr.paper.parity.audit_paper_parity`
@@ -26,4 +27,16 @@ from stable_asr.paper.release_smoke import run_paper_release_smoke
 
 result = run_paper_release_smoke("runs/paper/release_smoke")
 print(result.to_text())
+```
+
+Verify a generated bundle before publishing or moving it:
+
+```python
+from stable_asr.paper.integrity import verify_artifact_integrity
+
+report = verify_artifact_integrity(
+    "runs/paper/smoke/artifacts/artifact_hashes.json",
+    root="runs/paper/smoke/artifacts",
+)
+print(report.to_markdown())
 ```

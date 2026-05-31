@@ -12,6 +12,7 @@ from stable_asr.models.adapters.registry import load_adapter_registry, validate_
 from stable_asr.paper.final_config import load_final_run_config, validate_final_run_config
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
 from stable_asr.paper.figures import PAPER_FIGURES
+from stable_asr.paper.integrity import verify_artifact_integrity
 from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_parity_checklist
 from stable_asr.paper.suites import audit_benchmark_suite_coverage, load_benchmark_suite, validate_benchmark_suite
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results
@@ -918,6 +919,9 @@ def _artifact_checks(artifacts_dir: Path) -> list[PaperAuditCheck]:
     checks.append(_exists_check("leaderboard:csv", artifacts_dir / "leaderboard.csv"))
     checks.append(_exists_check("leaderboard_validation:json", artifacts_dir / "leaderboard_validation.json"))
     checks.append(_exists_check("leaderboard_validation:markdown", artifacts_dir / "LEADERBOARD_VALIDATION.md"))
+    checks.append(_exists_check("artifact_integrity:json", artifacts_dir / "artifact_hashes.json"))
+    checks.append(_exists_check("artifact_integrity:markdown", artifacts_dir / "ARTIFACT_HASHES.md"))
+    checks.append(_integrity_check(artifacts_dir))
     checks.append(_exists_check("benchmark_suite:json", artifacts_dir / "benchmark_suite.json"))
     checks.append(_exists_check("benchmark_suite:markdown", artifacts_dir / "BENCHMARK_SUITE.md"))
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))
@@ -957,6 +961,26 @@ def _artifact_checks(artifacts_dir: Path) -> list[PaperAuditCheck]:
 
 def _exists_check(name: str, path: Path) -> PaperAuditCheck:
     return PaperAuditCheck(name, path.exists(), str(path))
+
+
+def _integrity_check(artifacts_dir: Path) -> PaperAuditCheck:
+    manifest = artifacts_dir / "artifact_hashes.json"
+    if not manifest.exists():
+        return PaperAuditCheck("artifact_integrity:sha256", False, f"missing: {manifest}")
+    try:
+        report = verify_artifact_integrity(manifest, root=artifacts_dir)
+    except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
+        return PaperAuditCheck("artifact_integrity:sha256", False, str(exc))
+    if report.ok:
+        detail = f"{len(report.files)} file(s) verified"
+    else:
+        parts = []
+        if report.missing:
+            parts.append("missing: " + ", ".join(report.missing[:3]))
+        if report.mismatched:
+            parts.append("mismatched: " + ", ".join(report.mismatched[:3]))
+        detail = "; ".join(parts)
+    return PaperAuditCheck("artifact_integrity:sha256", report.ok, detail)
 
 
 def _optional_path_check(gate: str, name: str, path: str | Path | None) -> PaperReleaseAuditCheck:

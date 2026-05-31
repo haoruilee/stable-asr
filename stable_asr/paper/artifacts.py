@@ -23,6 +23,7 @@ from stable_asr.paper.final_config import (
     write_final_run_config_json,
 )
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
+from stable_asr.paper.integrity import artifact_integrity_manifest, write_artifact_integrity
 from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
 from stable_asr.paper.parity import audit_paper_parity, load_paper_parity_checklist, paper_parity_markdown
 from stable_asr.paper.status import paper_status, write_paper_status_json, write_paper_status_markdown
@@ -51,6 +52,7 @@ class PaperArtifactBundle:
     output_dir: str
     index_path: str
     manifest_path: str
+    artifact_integrity: dict[str, str]
     tables: dict[str, str]
     figures: dict[str, str]
     leaderboards: dict[str, str]
@@ -76,6 +78,7 @@ class PaperArtifactBundle:
             "output_dir": self.output_dir,
             "index_path": self.index_path,
             "manifest_path": self.manifest_path,
+            "artifact_integrity": self.artifact_integrity,
             "tables": self.tables,
             "figures": self.figures,
             "leaderboards": self.leaderboards,
@@ -190,6 +193,10 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
 
     index_path = output_dir / "ARTIFACT_INDEX.md"
     manifest_path = output_dir / "artifact_manifest.json"
+    artifact_integrity = {
+        "json": str(output_dir / "artifact_hashes.json"),
+        "markdown": str(output_dir / "ARTIFACT_HASHES.md"),
+    }
     # Seed these files before the parity audit, which checks that the paper
     # bundle contains an artifact index and manifest. They are rewritten below
     # with the final bundle payload.
@@ -285,6 +292,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         output_dir=str(output_dir),
         index_path=str(index_path),
         manifest_path=str(manifest_path),
+        artifact_integrity=artifact_integrity,
         tables=tables,
         figures=figures,
         leaderboards=leaderboards,
@@ -307,6 +315,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     )
     manifest_path.write_text(json.dumps(provisional.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     index_path.write_text(_artifact_index(results_path, provisional), encoding="utf-8")
+    _write_bundle_integrity(provisional)
 
     claim_artifacts = paper_claims(results_path, output_dir)
     claims = claim_artifacts.to_dict()
@@ -314,6 +323,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         output_dir=str(output_dir),
         index_path=str(index_path),
         manifest_path=str(manifest_path),
+        artifact_integrity=artifact_integrity,
         tables=tables,
         figures=figures,
         leaderboards=leaderboards,
@@ -336,6 +346,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     )
     manifest_path.write_text(json.dumps(bundle.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     index_path.write_text(_artifact_index(results_path, bundle), encoding="utf-8")
+    _write_bundle_integrity(bundle)
     return bundle
 
 
@@ -358,6 +369,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Leaderboard Validation", ""])
     for name, path in bundle.leaderboard_validation.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Artifact Integrity", ""])
+    for name, path in bundle.artifact_integrity.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Benchmark Suite", ""])
     for name, path in bundle.benchmark_suite.items():
@@ -416,3 +430,41 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def _write_bundle_integrity(bundle: PaperArtifactBundle) -> dict[str, str]:
+    output_dir = Path(bundle.output_dir)
+    report = artifact_integrity_manifest(_bundle_artifact_paths(bundle), root=output_dir)
+    return write_artifact_integrity(
+        report,
+        bundle.artifact_integrity["json"],
+        bundle.artifact_integrity["markdown"],
+    )
+
+
+def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
+    paths = [bundle.index_path, bundle.manifest_path]
+    sections = (
+        bundle.tables,
+        bundle.figures,
+        bundle.leaderboards,
+        bundle.leaderboard_validation,
+        bundle.benchmark_suite,
+        bundle.data_sources,
+        bundle.adapter_registry,
+        bundle.asr_collections,
+        bundle.scenario_suite,
+        bundle.case_studies,
+        bundle.paper_parity,
+        bundle.final_experiments,
+        bundle.final_run_config,
+        bundle.final_run_file_audit,
+        bundle.final_run_action_plan,
+        bundle.final_evidence_matrix,
+        bundle.paper_status,
+        bundle.roadmap_status,
+        bundle.claims,
+    )
+    for section in sections:
+        paths.extend(section.values())
+    return paths

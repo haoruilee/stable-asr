@@ -159,8 +159,9 @@ stable-asr paper-release-audit \
 ```
 
 `paper-release-smoke` writes `paper_results.json`, tables, figures, registry
-artifacts, case studies, final-run audits/action plans, final evidence matrix, claim evidence, roadmap
-status, `PAPER_DRAFT.md`, `paper.tex`, dataset/experiment cards, and
+artifacts, artifact hash manifests, case studies, final-run audits/action
+plans, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`,
+`paper.tex`, dataset/experiment cards, and
 `RELEASE_AUDIT.md`.
 
 Use `stable-asr doctor --check-release-env` before strict release smoke. A
@@ -261,6 +262,7 @@ is provided in `mkdocs.yaml`.
 - `paper-table policy` extraction
 - `paper-figure` SVG generation for platform diagrams plus baseline, latency, data, streaming, scenario, and policy figures
 - `paper-bundle` generation for paper tables, figures, artifact index, and artifact manifest
+- paper bundle sha256 integrity manifests and `paper-artifact-integrity` verification
 - ASR reference collection, paper-reference, BibTeX, and P0/P1 coverage artifacts in `paper-bundle`
 - final evidence matrix artifacts in `paper-bundle`
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
