@@ -73,6 +73,7 @@ stable-asr leaderboard-export --results runs/paper/smoke/paper_results.json --ou
 stable-asr leaderboard-validate --input runs/paper/smoke/leaderboard.jsonl --output runs/paper/smoke/LEADERBOARD_VALIDATION.md
 stable-asr paper-artifact-integrity --manifest runs/paper/smoke/artifacts/artifact_hashes.json --root runs/paper/smoke/artifacts
 stable-asr benchmark-suite --suite runs/paper/smoke/artifacts/benchmark_suite.json --artifacts-dir runs/paper/smoke/artifacts --validate-only
+stable-asr paper-archive --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/artifacts.tar.gz
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --validate-only
 stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
@@ -107,7 +108,8 @@ stable-asr paper-latex --results runs/paper/smoke/paper_results.json --artifacts
 
 `paper-audit` checks artifact shape, provenance files, and verifies the bundle hash manifest.
 `paper-artifact-integrity` can be run directly to re-check `artifact_hashes.json`
-after moving or publishing a bundle. `paper-release-audit` checks whether the
+after moving or publishing a bundle. `paper-archive` writes a publishable
+`tar.gz` plus SHA256 sidecar after those gates pass. `paper-release-audit` checks whether the
 repository has enough evidence for a platform paper release. `paper-parity-audit`
 checks whether each stable-worldmodel-style paper element has structural
 evidence and lists the remaining final-scale experiment requirements.

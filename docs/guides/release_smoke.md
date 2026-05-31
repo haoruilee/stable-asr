@@ -18,6 +18,8 @@ Expected outputs:
 - `paper.tex`
 - `DATASET_CARD.md`
 - `EXPERIMENT_CARD.md`
+- `artifacts.tar.gz`
+- `artifacts.tar.gz.sha256`
 - `release_audit.json`
 - `RELEASE_AUDIT.md`
 

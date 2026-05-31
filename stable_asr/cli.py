@@ -87,6 +87,7 @@ from stable_asr.paper.final_experiments import (
 )
 from stable_asr.paper.final_results import assemble_final_paper_results
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
+from stable_asr.paper.archive import paper_artifact_archive
 from stable_asr.paper.integrity import verify_artifact_integrity
 from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
 from stable_asr.paper.latex import paper_latex
@@ -825,6 +826,15 @@ def build_parser() -> argparse.ArgumentParser:
     integrity_parser.add_argument("--root", type=Path, help="Artifact root. Defaults to the root stored in the manifest.")
     integrity_parser.add_argument("--output", type=Path, help="Optional Markdown or JSON report output path.")
     integrity_parser.add_argument("--json", action="store_true")
+
+    archive_parser = subparsers.add_parser(
+        "paper-archive",
+        help="Create a tar.gz archive and sha256 sidecar from an audited paper artifact bundle.",
+    )
+    archive_parser.add_argument("--artifacts-dir", type=Path, required=True)
+    archive_parser.add_argument("--output", type=Path, required=True)
+    archive_parser.add_argument("--root-name", default="stable-asr-artifacts")
+    archive_parser.add_argument("--json", action="store_true")
 
     paper_status_parser = subparsers.add_parser(
         "paper-status",
@@ -2160,6 +2170,15 @@ def main(argv: list[str] | None = None) -> int:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
         print(text)
+        return 0 if report.ok else 1
+
+    if args.command == "paper-archive":
+        try:
+            report = paper_artifact_archive(args.artifacts_dir, args.output, root_name=args.root_name)
+        except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_text())
         return 0 if report.ok else 1
 
     if args.command == "paper-status":

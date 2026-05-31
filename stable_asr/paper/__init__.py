@@ -1,5 +1,11 @@
 """Paper experiment helpers."""
 
+from stable_asr.paper.archive import (
+    PaperArchiveReport,
+    load_paper_archive_report,
+    paper_artifact_archive,
+    write_paper_archive_report,
+)
 from stable_asr.paper.artifacts import PaperArtifactBundle, paper_artifact_bundle
 from stable_asr.paper.audit import (
     PaperAuditCheck,
@@ -58,6 +64,7 @@ __all__ = [
     "BenchmarkSuiteCoverage",
     "BenchmarkSuiteValidation",
     "PaperArtifactBundle",
+    "PaperArchiveReport",
     "ArtifactDigest",
     "ArtifactIntegrityReport",
     "PaperAuditCheck",
@@ -85,7 +92,9 @@ __all__ = [
     "benchmark_suite_markdown",
     "load_benchmark_suite",
     "load_artifact_integrity",
+    "load_paper_archive_report",
     "paper_bundle_provenance",
+    "paper_artifact_archive",
     "paper_artifact_bundle",
     "paper_draft",
     "final_evidence_matrix",
@@ -99,5 +108,6 @@ __all__ = [
     "verify_artifact_integrity",
     "write_artifact_integrity",
     "write_benchmark_suite_json",
+    "write_paper_archive_report",
     "write_paper_provenance",
 ]

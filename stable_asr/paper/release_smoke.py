@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from stable_asr.paper.archive import paper_artifact_archive
 from stable_asr.paper.artifacts import paper_artifact_bundle
 from stable_asr.paper.audit import PaperReleaseAuditReport, audit_paper_release
 from stable_asr.paper.cards import dataset_card, experiment_card
@@ -24,6 +25,8 @@ class PaperReleaseSmokeResult:
     latex_draft: str
     dataset_card: str
     experiment_card: str
+    artifact_archive: str
+    artifact_archive_sha256: str
     release_audit_json: str
     release_audit_markdown: str
     audit: PaperReleaseAuditReport
@@ -42,6 +45,8 @@ class PaperReleaseSmokeResult:
             "latex_draft": self.latex_draft,
             "dataset_card": self.dataset_card,
             "experiment_card": self.experiment_card,
+            "artifact_archive": self.artifact_archive,
+            "artifact_archive_sha256": self.artifact_archive_sha256,
             "release_audit_json": self.release_audit_json,
             "release_audit_markdown": self.release_audit_markdown,
             "audit": self.audit.to_dict(),
@@ -57,6 +62,8 @@ class PaperReleaseSmokeResult:
             f"latex_draft: {self.latex_draft}",
             f"dataset_card: {self.dataset_card}",
             f"experiment_card: {self.experiment_card}",
+            f"artifact_archive: {self.artifact_archive}",
+            f"artifact_archive_sha256: {self.artifact_archive_sha256}",
             f"release_audit_json: {self.release_audit_json}",
             f"release_audit_markdown: {self.release_audit_markdown}",
             f"missing_gates: {len(missing)}",
@@ -97,6 +104,7 @@ def run_paper_release_smoke(
     audit_markdown = output_dir / "RELEASE_AUDIT.md"
     audit_json.write_text(json.dumps(audit.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     audit_markdown.write_text(audit.to_text() + "\n", encoding="utf-8")
+    archive = paper_artifact_archive(bundle.output_dir, output_dir / "artifacts.tar.gz")
 
     return PaperReleaseSmokeResult(
         output_dir=str(output_dir),
@@ -106,6 +114,8 @@ def run_paper_release_smoke(
         latex_draft=latex,
         dataset_card=dataset,
         experiment_card=experiment,
+        artifact_archive=archive.archive_path,
+        artifact_archive_sha256=archive.sha256_path,
         release_audit_json=str(audit_json),
         release_audit_markdown=str(audit_markdown),
         audit=audit,

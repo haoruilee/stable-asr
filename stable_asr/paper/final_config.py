@@ -120,6 +120,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
     "artifacts": {
         "paper_results": "runs/final/paper_results.json",
         "bundle_dir": "runs/final/artifacts",
+        "artifact_archive": "runs/final/artifacts.tar.gz",
         "markdown_draft": "runs/final/PAPER_DRAFT.md",
         "latex_draft": "runs/final/paper.tex",
         "dataset_card": "runs/final/DATASET_CARD.md",
@@ -158,6 +159,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json",
         "stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts",
         "stable-asr paper-artifact-integrity --manifest runs/final/artifacts/artifact_hashes.json --root runs/final/artifacts",
+        "stable-asr paper-archive --artifacts-dir runs/final/artifacts --output runs/final/artifacts.tar.gz",
         "stable-asr paper-parity-audit --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final",
     ],
 }
@@ -2062,7 +2064,11 @@ def _final_artifacts_action(
     config_path: str,
 ) -> FinalRunActionItem:
     blockers = [check.path for check in missing_required]
-    artifacts = [str(config["artifacts"]["paper_results"]), str(config["artifacts"]["bundle_dir"])]
+    artifacts = [
+        str(config["artifacts"]["paper_results"]),
+        str(config["artifacts"]["bundle_dir"]),
+        str(config["artifacts"].get("artifact_archive", "runs/final/artifacts.tar.gz")),
+    ]
     return FinalRunActionItem(
         id="assemble_final_artifacts",
         title="Assemble paper results, bundle artifacts, and run final parity gates",
@@ -2072,6 +2078,7 @@ def _final_artifacts_action(
             f"stable-asr final-results --config {config_path} --output {config['artifacts']['paper_results']}",
             f"stable-asr paper-bundle --results {config['artifacts']['paper_results']} --output-dir {config['artifacts']['bundle_dir']}",
             f"stable-asr paper-artifact-integrity --manifest {config['artifacts']['bundle_dir']}/artifact_hashes.json --root {config['artifacts']['bundle_dir']}",
+            f"stable-asr paper-archive --artifacts-dir {config['artifacts']['bundle_dir']} --output {config['artifacts'].get('artifact_archive', 'runs/final/artifacts.tar.gz')}",
             f"stable-asr paper-parity-audit --results {config['artifacts']['paper_results']} --artifacts-dir {config['artifacts']['bundle_dir']} --require-final",
             f"stable-asr paper-release-audit --repo-root . --results {config['artifacts']['paper_results']} --artifacts-dir {config['artifacts']['bundle_dir']}",
         ],

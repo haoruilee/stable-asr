@@ -6,6 +6,7 @@ Core entry points:
 
 - `stable_asr.paper.experiments.run_paper_smoke`
 - `stable_asr.paper.artifacts.paper_artifact_bundle`
+- `stable_asr.paper.archive.paper_artifact_archive`
 - `stable_asr.paper.integrity.verify_artifact_integrity`
 - `stable_asr.paper.provenance.paper_bundle_provenance`
 - `stable_asr.paper.release_smoke.run_paper_release_smoke`

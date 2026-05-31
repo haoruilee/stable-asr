@@ -41,6 +41,7 @@ stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 
 - `paper/paper_results.json`
 - `artifacts/` with copied paper results, tables, figures, registries, case studies, claims, roadmap status, benchmark suite files, provenance, and integrity hashes
+- `artifacts.tar.gz` and `artifacts.tar.gz.sha256`
 - `PAPER_DRAFT.md`
 - `paper.tex`
 - `DATASET_CARD.md`

@@ -2426,6 +2426,45 @@ def test_benchmark_suite_cli_audits_required_artifacts(tmp_path, capsys) -> None
     assert "leaderboard.csv" in captured.err
 
 
+def test_paper_archive_cli(tmp_path, capsys) -> None:
+    main(
+        [
+            "reproduce-paper",
+            "--output-dir",
+            str(tmp_path / "paper"),
+            "--episodes",
+            "10",
+            "--skip-train",
+        ]
+    )
+    output_dir = tmp_path / "artifacts"
+    main(
+        [
+            "paper-bundle",
+            "--results",
+            str(tmp_path / "paper" / "paper_results.json"),
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+    archive = tmp_path / "stable_asr_artifacts.tar.gz"
+    code = main(
+        [
+            "paper-archive",
+            "--artifacts-dir",
+            str(output_dir),
+            "--output",
+            str(archive),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "paper_archive: OK" in captured.out
+    assert archive.exists()
+    assert (tmp_path / "stable_asr_artifacts.tar.gz.sha256").exists()
+
+
 def test_paper_audit_cli(tmp_path, capsys) -> None:
     main(
         [
@@ -2624,8 +2663,11 @@ def test_paper_release_smoke_cli(tmp_path, capsys) -> None:
     assert code == 0
     assert "paper_release_smoke: NOT_READY" in captured.out
     assert "release_audit_json:" in captured.out
+    assert "artifact_archive:" in captured.out
     assert (tmp_path / "release_smoke" / "release_audit.json").exists()
     assert (tmp_path / "release_smoke" / "RELEASE_AUDIT.md").exists()
+    assert (tmp_path / "release_smoke" / "artifacts.tar.gz").exists()
+    assert (tmp_path / "release_smoke" / "artifacts.tar.gz.sha256").exists()
 
 
 def test_paper_release_smoke_default_trains_nanoturn_when_torch_available(tmp_path, capsys) -> None:
