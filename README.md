@@ -28,7 +28,8 @@ Stable-ASR is not another general ASR toolkit. The first releases focus on:
 ## Documentation
 
 See [docs/index.md](docs/index.md) for the project documentation, including the
-paper pipeline, release gates, and manifest schema.
+quick start, CLI reference, baseline guide, paper pipeline, release gates, API
+notes, and manifest schema. A MkDocs config is provided in `mkdocs.yaml`.
 
 ## Quick Start
 

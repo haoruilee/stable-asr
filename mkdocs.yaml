@@ -1,0 +1,29 @@
+site_name: Stable-ASR
+site_description: Reproducible real-time ASR and full-duplex turn-taking research platform.
+repo_url: https://github.com/haoruilee/stable-asr
+repo_name: haoruilee/stable-asr
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Quick Start: quick_start.md
+  - CLI: cli.md
+  - Baselines: baselines.md
+  - Data Schema: schema.md
+  - Paper Pipeline: paper_pipeline.md
+  - Release Gates: release_gates.md
+  - ASR Collections: asr_collections.md
+  - API:
+      - Data: api/data.md
+      - Turn: api/turn.md
+      - Scenarios: api/scenarios.md
+      - Paper: api/paper.md
+  - Guides:
+      - External ASR Adapters: guides/adapters.md
+      - Release Smoke: guides/release_smoke.md

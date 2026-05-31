@@ -480,6 +480,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
     required = {
         "pyproject": "pyproject.toml",
         "manifest_in": "MANIFEST.in",
+        "mkdocs_config": "mkdocs.yaml",
         "readme": "README.md",
         "license": "LICENSE",
         "contributing": "CONTRIBUTING.md",
@@ -541,6 +542,7 @@ def _source_manifest_content_check(path: Path) -> PaperReleaseAuditCheck:
         "include SECURITY.md",
         "include CODE_OF_CONDUCT.md",
         "include CITATION.cff",
+        "include mkdocs.yaml",
         "recursive-include .github/workflows",
         "recursive-include configs",
         "recursive-include docs",
@@ -564,6 +566,7 @@ def _wheel_data_files_check(path: Path) -> PaperReleaseAuditCheck:
     required_patterns = (
         "[tool.setuptools.data-files]",
         "share/stable-asr",
+        "mkdocs.yaml",
         "share/stable-asr/.github/workflows",
         "share/stable-asr/configs/adapters",
         "share/stable-asr/configs/benchmarks",
@@ -574,6 +577,8 @@ def _wheel_data_files_check(path: Path) -> PaperReleaseAuditCheck:
         "share/stable-asr/configs/roadmap",
         "share/stable-asr/configs/scenarios",
         "share/stable-asr/docs",
+        "share/stable-asr/docs/api",
+        "share/stable-asr/docs/guides",
         "share/stable-asr/examples",
         "share/stable-asr/scripts",
         "share/stable-asr/tests/fixtures",

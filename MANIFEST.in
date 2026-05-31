@@ -6,6 +6,7 @@ include SECURITY.md
 include CODE_OF_CONDUCT.md
 include CITATION.cff
 include pyproject.toml
+include mkdocs.yaml
 
 recursive-include .github/workflows *.yml
 recursive-include configs *.json

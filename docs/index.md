@@ -82,7 +82,12 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --resul
 
 ## Documents
 
+- [Quick start](quick_start.md)
+- [CLI](cli.md)
+- [Baselines](baselines.md)
 - [Paper pipeline](paper_pipeline.md)
 - [Release gates](release_gates.md)
 - [Data schema](schema.md)
 - [ASR reference collections](asr_collections.md)
+- API: [Data](api/data.md), [Turn](api/turn.md), [Scenarios](api/scenarios.md), [Paper](api/paper.md)
+- Guides: [External ASR adapters](guides/adapters.md), [Release smoke](guides/release_smoke.md)

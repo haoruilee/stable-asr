@@ -83,6 +83,7 @@ def test_paper_release_audit_resolves_platform_assets_from_empty_repo_root(tmp_p
 
     assert "OK software/pyproject" in text
     assert "OK software/manifest_in" in text
+    assert "OK software/mkdocs_config" in text
     assert "OK software/ci_workflow" in text
     assert "OK software/asr_manifest_schema" in text
     assert "OK paper/citation" in text

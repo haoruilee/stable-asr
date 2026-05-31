@@ -1,0 +1,50 @@
+# Quick Start
+
+Stable-ASR starts with turn-taking and endpointing, then expands into streaming
+ASR evaluation, data-layer benchmarking, scenario evaluation, and paper-ready
+artifact generation.
+
+## Install
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+python -m pip install -e ".[train]"   # optional NanoTurn training
+python -m pip install -e ".[lance]"   # optional Parquet/Lance data backends
+```
+
+## Three-Step Platform Flow
+
+```bash
+# 1. Validate and profile turn data
+stable-asr validate-manifest examples/data/turn_demo.jsonl
+stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report runs/turn_profile.md
+
+# 2. Compare baselines and train NanoTurn
+stable-asr compare-turn \
+  --dataset examples/data/turn_demo.jsonl \
+  --baseline vad_pause \
+  --baseline text_turn \
+  --report runs/turn_compare.md
+stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
+
+# 3. Generate paper-facing evidence
+stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
+```
+
+## What The Smoke Run Produces
+
+`paper-release-smoke` writes:
+
+- `paper/paper_results.json`
+- `artifacts/` with tables, figures, registries, case studies, claims, roadmap status, and benchmark suite files
+- `PAPER_DRAFT.md`
+- `paper.tex`
+- `DATASET_CARD.md`
+- `EXPERIMENT_CARD.md`
+- `release_audit.json`
+- `RELEASE_AUDIT.md`
+
+Use `--skip-train` for a faster structural run. Use `--strict` when all
+optional data backends and final-scale inputs are expected to be present.
