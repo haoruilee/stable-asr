@@ -7,6 +7,8 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
+from stable_asr.paper.adapter_pack import build_adapter_pack
+from stable_asr.paper.benchmark_pack import build_benchmark_pack
 from stable_asr.paper.case_studies import paper_case_studies
 from stable_asr.paper.claims import paper_claims
 from stable_asr.paper.evidence import final_evidence_matrix
@@ -76,6 +78,7 @@ class PaperArtifactBundle:
     leaderboard_validation: dict[str, str]
     leaderboard_reports: dict[str, str]
     benchmark_suite: dict[str, str]
+    starter_packs: dict[str, str]
     data_sources: dict[str, str]
     adapter_registry: dict[str, str]
     model_registry: dict[str, str]
@@ -109,6 +112,7 @@ class PaperArtifactBundle:
             "leaderboard_validation": self.leaderboard_validation,
             "leaderboard_reports": self.leaderboard_reports,
             "benchmark_suite": self.benchmark_suite,
+            "starter_packs": self.starter_packs,
             "data_sources": self.data_sources,
             "adapter_registry": self.adapter_registry,
             "model_registry": self.model_registry,
@@ -193,6 +197,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "markdown": str(output_dir / "BENCHMARK_SUITE.md"),
     }
     Path(benchmark_suite["markdown"]).write_text(benchmark_suite_markdown(suite), encoding="utf-8")
+    starter_packs = _write_starter_packs(output_dir)
     sources = load_data_sources()
     data_sources = {
         "json": write_data_sources_json(output_dir / "data_sources.json", sources),
@@ -411,6 +416,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         leaderboard_validation=leaderboard_validation,
         leaderboard_reports=leaderboard_reports,
         benchmark_suite=benchmark_suite,
+        starter_packs=starter_packs,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
         model_registry=model_registry,
@@ -450,6 +456,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         leaderboard_validation=leaderboard_validation,
         leaderboard_reports=leaderboard_reports,
         benchmark_suite=benchmark_suite,
+        starter_packs=starter_packs,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
         model_registry=model_registry,
@@ -510,6 +517,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Benchmark Suite", ""])
     for name, path in bundle.benchmark_suite.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Starter Packs", ""])
+    for name, path in bundle.starter_packs.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Data Sources", ""])
     for name, path in bundle.data_sources.items():
@@ -609,6 +619,7 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.leaderboard_validation,
         bundle.leaderboard_reports,
         bundle.benchmark_suite,
+        bundle.starter_packs,
         bundle.data_sources,
         bundle.adapter_registry,
         bundle.model_registry,
@@ -638,3 +649,17 @@ def _copy_results(results_path: Path, output_path: Path) -> None:
     if results_path.resolve() == output_path.resolve():
         return
     shutil.copyfile(results_path, output_path)
+
+
+def _write_starter_packs(output_dir: Path) -> dict[str, str]:
+    packs_dir = output_dir / "starter_packs"
+    benchmark = build_benchmark_pack(packs_dir / "benchmark_pack")
+    adapter = build_adapter_pack(packs_dir / "adapter_pack")
+    paths: dict[str, str] = {}
+    for prefix, files in (
+        ("benchmark_pack", benchmark.files),
+        ("adapter_pack", adapter.files),
+    ):
+        for name, path in sorted(files.items()):
+            paths[f"{prefix}:{name}"] = path
+    return paths

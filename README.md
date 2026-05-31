@@ -159,7 +159,7 @@ stable-asr paper-release-audit \
   --artifacts-dir runs/paper/smoke/artifacts
 ```
 
-`paper-release-smoke` writes `paper_results.json`, tables, figures, registry
+`paper-release-smoke` writes `paper_results.json`, tables, figures, starter packs, registry
 artifacts, a copied `paper_results.json`, artifact hash manifests, provenance
 manifests, case studies, final-run audits/action plans, final input collection
 status, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
@@ -272,6 +272,7 @@ is provided in `mkdocs.yaml`.
 - `paper-table policy` extraction
 - `paper-figure` SVG generation for platform diagrams plus baseline, latency, data, streaming, scenario, and policy figures
 - `paper-bundle` generation for paper results, tables, figures, artifact index, and artifact manifest
+- contributor benchmark and adapter starter packs in `paper-bundle`
 - schema registry JSON/Markdown artifacts in `paper-bundle`
 - paper bundle sha256 integrity manifests and `paper-artifact-integrity` verification
 - paper bundle provenance manifests that record Stable-ASR version, git commit, input result hashes, and config hashes

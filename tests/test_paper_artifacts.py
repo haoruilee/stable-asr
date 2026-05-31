@@ -21,6 +21,10 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert set(bundle.artifact_integrity) == {"json", "markdown"}
     assert set(bundle.provenance) == {"json", "markdown"}
     assert set(bundle.benchmark_suite) == {"json", "markdown"}
+    assert "benchmark_pack:readme" in bundle.starter_packs
+    assert "benchmark_pack:commands_script" in bundle.starter_packs
+    assert "adapter_pack:readme" in bundle.starter_packs
+    assert "adapter_pack:command_config" in bundle.starter_packs
     assert set(bundle.data_sources) == {"json", "markdown"}
     assert set(bundle.adapter_registry) == {"json", "markdown"}
     assert set(bundle.model_registry) == {"json", "markdown"}
@@ -66,6 +70,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "generated_at_utc" in Path(bundle.provenance["json"]).read_text(encoding="utf-8")
     assert "Provenance" in Path(bundle.index_path).read_text(encoding="utf-8")
     assert "asr_transcript_conversion" in Path(bundle.benchmark_suite["markdown"]).read_text(encoding="utf-8")
+    assert "Starter Packs" in Path(bundle.index_path).read_text(encoding="utf-8")
+    assert "Stable-ASR Benchmark Starter Pack" in Path(bundle.starter_packs["benchmark_pack:readme"]).read_text(encoding="utf-8")
+    assert "Stable-ASR External ASR Adapter Pack" in Path(bundle.starter_packs["adapter_pack:readme"]).read_text(encoding="utf-8")
     assert "synthetic_voiceworld" in Path(bundle.data_sources["markdown"]).read_text(encoding="utf-8")
     assert "command_streaming_asr" in Path(bundle.adapter_registry["markdown"]).read_text(encoding="utf-8")
     assert "nanoturn_pico" in Path(bundle.model_registry["markdown"]).read_text(encoding="utf-8")
@@ -95,6 +102,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "final_evidence_matrix" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "model_cards" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "schema_registry" in Path(bundle.manifest_path).read_text(encoding="utf-8")
+    assert "starter_packs" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "artifact_integrity" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "provenance" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "Stable-ASR Paper Status" in Path(bundle.paper_status["markdown"]).read_text(encoding="utf-8")

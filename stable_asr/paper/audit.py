@@ -1016,6 +1016,18 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("benchmark_suite:json", artifacts_dir / "benchmark_suite.json"))
     checks.append(_exists_check("benchmark_suite:markdown", artifacts_dir / "BENCHMARK_SUITE.md"))
     checks.append(_benchmark_required_artifacts_check(artifacts_dir))
+    checks.append(
+        _exists_check("starter_pack:benchmark_manifest", artifacts_dir / "starter_packs" / "benchmark_pack" / "manifest.json")
+    )
+    checks.append(
+        _exists_check("starter_pack:benchmark_readme", artifacts_dir / "starter_packs" / "benchmark_pack" / "README.md")
+    )
+    checks.append(
+        _exists_check("starter_pack:adapter_manifest", artifacts_dir / "starter_packs" / "adapter_pack" / "manifest.json")
+    )
+    checks.append(
+        _exists_check("starter_pack:adapter_readme", artifacts_dir / "starter_packs" / "adapter_pack" / "README.md")
+    )
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))
     checks.append(_exists_check("data_sources:markdown", artifacts_dir / "DATA_SOURCES.md"))
     checks.append(_exists_check("adapter_registry:json", artifacts_dir / "adapter_registry.json"))

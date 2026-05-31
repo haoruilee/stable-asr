@@ -2549,6 +2549,7 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert "artifact_index:" in captured.out
     assert "results:" in captured.out
     assert "benchmark_suite:" in captured.out
+    assert "starter_packs:" in captured.out
     assert "provenance:" in captured.out
     assert "data_sources:" in captured.out
     assert "model_registry:" in captured.out

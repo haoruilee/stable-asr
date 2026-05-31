@@ -162,6 +162,7 @@
         "smoke artifacts have stable tables, figures, claim audits, bundle manifests, provenance, and integrity hashes",
         "release audit separates structural readiness from final-scale missing evidence",
         "leaderboard exports are generated from paper result artifacts",
+        "paper bundles include contributor benchmark and adapter starter packs under release-audited required artifacts",
         "external data and artifact contracts are published as versioned JSON Schemas",
         "JSON/JSONL artifacts can be validated directly against those contracts",
         "external contributors can generate a self-contained benchmark starter pack with schemas, suite metadata, fixtures, and runnable submission commands",
