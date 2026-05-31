@@ -158,6 +158,34 @@ def test_benchmark_turn_cli_external_predictions(capsys) -> None:
     assert "artifact_bytes[tests/fixtures/turn_predictions_sample.jsonl]:" in captured.out
 
 
+def test_split_turn_data_cli(tmp_path, capsys) -> None:
+    output_dir = tmp_path / "splits"
+    code = main(
+        [
+            "split-turn-data",
+            "--input",
+            "examples/data/turn_demo.jsonl",
+            "--output-dir",
+            str(output_dir),
+            "--train-ratio",
+            "0.5",
+            "--dev-ratio",
+            "0.25",
+            "--test-ratio",
+            "0.25",
+            "--seed",
+            "9",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "turn_split:" in captured.out
+    assert (output_dir / "turn_train.jsonl").exists()
+    assert (output_dir / "turn_dev.jsonl").exists()
+    assert (output_dir / "turn_test.jsonl").exists()
+
+
 def test_convert_predictions_cli(tmp_path, capsys) -> None:
     output = tmp_path / "easyturn_predictions.jsonl"
     code = main(

@@ -93,6 +93,26 @@ Stable-ASR currently supports JSONL conversion for:
 - Full-Duplex-Bench-style manifests
 - SmartTurn-style manifests
 
+## Train/Dev/Test Splits
+
+Use `split-turn-data` to create deterministic NanoTurn training splits from any
+registered turn manifest backend:
+
+```bash
+stable-asr split-turn-data \
+  --input examples/data/turn_demo.jsonl \
+  --output-dir runs/splits \
+  --train-ratio 0.8 \
+  --dev-ratio 0.1 \
+  --test-ratio 0.1 \
+  --seed 0
+```
+
+By default the command stratifies by `turn_label`. Repeat `--stratify-by` to
+add fields such as `scenario`, use `--group-by metadata.conversation_id` to
+keep dialogue windows together, or pass `--no-stratify` for a plain shuffled
+split.
+
 ## Data Source Registry
 
 Stable-ASR keeps a machine-readable source registry at

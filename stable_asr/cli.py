@@ -24,7 +24,9 @@ from stable_asr.data.registry import (
     convert_turn_manifest,
     load_turn_records,
     summarize_records,
+    write_turn_records,
 )
+from stable_asr.data.split import TurnSplitConfig, split_turn_records
 from stable_asr.doctor import run_doctor
 from stable_asr.eval.turn_benchmark import benchmark_turn_predictor
 from stable_asr.eval.turn_eval import evaluate_turn_records
@@ -249,6 +251,29 @@ def build_parser() -> argparse.ArgumentParser:
     inspect_parser.add_argument("path", type=Path, help="Manifest path.")
     inspect_parser.add_argument("--format", choices=TURN_FORMATS.names())
     inspect_parser.add_argument("--json", action="store_true", help="Print summary as JSON.")
+
+    split_parser = subparsers.add_parser(
+        "split-turn-data",
+        help="Split a turn manifest into deterministic train/dev/test manifests.",
+    )
+    split_parser.add_argument("--input", type=Path, required=True, help="Input turn manifest.")
+    split_parser.add_argument("--output-dir", type=Path, required=True, help="Output directory.")
+    split_parser.add_argument("--prefix", default="turn", help="Output filename prefix.")
+    split_parser.add_argument("--format", choices=TURN_FORMATS.names(), default="jsonl", help="Output format.")
+    split_parser.add_argument("--train-ratio", type=float, default=0.8)
+    split_parser.add_argument("--dev-ratio", type=float, default=0.1)
+    split_parser.add_argument("--test-ratio", type=float, default=0.1)
+    split_parser.add_argument("--seed", type=int, default=0)
+    split_parser.add_argument(
+        "--stratify-by",
+        action="append",
+        default=None,
+        help="Record field used for stratified splitting. May be repeated. Use --no-stratify to disable.",
+    )
+    split_parser.add_argument("--no-stratify", action="store_true")
+    split_parser.add_argument("--group-by", help="Optional record field kept together across splits.")
+    split_parser.add_argument("--allow-empty", action="store_true", help="Do not rebalance tiny datasets to fill all splits.")
+    split_parser.add_argument("--json", action="store_true")
 
     benchmark_parser = subparsers.add_parser(
         "benchmark-data",
@@ -788,6 +813,38 @@ def main(argv: list[str] | None = None) -> int:
                 if isinstance(values, dict):
                     for name, count in values.items():
                         print(f"  {name}: {count}")
+        return 0
+
+    if args.command == "split-turn-data":
+        try:
+            config = TurnSplitConfig(
+                train_ratio=args.train_ratio,
+                dev_ratio=args.dev_ratio,
+                test_ratio=args.test_ratio,
+                seed=args.seed,
+                stratify_by=() if args.no_stratify else tuple(args.stratify_by or ["turn_label"]),
+                group_by=args.group_by,
+                ensure_non_empty=not args.allow_empty,
+            )
+            result = split_turn_records(load_turn_records(args.input), config=config)
+            suffix = ".jsonl" if args.format == "jsonl" else ".parquet" if args.format == "parquet" else ".lance"
+            output_paths = {
+                name: args.output_dir / f"{args.prefix}_{name}{suffix}"
+                for name in ("train", "dev", "test")
+            }
+            for name, path in output_paths.items():
+                write_turn_records(path, result.split(name), format=args.format)
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        payload = result.to_dict()
+        payload["outputs"] = {name: str(path) for name, path in output_paths.items()}
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            print(result.to_text())
+            for name, path in output_paths.items():
+                print(f"{name}_path: {path}")
         return 0
 
     if args.command == "benchmark-data":
