@@ -40,7 +40,7 @@ cd runs/benchmark_pack
 bash commands.sh
 ```
 
-The generated `commands.sh` validates schemas, builds turn and streaming submission packages, then merges their `leaderboard.jsonl` files into `leaderboard/leaderboard.jsonl` with validation and ranked Markdown reports.
+The generated `commands.sh` validates schemas, builds turn and streaming submission packages, then indexes the `submissions/` directory into `leaderboard/SUBMISSIONS.md` and a merged `leaderboard/leaderboard.jsonl` with validation and ranked Markdown reports.
 
 ## External ASR Adapter Pack
 
@@ -104,6 +104,7 @@ stable-asr final-results --config configs/final/paper_final.json --output runs/f
 stable-asr leaderboard-export --results runs/final/paper_results.json --output runs/final/leaderboard.jsonl
 stable-asr leaderboard-validate --input runs/final/leaderboard.jsonl --require-complete-suite --output runs/final/LEADERBOARD_VALIDATION.md
 stable-asr leaderboard-report --input runs/final/leaderboard.jsonl --require-complete-suite --output runs/final/LEADERBOARD_REPORT.md
+stable-asr submission-index --root runs/submissions --output-dir runs/final/community_leaderboard
 stable-asr leaderboard-merge --input runs/submissions/oracle_fixture/leaderboard.jsonl --input runs/submissions/streaming_fixture/leaderboard.jsonl --output runs/final/community_leaderboard.jsonl --validation-output runs/final/COMMUNITY_LEADERBOARD_VALIDATION.md --report-output runs/final/COMMUNITY_LEADERBOARD_REPORT.md
 stable-asr paper-artifact-integrity --manifest runs/paper/smoke/artifacts/artifact_hashes.json --root runs/paper/smoke/artifacts
 stable-asr benchmark-suite --suite runs/paper/smoke/artifacts/benchmark_suite.json --artifacts-dir runs/paper/smoke/artifacts --validate-only

@@ -72,6 +72,7 @@ stable-asr paper-evidence-matrix --output runs/final/FINAL_EVIDENCE_MATRIX.md
 stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
 stable-asr leaderboard-export --results runs/paper/smoke/paper_results.json --output runs/paper/smoke/leaderboard.jsonl
 stable-asr leaderboard-validate --input runs/paper/smoke/leaderboard.jsonl --output runs/paper/smoke/LEADERBOARD_VALIDATION.md
+stable-asr submission-index --root runs/submissions --output-dir runs/paper/smoke/community_leaderboard
 stable-asr leaderboard-merge --input runs/submissions/oracle_fixture/leaderboard.jsonl --input runs/submissions/streaming_fixture/leaderboard.jsonl --output runs/paper/smoke/community_leaderboard.jsonl --validation-output runs/paper/smoke/COMMUNITY_LEADERBOARD_VALIDATION.md --report-output runs/paper/smoke/COMMUNITY_LEADERBOARD_REPORT.md
 stable-asr paper-artifact-integrity --manifest runs/paper/smoke/artifacts/artifact_hashes.json --root runs/paper/smoke/artifacts
 stable-asr benchmark-suite --suite runs/paper/smoke/artifacts/benchmark_suite.json --artifacts-dir runs/paper/smoke/artifacts --validate-only

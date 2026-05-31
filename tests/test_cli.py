@@ -1905,6 +1905,47 @@ def test_leaderboard_merge_cli(tmp_path, capsys) -> None:
     assert "streaming_asr" in output.read_text(encoding="utf-8")
 
 
+def test_submission_index_cli(tmp_path, capsys) -> None:
+    root = tmp_path / "submissions"
+    main(
+        [
+            "turn-submission",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--predictions",
+            "tests/fixtures/turn_predictions_sample.jsonl",
+            "--system",
+            "oracle_fixture",
+            "--output-dir",
+            str(root / "turn_oracle"),
+        ]
+    )
+    main(
+        [
+            "streaming-submission",
+            "--input",
+            "tests/fixtures/streaming_asr_sample.jsonl",
+            "--system",
+            "streaming_fixture",
+            "--output-dir",
+            str(root / "streaming_fixture"),
+            "--slice",
+            "adapter",
+        ]
+    )
+    output_dir = tmp_path / "leaderboard"
+
+    code = main(["submission-index", "--root", str(root), "--output-dir", str(output_dir), "--top-k", "2"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "submission_index: OK" in captured.out
+    assert (output_dir / "submissions_index.json").exists()
+    assert (output_dir / "SUBMISSIONS.md").exists()
+    assert (output_dir / "leaderboard.jsonl").exists()
+    assert "streaming_asr" in (output_dir / "leaderboard.jsonl").read_text(encoding="utf-8")
+
+
 def test_leaderboard_validate_cli_rejects_bad_submission(tmp_path, capsys) -> None:
     bad = tmp_path / "bad.jsonl"
     bad.write_text(

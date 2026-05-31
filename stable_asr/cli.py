@@ -116,7 +116,7 @@ from stable_asr.paper.parity import (
     validate_paper_parity_checklist,
 )
 from stable_asr.paper.status import paper_status, write_paper_status_markdown
-from stable_asr.paper.submissions import build_streaming_submission, build_turn_submission
+from stable_asr.paper.submissions import build_streaming_submission, build_turn_submission, index_submission_directory
 from stable_asr.paper.suites import (
     audit_benchmark_required_artifacts,
     audit_benchmark_suite_coverage,
@@ -286,6 +286,19 @@ def build_parser() -> argparse.ArgumentParser:
     turn_submission_parser.add_argument("--complete-threshold", type=float, default=0.75)
     turn_submission_parser.add_argument("--suite", type=Path, help="Optional benchmark suite JSON path.")
     turn_submission_parser.add_argument("--json", action="store_true")
+
+    submission_index_parser = subparsers.add_parser(
+        "submission-index",
+        help="Discover submission packages, write an index, and merge their leaderboard rows.",
+    )
+    submission_index_parser.add_argument("--root", type=Path, required=True, help="Directory containing submission packages.")
+    submission_index_parser.add_argument("--output-dir", type=Path, required=True)
+    submission_index_parser.add_argument("--suite", type=Path, help="Optional benchmark suite JSON path.")
+    submission_index_parser.add_argument("--top-k", type=int, default=3)
+    submission_index_parser.add_argument("--json", action="store_true")
+    submission_index_parser.add_argument("--require-known-systems", action="store_true")
+    submission_index_parser.add_argument("--require-known-slices", action="store_true")
+    submission_index_parser.add_argument("--require-complete-suite", action="store_true")
 
     compare_turn_parser = subparsers.add_parser(
         "compare-turn",
@@ -1384,6 +1397,30 @@ def main(argv: list[str] | None = None) -> int:
             print(f"submission: {report.artifacts.manifest}")
             print(f"summary: {report.artifacts.summary_markdown}")
             print(f"leaderboard: {report.artifacts.leaderboard['jsonl']}")
+        return 0 if report.ok else 1
+
+    if args.command == "submission-index":
+        try:
+            report = index_submission_directory(
+                args.root,
+                args.output_dir,
+                suite=load_benchmark_suite(args.suite),
+                top_k=args.top_k,
+                require_known_systems=args.require_known_systems,
+                require_known_slices=args.require_known_slices,
+                require_complete_suite=args.require_complete_suite,
+            )
+        except (OSError, ValueError, KeyError, RuntimeError, json.JSONDecodeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(report.to_text())
+            print(f"index: {report.artifacts.index_json}")
+            print(f"summary: {report.artifacts.summary_markdown}")
+            if report.artifacts.leaderboard:
+                print(f"leaderboard: {report.artifacts.leaderboard}")
         return 0 if report.ok else 1
 
     if args.command == "compare-turn":

@@ -2,8 +2,7 @@ import json
 from pathlib import Path
 
 from stable_asr.paper.benchmark_pack import build_benchmark_pack
-from stable_asr.paper.leaderboard import merge_leaderboard_jsonl
-from stable_asr.paper.submissions import build_streaming_submission, build_turn_submission
+from stable_asr.paper.submissions import build_streaming_submission, build_turn_submission, index_submission_directory
 from stable_asr.schema_validation import validate_schema_file
 
 
@@ -33,7 +32,7 @@ def test_build_benchmark_pack_writes_contributor_starter_files(tmp_path: Path) -
     assert manifest["version"] == "benchmark_pack_v0"
     assert manifest["ok"] is True
     assert "stable-asr turn-submission" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
-    assert "stable-asr leaderboard-merge" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
+    assert "stable-asr submission-index" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
 
     turn_validation = validate_schema_file(
         output_dir / "data" / "turn_demo.jsonl",
@@ -67,13 +66,10 @@ def test_benchmark_pack_samples_run_submission_builders(tmp_path: Path) -> None:
     assert (output_dir / "submissions" / "turn_oracle" / "leaderboard.jsonl").exists()
     assert (output_dir / "submissions" / "streaming_fixture" / "leaderboard.jsonl").exists()
 
-    leaderboard = merge_leaderboard_jsonl(
-        [
-            output_dir / "submissions" / "turn_oracle" / "leaderboard.jsonl",
-            output_dir / "submissions" / "streaming_fixture" / "leaderboard.jsonl",
-        ],
-        output_dir / "leaderboard" / "leaderboard.jsonl",
-        suite=None,
+    leaderboard = index_submission_directory(
+        output_dir / "submissions",
+        output_dir / "leaderboard",
     )
     assert leaderboard.ok
     assert (output_dir / "leaderboard" / "leaderboard.jsonl").exists()
+    assert (output_dir / "leaderboard" / "submissions_index.json").exists()

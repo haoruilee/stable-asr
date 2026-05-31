@@ -13,7 +13,12 @@ from stable_asr.eval.turn_eval import TurnEvalReport, evaluate_turn_records
 from stable_asr.models.adapters import TurnPredictionManifestAdapter, validate_turn_prediction_jsonl
 from stable_asr.models.adapters.transcript import load_streaming_transcript_jsonl
 from stable_asr.models.adapters.prediction_audit import TurnPredictionValidationReport
-from stable_asr.paper.leaderboard import LeaderboardRow, validate_leaderboard_jsonl
+from stable_asr.paper.leaderboard import (
+    LeaderboardMergeReport,
+    LeaderboardRow,
+    merge_leaderboard_jsonl,
+    validate_leaderboard_jsonl,
+)
 from stable_asr.paper.suites import load_benchmark_suite
 from stable_asr.schema_validation import SchemaFileValidationReport, validate_schema_file
 from stable_asr.streaming.metrics import StreamingASRReport, evaluate_streaming_records
@@ -218,6 +223,124 @@ class StreamingSubmissionReport:
         )
 
 
+@dataclass(frozen=True)
+class SubmissionIndexEntry:
+    manifest: str
+    version: str
+    task: str
+    system: str
+    ok: bool
+    records: int
+    leaderboard: str | None
+    summary_markdown: str | None
+    issues: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "manifest": self.manifest,
+            "version": self.version,
+            "task": self.task,
+            "system": self.system,
+            "ok": self.ok,
+            "records": self.records,
+            "leaderboard": self.leaderboard,
+            "summary_markdown": self.summary_markdown,
+            "issues": self.issues,
+        }
+
+
+@dataclass(frozen=True)
+class SubmissionIndexArtifacts:
+    output_dir: str
+    index_json: str
+    summary_markdown: str
+    leaderboard: str | None
+    leaderboard_validation: dict[str, str]
+    leaderboard_report: dict[str, str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "output_dir": self.output_dir,
+            "index_json": self.index_json,
+            "summary_markdown": self.summary_markdown,
+            "leaderboard": self.leaderboard,
+            "leaderboard_validation": self.leaderboard_validation,
+            "leaderboard_report": self.leaderboard_report,
+        }
+
+
+@dataclass(frozen=True)
+class SubmissionIndexReport:
+    ok: bool
+    root: str
+    submissions: list[SubmissionIndexEntry]
+    leaderboard_merge: LeaderboardMergeReport | None
+    artifacts: SubmissionIndexArtifacts
+
+    @property
+    def valid_submissions(self) -> int:
+        return sum(1 for submission in self.submissions if submission.ok and submission.leaderboard and not submission.issues)
+
+    @property
+    def failed_submissions(self) -> int:
+        return sum(1 for submission in self.submissions if not submission.ok or submission.issues)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "root": self.root,
+            "submissions": [submission.to_dict() for submission in self.submissions],
+            "valid_submissions": self.valid_submissions,
+            "failed_submissions": self.failed_submissions,
+            "leaderboard_merge": self.leaderboard_merge.to_dict() if self.leaderboard_merge is not None else None,
+            "artifacts": self.artifacts.to_dict(),
+        }
+
+    def to_text(self) -> str:
+        lines = [
+            f"submission_index: {'OK' if self.ok else 'FAILED'}",
+            f"root: {self.root}",
+            f"submissions: {len(self.submissions)}",
+            f"valid_submissions: {self.valid_submissions}",
+            f"failed_submissions: {self.failed_submissions}",
+        ]
+        if self.leaderboard_merge is not None:
+            lines.append(f"leaderboard: {self.leaderboard_merge.output_path}")
+        for submission in self.submissions:
+            if submission.issues:
+                lines.append(f"- {submission.manifest}: " + "; ".join(submission.issues))
+        return "\n".join(lines)
+
+    def to_markdown(self) -> str:
+        rows = [
+            {
+                "task": submission.task,
+                "system": submission.system,
+                "status": "OK" if submission.ok and not submission.issues else "FAILED",
+                "records": submission.records,
+                "leaderboard": submission.leaderboard or "",
+                "issues": "; ".join(submission.issues),
+            }
+            for submission in self.submissions
+        ]
+        lines = [
+            "# Stable-ASR Submission Index",
+            "",
+            f"- status: `{'OK' if self.ok else 'FAILED'}`",
+            f"- root: `{self.root}`",
+            f"- submissions: `{len(self.submissions)}`",
+            f"- valid_submissions: `{self.valid_submissions}`",
+            f"- failed_submissions: `{self.failed_submissions}`",
+            "",
+            "## Submissions",
+            "",
+            dict_table(rows) if rows else "No submissions found.",
+        ]
+        if self.leaderboard_merge is not None:
+            lines.extend(["", "## Leaderboard Merge", "", self.leaderboard_merge.to_markdown()])
+        return "\n".join(lines) + "\n"
+
+
 def build_turn_submission(
     *,
     dataset: str | Path,
@@ -326,6 +449,95 @@ def build_turn_submission(
         artifacts=artifacts,
     )
     _write_json(artifacts.manifest, report.to_dict())
+    _write_text(artifacts.summary_markdown, report.to_markdown())
+    return report
+
+
+def index_submission_directory(
+    root: str | Path,
+    output_dir: str | Path,
+    *,
+    suite: dict[str, Any] | None = None,
+    top_k: int = 3,
+    require_known_systems: bool = False,
+    require_known_slices: bool = False,
+    require_complete_suite: bool = False,
+) -> SubmissionIndexReport:
+    """Index submission packages and produce a merged leaderboard report."""
+
+    root = Path(root)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    manifest_paths = sorted(root.rglob("submission.json")) if root.exists() else []
+    entries = [_load_submission_index_entry(path) for path in manifest_paths]
+    leaderboard_inputs = [
+        Path(entry.leaderboard)
+        for entry in entries
+        if entry.ok and not entry.issues and entry.leaderboard and Path(entry.leaderboard).exists()
+    ]
+
+    artifacts = SubmissionIndexArtifacts(
+        output_dir=str(output_dir),
+        index_json=str(output_dir / "submissions_index.json"),
+        summary_markdown=str(output_dir / "SUBMISSIONS.md"),
+        leaderboard=str(output_dir / "leaderboard.jsonl") if leaderboard_inputs else None,
+        leaderboard_validation={
+            "json": str(output_dir / "leaderboard_validation.json"),
+            "markdown": str(output_dir / "LEADERBOARD_VALIDATION.md"),
+        },
+        leaderboard_report={
+            "json": str(output_dir / "leaderboard_report.json"),
+            "markdown": str(output_dir / "LEADERBOARD_REPORT.md"),
+        },
+    )
+
+    leaderboard_merge: LeaderboardMergeReport | None = None
+    if leaderboard_inputs:
+        leaderboard_merge = merge_leaderboard_jsonl(
+            leaderboard_inputs,
+            output_dir / "leaderboard.jsonl",
+            suite=suite,
+            top_k=top_k,
+            require_known_systems=require_known_systems,
+            require_known_slices=require_known_slices,
+            require_complete_suite=require_complete_suite,
+        )
+        _write_json(artifacts.leaderboard_validation["json"], leaderboard_merge.validation.to_dict())
+        _write_text(artifacts.leaderboard_validation["markdown"], leaderboard_merge.validation.to_markdown())
+        _write_json(artifacts.leaderboard_report["json"], leaderboard_merge.report.to_dict())
+        _write_text(artifacts.leaderboard_report["markdown"], leaderboard_merge.report.to_markdown())
+    else:
+        _write_json(
+            artifacts.leaderboard_validation["json"],
+            {"ok": False, "skipped": "no valid leaderboard inputs"},
+        )
+        _write_text(
+            artifacts.leaderboard_validation["markdown"],
+            "# Stable-ASR Leaderboard Validation\n\nSkipped because no valid leaderboard inputs were found.\n",
+        )
+        _write_json(
+            artifacts.leaderboard_report["json"],
+            {"ok": False, "skipped": "no valid leaderboard inputs"},
+        )
+        _write_text(
+            artifacts.leaderboard_report["markdown"],
+            "# Stable-ASR Leaderboard Report\n\nSkipped because no valid leaderboard inputs were found.\n",
+        )
+
+    ok = bool(
+        entries
+        and leaderboard_merge is not None
+        and leaderboard_merge.ok
+        and all(entry.ok and not entry.issues for entry in entries)
+    )
+    report = SubmissionIndexReport(
+        ok=ok,
+        root=str(root),
+        submissions=entries,
+        leaderboard_merge=leaderboard_merge,
+        artifacts=artifacts,
+    )
+    _write_json(artifacts.index_json, report.to_dict())
     _write_text(artifacts.summary_markdown, report.to_markdown())
     return report
 
@@ -553,6 +765,92 @@ def _streaming_metric_table(report: StreamingASRReport | None) -> list[dict[str,
 def _write_leaderboard_jsonl(path: str | Path, rows: list[LeaderboardRow]) -> None:
     text = "\n".join(json.dumps(row.to_dict(), ensure_ascii=False, sort_keys=True) for row in rows)
     _write_text(path, text + ("\n" if text else ""))
+
+
+def _load_submission_index_entry(manifest_path: Path) -> SubmissionIndexEntry:
+    issues: list[str] = []
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return SubmissionIndexEntry(
+            manifest=str(manifest_path),
+            version="unknown",
+            task="unknown",
+            system="unknown",
+            ok=False,
+            records=0,
+            leaderboard=None,
+            summary_markdown=None,
+            issues=[str(exc)],
+        )
+    if not isinstance(payload, dict):
+        issues.append("submission manifest must be a JSON object")
+        payload = {}
+
+    version = str(payload.get("version", "unknown"))
+    task = _submission_task(version)
+    system = str(payload.get("system", "unknown"))
+    ok = bool(payload.get("ok"))
+    records = _safe_int(payload.get("records"))
+    artifacts = payload.get("artifacts")
+    if not isinstance(artifacts, dict):
+        artifacts = {}
+        issues.append("missing artifacts object")
+    leaderboard = _artifact_path(manifest_path, artifacts.get("leaderboard"), "jsonl")
+    summary = _artifact_path(manifest_path, artifacts.get("summary_markdown"), None)
+    if ok and not leaderboard:
+        issues.append("missing leaderboard artifact")
+    if leaderboard and not Path(leaderboard).exists():
+        issues.append(f"leaderboard artifact not found: {leaderboard}")
+    if not system or system == "unknown":
+        issues.append("missing system")
+    if task == "unknown":
+        issues.append(f"unknown submission version: {version}")
+
+    return SubmissionIndexEntry(
+        manifest=str(manifest_path),
+        version=version,
+        task=task,
+        system=system,
+        ok=ok,
+        records=records,
+        leaderboard=leaderboard,
+        summary_markdown=summary,
+        issues=issues,
+    )
+
+
+def _submission_task(version: str) -> str:
+    if version == TURN_SUBMISSION_VERSION:
+        return "turn_quality"
+    if version == STREAMING_SUBMISSION_VERSION:
+        return "streaming_asr"
+    return "unknown"
+
+
+def _artifact_path(manifest_path: Path, payload: object, key: str | None) -> str | None:
+    if isinstance(payload, dict) and key is not None:
+        raw = payload.get(key)
+    else:
+        raw = payload
+    if raw is None:
+        return None
+    path = Path(str(raw))
+    if path.is_absolute():
+        return str(path)
+    if path.exists():
+        return str(path)
+    sibling = manifest_path.parent / path.name
+    if sibling.exists():
+        return str(sibling)
+    return str(path)
+
+
+def _safe_int(value: object) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
 
 
 def _write_json(path: str | Path, payload: dict[str, Any]) -> None:

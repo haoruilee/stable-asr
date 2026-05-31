@@ -77,6 +77,7 @@ stable-asr compare-turn-splits --train runs/splits/turn_train.jsonl --dev runs/s
 stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl
 stable-asr compare-streaming-asr --input balanced=tests/fixtures/streaming_asr_sample.jsonl --input fast_unstable=tests/fixtures/streaming_asr_fast_unstable_sample.jsonl
 stable-asr streaming-submission --input tests/fixtures/streaming_asr_sample.jsonl --system streaming_fixture --output-dir runs/submissions/streaming_fixture
+stable-asr submission-index --root runs/submissions --output-dir runs/submissions/leaderboard
 stable-asr sweep-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl --chunks-ms 160 320 640 --lookahead-ms 0 160
 stable-asr convert-asr-transcript --schema whisper --input tests/fixtures/whisper_transcript_sample.jsonl --output runs/whisper_streaming.jsonl
 stable-asr eval-asr-command --name my_asr --command "python your_asr_export.py --output {output}" --output runs/my_asr_streaming.jsonl

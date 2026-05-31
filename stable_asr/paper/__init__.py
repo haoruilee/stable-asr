@@ -56,6 +56,7 @@ from stable_asr.paper.provenance import (
     write_paper_provenance,
 )
 from stable_asr.paper.release_smoke import PaperReleaseSmokeResult, run_paper_release_smoke
+from stable_asr.paper.submissions import SubmissionIndexReport, index_submission_directory
 from stable_asr.paper.suites import (
     DEFAULT_BENCHMARK_SUITE,
     DEFAULT_SUITE_ID,
@@ -97,6 +98,7 @@ __all__ = [
     "FinalInputCollectionReport",
     "FinalEvidenceMatrixReport",
     "LeaderboardMergeReport",
+    "SubmissionIndexReport",
     "GitProvenance",
     "PaperProvenanceReport",
     "ProvenanceFile",
@@ -111,6 +113,7 @@ __all__ = [
     "experiment_card",
     "model_card",
     "model_card_payload",
+    "index_submission_directory",
     "export_leaderboard",
     "leaderboard_report",
     "merge_leaderboard_jsonl",

@@ -198,6 +198,7 @@ is provided in `mkdocs.yaml`.
 - `predict-turn` for exporting baseline/checkpoint predictions in the shared prediction manifest schema
 - `validate-turn-predictions` for checking prediction schema, ID coverage, duplicate IDs, and extra predictions before benchmark submission
 - `turn-submission` for packaging external turn predictions with schema validation, coverage validation, evaluation, and leaderboard rows
+- `submission-index` for discovering submission packages, generating a community index, and merging leaderboard rows
 - `benchmark-pack` for generating a contributor starter kit with schemas, benchmark suite metadata, fixture data, and runnable submission commands
 - `compare-turn` for same-dataset turn baseline/checkpoint/prediction comparison reports
 - `compare-turn-splits` for train/dev/test turn benchmark comparison reports

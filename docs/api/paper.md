@@ -28,6 +28,7 @@ Core entry points:
 - `stable_asr.paper.benchmark_pack.build_benchmark_pack`
 - `stable_asr.paper.submissions.build_turn_submission`
 - `stable_asr.paper.submissions.build_streaming_submission`
+- `stable_asr.paper.submissions.index_submission_directory`
 - `stable_asr.paper.suites.audit_benchmark_required_artifacts`
 - `stable_asr.streaming.command_compare.audit_asr_command_config`
 
@@ -63,6 +64,18 @@ print(report.to_text())
 ```
 
 Merge external submission leaderboards before publishing a community report:
+
+```python
+from stable_asr.paper.submissions import index_submission_directory
+
+report = index_submission_directory(
+    "runs/submissions",
+    "runs/submissions/leaderboard",
+)
+print(report.to_text())
+```
+
+For explicit inputs, merge leaderboard JSONL files directly:
 
 ```python
 from stable_asr.paper.leaderboard import merge_leaderboard_jsonl
