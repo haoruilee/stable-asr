@@ -83,8 +83,8 @@ def artifact_integrity_manifest(
     missing: list[str] = []
     for raw_path in sorted({str(path) for path in paths}):
         path = Path(raw_path)
-        resolved = path if path.is_absolute() else root_path / path
-        display = _display_path(path, root_path)
+        resolved = _resolve_artifact_input(path, root_path)
+        display = _display_path(resolved, root_path)
         if not resolved.exists() or not resolved.is_file():
             missing.append(display)
             continue
@@ -195,6 +195,16 @@ def _display_path(path: Path, root: Path) -> str:
         if path.is_absolute():
             return str(path)
         return str(path)
+
+
+def _resolve_artifact_input(path: Path, root: Path) -> Path:
+    if path.is_absolute():
+        return path
+    try:
+        path.resolve().relative_to(root.resolve())
+        return path
+    except ValueError:
+        return root / path
 
 
 def _resolve_verify_root(manifest_path: Path, root: str, files: list[ArtifactDigest]) -> Path:

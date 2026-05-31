@@ -26,3 +26,16 @@ def test_artifact_integrity_verifies_and_detects_mismatch(tmp_path: Path) -> Non
 
     assert not tampered.ok
     assert tampered.mismatched == ["first.txt"]
+
+
+def test_artifact_integrity_accepts_relative_paths_that_include_root(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    root = Path("artifacts")
+    root.mkdir()
+    artifact = root / "index.md"
+    artifact.write_text("stable-asr\n", encoding="utf-8")
+
+    report = artifact_integrity_manifest([artifact], root=root)
+
+    assert report.ok
+    assert [digest.path for digest in report.files] == ["index.md"]
