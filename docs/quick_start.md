@@ -41,6 +41,7 @@ stable-asr streaming-submission \
   --input tests/fixtures/streaming_asr_sample.jsonl \
   --system streaming_fixture \
   --output-dir runs/submissions/streaming_fixture
+stable-asr adapter-pack --output-dir runs/adapter_pack
 
 # 4. Generate paper-facing evidence
 stable-asr doctor --check-release-env

@@ -157,6 +157,19 @@ def test_benchmark_pack_cli(capsys, tmp_path) -> None:
     assert (output_dir / "configs" / "benchmark_suite.json").exists()
 
 
+def test_adapter_pack_cli(capsys, tmp_path) -> None:
+    output_dir = tmp_path / "adapter_pack"
+    code = main(["adapter-pack", "--output-dir", str(output_dir)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "adapter_pack: OK" in captured.out
+    assert (output_dir / "README.md").exists()
+    assert (output_dir / "COMMANDS.md").exists()
+    assert (output_dir / "configs" / "adapter_registry.json").exists()
+    assert (output_dir / "configs" / "asr_command_compare.json").exists()
+
+
 def test_labels_cli(capsys) -> None:
     code = main(["labels"])
 

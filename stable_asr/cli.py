@@ -101,6 +101,7 @@ from stable_asr.paper.archive import paper_artifact_archive, verify_paper_artifa
 from stable_asr.paper.integrity import verify_artifact_integrity
 from stable_asr.paper.leaderboard import export_leaderboard, leaderboard_report, validate_leaderboard_jsonl
 from stable_asr.paper.latex import paper_latex
+from stable_asr.paper.adapter_pack import build_adapter_pack
 from stable_asr.paper.benchmark_pack import build_benchmark_pack
 from stable_asr.paper.release_smoke import run_paper_release_smoke
 from stable_asr.paper.parity import (
@@ -1150,6 +1151,16 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark_pack_parser.add_argument("--suite", type=Path, help="Optional benchmark suite JSON path.")
     benchmark_pack_parser.add_argument("--schema-registry", type=Path, help="Optional schema registry JSON path.")
     benchmark_pack_parser.add_argument("--json", action="store_true")
+
+    adapter_pack_parser = subparsers.add_parser(
+        "adapter-pack",
+        help="Create an external ASR adapter starter pack with registries, templates, fixtures, and command checks.",
+    )
+    adapter_pack_parser.add_argument("--output-dir", type=Path, required=True)
+    adapter_pack_parser.add_argument("--adapter-registry", type=Path, help="Optional adapter registry JSON path.")
+    adapter_pack_parser.add_argument("--asr-collections", type=Path, help="Optional ASR collections JSON path.")
+    adapter_pack_parser.add_argument("--schema-registry", type=Path, help="Optional schema registry JSON path.")
+    adapter_pack_parser.add_argument("--json", action="store_true")
 
     paper_audit_parser = subparsers.add_parser(
         "paper-audit",
@@ -2878,6 +2889,26 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
         else:
             print(f"benchmark_pack: {'OK' if report.ok else 'FAILED'}")
+            print(f"output_dir: {report.output_dir}")
+            print(f"readme: {report.files.get('readme')}")
+            print(f"commands: {report.files.get('commands_markdown')}")
+        return 0 if report.ok else 1
+
+    if args.command == "adapter-pack":
+        try:
+            report = build_adapter_pack(
+                args.output_dir,
+                adapter_registry_path=args.adapter_registry,
+                asr_collections_path=args.asr_collections,
+                schema_registry_path=args.schema_registry,
+            )
+        except (OSError, ValueError, KeyError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(f"adapter_pack: {'OK' if report.ok else 'FAILED'}")
             print(f"output_dir: {report.output_dir}")
             print(f"readme: {report.files.get('readme')}")
             print(f"commands: {report.files.get('commands_markdown')}")

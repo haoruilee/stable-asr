@@ -27,6 +27,21 @@ stable-asr eval-asr-command \
   --output runs/funasr_streaming.jsonl
 ```
 
+To start a new integration without guessing the file layout, generate an
+adapter pack:
+
+```bash
+stable-asr adapter-pack --output-dir runs/adapter_pack
+cd runs/adapter_pack
+bash commands.sh
+```
+
+The generated pack includes an ASR manifest fixture, normalized streaming ASR
+fixtures, adapter/reference registries, a command-comparison config, and
+`scripts/export_streaming_template.py`. Replace the fixture copy in that script
+with the upstream ASR call, then keep the same `--input-manifest` and
+`--output` contract.
+
 ## Vendor Transcript Normalizer
 
 For upstream systems that already export JSONL transcripts, normalize the

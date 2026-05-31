@@ -40,6 +40,14 @@ cd runs/benchmark_pack
 bash commands.sh
 ```
 
+## External ASR Adapter Pack
+
+```bash
+stable-asr adapter-pack --output-dir runs/adapter_pack
+cd runs/adapter_pack
+bash commands.sh
+```
+
 ## Streaming ASR
 
 ```bash
