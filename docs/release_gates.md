@@ -65,7 +65,7 @@ ready.
 - streaming ASR failure mining exists for real-time case studies
 - streaming ASR schedule sweep includes chunk/lookahead rows
 - command-backed streaming ASR adapter fixture exists
-- external ASR transcript conversion includes at least two schemas
+- external ASR transcript conversion includes at least four schemas: Whisper, FunASR, Qwen3-ASR, and FireRedASR2S
 - NanoTurn is included as a checkpoint-backed baseline
 - paper bundle, Markdown draft, and LaTeX draft exist
 - `paper_results.json` is copied into the artifact bundle and matches the audited source results file

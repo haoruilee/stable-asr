@@ -243,6 +243,8 @@ def _asr_transcript_conversions() -> list[dict[str, object]]:
     return [
         {"schema": "whisper", "records": 1, "metrics": metrics},
         {"schema": "funasr", "records": 1, "metrics": metrics},
+        {"schema": "qwen3_asr", "records": 1, "metrics": metrics},
+        {"schema": "firered_asr2s", "records": 1, "metrics": metrics},
     ]
 
 

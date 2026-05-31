@@ -40,6 +40,9 @@ from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_s
 from stable_asr.schemas import load_schema_registry, validate_schema_registry
 
 
+MIN_ASR_TRANSCRIPT_CONVERSION_SCHEMAS = 4
+
+
 @dataclass(frozen=True)
 class PaperAuditCheck:
     name: str
@@ -701,12 +704,12 @@ def _results_checks(results: dict[str, object]) -> list[PaperAuditCheck]:
         )
     )
     conversions = streaming.get("asr_transcript_conversions", [])
-    conversion_ok = isinstance(conversions, list) and len(conversions) >= 2
+    conversion_count = len(conversions) if isinstance(conversions, list) else 0
     checks.append(
         PaperAuditCheck(
             "asr_transcript_conversions",
-            conversion_ok,
-            f"{len(conversions) if isinstance(conversions, list) else 0} conversion(s)",
+            conversion_count >= MIN_ASR_TRANSCRIPT_CONVERSION_SCHEMAS,
+            f"{conversion_count}/{MIN_ASR_TRANSCRIPT_CONVERSION_SCHEMAS} conversion(s)",
         )
     )
     streaming_failures = _dict(metrics.get("failure_analysis"))
@@ -1138,8 +1141,8 @@ def _release_result_checks(
         _release_check(
             "streaming",
             "asr_transcript_conversions",
-            asr_conversion_count >= 2,
-            f"{asr_conversion_count} converted ASR transcript schema(s)",
+            asr_conversion_count >= MIN_ASR_TRANSCRIPT_CONVERSION_SCHEMAS,
+            f"{asr_conversion_count}/{MIN_ASR_TRANSCRIPT_CONVERSION_SCHEMAS} converted ASR transcript schema(s)",
         )
     )
     command_adapter = _dict(streaming.get("command_adapter", {}))

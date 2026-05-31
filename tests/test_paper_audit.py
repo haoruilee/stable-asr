@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from stable_asr.paper.artifacts import paper_artifact_bundle
@@ -38,6 +39,22 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "asr_collection_readiness:markdown" in report.to_text()
     assert "turn_collection_coverage:markdown" in report.to_text()
     assert report.to_dict()["ok"] is True
+
+
+def test_paper_audit_requires_four_asr_transcript_conversions(tmp_path: Path) -> None:
+    result = run_paper_smoke(tmp_path / "paper", episodes=9, seed=6, train_model=False)
+    payload = json.loads(Path(result.results_path).read_text(encoding="utf-8"))
+    payload["streaming_asr"]["asr_transcript_conversions"] = payload["streaming_asr"][
+        "asr_transcript_conversions"
+    ][:3]
+    truncated = tmp_path / "paper_results_three_asr_schemas.json"
+    truncated.write_text(json.dumps(payload), encoding="utf-8")
+
+    report = audit_paper_artifacts(truncated)
+
+    assert not report.ok
+    assert "asr_transcript_conversions" in report.to_text()
+    assert "3/4 conversion(s)" in report.to_text()
 
 
 def test_paper_audit_rejects_incomplete_bundle(tmp_path: Path) -> None:
