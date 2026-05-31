@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from stable_asr.data.asr_manifest import load_asr_manifest, summarize_asr_records, write_asr_manifest
-from stable_asr.data.recipes import prepare_asr_manifest, prepare_public_asr_manifest
+from stable_asr.data.recipes import prepare_asr_manifest, prepare_public_asr_manifest, prepare_voiceworld_manifest
 from stable_asr.data.registry import load_turn_records, summarize_records, write_turn_records
 from stable_asr.data.split import SPLIT_NAMES, TurnSplitConfig, split_turn_records
 from stable_asr.data.turn_from_asr import ASRToTurnConfig, asr_records_to_turn_records
@@ -82,6 +82,15 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "test": "runs/final/turn_test.jsonl",
         "voiceworld_real": "runs/final/voiceworld_real.jsonl",
     },
+    "voiceworld_real": {
+        "metadata": "data/voiceworld/metadata.tsv",
+        "audio_root": "data/voiceworld/audio",
+        "manifest": "runs/final/voiceworld_real.jsonl",
+        "sample_rate": 16000,
+        "language": "zh",
+        "source": "voiceworld_real",
+        "required": True,
+    },
     "external_turn_predictions": [
         {
             "id": "smart_turn",
@@ -133,7 +142,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
         "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions",
-        "stable-asr prepare-voiceworld --input data/voiceworld/metadata.tsv --audio-root data/voiceworld/audio --output runs/final/voiceworld_real.jsonl",
+        "stable-asr final-config --config configs/final/paper_final.json --prepare-voiceworld-real",
         "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md",
@@ -584,12 +593,56 @@ class FinalExternalPredictionReport:
 
 
 @dataclass(frozen=True)
+class FinalVoiceWorldPrepareReport:
+    ok: bool
+    metadata: str
+    audio_root: str
+    manifest: str
+    records: int
+    skipped: bool
+    audit: FinalVoiceWorldAuditReport | None
+    detail: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "metadata": self.metadata,
+            "audio_root": self.audio_root,
+            "manifest": self.manifest,
+            "records": self.records,
+            "skipped": self.skipped,
+            "audit": self.audit.to_dict() if self.audit else None,
+            "detail": self.detail,
+        }
+
+    def to_text(self) -> str:
+        if self.ok and not self.skipped:
+            status = "READY"
+        elif self.skipped:
+            status = "SKIPPED"
+        else:
+            status = "FAILED"
+        lines = [
+            f"final_voiceworld_real_prepare: {status}",
+            f"- metadata: {self.metadata}",
+            f"- audio_root: {self.audio_root}",
+            f"- manifest: {self.manifest}",
+            f"- records: {self.records}",
+            f"- detail: {self.detail}",
+        ]
+        if self.audit:
+            lines.extend(["", self.audit.to_text()])
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
 class FinalInputPrepareReport:
     ok: bool
     corpora: FinalCorpusPrepareReport
     asr_eval_manifest: FinalASREvalManifestReport
     turn_splits: FinalTurnBootstrapReport
     external_predictions: FinalExternalPredictionReport
+    voiceworld_prepare: FinalVoiceWorldPrepareReport
     voiceworld_real: FinalVoiceWorldAuditReport
     asr_command_config: ASRCommandConfigAuditReport
     file_audit: FinalRunFileAudit
@@ -609,6 +662,7 @@ class FinalInputPrepareReport:
             "asr_eval_manifest": self.asr_eval_manifest.to_dict(),
             "turn_splits": self.turn_splits.to_dict(),
             "external_predictions": self.external_predictions.to_dict(),
+            "voiceworld_prepare": self.voiceworld_prepare.to_dict(),
             "voiceworld_real": self.voiceworld_real.to_dict(),
             "asr_command_config": self.asr_command_config.to_dict(),
             "file_audit": self.file_audit.to_dict(),
@@ -623,6 +677,7 @@ class FinalInputPrepareReport:
             f"- asr_eval_records: {self.asr_eval_manifest.records}",
             f"- turn_records: {self.turn_splits.turn_records}",
             f"- external_predictions_prepared: {self.external_predictions.prepared_count}",
+            f"- voiceworld_prepare_ready: {self.voiceworld_prepare.ok}",
             f"- voiceworld_real_ready: {self.voiceworld_real.ok}",
             f"- asr_commands_ready: {self.asr_command_config.ok}",
             f"- missing_required: {len(self.missing_required)}",
@@ -638,6 +693,8 @@ class FinalInputPrepareReport:
                 self.turn_splits.to_text(),
                 "",
                 self.external_predictions.to_text(),
+                "",
+                self.voiceworld_prepare.to_text(),
                 "",
                 self.voiceworld_real.to_text(),
                 "",
@@ -771,6 +828,23 @@ def validate_final_run_config(config: dict[str, Any]) -> FinalRunConfigValidatio
         if missing_splits:
             errors.append("turn_splits missing: " + ", ".join(missing_splits))
 
+    voiceworld_real = config.get("voiceworld_real", {})
+    if voiceworld_real is not None and not isinstance(voiceworld_real, dict):
+        errors.append("voiceworld_real must be an object")
+    elif isinstance(voiceworld_real, dict) and voiceworld_real:
+        for key in ("metadata", "audio_root", "manifest", "sample_rate", "language", "source"):
+            if key not in voiceworld_real:
+                errors.append(f"voiceworld_real missing {key}")
+        if "required" in voiceworld_real and not isinstance(voiceworld_real["required"], bool):
+            errors.append("voiceworld_real required must be a boolean")
+        if (
+            isinstance(turn_splits, dict)
+            and isinstance(turn_splits.get("voiceworld_real"), str)
+            and isinstance(voiceworld_real.get("manifest"), str)
+            and voiceworld_real["manifest"] != turn_splits["voiceworld_real"]
+        ):
+            errors.append("voiceworld_real manifest must match turn_splits.voiceworld_real")
+
     predictions = config.get("external_turn_predictions", [])
     if predictions is not None and not isinstance(predictions, list):
         errors.append("external_turn_predictions must be a list")
@@ -858,6 +932,13 @@ def audit_final_run_files(config: dict[str, Any], *, repo_root: str | Path = "."
     for split, path in config.get("turn_splits", {}).items():
         checks.append(_input_check(f"turn_split:{split}", path, root=root))
 
+    voiceworld = config.get("voiceworld_real") or {}
+    if isinstance(voiceworld, dict) and voiceworld:
+        required = bool(voiceworld.get("required", True))
+        checks.append(_input_check("voiceworld_real:metadata", voiceworld["metadata"], root=root, required=required))
+        checks.append(_input_check("voiceworld_real:audio_root", voiceworld["audio_root"], root=root, required=required))
+        checks.append(_planned_check("voiceworld_real:manifest", voiceworld["manifest"], root=root, kind="output"))
+
     for prediction in config.get("external_turn_predictions", []):
         prediction_id = str(prediction["id"])
         checks.append(_input_check(f"external_prediction:{prediction_id}:raw", prediction["raw"], root=root))
@@ -907,6 +988,18 @@ def final_run_config_markdown(config: dict[str, Any]) -> str:
     ]
     for name, path in config["turn_splits"].items():
         lines.append(f"- `{name}`: `{path}`")
+    voiceworld = config.get("voiceworld_real") or {}
+    lines.extend(["", "## VoiceWorld Real Input", ""])
+    if isinstance(voiceworld, dict) and voiceworld:
+        lines.append(dict_table([{
+            "metadata": voiceworld.get("metadata", ""),
+            "audio_root": voiceworld.get("audio_root", ""),
+            "manifest": voiceworld.get("manifest", ""),
+            "language": voiceworld.get("language", ""),
+            "required": voiceworld.get("required", True),
+        }]))
+    else:
+        lines.append("No real VoiceWorld input recipe configured.")
     lines.extend(["", "## External Turn Predictions", ""])
     if config.get("external_turn_predictions"):
         lines.append(dict_table(_prediction_rows(config)))
@@ -1034,6 +1127,27 @@ def scaffold_final_run(config: dict[str, Any], *, repo_root: str | Path = ".") -
             + "\n\nThese files must be real Stable-ASR turn manifests.\n",
         )
     )
+
+    voiceworld = config.get("voiceworld_real") or {}
+    if isinstance(voiceworld, dict) and voiceworld:
+        metadata_path = _resolve(str(voiceworld["metadata"]), root=root)
+        audio_root = _resolve(str(voiceworld["audio_root"]), root=root)
+        manifest_parent = _resolve(str(voiceworld["manifest"]), root=root).parent
+        entries.append(_ensure_dir(metadata_path.parent, "voiceworld_real:metadata_parent"))
+        entries.append(_ensure_dir(audio_root, "voiceworld_real:audio_root"))
+        entries.append(_ensure_dir(manifest_parent, "voiceworld_real:manifest_parent"))
+        entries.append(
+            _ensure_readme(
+                metadata_path.parent / "README.md",
+                title="VoiceWorld Real Inputs",
+                body=(
+                    f"Place real VoiceWorld annotations at `{voiceworld['metadata']}` and audio under "
+                    f"`{voiceworld['audio_root']}`.\n\n"
+                    "Then run `stable-asr final-config --prepare-voiceworld-real`.\n"
+                    "This scaffold does not create benchmark records.\n"
+                ),
+            )
+        )
 
     for prediction in config.get("external_turn_predictions", []):
         prediction_id = str(prediction["id"])
@@ -1411,6 +1525,81 @@ def prepare_final_external_predictions(
     )
 
 
+def prepare_final_voiceworld_real(
+    config: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+    scenario_suite_path: str | Path | None = None,
+    min_per_scenario: int = 1,
+    require_input: bool = False,
+) -> FinalVoiceWorldPrepareReport:
+    """Prepare the configured real VoiceWorld manifest when metadata exists."""
+
+    validation = validate_final_run_config(config)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    root = Path(repo_root)
+    voiceworld = config.get("voiceworld_real") or {}
+    if not isinstance(voiceworld, dict) or not voiceworld:
+        manifest = _resolve(str(config["turn_splits"]["voiceworld_real"]), root=root)
+        return FinalVoiceWorldPrepareReport(
+            ok=not require_input,
+            metadata="",
+            audio_root="",
+            manifest=str(manifest),
+            records=0,
+            skipped=True,
+            audit=None,
+            detail="voiceworld_real recipe is not configured",
+        )
+
+    metadata_path = _resolve(str(voiceworld["metadata"]), root=root)
+    audio_root = _resolve(str(voiceworld["audio_root"]), root=root)
+    manifest_path = _resolve(str(voiceworld["manifest"]), root=root)
+    if not metadata_path.exists() or not audio_root.exists():
+        missing = []
+        if not metadata_path.exists():
+            missing.append("metadata")
+        if not audio_root.exists():
+            missing.append("audio_root")
+        return FinalVoiceWorldPrepareReport(
+            ok=not require_input and not bool(voiceworld.get("required", True)),
+            metadata=str(metadata_path),
+            audio_root=str(audio_root),
+            manifest=str(manifest_path),
+            records=0,
+            skipped=True,
+            audit=None,
+            detail="missing " + " and ".join(missing),
+        )
+
+    records = prepare_voiceworld_manifest(
+        metadata_path,
+        manifest_path,
+        audio_root=audio_root,
+        default_sample_rate=int(voiceworld["sample_rate"]),
+        default_language=str(voiceworld["language"]),
+        default_source=str(voiceworld["source"]),
+    )
+    audit = audit_final_voiceworld_real(
+        config,
+        repo_root=repo_root,
+        scenario_suite_path=scenario_suite_path,
+        min_per_scenario=min_per_scenario,
+    )
+    return FinalVoiceWorldPrepareReport(
+        ok=audit.ok,
+        metadata=str(metadata_path),
+        audio_root=str(audio_root),
+        manifest=str(manifest_path),
+        records=len(records),
+        skipped=False,
+        audit=audit,
+        detail="manifest written and audited" if audit.ok else "manifest written but audit failed",
+    )
+
+
 def prepare_final_inputs(
     config: dict[str, Any],
     *,
@@ -1444,6 +1633,13 @@ def prepare_final_inputs(
         require_all=require_all_predictions,
         allow_extra=allow_extra_predictions,
     )
+    voiceworld_prepare_report = prepare_final_voiceworld_real(
+        config,
+        repo_root=repo_root,
+        scenario_suite_path=scenario_suite_path,
+        min_per_scenario=min_per_scenario,
+        require_input=True,
+    )
     voiceworld_report = audit_final_voiceworld_real(
         config,
         repo_root=repo_root,
@@ -1462,6 +1658,7 @@ def prepare_final_inputs(
         and asr_eval_report.ok
         and turn_report.ok
         and prediction_report.ok
+        and voiceworld_prepare_report.ok
         and voiceworld_report.ok
         and asr_command_report.ok
         and file_audit.ok
@@ -1472,6 +1669,7 @@ def prepare_final_inputs(
         asr_eval_manifest=asr_eval_report,
         turn_splits=turn_report,
         external_predictions=prediction_report,
+        voiceworld_prepare=voiceworld_prepare_report,
         voiceworld_real=voiceworld_report,
         asr_command_config=asr_command_report,
         file_audit=file_audit,
@@ -1622,14 +1820,24 @@ def _voiceworld_action(
     config_path: str,
 ) -> FinalRunActionItem:
     voiceworld_path = str(config["turn_splits"]["voiceworld_real"])
-    blockers = _missing_paths(missing_required, "turn_split:voiceworld_real")
+    voiceworld = config.get("voiceworld_real") or {}
+    blockers = _missing_paths(missing_required, "turn_split:voiceworld_real", "voiceworld_real:")
+    if isinstance(voiceworld, dict) and voiceworld:
+        prepare_command = f"stable-asr final-config --config {config_path} --prepare-voiceworld-real"
+        metadata = str(voiceworld.get("metadata", "data/voiceworld/metadata.tsv"))
+        audio_root = str(voiceworld.get("audio_root", "data/voiceworld/audio"))
+    else:
+        prepare_command = f"stable-asr prepare-voiceworld --input data/voiceworld/metadata.tsv --audio-root data/voiceworld/audio --output {voiceworld_path}"
+        metadata = "data/voiceworld/metadata.tsv"
+        audio_root = "data/voiceworld/audio"
     return FinalRunActionItem(
         id="collect_voiceworld_real",
         title="Collect or compose the real VoiceWorld scenario manifest",
         status=_action_status(blockers),
         blockers=blockers,
         commands=[
-            f"stable-asr prepare-voiceworld --input data/voiceworld/metadata.tsv --audio-root data/voiceworld/audio --output {voiceworld_path}",
+            f"# stage annotations at {metadata} and audio under {audio_root}",
+            prepare_command,
             f"stable-asr validate-manifest {voiceworld_path}",
             (
                 f"stable-asr final-config --config {config_path} --audit-voiceworld-real "
@@ -1777,6 +1985,10 @@ def _suggest_action_for_missing_check(check: FinalRunPathCheck) -> str:
         return "run final-config --prepare-asr-eval-manifest and --bootstrap-turn-splits after corpus manifests exist"
     if check.name == "turn_split:voiceworld_real":
         return "collect or compose real VoiceWorld scenario records, then run final-config --audit-voiceworld-real"
+    if check.name == "voiceworld_real:metadata":
+        return "place the real VoiceWorld annotation table, then run final-config --prepare-voiceworld-real"
+    if check.name == "voiceworld_real:audio_root":
+        return "place the real VoiceWorld audio directory, then run final-config --prepare-voiceworld-real"
     if check.name.startswith("external_prediction:") and check.name.endswith(":raw"):
         return "run the external turn model and save its raw prediction export, then run final-config --prepare-external-predictions"
     if check.name == "asr_command_config":

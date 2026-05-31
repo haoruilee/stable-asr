@@ -74,6 +74,7 @@ from stable_asr.paper.final_config import (
     prepare_final_external_predictions,
     prepare_final_corpora,
     prepare_final_inputs,
+    prepare_final_voiceworld_real,
     scaffold_final_run,
     validate_final_run_config,
 )
@@ -901,6 +902,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--prepare-external-predictions",
         action="store_true",
         help="Normalize configured external turn prediction exports and validate test coverage when possible.",
+    )
+    final_config_parser.add_argument(
+        "--prepare-voiceworld-real",
+        action="store_true",
+        help="Prepare the configured real VoiceWorld manifest from metadata/audio inputs and audit scenario coverage.",
     )
     final_config_parser.add_argument(
         "--require-all-predictions",
@@ -2255,6 +2261,19 @@ def main(argv: list[str] | None = None) -> int:
                     repo_root=args.repo_root,
                     require_all=args.require_all_predictions,
                     allow_extra=args.allow_extra_predictions,
+                )
+                if args.json:
+                    print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+                else:
+                    print(report.to_text())
+                return 0 if report.ok else 1
+            if args.prepare_voiceworld_real:
+                report = prepare_final_voiceworld_real(
+                    config,
+                    repo_root=args.repo_root,
+                    scenario_suite_path=args.scenario_suite,
+                    min_per_scenario=args.min_scenario_records,
+                    require_input=True,
                 )
                 if args.json:
                     print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))

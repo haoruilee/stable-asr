@@ -13,6 +13,7 @@ from stable_asr.paper.final_config import (
     prepare_final_external_predictions,
     prepare_final_corpora,
     prepare_final_inputs,
+    prepare_final_voiceworld_real,
     scaffold_final_run,
     validate_final_run_config,
     write_final_run_config_json,
@@ -80,6 +81,7 @@ def test_final_run_file_audit_accepts_existing_required_inputs(tmp_path: Path) -
         "runs/final/turn_dev.jsonl",
         "runs/final/turn_test.jsonl",
         "runs/final/voiceworld_real.jsonl",
+        "data/voiceworld/metadata.tsv",
         "runs/final/external/smartturn_raw.jsonl",
         "configs/final/asr_command_compare.json",
     ]:
@@ -87,6 +89,7 @@ def test_final_run_file_audit_accepts_existing_required_inputs(tmp_path: Path) -
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("{}\n", encoding="utf-8")
     (tmp_path / "data/corpus/audio").mkdir(parents=True)
+    (tmp_path / "data/voiceworld/audio").mkdir(parents=True)
     config = load_final_run_config()
     config["public_corpora"] = [
         {
@@ -359,6 +362,23 @@ def test_prepare_final_inputs_runs_sequence_and_audit(tmp_path: Path) -> None:
             f'"language":"en","source":"real","scenario":"{scenario}","metadata":{{{factor_payload}}}}}'
         )
     voiceworld.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    voiceworld_metadata = tmp_path / "data/voiceworld/metadata.tsv"
+    voiceworld_audio = tmp_path / "data/voiceworld/audio"
+    voiceworld_audio.mkdir(parents=True)
+    voiceworld_rows = [
+        "id\taudio\ttext\tscenario\tturn_label\taction_label\tassistant_speaking\toverlap\t"
+        "start\tend\tpause_ms\tvad_pause_ms\tduration_ms\tsnr_db\treverb\tspeaking_rate\t"
+        "overlap_offset_ms\tnetwork_jitter_ms\tfarfield_distance_m\tcode_switch_ratio\taccent"
+    ]
+    for index, (scenario, turn_label, action_label, assistant_speaking, overlap) in enumerate(scenarios):
+        audio = f"{index}.wav"
+        (voiceworld_audio / audio).write_bytes(b"")
+        voiceworld_rows.append(
+            f"real_{index}\t{audio}\ttext {index}\t{scenario}\t{turn_label}\t{action_label}\t"
+            f"{str(assistant_speaking).lower()}\t{str(overlap).lower()}\t0.0\t1.0\t"
+            "900\t920\t1000\t20\tnone\t1.0\t0\t0\t0.5\t0.0\tstandard"
+        )
+    voiceworld_metadata.write_text("\n".join(voiceworld_rows) + "\n", encoding="utf-8")
     asr_config = tmp_path / "configs/final/asr_command_compare.json"
     asr_config.parent.mkdir(parents=True)
     asr_config.write_text(
@@ -396,11 +416,57 @@ def test_prepare_final_inputs_runs_sequence_and_audit(tmp_path: Path) -> None:
     assert report.asr_eval_manifest.records == 3
     assert report.turn_splits.turn_records == 6
     assert report.external_predictions.prepared_count == 0
+    assert report.voiceworld_prepare.ok
     assert report.voiceworld_real.ok
     assert report.asr_command_config.ok
     assert report.missing_required == []
     assert (tmp_path / "runs/final/turn_train.jsonl").exists()
     assert "final_inputs_prepare: READY" in report.to_text()
+
+
+def test_prepare_final_voiceworld_real_writes_and_audits_manifest(tmp_path: Path) -> None:
+    voiceworld_dir = tmp_path / "data/voiceworld"
+    audio_root = voiceworld_dir / "audio"
+    audio_root.mkdir(parents=True)
+    metadata = voiceworld_dir / "metadata.tsv"
+    factor_header = (
+        "pause_ms\tvad_pause_ms\tduration_ms\tsnr_db\treverb\tspeaking_rate\t"
+        "overlap_offset_ms\tnetwork_jitter_ms\tfarfield_distance_m\tcode_switch_ratio\taccent"
+    )
+    factor_values = "900\t920\t1000\t20\tnone\t1.0\t0\t0\t0.5\t0.0\tstandard"
+    scenarios = [
+        ("normal_question", "complete", "take_turn", "false", "false"),
+        ("incomplete_pause", "incomplete", "keep_listening", "false", "false"),
+        ("backchannel", "backchannel", "continue_speaking", "true", "true"),
+        ("wait_stop", "wait", "hold", "false", "false"),
+        ("user_interruption", "complete", "stop_tts_and_listen", "true", "true"),
+        ("side_conversation", "wait", "ignore", "false", "true"),
+        ("ambient_speech", "wait", "ignore", "false", "true"),
+        ("noisy_farfield", "complete", "take_turn", "false", "false"),
+        ("code_switching", "complete", "take_turn", "false", "false"),
+    ]
+    rows = [
+        "id\taudio\ttext\tscenario\tturn_label\taction_label\tassistant_speaking\toverlap\tstart\tend\t"
+        + factor_header
+    ]
+    for index, (scenario, turn_label, action_label, assistant_speaking, overlap) in enumerate(scenarios):
+        audio = f"{index}.wav"
+        (audio_root / audio).write_bytes(b"")
+        rows.append(
+            f"real_{index}\t{audio}\ttext {index}\t{scenario}\t{turn_label}\t{action_label}\t"
+            f"{assistant_speaking}\t{overlap}\t0.0\t1.0\t{factor_values}"
+        )
+    metadata.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    config = load_final_run_config()
+
+    report = prepare_final_voiceworld_real(config, repo_root=tmp_path)
+
+    assert report.ok
+    assert report.records == len(scenarios)
+    assert not report.skipped
+    assert report.audit is not None and report.audit.ok
+    assert (tmp_path / "runs/final/voiceworld_real.jsonl").exists()
+    assert "final_voiceworld_real_prepare: READY" in report.to_text()
 
 
 def test_audit_final_voiceworld_real_checks_scenario_and_factor_coverage(tmp_path: Path) -> None:

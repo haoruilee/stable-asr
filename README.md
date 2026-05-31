@@ -277,6 +277,7 @@ is provided in `mkdocs.yaml`.
 - `final-config --prepare-asr-eval-manifest` for combining prepared ASR corpus manifests into the shared final streaming-ASR evaluation manifest
 - `final-config --bootstrap-turn-splits` for creating weak train/dev/test turn splits from prepared final ASR manifests
 - `final-config --prepare-external-predictions` for normalizing configured SmartTurn/EasyTurn-style prediction exports
+- `final-config --prepare-voiceworld-real` for preparing and auditing configured real VoiceWorld metadata/audio inputs
 - `final-config --audit-voiceworld-real` for checking final real VoiceWorld scenario and factor coverage
 - `final-config --audit-asr-commands` for checking final command-backed ASR comparison inputs without executing the adapters
 - `final-config --plan-missing` for turning the final-run file audit into an actionable data-staging and experiment runbook

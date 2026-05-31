@@ -1112,6 +1112,15 @@ def test_final_config_cli_audit_voiceworld_real_missing(tmp_path, capsys) -> Non
     assert "voiceworld_real manifest is missing" in captured.out
 
 
+def test_final_config_cli_prepare_voiceworld_real_reports_missing_inputs(tmp_path, capsys) -> None:
+    code = main(["final-config", "--repo-root", str(tmp_path), "--prepare-voiceworld-real"])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "final_voiceworld_real_prepare: SKIPPED" in captured.out
+    assert "missing metadata and audio_root" in captured.out
+
+
 def test_adapter_registry_cli(tmp_path, capsys) -> None:
     output = tmp_path / "ADAPTERS.md"
     code = main(["adapter-registry", "--output", str(output)])
