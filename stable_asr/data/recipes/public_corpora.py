@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import csv
+import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
+from stable_asr.data.formats.jsonl import iter_jsonl
 from stable_asr.data.asr_manifest import ASRManifestRecord, write_asr_manifest
 
-PUBLIC_ASR_CORPORA = ("librispeech", "aishell1", "common_voice")
+PUBLIC_ASR_CORPORA = ("librispeech", "aishell1", "common_voice", "wenetspeech")
 COMMON_VOICE_DEFAULT_SPLITS = ("train", "dev", "test", "validated", "other")
 COMMON_VOICE_SPLIT_FILES = {f"{split}.tsv" for split in (*COMMON_VOICE_DEFAULT_SPLITS, "invalidated", "reported")}
 
@@ -40,8 +42,10 @@ def prepare_public_asr_manifest(
         records = _prepare_librispeech(root, split=split, sample_rate=sample_rate)
     elif corpus == "aishell1":
         records = _prepare_aishell1(root, split=split, sample_rate=sample_rate)
-    else:
+    elif corpus == "common_voice":
         records = _prepare_common_voice(root, split=split, sample_rate=sample_rate)
+    else:
+        records = _prepare_wenetspeech(root, split=split, sample_rate=sample_rate)
 
     if not records:
         detail = f" for split {split!r}" if split else ""
@@ -164,6 +168,29 @@ def _prepare_common_voice(root: Path, *, split: str | None, sample_rate: int) ->
                         }
                     )
                 )
+    return records
+
+
+def _prepare_wenetspeech(root: Path, *, split: str | None, sample_rate: int) -> list[ASRManifestRecord]:
+    metadata_path = _find_wenetspeech_metadata(root)
+    audio_base = root if root.is_dir() else root.parent
+    if metadata_path.suffix.lower() == ".jsonl":
+        rows = [row for _, row in iter_jsonl(metadata_path)]
+        records = _prepare_wenetspeech_flat_rows(
+            rows,
+            metadata_path=metadata_path,
+            audio_base=audio_base,
+            split=split,
+            sample_rate=sample_rate,
+        )
+    else:
+        records = _prepare_wenetspeech_audios(
+            _iter_wenetspeech_audios(metadata_path),
+            metadata_path=metadata_path,
+            audio_base=audio_base,
+            split=split,
+            sample_rate=sample_rate,
+        )
     return records
 
 
@@ -344,3 +371,248 @@ def _optional_float(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"duration must be numeric when present, got {value!r}") from exc
+
+
+def _find_wenetspeech_metadata(root: Path) -> Path:
+    if root.is_file():
+        return root
+    candidates = [
+        root / "WenetSpeech.json",
+        root / "wenetspeech.json",
+        root / "metadata" / "WenetSpeech.json",
+        root / "metadata" / "wenetspeech.json",
+        root / "WenetSpeech.jsonl",
+        root / "wenetspeech.jsonl",
+        root / "metadata" / "WenetSpeech.jsonl",
+        root / "metadata" / "wenetspeech.jsonl",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    matches = sorted(path for path in root.rglob("WenetSpeech.json") if path.is_file())
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        raise ValueError(f"found multiple WenetSpeech metadata files under {root}; pass one metadata root")
+    raise ValueError(f"could not find WenetSpeech.json or WenetSpeech.jsonl under {root}")
+
+
+def _iter_wenetspeech_audios(metadata_path: Path) -> Iterable[dict[str, Any]]:
+    try:
+        import ijson  # type: ignore[import-not-found]
+    except ModuleNotFoundError:
+        with metadata_path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+        audios = payload.get("audios") if isinstance(payload, dict) else None
+        if not isinstance(audios, list):
+            raise ValueError(f"{metadata_path} must contain a top-level audios list")
+        for audio in audios:
+            if isinstance(audio, dict):
+                yield audio
+        return
+
+    with metadata_path.open("rb") as handle:
+        for audio in ijson.items(handle, "audios.item"):
+            if isinstance(audio, dict):
+                yield audio
+
+
+def _prepare_wenetspeech_audios(
+    audios: Iterable[dict[str, Any]],
+    *,
+    metadata_path: Path,
+    audio_base: Path,
+    split: str | None,
+    sample_rate: int,
+) -> list[ASRManifestRecord]:
+    records: list[ASRManifestRecord] = []
+    for audio_index, audio in enumerate(audios):
+        audio_rel = _pick_wenetspeech_audio_path(audio)
+        segments = audio.get("segments", [])
+        if not isinstance(segments, list):
+            raise ValueError(f"{metadata_path}: audio {audio_index} segments must be a list")
+        for segment_index, segment in enumerate(segments):
+            if not isinstance(segment, dict):
+                continue
+            record = _wenetspeech_record_from_segment(
+                audio,
+                segment,
+                audio_rel=audio_rel,
+                metadata_path=metadata_path,
+                audio_base=audio_base,
+                split=split,
+                sample_rate=sample_rate,
+                audio_index=audio_index,
+                segment_index=segment_index,
+            )
+            if record is not None:
+                records.append(record)
+    return records
+
+
+def _prepare_wenetspeech_flat_rows(
+    rows: list[dict[str, Any]],
+    *,
+    metadata_path: Path,
+    audio_base: Path,
+    split: str | None,
+    sample_rate: int,
+) -> list[ASRManifestRecord]:
+    records: list[ASRManifestRecord] = []
+    for row_index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            continue
+        audio_payload = row.get("audio") if isinstance(row.get("audio"), dict) else {}
+        audio_rel = _first_present(
+            row.get("audio_path"),
+            row.get("WavPath"),
+            row.get("wav"),
+            row.get("path"),
+            audio_payload.get("path"),
+        )
+        segment = {
+            "sid": row.get("utt_id") or row.get("sid") or row.get("id"),
+            "begin_time": _first_present(row.get("begin_time"), audio_payload.get("start_time")),
+            "end_time": _first_present(row.get("end_time"), audio_payload.get("end_time")),
+            "text": row.get("text") or row.get("sentence"),
+            "confidence": row.get("confidence"),
+            "subsets": row.get("subsets") or row.get("split"),
+        }
+        audio = {
+            "aid": row.get("aid"),
+            "path": audio_rel,
+            "source": row.get("source"),
+            "category": row.get("category"),
+        }
+        record = _wenetspeech_record_from_segment(
+            audio,
+            segment,
+            audio_rel=audio_rel,
+            metadata_path=metadata_path,
+            audio_base=audio_base,
+            split=split,
+            sample_rate=sample_rate,
+            audio_index=row_index,
+            segment_index=0,
+        )
+        if record is not None:
+            records.append(record)
+    return records
+
+
+def _wenetspeech_record_from_segment(
+    audio: dict[str, Any],
+    segment: dict[str, Any],
+    *,
+    audio_rel: Any,
+    metadata_path: Path,
+    audio_base: Path,
+    split: str | None,
+    sample_rate: int,
+    audio_index: int,
+    segment_index: int,
+) -> ASRManifestRecord | None:
+    text = str(segment.get("text") or "").strip()
+    if not audio_rel or not text:
+        return None
+    inferred_split = _infer_wenetspeech_split(audio, segment, audio_rel=audio_rel)
+    if split and inferred_split != split:
+        return None
+    begin_time = _optional_float(segment.get("begin_time"))
+    end_time = _optional_float(segment.get("end_time"))
+    duration = _positive_duration(begin_time, end_time) or _optional_float(segment.get("duration"))
+    sid = str(segment.get("sid") or "").strip()
+    aid = _optional_row_str(audio, "aid")
+    record_id = sid or f"{aid or 'wenetspeech'}_{segment_index:05d}"
+
+    return ASRManifestRecord.from_dict(
+        {
+            "id": record_id,
+            "audio": _normalize_wenetspeech_audio_path(audio_base, str(audio_rel)).as_posix(),
+            "sample_rate": sample_rate,
+            "text": text,
+            "language": "zh",
+            "source": "wenetspeech",
+            "duration": duration,
+            "split": inferred_split,
+            "speaker_id": _optional_row_str(segment, "speaker_id") or _optional_row_str(audio, "speaker_id"),
+            "metadata": _wenetspeech_metadata(
+                audio,
+                segment,
+                metadata_path=metadata_path,
+                audio_index=audio_index,
+                segment_index=segment_index,
+                begin_time=begin_time,
+                end_time=end_time,
+            ),
+        }
+    )
+
+
+def _pick_wenetspeech_audio_path(audio: dict[str, Any]) -> Any:
+    return audio.get("path") or audio.get("audio_path") or audio.get("wav") or audio.get("WavPath")
+
+
+def _first_present(*values: Any) -> Any:
+    for value in values:
+        if value is not None and value != "":
+            return value
+    return None
+
+
+def _normalize_wenetspeech_audio_path(audio_base: Path, audio_rel: str) -> Path:
+    path = Path(audio_rel)
+    if path.is_absolute():
+        return path
+    return audio_base / path
+
+
+def _infer_wenetspeech_split(audio: dict[str, Any], segment: dict[str, Any], *, audio_rel: Any) -> str | None:
+    subset = segment.get("subsets") or segment.get("subset") or audio.get("subsets") or audio.get("subset")
+    if isinstance(subset, list) and subset:
+        return str(subset[0]).lower()
+    if isinstance(subset, str) and subset:
+        return subset.lower()
+    path_parts = Path(str(audio_rel or "")).parts
+    for index, part in enumerate(path_parts):
+        if part == "audio" and index + 1 < len(path_parts):
+            return path_parts[index + 1]
+        if part in {"train", "dev", "test_net", "test_meeting", "test_meeting_16k"}:
+            return part
+    return None
+
+
+def _positive_duration(begin_time: float | None, end_time: float | None) -> float | None:
+    if begin_time is None or end_time is None:
+        return None
+    duration = round(end_time - begin_time, 6)
+    return duration if duration > 0 else None
+
+
+def _wenetspeech_metadata(
+    audio: dict[str, Any],
+    segment: dict[str, Any],
+    *,
+    metadata_path: Path,
+    audio_index: int,
+    segment_index: int,
+    begin_time: float | None,
+    end_time: float | None,
+) -> dict[str, Any]:
+    metadata: dict[str, Any] = {
+        "corpus_recipe": "wenetspeech",
+        "metadata_path": metadata_path.as_posix(),
+        "audio_index": audio_index,
+        "segment_index": segment_index,
+    }
+    for key in ("aid", "duration", "url", "source", "category"):
+        if key in audio and audio[key] not in (None, ""):
+            metadata[f"audio_{key}"] = audio[key]
+    for key in ("confidence", "subsets"):
+        if key in segment and segment[key] not in (None, ""):
+            metadata[key] = segment[key]
+    if begin_time is not None:
+        metadata["segment_start_sec"] = begin_time
+    if end_time is not None:
+        metadata["segment_end_sec"] = end_time
+    return metadata

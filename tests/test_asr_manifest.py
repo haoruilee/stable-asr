@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 
 import pytest
 
@@ -182,4 +183,57 @@ def test_prepare_common_voice_public_recipe(tmp_path: Path) -> None:
     assert records[0].metadata["sentence_id"] == "sent-1"
     assert records[0].metadata["accents"] == "us"
     assert records[0].metadata["corpus_recipe"] == "common_voice"
+    assert validate_asr_manifest(output).ok
+
+
+def test_prepare_wenetspeech_public_recipe(tmp_path: Path) -> None:
+    root = tmp_path / "WenetSpeech"
+    audio_dir = root / "audio" / "dev" / "third_party" / "B00000"
+    audio_dir.mkdir(parents=True)
+    (audio_dir / "DEV_T0000000000.opus").write_bytes(b"")
+    (root / "WenetSpeech.json").write_text(
+        json.dumps(
+            {
+                "audios": [
+                    {
+                        "aid": "DEV_T0000000000",
+                        "duration": 12.0,
+                        "path": "audio/dev/third_party/B00000/DEV_T0000000000.opus",
+                        "source": "third_party",
+                        "segments": [
+                            {
+                                "sid": "DEV_T0000000000_S00000",
+                                "begin_time": 0.0,
+                                "end_time": 5.61,
+                                "text": "对我做了介绍啊",
+                                "confidence": 1.0,
+                                "subsets": ["dev"],
+                            }
+                        ],
+                    }
+                ]
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    output = tmp_path / "wenetspeech.jsonl"
+
+    records = prepare_public_asr_manifest(
+        corpus="wenetspeech",
+        input_dir=root,
+        output_path=output,
+        split="dev",
+    )
+
+    assert len(records) == 1
+    assert records[0].id == "DEV_T0000000000_S00000"
+    assert records[0].audio.endswith("audio/dev/third_party/B00000/DEV_T0000000000.opus")
+    assert records[0].language == "zh"
+    assert records[0].source == "wenetspeech"
+    assert records[0].split == "dev"
+    assert records[0].duration == pytest.approx(5.61)
+    assert records[0].metadata["segment_start_sec"] == 0.0
+    assert records[0].metadata["segment_end_sec"] == 5.61
+    assert records[0].metadata["audio_aid"] == "DEV_T0000000000"
     assert validate_asr_manifest(output).ok

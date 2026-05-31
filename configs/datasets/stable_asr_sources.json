@@ -109,10 +109,10 @@
       "task": "asr",
       "languages": ["zh"],
       "source_type": "public_corpus",
-      "status": "recipe_scaffold",
-      "stable_asr_entrypoint": "stable-asr prepare-asr-manifest --input <metadata.tsv> --output <manifest.jsonl>",
+      "status": "recipe_implemented",
+      "stable_asr_entrypoint": "stable-asr prepare-public-asr --corpus wenetspeech --input-dir <WenetSpeech> --split <train|dev|test_net|test_meeting> --output <manifest.jsonl>",
       "license": "see_upstream",
-      "notes": "Large Mandarin ASR source; v0 normalizes local metadata exports for later scaling experiments."
+      "notes": "Large Mandarin ASR source; v0 parses WenetSpeech.json audios/segments or flattened JSONL exports into segment-level ASR manifests."
     },
     {
       "id": "common_voice",

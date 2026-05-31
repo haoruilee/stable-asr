@@ -489,6 +489,41 @@ def test_prepare_public_asr_common_voice_cli(tmp_path, capsys) -> None:
     assert output.exists()
 
 
+def test_prepare_public_asr_wenetspeech_cli(tmp_path, capsys) -> None:
+    root = tmp_path / "WenetSpeech"
+    audio_dir = root / "audio" / "dev" / "third_party" / "B00000"
+    audio_dir.mkdir(parents=True)
+    (audio_dir / "DEV_T0000000000.opus").write_bytes(b"")
+    (root / "WenetSpeech.jsonl").write_text(
+        (
+            '{"utt_id":"DEV_T0000000000_S00000","audio_path":"audio/dev/third_party/B00000/DEV_T0000000000.opus",'
+            '"text":"对我做了介绍啊","begin_time":0.0,"end_time":5.61,"aid":"DEV_T0000000000","subsets":["dev"]}\n'
+        ),
+        encoding="utf-8",
+    )
+    output = tmp_path / "wenetspeech.jsonl"
+
+    code = main(
+        [
+            "prepare-public-asr",
+            "--corpus",
+            "wenetspeech",
+            "--input-dir",
+            str(root),
+            "--split",
+            "dev",
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "wrote 1 wenetspeech ASR record" in captured.out
+    assert '"dev": 1' in captured.out
+    assert output.exists()
+
+
 def test_bootstrap_turn_data_cli(tmp_path, capsys) -> None:
     output_dir = tmp_path / "bootstrap"
     code = main(

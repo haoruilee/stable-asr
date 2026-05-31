@@ -222,7 +222,7 @@ is provided in `mkdocs.yaml`.
 - `scenario-suite` for validating and rendering scenario suite definitions
 - utterance-level ASR manifest schema and metadata-table recipe via `prepare-asr-manifest`
 - `validate-asr-manifest` and `inspect-asr-manifest` for public ASR corpus manifests
-- `prepare-public-asr` recipes for local LibriSpeech, AISHELL-1, and Common Voice directories
+- `prepare-public-asr` recipes for local LibriSpeech, AISHELL-1, Common Voice, and WenetSpeech directories
 - `asr-to-turn` for weakly labeled complete/incomplete turn windows from ASR utterance manifests
 - `bootstrap-turn-data` for one-command ASR metadata to weak turn manifest and train/dev/test splits
 - `audit-audio` for turn/ASR manifest file existence, WAV sample-rate, and WAV duration checks
