@@ -19,6 +19,7 @@ Core entry points:
 - `stable_asr.paper.evidence.final_evidence_matrix`
 - `stable_asr.paper.final_results.assemble_final_paper_results`
 - `stable_asr.paper.leaderboard.validate_leaderboard_jsonl`
+- `stable_asr.paper.suites.audit_benchmark_required_artifacts`
 - `stable_asr.streaming.command_compare.audit_asr_command_config`
 
 Example:

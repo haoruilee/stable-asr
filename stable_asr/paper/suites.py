@@ -187,6 +187,27 @@ class BenchmarkSuiteCoverage:
         return "benchmark_suite_coverage: FAILED\n" + "\n".join(f"- {item}" for item in self.missing)
 
 
+@dataclass(frozen=True)
+class BenchmarkArtifactAudit:
+    ok: bool
+    artifacts_dir: str
+    present: list[str]
+    missing: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "artifacts_dir": self.artifacts_dir,
+            "present": self.present,
+            "missing": self.missing,
+        }
+
+    def to_text(self) -> str:
+        if self.ok:
+            return f"benchmark_required_artifacts: OK ({len(self.present)} artifact(s))"
+        return "benchmark_required_artifacts: FAILED\n" + "\n".join(f"- {item}" for item in self.missing)
+
+
 def load_benchmark_suite(path: str | Path | None = None) -> dict[str, Any]:
     if path is None:
         return json.loads(json.dumps(DEFAULT_BENCHMARK_SUITE))
@@ -210,6 +231,12 @@ def validate_benchmark_suite(suite: dict[str, Any]) -> BenchmarkSuiteValidation:
     for key in ("id", "version", "title", "leaderboard_suite", "tasks"):
         if key not in suite:
             errors.append(f"missing top-level key: {key}")
+    required_artifacts = suite.get("required_artifacts", [])
+    if required_artifacts and (
+        not isinstance(required_artifacts, list)
+        or not all(isinstance(artifact, str) and artifact for artifact in required_artifacts)
+    ):
+        errors.append("required_artifacts must be a list of non-empty strings")
     tasks = suite.get("tasks")
     if not isinstance(tasks, list) or not tasks:
         errors.append("tasks must be a non-empty list")
@@ -296,6 +323,38 @@ def audit_benchmark_suite_coverage(
                     if metric not in available_metrics:
                         missing.append(f"{task_id}/{system}/{metric}: missing metric")
     return BenchmarkSuiteCoverage(ok=not missing, missing=missing, rows=len(rows))
+
+
+def audit_benchmark_required_artifacts(
+    artifacts_dir: str | Path,
+    *,
+    suite: dict[str, Any] | None = None,
+) -> BenchmarkArtifactAudit:
+    suite = suite or load_benchmark_suite()
+    validation = validate_benchmark_suite(suite)
+    if not validation.ok:
+        return BenchmarkArtifactAudit(
+            ok=False,
+            artifacts_dir=str(artifacts_dir),
+            present=[],
+            missing=validation.errors,
+        )
+    artifacts_dir = Path(artifacts_dir)
+    present: list[str] = []
+    missing: list[str] = []
+    for artifact in suite.get("required_artifacts", []):
+        relative = str(artifact)
+        path = artifacts_dir / relative
+        if path.exists():
+            present.append(relative)
+        else:
+            missing.append(relative)
+    return BenchmarkArtifactAudit(
+        ok=not missing,
+        artifacts_dir=str(artifacts_dir),
+        present=present,
+        missing=missing,
+    )
 
 
 def benchmark_suite_markdown(suite: dict[str, Any]) -> str:

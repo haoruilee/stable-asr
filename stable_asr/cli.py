@@ -99,6 +99,7 @@ from stable_asr.paper.parity import (
 )
 from stable_asr.paper.status import paper_status, write_paper_status_markdown
 from stable_asr.paper.suites import (
+    audit_benchmark_required_artifacts,
     audit_benchmark_suite_coverage,
     benchmark_suite_markdown,
     load_benchmark_suite,
@@ -1005,6 +1006,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     benchmark_suite_parser.add_argument("--suite", type=Path, help="Optional benchmark suite JSON path.")
     benchmark_suite_parser.add_argument("--results", type=Path, help="Optional paper_results.json coverage input.")
+    benchmark_suite_parser.add_argument("--artifacts-dir", type=Path, help="Optional paper artifact bundle directory.")
     benchmark_suite_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     benchmark_suite_parser.add_argument("--json", action="store_true", help="Print the suite as JSON.")
     benchmark_suite_parser.add_argument("--validate-only", action="store_true", help="Only validate the suite.")
@@ -2495,14 +2497,31 @@ def main(argv: list[str] | None = None) -> int:
                 if not coverage.ok:
                     print(coverage.to_text(), file=sys.stderr)
                     return 1
+            artifact_audit = None
+            if args.artifacts_dir:
+                artifact_audit = audit_benchmark_required_artifacts(args.artifacts_dir, suite=suite)
+                if not artifact_audit.ok:
+                    print(artifact_audit.to_text(), file=sys.stderr)
+                    return 1
             if args.validate_only:
                 suffix = f"; coverage=OK ({coverage.rows} row(s))" if coverage is not None else ""
+                if artifact_audit is not None:
+                    suffix += f"; artifacts=OK ({len(artifact_audit.present)} required)"
                 print(f"OK: {suite['id']} ({len(suite['tasks'])} task(s)){suffix}")
                 return 0
             if args.json:
-                text = json.dumps(suite, ensure_ascii=False, indent=2)
+                payload: dict[str, object] = {"suite": suite}
+                if coverage is not None:
+                    payload["coverage"] = coverage.to_dict()
+                if artifact_audit is not None:
+                    payload["artifacts"] = artifact_audit.to_dict()
+                text = json.dumps(payload if len(payload) > 1 else suite, ensure_ascii=False, indent=2)
             else:
                 text = benchmark_suite_markdown(suite)
+                if coverage is not None:
+                    text += "\n" + coverage.to_text() + "\n"
+                if artifact_audit is not None:
+                    text += "\n" + artifact_audit.to_text() + "\n"
             if args.output:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")

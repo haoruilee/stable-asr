@@ -2373,6 +2373,59 @@ def test_paper_artifact_integrity_cli(tmp_path, capsys) -> None:
     assert "Mismatched" in captured.out
 
 
+def test_benchmark_suite_cli_audits_required_artifacts(tmp_path, capsys) -> None:
+    main(
+        [
+            "reproduce-paper",
+            "--output-dir",
+            str(tmp_path / "paper"),
+            "--episodes",
+            "10",
+            "--skip-train",
+        ]
+    )
+    output_dir = tmp_path / "artifacts"
+    main(
+        [
+            "paper-bundle",
+            "--results",
+            str(tmp_path / "paper" / "paper_results.json"),
+            "--output-dir",
+            str(output_dir),
+        ]
+    )
+    code = main(
+        [
+            "benchmark-suite",
+            "--suite",
+            str(output_dir / "benchmark_suite.json"),
+            "--artifacts-dir",
+            str(output_dir),
+            "--validate-only",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "artifacts=OK" in captured.out
+
+    (output_dir / "leaderboard.csv").unlink()
+    code = main(
+        [
+            "benchmark-suite",
+            "--suite",
+            str(output_dir / "benchmark_suite.json"),
+            "--artifacts-dir",
+            str(output_dir),
+            "--validate-only",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "leaderboard.csv" in captured.err
+
+
 def test_paper_audit_cli(tmp_path, capsys) -> None:
     main(
         [

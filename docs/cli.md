@@ -74,6 +74,7 @@ stable-asr final-results --config configs/final/paper_final.json --output runs/f
 stable-asr leaderboard-export --results runs/final/paper_results.json --output runs/final/leaderboard.jsonl
 stable-asr leaderboard-validate --input runs/final/leaderboard.jsonl --require-complete-suite --output runs/final/LEADERBOARD_VALIDATION.md
 stable-asr paper-artifact-integrity --manifest runs/paper/smoke/artifacts/artifact_hashes.json --root runs/paper/smoke/artifacts
+stable-asr benchmark-suite --suite runs/paper/smoke/artifacts/benchmark_suite.json --artifacts-dir runs/paper/smoke/artifacts --validate-only
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 ```

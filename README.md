@@ -295,7 +295,7 @@ is provided in `mkdocs.yaml`.
 - `leaderboard-export` for JSONL/CSV metric rows
 - `leaderboard-validate` for checking external leaderboard JSONL submissions against the benchmark suite schema
 - machine-readable benchmark suite definition in `configs/benchmarks/stable_asr_v0.json`
-- `benchmark-suite` for validating and rendering benchmark suite definitions
+- `benchmark-suite` for validating and rendering benchmark suite definitions and required artifact coverage
 - `paper-audit` checks for paper result sections and bundled table/figure artifacts
 - `paper-release-audit` checks stricter platform-paper release gates and reports remaining gaps
 - `paper-release-smoke` runs the smoke pipeline, generates bundle/drafts/cards, and writes release audit files

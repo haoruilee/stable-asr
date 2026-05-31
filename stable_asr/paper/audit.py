@@ -15,7 +15,12 @@ from stable_asr.paper.final_experiments import load_final_experiments, validate_
 from stable_asr.paper.figures import PAPER_FIGURES
 from stable_asr.paper.integrity import verify_artifact_integrity
 from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_parity_checklist
-from stable_asr.paper.suites import audit_benchmark_suite_coverage, load_benchmark_suite, validate_benchmark_suite
+from stable_asr.paper.suites import (
+    audit_benchmark_required_artifacts,
+    audit_benchmark_suite_coverage,
+    load_benchmark_suite,
+    validate_benchmark_suite,
+)
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results
 from stable_asr.references import audit_asr_collection_coverage, load_asr_collections, validate_asr_collections
 from stable_asr.resources import resolve_platform_path
@@ -928,6 +933,7 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("provenance:markdown", artifacts_dir / "PROVENANCE.md"))
     checks.append(_exists_check("benchmark_suite:json", artifacts_dir / "benchmark_suite.json"))
     checks.append(_exists_check("benchmark_suite:markdown", artifacts_dir / "BENCHMARK_SUITE.md"))
+    checks.append(_benchmark_required_artifacts_check(artifacts_dir))
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))
     checks.append(_exists_check("data_sources:markdown", artifacts_dir / "DATA_SOURCES.md"))
     checks.append(_exists_check("adapter_registry:json", artifacts_dir / "adapter_registry.json"))
@@ -980,6 +986,22 @@ def _results_copy_check(*, results_path: Path, artifacts_dir: Path) -> PaperAudi
         source_sha == artifact_sha,
         str(artifact_path) if source_sha == artifact_sha else f"hash mismatch: {artifact_path}",
     )
+
+
+def _benchmark_required_artifacts_check(artifacts_dir: Path) -> PaperAuditCheck:
+    suite_path = artifacts_dir / "benchmark_suite.json"
+    if not suite_path.exists():
+        return PaperAuditCheck("benchmark_suite:required_artifacts", False, f"missing: {suite_path}")
+    try:
+        report = audit_benchmark_required_artifacts(artifacts_dir, suite=load_benchmark_suite(suite_path))
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return PaperAuditCheck("benchmark_suite:required_artifacts", False, str(exc))
+    detail = (
+        f"{len(report.present)} required artifact(s)"
+        if report.ok
+        else "missing: " + ", ".join(report.missing[:5])
+    )
+    return PaperAuditCheck("benchmark_suite:required_artifacts", report.ok, detail)
 
 
 def _integrity_check(artifacts_dir: Path) -> PaperAuditCheck:

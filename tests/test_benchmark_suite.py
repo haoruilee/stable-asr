@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from stable_asr.paper.suites import (
+    audit_benchmark_required_artifacts,
     audit_benchmark_suite_coverage,
     benchmark_suite_markdown,
     load_benchmark_suite,
@@ -46,6 +47,26 @@ def test_benchmark_suite_validation_rejects_bad_metric() -> None:
 
     assert not report.ok
     assert "higher_is_better" in report.to_text()
+
+
+def test_benchmark_required_artifact_audit_accepts_and_rejects_bundle_shape(tmp_path: Path) -> None:
+    suite = load_benchmark_suite()
+    artifacts = tmp_path / "artifacts"
+    artifacts.mkdir()
+    for artifact in suite["required_artifacts"]:
+        path = artifacts / artifact
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("x\n", encoding="utf-8")
+
+    report = audit_benchmark_required_artifacts(artifacts, suite=suite)
+    assert report.ok
+    assert "benchmark_required_artifacts: OK" in report.to_text()
+
+    (artifacts / "leaderboard.csv").unlink()
+    missing = audit_benchmark_required_artifacts(artifacts, suite=suite)
+
+    assert not missing.ok
+    assert missing.missing == ["leaderboard.csv"]
 
 
 def test_benchmark_suite_coverage_accepts_matching_result_subset(tmp_path: Path) -> None:
