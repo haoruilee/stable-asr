@@ -19,6 +19,7 @@ from stable_asr.models.adapters.registry import (
 from stable_asr.references.collections import (
     asr_collections_markdown,
     audit_asr_collection_coverage,
+    audit_asr_collection_licenses,
     load_asr_collections,
     validate_asr_collections,
     write_asr_collections_json,
@@ -44,6 +45,7 @@ class AdapterPackReport:
     streaming_fixture_ok: bool
     command_config_ok: bool
     reference_coverage_ok: bool
+    license_review_ok: bool
 
     @property
     def ok(self) -> bool:
@@ -56,6 +58,7 @@ class AdapterPackReport:
                 self.streaming_fixture_ok,
                 self.command_config_ok,
                 self.reference_coverage_ok,
+                self.license_review_ok,
             ]
         )
 
@@ -73,6 +76,7 @@ class AdapterPackReport:
             "streaming_fixture_ok": self.streaming_fixture_ok,
             "command_config_ok": self.command_config_ok,
             "reference_coverage_ok": self.reference_coverage_ok,
+            "license_review_ok": self.license_review_ok,
         }
 
     def to_markdown(self) -> str:
@@ -85,6 +89,7 @@ class AdapterPackReport:
             {"check": "streaming_fixture", "ok": _yes_no(self.streaming_fixture_ok)},
             {"check": "command_config", "ok": _yes_no(self.command_config_ok)},
             {"check": "reference_coverage", "ok": _yes_no(self.reference_coverage_ok)},
+            {"check": "license_review", "ok": _yes_no(self.license_review_ok)},
         ]
         return "\n".join(
             [
@@ -156,6 +161,15 @@ def build_adapter_pack(
         output_dir / "configs" / "ASR_COLLECTIONS.md",
         asr_collections_markdown(asr_collections),
     )
+    license_review = audit_asr_collection_licenses(asr_collections, required_priorities=("p0", "p1"))
+    files["asr_license_review_json"] = _write_json(
+        output_dir / "configs" / "asr_collection_license_review.json",
+        license_review.to_dict(),
+    )
+    files["asr_license_review_markdown"] = _write_text(
+        output_dir / "configs" / "ASR_COLLECTION_LICENSE_REVIEW.md",
+        license_review.to_markdown(),
+    )
     files["schema_registry_json"] = write_schema_registry_json(
         output_dir / "configs" / "schema_registry.json",
         schema_registry,
@@ -215,6 +229,7 @@ def build_adapter_pack(
         streaming_fixture_ok=streaming_report.ok,
         command_config_ok=command_audit.ok,
         reference_coverage_ok=coverage.ok,
+        license_review_ok=license_review.ok,
     )
     files["readme"] = _write_text(output_dir / "README.md", report.to_markdown())
     _write_json(output_dir / "manifest.json", report.to_dict())
@@ -268,6 +283,7 @@ def _adapter_commands() -> list[str]:
         "stable-asr validate-schema-file --input data/streaming_asr_sample.jsonl --schema-id stable_asr.streaming_asr_record.v0 --registry configs/schema_registry.json",
         "stable-asr adapter-registry --registry configs/adapter_registry.json --validate-only",
         "stable-asr asr-collections --registry configs/asr_collections.json --audit-coverage --require-priority p0 --require-priority p1",
+        "stable-asr asr-collections --registry configs/asr_collections.json --audit-licenses --output reports/ASR_COLLECTION_LICENSE_REVIEW.md",
         "stable-asr compare-asr-commands --config configs/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2 --repo-root .",
         "stable-asr compare-asr-commands --config configs/asr_command_compare.json --report reports/asr_command_compare.md --json-output reports/asr_command_compare.json",
         "stable-asr streaming-submission --input runs/asr_adapter_pack/balanced_template.jsonl --system balanced_template --slice adapter --output-dir submissions/balanced_template",

@@ -254,7 +254,7 @@ is provided in `mkdocs.yaml`.
 - `data-sources` for validating and rendering data source registries
 - machine-readable adapter registry in `configs/adapters/stable_asr_adapters.json`
 - `adapter-registry` for validating and rendering baseline, converter, command-backed, and external-system adapter entries
-- `adapter-pack` for generating an external ASR adapter starter kit with registries, command config, fixtures, and script templates
+- `adapter-pack` for generating an external ASR adapter starter kit with registries, command config, fixtures, license-review artifacts, and script templates
 - machine-readable JSON Schema registry in `configs/schemas/stable_asr_schemas.json`
 - `schema-registry` for validating and rendering public data, prediction, streaming, leaderboard, model, and final-input contracts
 - `validate-schema-file` for checking JSON/JSONL files against those public contracts before publishing or submitting artifacts
