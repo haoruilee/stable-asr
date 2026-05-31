@@ -31,6 +31,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "final_pack:action_plan_markdown" in bundle.starter_packs
     assert "final_acquisition_pack:readme" in bundle.starter_packs
     assert "final_acquisition_pack:checklist_tsv" in bundle.starter_packs
+    assert "final_acquisition_pack:assignments_json" in bundle.starter_packs
+    assert "final_acquisition_pack:assignments_markdown" in bundle.starter_packs
     assert "final_acquisition_pack:handoff_json_template" in bundle.starter_packs
     assert "final_acquisition_pack:handoff_schema_markdown" in bundle.starter_packs
     assert "contributor_pack:readme" in bundle.starter_packs
@@ -95,6 +97,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR VoiceWorld Scenario Pack" in Path(bundle.starter_packs["scenario_pack:readme"]).read_text(encoding="utf-8")
     assert "Stable-ASR Final Run Starter Pack" in Path(bundle.starter_packs["final_pack:readme"]).read_text(encoding="utf-8")
     assert "Stable-ASR Final Acquisition Pack" in Path(bundle.starter_packs["final_acquisition_pack:readme"]).read_text(encoding="utf-8")
+    assert "Stable-ASR Final Acquisition Assignments" in Path(
+        bundle.starter_packs["final_acquisition_pack:assignments_markdown"]
+    ).read_text(encoding="utf-8")
     assert "Stable-ASR Contributor Pack" in Path(bundle.starter_packs["contributor_pack:readme"]).read_text(encoding="utf-8")
     assert "synthetic_voiceworld" in Path(bundle.data_sources["markdown"]).read_text(encoding="utf-8")
     assert "command_streaming_asr" in Path(bundle.adapter_registry["markdown"]).read_text(encoding="utf-8")

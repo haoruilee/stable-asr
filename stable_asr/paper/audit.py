@@ -1168,6 +1168,19 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     )
     checks.append(
         _exists_check(
+            "starter_pack:final_acquisition_assignments",
+            artifacts_dir / "starter_packs" / "final_acquisition_pack" / "acquisition" / "assignments.json",
+        )
+    )
+    checks.append(
+        _contains_check(
+            "starter_pack:final_acquisition_assignment_audit_command",
+            artifacts_dir / "starter_packs" / "final_acquisition_pack" / "COMMANDS.md",
+            contains="final-assignment-audit",
+        )
+    )
+    checks.append(
+        _exists_check(
             "starter_pack:final_acquisition_handoff_template",
             artifacts_dir / "starter_packs" / "final_acquisition_pack" / "acquisition" / "handoff_template.json",
         )
@@ -1246,6 +1259,17 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
 
 def _exists_check(name: str, path: Path) -> PaperAuditCheck:
     return PaperAuditCheck(name, path.exists(), str(path))
+
+
+def _contains_check(name: str, path: Path, *, contains: str) -> PaperAuditCheck:
+    if not path.exists():
+        return PaperAuditCheck(name, False, f"missing: {path}")
+    text = path.read_text(encoding="utf-8")
+    return PaperAuditCheck(
+        name,
+        contains in text,
+        str(path) if contains in text else f"missing text {contains!r}: {path}",
+    )
 
 
 def _results_copy_check(*, results_path: Path, artifacts_dir: Path) -> PaperAuditCheck:
