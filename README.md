@@ -150,7 +150,7 @@ stable-asr asr-collections --audit-coverage --require-priority p0 --require-prio
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
 stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
-stable-asr turn-collections --audit-coverage --output runs/TURN_COLLECTION_COVERAGE.md
+stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1 --output runs/TURN_COLLECTION_COVERAGE.md
 stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
 stable-asr compare-asr-commands --config examples/configs/asr_vendor_adapter_demo.json --report runs/asr_vendor_adapter.md
 stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2

@@ -7,7 +7,7 @@ ASR toolkits. The curated registry lives at
 ```bash
 stable-asr turn-collections --registry configs/references/turn_collections.json --validate-only
 stable-asr turn-collections --output runs/TURN_COLLECTIONS.md
-stable-asr turn-collections --audit-coverage --output runs/TURN_COLLECTION_COVERAGE.md
+stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1 --output runs/TURN_COLLECTION_COVERAGE.md
 stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
 ```
 
@@ -29,10 +29,12 @@ Every substantial turn-taking adapter, endpointing baseline, VoiceWorld
 scenario, or full-duplex benchmark feature should either link to this registry
 or add a new entry first.
 
-`turn-collections --audit-coverage` checks whether required P0 references have
-evidence in the data-source registry or adapter registry. For v0 this means
-Smart Turn, Easy Turn, Full-Duplex-Bench, and VAP must have a converter,
-prediction adapter, scenario bridge, or template.
+`turn-collections --audit-coverage` checks whether required references have
+evidence in the data-source registry or adapter registry. Use
+`--require-priority p0 --require-priority p1` for release-facing coverage across
+Smart Turn, Easy Turn, Full-Duplex-Bench, VAP, Pipecat, Silero VAD, and WebRTC
+VAD. Each required item must have a converter, prediction adapter, scenario
+bridge, runtime bridge, or endpointing template.
 
 `turn-collections --format acquisition-markdown` turns the same registry into a
 collection plan with P0 acquisition order, evidence targets, and license-review

@@ -382,7 +382,7 @@ def audit_paper_release(
                     turn_collections,
                     source_registry,
                     adapter_registry,
-                    required_priorities=("p0",),
+                    required_priorities=("p0", "p1"),
                 )
                 required = [check for check in coverage.checks if check.required]
                 covered = [check for check in required if check.covered]

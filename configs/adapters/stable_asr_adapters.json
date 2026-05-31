@@ -450,6 +450,48 @@
       "license": "see_upstream",
       "related_references": ["vap"],
       "notes": "Template for mapping VAP-style future activity scores to Stable-ASR turn probabilities."
+    },
+    {
+      "id": "pipecat_voice_agent_bridge_template",
+      "title": "Pipecat Voice-Agent Bridge Template",
+      "task": "voice_agent_integration",
+      "modality": "pipeline_bridge",
+      "status": "template",
+      "interface": "VoiceAgentPipelineBridge",
+      "entrypoint": "planned: export Pipecat VAD, turn-detector, ASR, TTS, and interruption events to Stable-ASR traces",
+      "input_schema": "Pipecat frame, transport, and processor event logs",
+      "output_schema": "Stable-ASR turn manifests, streaming ASR traces, or VoiceWorld event traces",
+      "license": "depends_on_external_system",
+      "related_references": ["pipecat"],
+      "notes": "Template for documenting runtime boundaries between Stable-ASR evaluation and a production voice-agent framework without replacing Pipecat."
+    },
+    {
+      "id": "silero_vad_endpointing_template",
+      "title": "Silero VAD Endpointing Template",
+      "task": "turn_taking",
+      "modality": "vad_audio",
+      "status": "template",
+      "interface": "TurnPredictor",
+      "entrypoint": "planned: Silero VAD speech segments to Stable-ASR pause metadata and turn probabilities",
+      "input_schema": "audio window or Silero VAD speech timestamps",
+      "output_schema": "TurnPrediction",
+      "license": "depends_on_external_system",
+      "related_references": ["silero_vad"],
+      "notes": "Template for benchmarking neural VAD pause endpointing against rule and metadata-only baselines."
+    },
+    {
+      "id": "webrtcvad_endpointing_template",
+      "title": "WebRTC VAD Endpointing Template",
+      "task": "turn_taking",
+      "modality": "vad_audio",
+      "status": "template",
+      "interface": "TurnPredictor",
+      "entrypoint": "planned: WebRTC VAD frames to Stable-ASR pause metadata and turn probabilities",
+      "input_schema": "audio frames or WebRTC VAD speech/non-speech decisions",
+      "output_schema": "TurnPrediction",
+      "license": "depends_on_external_system",
+      "related_references": ["webrtcvad"],
+      "notes": "Template for comparing a traditional low-dependency VAD endpointing path with neural VAD and turn-action models."
     }
   ]
 }
