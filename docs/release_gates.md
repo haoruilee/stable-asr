@@ -56,6 +56,7 @@ ready.
 - paper bundle, Markdown draft, and LaTeX draft exist
 - `paper_results.json` is copied into the artifact bundle and matches the audited source results file
 - publishable `artifacts.tar.gz` and `.sha256` sidecar are generated from an audited artifact bundle
+- `paper-archive-verify` validates the archive SHA256 sidecar, tar path safety, embedded bundle hashes, and benchmark artifact requirements
 - dataset and experiment cards are provided
 - leaderboard-ready JSONL/CSV exports are included in the artifact bundle
 - leaderboard validation JSON/Markdown files are included in the artifact bundle

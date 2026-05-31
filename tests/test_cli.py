@@ -2463,6 +2463,33 @@ def test_paper_archive_cli(tmp_path, capsys) -> None:
     assert "paper_archive: OK" in captured.out
     assert archive.exists()
     assert (tmp_path / "stable_asr_artifacts.tar.gz.sha256").exists()
+    code = main(
+        [
+            "paper-archive-verify",
+            "--archive",
+            str(archive),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "paper_archive_verify: OK" in captured.out
+
+    (tmp_path / "stable_asr_artifacts.tar.gz.sha256").write_text(
+        "0" * 64 + "  stable_asr_artifacts.tar.gz\n",
+        encoding="utf-8",
+    )
+    code = main(
+        [
+            "paper-archive-verify",
+            "--archive",
+            str(archive),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "sha256 mismatch" in captured.out
 
 
 def test_paper_audit_cli(tmp_path, capsys) -> None:
@@ -2664,10 +2691,13 @@ def test_paper_release_smoke_cli(tmp_path, capsys) -> None:
     assert "paper_release_smoke: NOT_READY" in captured.out
     assert "release_audit_json:" in captured.out
     assert "artifact_archive:" in captured.out
+    assert "archive_verification: OK" in captured.out
     assert (tmp_path / "release_smoke" / "release_audit.json").exists()
     assert (tmp_path / "release_smoke" / "RELEASE_AUDIT.md").exists()
     assert (tmp_path / "release_smoke" / "artifacts.tar.gz").exists()
     assert (tmp_path / "release_smoke" / "artifacts.tar.gz.sha256").exists()
+    assert (tmp_path / "release_smoke" / "archive_verification.json").exists()
+    assert (tmp_path / "release_smoke" / "ARCHIVE_VERIFICATION.md").exists()
 
 
 def test_paper_release_smoke_default_trains_nanoturn_when_torch_available(tmp_path, capsys) -> None:

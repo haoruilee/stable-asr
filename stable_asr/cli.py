@@ -87,7 +87,7 @@ from stable_asr.paper.final_experiments import (
 )
 from stable_asr.paper.final_results import assemble_final_paper_results
 from stable_asr.paper.figures import PAPER_FIGURES, paper_figure
-from stable_asr.paper.archive import paper_artifact_archive
+from stable_asr.paper.archive import paper_artifact_archive, verify_paper_artifact_archive
 from stable_asr.paper.integrity import verify_artifact_integrity
 from stable_asr.paper.leaderboard import export_leaderboard, validate_leaderboard_jsonl
 from stable_asr.paper.latex import paper_latex
@@ -835,6 +835,15 @@ def build_parser() -> argparse.ArgumentParser:
     archive_parser.add_argument("--output", type=Path, required=True)
     archive_parser.add_argument("--root-name", default="stable-asr-artifacts")
     archive_parser.add_argument("--json", action="store_true")
+
+    archive_verify_parser = subparsers.add_parser(
+        "paper-archive-verify",
+        help="Verify a paper artifact tar.gz archive, sha256 sidecar, and embedded bundle checks.",
+    )
+    archive_verify_parser.add_argument("--archive", type=Path, required=True)
+    archive_verify_parser.add_argument("--sha256", type=Path, help="Optional sha256 sidecar path.")
+    archive_verify_parser.add_argument("--root-name", default="stable-asr-artifacts")
+    archive_verify_parser.add_argument("--json", action="store_true")
 
     paper_status_parser = subparsers.add_parser(
         "paper-status",
@@ -2178,6 +2187,15 @@ def main(argv: list[str] | None = None) -> int:
         except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
+        print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_text())
+        return 0 if report.ok else 1
+
+    if args.command == "paper-archive-verify":
+        report = verify_paper_artifact_archive(
+            args.archive,
+            sha256_path=args.sha256,
+            expected_root=args.root_name,
+        )
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_text())
         return 0 if report.ok else 1
 

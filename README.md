@@ -265,7 +265,7 @@ is provided in `mkdocs.yaml`.
 - `paper-bundle` generation for paper results, tables, figures, artifact index, and artifact manifest
 - paper bundle sha256 integrity manifests and `paper-artifact-integrity` verification
 - paper bundle provenance manifests that record Stable-ASR version, git commit, input result hashes, and config hashes
-- `paper-archive` for creating publishable tar.gz artifact archives with SHA256 sidecars
+- `paper-archive` and `paper-archive-verify` for publishable tar.gz artifact archives with SHA256 and embedded bundle checks
 - ASR reference collection, paper-reference, BibTeX, and P0/P1 coverage artifacts in `paper-bundle`
 - final evidence matrix artifacts in `paper-bundle`
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records

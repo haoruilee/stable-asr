@@ -2,8 +2,10 @@
 
 from stable_asr.paper.archive import (
     PaperArchiveReport,
+    PaperArchiveVerificationReport,
     load_paper_archive_report,
     paper_artifact_archive,
+    verify_paper_artifact_archive,
     write_paper_archive_report,
 )
 from stable_asr.paper.artifacts import PaperArtifactBundle, paper_artifact_bundle
@@ -65,6 +67,7 @@ __all__ = [
     "BenchmarkSuiteValidation",
     "PaperArtifactBundle",
     "PaperArchiveReport",
+    "PaperArchiveVerificationReport",
     "ArtifactDigest",
     "ArtifactIntegrityReport",
     "PaperAuditCheck",
@@ -106,6 +109,7 @@ __all__ = [
     "validate_benchmark_suite",
     "validate_leaderboard_jsonl",
     "verify_artifact_integrity",
+    "verify_paper_artifact_archive",
     "write_artifact_integrity",
     "write_benchmark_suite_json",
     "write_paper_archive_report",
