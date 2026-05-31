@@ -54,7 +54,7 @@ def test_turn_collection_coverage_requires_p0_references() -> None:
     required = {check.reference_id: check for check in report.checks if check.required}
     assert {"smart_turn", "easy_turn", "full_duplex_bench", "vap"}.issubset(required)
     assert all(required[key].covered for key in {"smart_turn", "easy_turn", "full_duplex_bench", "vap"})
-    assert any("adapter:vap_prediction_template" in item for item in required["vap"].evidence)
+    assert any("adapter:vap_prediction" in item for item in required["vap"].evidence)
 
 
 def test_turn_collection_coverage_can_require_p1_references() -> None:

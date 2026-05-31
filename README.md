@@ -244,7 +244,7 @@ is provided in `mkdocs.yaml`.
 - `audit-turn-splits` for detecting record, audio, or ASR/conversation group leakage across splits
 - `prepare-voiceworld` for converting real VoiceWorld scenario annotation tables into canonical turn manifests
 - `convert-external` for EasyTurn-style, Full-Duplex-Bench-style, and SmartTurn-style JSONL manifests
-- `convert-predictions` for generic, SmartTurn-style, and EasyTurn-style prediction JSONL
+- `convert-predictions` for generic, SmartTurn-style, EasyTurn-style, and VAP-style prediction JSONL
 - `convert-asr-transcript` for Whisper, FunASR, Qwen3-ASR, FireRedASR2S, WhisperX, whisper.cpp, SenseVoice, Moonshine, and WhisperKit-style transcript JSONL into the normalized streaming ASR schema
 - `benchmark-data` for paper-facing data-layer tables
 - CI smoke coverage for optional JSONL/Parquet/Lance data backend benchmarks

@@ -12,7 +12,7 @@ from stable_asr.turn.labels import TURN_LABELS
 from stable_asr.turn.types import TurnPrediction
 
 
-PREDICTION_SCHEMAS = ("generic", "smart_turn", "easyturn")
+PREDICTION_SCHEMAS = ("generic", "smart_turn", "easyturn", "vap")
 
 
 @dataclass(frozen=True)
@@ -133,6 +133,8 @@ def convert_turn_prediction_row(data: dict[str, Any], *, schema: str) -> TurnPre
         return _convert_smart_turn_row(data)
     if schema == "easyturn":
         return _convert_easyturn_prediction_row(data)
+    if schema == "vap":
+        return _convert_vap_prediction_row(data)
     raise ValueError(f"unknown prediction schema {schema!r}; expected one of {PREDICTION_SCHEMAS}")
 
 
@@ -190,6 +192,100 @@ def _convert_easyturn_prediction_row(data: dict[str, Any]) -> TurnPredictionRow:
     label = data.get("label", data.get("prediction", data.get("state", data.get("turn_state"))))
     if label is None:
         raise ValueError("easyturn row requires probs, class probabilities, or a label")
+    confidence = data.get("confidence", data.get("score", 1.0))
+    return TurnPredictionRow.from_dict(
+        {
+            "id": row_id,
+            "label": _normalize_label(label),
+            "confidence": confidence,
+            "timestamp": _timestamp(data),
+        }
+    )
+
+
+def _convert_vap_prediction_row(data: dict[str, Any]) -> TurnPredictionRow:
+    """Map VAP-style future activity scores to Stable-ASR turn labels.
+
+    VAP systems usually expose continuous future voice-activity estimates rather
+    than discrete turn labels. Stable-ASR treats high future user activity as
+    `incomplete` and high future assistant/system activity as `complete`.
+    Optional backchannel/wait scores can override those two-way dynamics when an
+    exporter provides them.
+    """
+
+    row_id = _row_id(data)
+    probs = data.get("probs", data.get("probabilities"))
+    if isinstance(probs, dict) and any(str(label) in TURN_LABELS for label in probs):
+        return TurnPredictionRow(id=row_id, probs=_parse_probs(_alias_prob_keys(probs)), timestamp=_timestamp(data))
+    score_source = dict(data)
+    if isinstance(probs, dict):
+        score_source.update(probs)
+
+    user_future = _pick_probability(
+        score_source,
+        "user_future_activity",
+        "future_user_activity",
+        "future_user_va",
+        "p_user_future",
+        "p_future_user",
+        "p_user_speech_future",
+        "user_future",
+    )
+    assistant_future = _pick_probability(
+        score_source,
+        "assistant_future_activity",
+        "system_future_activity",
+        "future_assistant_activity",
+        "future_system_activity",
+        "future_assistant_va",
+        "future_system_va",
+        "p_assistant_future",
+        "p_system_future",
+        "p_future_assistant",
+        "p_future_system",
+        "assistant_future",
+        "system_future",
+    )
+    complete = _pick_probability(score_source, "complete", "complete_probability", "prob_complete", "p_complete")
+    incomplete = _pick_probability(score_source, "incomplete", "incomplete_probability", "prob_incomplete", "p_incomplete")
+    backchannel = _pick_probability(
+        score_source,
+        "backchannel",
+        "backchannel_probability",
+        "prob_backchannel",
+        "p_backchannel",
+        "listener_backchannel_probability",
+        "p_listener_backchannel",
+    )
+    wait = _pick_probability(score_source, "wait", "wait_probability", "prob_wait", "p_wait", "hold_probability", "p_hold")
+
+    next_speaker = data.get("next_speaker", data.get("predicted_next_speaker"))
+    if complete is None and _is_assistant_speaker(next_speaker):
+        complete = 1.0
+    if incomplete is None and _is_user_speaker(next_speaker):
+        incomplete = 1.0
+
+    if complete is None and assistant_future is not None:
+        complete = assistant_future
+    if incomplete is None and user_future is not None:
+        incomplete = user_future
+    if complete is None and user_future is not None:
+        complete = 1.0 - user_future
+    if incomplete is None and assistant_future is not None:
+        incomplete = 1.0 - assistant_future
+
+    scores = {
+        "complete": complete or 0.0,
+        "incomplete": incomplete or 0.0,
+        "backchannel": backchannel or 0.0,
+        "wait": wait or 0.0,
+    }
+    if sum(scores.values()) > 0.0:
+        return TurnPredictionRow(id=row_id, probs=_normalize_probs(scores), timestamp=_timestamp(data))
+
+    label = data.get("label", data.get("prediction", data.get("state", data.get("turn_state"))))
+    if label is None:
+        raise ValueError("vap row requires future activity scores, next_speaker, turn probabilities, or a label")
     confidence = data.get("confidence", data.get("score", 1.0))
     return TurnPredictionRow.from_dict(
         {
@@ -267,6 +363,13 @@ def _pick_number(data: dict[str, Any], *keys: str) -> float | None:
     return None
 
 
+def _pick_probability(data: dict[str, Any], *keys: str) -> float | None:
+    value = _pick_number(data, *keys)
+    if value is None:
+        return None
+    return _clamp_probability(value, keys[0] if keys else "probability")
+
+
 def _clamp_probability(value: float, name: str) -> float:
     if not 0.0 <= value <= 1.0:
         raise ValueError(f"{name} must be between 0 and 1")
@@ -287,8 +390,20 @@ def _alias_prob_keys(probs: dict[str, Any]) -> dict[str, Any]:
         "wait_probability": "wait",
         "prob_wait": "wait",
         "p_wait": "wait",
+        "hold_probability": "wait",
+        "p_hold": "wait",
     }
     return {aliases.get(str(label), str(label)): score for label, score in probs.items()}
+
+
+def _is_user_speaker(value: Any) -> bool:
+    text = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    return text in {"user", "speaker", "current_speaker", "human"}
+
+
+def _is_assistant_speaker(value: Any) -> bool:
+    text = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    return text in {"assistant", "system", "agent", "bot", "other_speaker"}
 
 
 def _normalize_label(value: Any) -> str:

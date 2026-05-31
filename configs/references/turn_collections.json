@@ -49,8 +49,8 @@
       "docs_url": "https://arxiv.org/abs/2205.09812",
       "license": "see_upstream",
       "focus": "Self-supervised future voice activity prediction for turn-taking.",
-      "reference_use": "Use as a continuous turn-prediction objective and external prediction-template target.",
-      "stable_asr_actions": ["maintain_prediction_template", "map_future_activity_to_turn_probs", "compare_stereo_dialogue_objectives"],
+      "reference_use": "Use as a continuous turn-prediction objective and external prediction-converter target.",
+      "stable_asr_actions": ["maintain_prediction_converter", "map_future_activity_to_turn_probs", "compare_stereo_dialogue_objectives"],
       "priority": "p0"
     },
     {

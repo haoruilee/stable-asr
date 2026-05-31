@@ -1016,6 +1016,26 @@ def test_convert_predictions_cli(tmp_path, capsys) -> None:
     assert "accuracy: 1.0000" in eval_output.out
 
 
+def test_convert_predictions_cli_accepts_vap(tmp_path, capsys) -> None:
+    output = tmp_path / "vap_predictions.jsonl"
+    code = main(
+        [
+            "convert-predictions",
+            "--schema",
+            "vap",
+            "--input",
+            "tests/fixtures/vap_predictions_sample.jsonl",
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "converted 4 prediction record" in captured.out
+    assert output.exists()
+
+
 def test_convert_asr_transcript_cli(tmp_path, capsys) -> None:
     output = tmp_path / "whisper_streaming.jsonl"
     code = main(

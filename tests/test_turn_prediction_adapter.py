@@ -84,6 +84,23 @@ def test_convert_easyturn_predictions_to_stable_schema(tmp_path: Path) -> None:
     assert adapter.predict(records[3]).label == "wait"
 
 
+def test_convert_vap_predictions_to_stable_schema(tmp_path: Path) -> None:
+    output = tmp_path / "vap_converted.jsonl"
+    count = convert_turn_prediction_jsonl(
+        "tests/fixtures/vap_predictions_sample.jsonl",
+        output,
+        schema="vap",
+    )
+    records = load_manifest("examples/data/turn_demo.jsonl")
+    adapter = load_turn_prediction_jsonl(output)
+
+    assert count == 4
+    assert adapter.predict(records[0]).label == "complete"
+    assert adapter.predict(records[1]).label == "incomplete"
+    assert adapter.predict(records[2]).label == "backchannel"
+    assert adapter.predict(records[3]).label == "wait"
+
+
 def test_export_turn_predictions_jsonl_roundtrip(tmp_path: Path) -> None:
     records = load_manifest("examples/data/turn_demo.jsonl")
     output = tmp_path / "text_turn_predictions.jsonl"
