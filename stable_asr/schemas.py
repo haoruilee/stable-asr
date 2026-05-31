@@ -133,6 +133,7 @@ def schema_registry_markdown(registry: dict[str, Any]) -> str:
         "```bash",
         "stable-asr schema-registry --validate-only",
         "stable-asr schema-registry --schema-id stable_asr.turn_manifest_record.v0 --json",
+        "stable-asr validate-schema-file --input examples/data/turn_demo.jsonl --schema-id stable_asr.turn_manifest_record.v0",
         "stable-asr schema-registry --output runs/SCHEMAS.md",
         "```",
         "",

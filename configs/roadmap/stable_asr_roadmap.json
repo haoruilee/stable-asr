@@ -132,6 +132,7 @@
         {"path": "stable_asr/paper/artifacts.py", "required_now": true},
         {"path": "stable_asr/paper/audit.py", "required_now": true},
         {"path": "stable_asr/schemas.py", "required_now": true},
+        {"path": "stable_asr/schema_validation.py", "required_now": true},
         {"path": "stable_asr/paper/provenance.py", "required_now": true},
         {"path": "stable_asr/paper/integrity.py", "required_now": true},
         {"path": "stable_asr/paper/parity.py", "required_now": true},
@@ -146,13 +147,15 @@
         "stable-asr paper-status --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only",
+        "stable-asr validate-schema-file --input examples/data/turn_demo.jsonl --schema-id stable_asr.turn_manifest_record.v0",
         "stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts"
       ],
       "success_criteria": [
         "smoke artifacts have stable tables, figures, claim audits, bundle manifests, provenance, and integrity hashes",
         "release audit separates structural readiness from final-scale missing evidence",
         "leaderboard exports are generated from paper result artifacts",
-        "external data and artifact contracts are published as versioned JSON Schemas"
+        "external data and artifact contracts are published as versioned JSON Schemas",
+        "JSON/JSONL artifacts can be validated directly against those contracts"
       ]
     },
     {

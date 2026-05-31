@@ -50,6 +50,8 @@ stable-asr model-registry --output runs/MODELS.md
 stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only
 stable-asr schema-registry --output runs/SCHEMAS.md
 stable-asr schema-registry --schema-id stable_asr.streaming_asr_record.v0 --json
+stable-asr validate-schema-file --input examples/data/turn_demo.jsonl --schema-id stable_asr.turn_manifest_record.v0
+stable-asr validate-schema-file --input tests/fixtures/streaming_asr_sample.jsonl --schema-id stable_asr.streaming_asr_record.v0 --output runs/STREAMING_SCHEMA_VALIDATION.md
 stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
 stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
 stable-asr asr-collections --format paper-markdown --output runs/ASR_REFERENCES.md

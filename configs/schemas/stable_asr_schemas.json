@@ -178,9 +178,15 @@
         "$id": "https://stable-asr.dev/schemas/turn_prediction_record.v0.json",
         "title": "Stable-ASR TurnPredictionRow v0",
         "type": "object",
-        "required": ["id", "probs"],
+        "required": ["id"],
+        "anyOf": [
+          {"required": ["probs"]},
+          {"required": ["label"]}
+        ],
         "properties": {
           "id": {"type": "string", "minLength": 1},
+          "label": {"type": "string", "enum": ["backchannel", "complete", "incomplete", "wait"]},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
           "probs": {
             "type": "object",
             "minProperties": 1,

@@ -107,6 +107,43 @@ def test_schema_registry_cli(capsys, tmp_path) -> None:
     assert '"id": "stable_asr.streaming_asr_record.v0"' in captured.out
 
 
+def test_validate_schema_file_cli(capsys, tmp_path) -> None:
+    output = tmp_path / "schema_validation.md"
+    code = main(
+        [
+            "validate-schema-file",
+            "--input",
+            "examples/data/turn_demo.jsonl",
+            "--schema-id",
+            "stable_asr.turn_manifest_record.v0",
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Schema File Validation" in captured.out
+    assert output.exists()
+    assert "records: `4`" in output.read_text(encoding="utf-8")
+
+    bad = tmp_path / "bad.jsonl"
+    bad.write_text('{"id":"bad"}\n', encoding="utf-8")
+    code = main(
+        [
+            "validate-schema-file",
+            "--input",
+            str(bad),
+            "--schema-id",
+            "stable_asr.turn_manifest_record.v0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "missing required field" in captured.out
+
+
 def test_labels_cli(capsys) -> None:
     code = main(["labels"])
 

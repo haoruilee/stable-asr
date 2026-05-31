@@ -13,11 +13,17 @@ exports, model cards, and final input collection plans.
 stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only
 stable-asr schema-registry --output runs/SCHEMAS.md
 stable-asr schema-registry --schema-id stable_asr.turn_manifest_record.v0 --json
+stable-asr validate-schema-file \
+  --input examples/data/turn_demo.jsonl \
+  --schema-id stable_asr.turn_manifest_record.v0 \
+  --output runs/turn_schema_validation.md
 ```
 
 The default registry is `configs/schemas/stable_asr_schemas.json`. Paper bundles
 also copy it to `schema_registry.json` and render `SCHEMAS.md`, so released
 artifacts carry the same machine-readable contracts as the repository.
+Use `validate-schema-file` before publishing converted datasets, external turn
+predictions, streaming ASR traces, model registries, or leaderboard submissions.
 
 ## Required Fields
 

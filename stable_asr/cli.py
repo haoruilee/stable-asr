@@ -142,6 +142,7 @@ from stable_asr.schemas import (
     schema_registry_markdown,
     validate_schema_registry,
 )
+from stable_asr.schema_validation import JSON_FORMATS, validate_schema_file
 from stable_asr.streaming.command_compare import audit_asr_command_config, compare_asr_commands_from_config
 from stable_asr.streaming.compare import compare_streaming_transcript_jsonl
 from stable_asr.streaming.metrics import evaluate_streaming_records
@@ -506,6 +507,18 @@ def build_parser() -> argparse.ArgumentParser:
     schema_registry_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     schema_registry_parser.add_argument("--json", action="store_true", help="Print registry or schema entry as JSON.")
     schema_registry_parser.add_argument("--validate-only", action="store_true")
+
+    schema_file_parser = subparsers.add_parser(
+        "validate-schema-file",
+        help="Validate a JSON or JSONL file against one Stable-ASR schema registry entry.",
+    )
+    schema_file_parser.add_argument("--input", type=Path, required=True)
+    schema_file_parser.add_argument("--schema-id", required=True)
+    schema_file_parser.add_argument("--registry", type=Path, help="Optional schema registry JSON path.")
+    schema_file_parser.add_argument("--format", choices=sorted(JSON_FORMATS), default="auto")
+    schema_file_parser.add_argument("--max-errors", type=int, default=50)
+    schema_file_parser.add_argument("--output", type=Path, help="Optional Markdown or JSON report path.")
+    schema_file_parser.add_argument("--json", action="store_true")
 
     asr_collections_parser = subparsers.add_parser(
         "asr-collections",
@@ -1675,6 +1688,25 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         return 0
+
+    if args.command == "validate-schema-file":
+        try:
+            report = validate_schema_file(
+                args.input,
+                schema_id=args.schema_id,
+                registry_path=args.registry,
+                format=args.format,
+                max_errors=args.max_errors,
+            )
+        except (OSError, ValueError, KeyError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+        print(text)
+        return 0 if report.ok else 1
 
     if args.command == "asr-collections":
         try:
