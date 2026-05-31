@@ -1028,6 +1028,30 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(
         _exists_check("starter_pack:adapter_readme", artifacts_dir / "starter_packs" / "adapter_pack" / "README.md")
     )
+    checks.append(
+        _exists_check("starter_pack:scenario_manifest", artifacts_dir / "starter_packs" / "scenario_pack" / "manifest.json")
+    )
+    checks.append(
+        _exists_check("starter_pack:scenario_readme", artifacts_dir / "starter_packs" / "scenario_pack" / "README.md")
+    )
+    checks.append(
+        _exists_check("starter_pack:final_manifest", artifacts_dir / "starter_packs" / "final_pack" / "manifest.json")
+    )
+    checks.append(
+        _exists_check("starter_pack:final_readme", artifacts_dir / "starter_packs" / "final_pack" / "README.md")
+    )
+    checks.append(
+        _exists_check(
+            "starter_pack:final_acquisition_manifest",
+            artifacts_dir / "starter_packs" / "final_acquisition_pack" / "manifest.json",
+        )
+    )
+    checks.append(
+        _exists_check(
+            "starter_pack:final_acquisition_checklist",
+            artifacts_dir / "starter_packs" / "final_acquisition_pack" / "acquisition" / "staging_checklist.tsv",
+        )
+    )
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))
     checks.append(_exists_check("data_sources:markdown", artifacts_dir / "DATA_SOURCES.md"))
     checks.append(_exists_check("adapter_registry:json", artifacts_dir / "adapter_registry.json"))
