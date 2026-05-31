@@ -72,13 +72,24 @@ DEFAULT_PARITY_CHECKLIST: dict[str, Any] = {
                 "stable_asr/models/baselines/text_turn.py",
                 "stable_asr/turn/nanoturn.py",
                 "stable_asr/models/adapters/registry.py",
-                "configs/adapters/stable_asr_adapters.json"
+                "stable_asr/models/registry.py",
+                "configs/adapters/stable_asr_adapters.json",
+                "configs/models/stable_asr_models.json"
             ],
             "result_keys": ["baselines", "turn_benchmarks", "nanoturn"],
-            "artifact_paths": ["tables/baselines.md", "tables/turn_benchmark.md", "ADAPTERS.md", "adapter_registry.json"],
+            "artifact_paths": [
+                "tables/baselines.md",
+                "tables/turn_benchmark.md",
+                "ADAPTERS.md",
+                "adapter_registry.json",
+                "MODELS.md",
+                "model_registry.json",
+                "MODEL_CARD.md"
+            ],
             "commands": [
                 "stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause",
-                "stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only"
+                "stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only",
+                "stable-asr model-registry --registry configs/models/stable_asr_models.json --validate-only"
             ],
             "final_scale_requirements": [
                 "run at least two external turn systems through prediction-manifest or command-backed adapters",
@@ -171,7 +182,9 @@ DEFAULT_PARITY_CHECKLIST: dict[str, Any] = {
                 "artifact_hashes.json",
                 "PROVENANCE.md",
                 "leaderboard.jsonl",
-                "BENCHMARK_SUITE.md"
+                "BENCHMARK_SUITE.md",
+                "MODEL_CARD.md",
+                "MODELS.md"
             ],
             "commands": [
                 "stable-asr reproduce-paper --config configs/paper/paper_smoke.json",
@@ -180,7 +193,7 @@ DEFAULT_PARITY_CHECKLIST: dict[str, Any] = {
             ],
             "final_scale_requirements": [
                 "archive the final benchmark result bundle and exact configs used for the paper",
-                "publish dataset and experiment cards for every non-toy dataset and trained model",
+                "publish dataset, experiment, and model cards for every non-toy dataset and trained model",
                 "run a clean reproduction from a fresh environment before submission"
             ]
         }

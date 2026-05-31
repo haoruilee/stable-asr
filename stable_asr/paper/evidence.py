@@ -274,6 +274,7 @@ def _artifact_path(
     artifact_map = {
         "DATASET_CARD.md": config["artifacts"].get("dataset_card"),
         "EXPERIMENT_CARD.md": config["artifacts"].get("experiment_card"),
+        "MODEL_CARD.md": config["artifacts"].get("model_card"),
         "paper.tex": config["artifacts"].get("latex_draft"),
         "PAPER_DRAFT.md": config["artifacts"].get("markdown_draft"),
     }

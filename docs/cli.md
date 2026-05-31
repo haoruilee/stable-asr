@@ -45,6 +45,8 @@ stable-asr compare-asr-commands --config configs/final/asr_command_compare.json 
 ## References
 
 ```bash
+stable-asr model-registry --registry configs/models/stable_asr_models.json --validate-only
+stable-asr model-registry --output runs/MODELS.md
 stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
 stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
 stable-asr asr-collections --format paper-markdown --output runs/ASR_REFERENCES.md
@@ -70,6 +72,7 @@ stable-asr final-config --config configs/final/paper_final.json --prepare-asr-tr
 stable-asr final-config --config configs/final/paper_final.json --check-files
 stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md
 stable-asr paper-evidence-matrix --output runs/final/FINAL_EVIDENCE_MATRIX.md
+stable-asr make-card model --input configs/models/stable_asr_models.json --model-id nanoturn_pico --metrics runs/final/nanoturn/metrics.json --output runs/final/MODEL_CARD.md
 stable-asr eval-scenario --dataset runs/final/voiceworld_real.jsonl --checkpoint runs/final/nanoturn/checkpoint.pt --json-output runs/final/reports/scenarios.json
 stable-asr final-results --config configs/final/paper_final.json --output runs/final/paper_results.json
 stable-asr leaderboard-export --results runs/final/paper_results.json --output runs/final/leaderboard.jsonl

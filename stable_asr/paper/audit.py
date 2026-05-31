@@ -10,6 +10,7 @@ from typing import Any
 
 from stable_asr.data.sources import load_data_sources, validate_data_sources
 from stable_asr.models.adapters.registry import load_adapter_registry, validate_adapter_registry
+from stable_asr.models.registry import load_model_registry, validate_model_registry
 from stable_asr.paper.final_config import load_final_run_config, validate_final_run_config
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
 from stable_asr.paper.figures import PAPER_FIGURES
@@ -121,6 +122,7 @@ def audit_paper_release(
     latex_draft: str | Path | None = None,
     dataset_card: str | Path | None = None,
     experiment_card: str | Path | None = None,
+    model_card: str | Path | None = None,
 ) -> PaperReleaseAuditReport:
     """Audit whether the repository has enough evidence for a platform paper release."""
 
@@ -250,6 +252,24 @@ def audit_paper_release(
         except (OSError, ValueError) as exc:
             checks.append(_release_check("adapter", "adapter_registry_schema", False, str(exc)))
 
+    model_registry_path = repo_root / "configs" / "models" / "stable_asr_models.json"
+    if model_registry_path.exists():
+        try:
+            model_registry = load_model_registry(model_registry_path)
+            model_validation = validate_model_registry(model_registry)
+            checks.append(
+                _release_check(
+                    "model",
+                    "model_registry_schema",
+                    model_validation.ok,
+                    f"{len(model_registry.get('models', []))} model(s)"
+                    if model_validation.ok
+                    else "; ".join(model_validation.errors[:3]),
+                )
+            )
+        except (OSError, ValueError) as exc:
+            checks.append(_release_check("model", "model_registry_schema", False, str(exc)))
+
     asr_collections: dict[str, Any] | None = None
     asr_collections_path = repo_root / "configs" / "references" / "asr_collections.json"
     if asr_collections_path.exists():
@@ -336,6 +356,7 @@ def audit_paper_release(
     checks.append(_optional_path_check("paper", "latex_draft", latex_draft))
     checks.append(_optional_path_check("data", "dataset_card", dataset_card))
     checks.append(_optional_path_check("paper", "experiment_card", experiment_card))
+    checks.append(_optional_path_check("model", "model_card", model_card))
     citation_path = _repo_or_platform_path(repo_root, "CITATION.cff")
     docs_path = _repo_or_platform_path(repo_root, "docs")
     checks.append(_release_check("paper", "citation", citation_path.exists(), _display_repo_path(repo_root, citation_path)))
@@ -958,6 +979,10 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("data_sources:markdown", artifacts_dir / "DATA_SOURCES.md"))
     checks.append(_exists_check("adapter_registry:json", artifacts_dir / "adapter_registry.json"))
     checks.append(_exists_check("adapter_registry:markdown", artifacts_dir / "ADAPTERS.md"))
+    checks.append(_exists_check("model_registry:json", artifacts_dir / "model_registry.json"))
+    checks.append(_exists_check("model_registry:markdown", artifacts_dir / "MODELS.md"))
+    checks.append(_exists_check("model_card:json", artifacts_dir / "model_card.json"))
+    checks.append(_exists_check("model_card:markdown", artifacts_dir / "MODEL_CARD.md"))
     checks.append(_exists_check("asr_collections:json", artifacts_dir / "asr_collections.json"))
     checks.append(_exists_check("asr_collections:markdown", artifacts_dir / "ASR_COLLECTIONS.md"))
     checks.append(_exists_check("asr_collections:paper_markdown", artifacts_dir / "ASR_REFERENCES.md"))

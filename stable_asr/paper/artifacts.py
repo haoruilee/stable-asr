@@ -30,12 +30,17 @@ from stable_asr.paper.parity import audit_paper_parity, load_paper_parity_checkl
 from stable_asr.paper.provenance import paper_bundle_provenance, write_paper_provenance
 from stable_asr.paper.status import paper_status, write_paper_status_json, write_paper_status_markdown
 from stable_asr.paper.suites import benchmark_suite_markdown, load_benchmark_suite, write_benchmark_suite_json
-from stable_asr.paper.tables import PAPER_TABLES, paper_table
+from stable_asr.paper.tables import PAPER_TABLES, load_paper_results, paper_table
 from stable_asr.data.sources import data_sources_markdown, load_data_sources, write_data_sources_json
 from stable_asr.models.adapters.registry import (
     adapter_registry_markdown,
     load_adapter_registry,
     write_adapter_registry_json,
+)
+from stable_asr.models.registry import (
+    load_model_registry,
+    model_registry_markdown,
+    write_model_registry_json,
 )
 from stable_asr.references import (
     asr_collections_bibtex,
@@ -48,6 +53,7 @@ from stable_asr.references import (
 )
 from stable_asr.roadmap import load_roadmap, roadmap_status
 from stable_asr.scenarios.suites import scenario_suite_markdown, load_scenario_suite, write_scenario_suite_json
+from stable_asr.paper.cards import model_card_markdown, model_card_payload, write_model_card_json
 
 
 @dataclass(frozen=True)
@@ -66,6 +72,8 @@ class PaperArtifactBundle:
     benchmark_suite: dict[str, str]
     data_sources: dict[str, str]
     adapter_registry: dict[str, str]
+    model_registry: dict[str, str]
+    model_cards: dict[str, str]
     asr_collections: dict[str, str]
     scenario_suite: dict[str, str]
     case_studies: dict[str, str]
@@ -95,6 +103,8 @@ class PaperArtifactBundle:
             "benchmark_suite": self.benchmark_suite,
             "data_sources": self.data_sources,
             "adapter_registry": self.adapter_registry,
+            "model_registry": self.model_registry,
+            "model_cards": self.model_cards,
             "asr_collections": self.asr_collections,
             "scenario_suite": self.scenario_suite,
             "case_studies": self.case_studies,
@@ -185,6 +195,31 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "markdown": str(output_dir / "ADAPTERS.md"),
     }
     Path(adapter_registry["markdown"]).write_text(adapter_registry_markdown(adapters), encoding="utf-8")
+    models = load_model_registry()
+    model_registry = {
+        "json": write_model_registry_json(output_dir / "model_registry.json", models),
+        "markdown": str(output_dir / "MODELS.md"),
+    }
+    Path(model_registry["markdown"]).write_text(model_registry_markdown(models), encoding="utf-8")
+    results = load_paper_results(results_path)
+    nanoturn = results.get("nanoturn", {}) if isinstance(results, dict) else {}
+    nanoturn_metrics = nanoturn.get("metrics") if isinstance(nanoturn, dict) else None
+    nanoturn_metrics_path = nanoturn.get("metrics_path") if isinstance(nanoturn, dict) else None
+    if not isinstance(nanoturn_metrics, dict):
+        nanoturn_metrics = None
+    if not isinstance(nanoturn_metrics_path, str):
+        nanoturn_metrics_path = None
+    model_payload = model_card_payload(
+        "configs/models/stable_asr_models.json",
+        model_id=str(nanoturn_metrics.get("model_type", "nanoturn_pico")) if nanoturn_metrics else "nanoturn_pico",
+        metrics_path=nanoturn_metrics_path,
+        metrics=nanoturn_metrics,
+    )
+    model_cards = {
+        "json": write_model_card_json(model_payload, output_dir / "model_card.json"),
+        "markdown": str(output_dir / "MODEL_CARD.md"),
+    }
+    Path(model_cards["markdown"]).write_text(model_card_markdown(model_payload), encoding="utf-8")
     asr_reference_registry = load_asr_collections()
     asr_reference_coverage = audit_asr_collection_coverage(
         asr_reference_registry,
@@ -350,6 +385,8 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         benchmark_suite=benchmark_suite,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
+        model_registry=model_registry,
+        model_cards=model_cards,
         asr_collections=asr_collections,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
@@ -385,6 +422,8 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         benchmark_suite=benchmark_suite,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
+        model_registry=model_registry,
+        model_cards=model_cards,
         asr_collections=asr_collections,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
@@ -445,6 +484,12 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Adapter Registry", ""])
     for name, path in bundle.adapter_registry.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Model Registry", ""])
+    for name, path in bundle.model_registry.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Model Cards", ""])
+    for name, path in bundle.model_cards.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## ASR Reference Collections", ""])
     for name, path in bundle.asr_collections.items():
@@ -528,6 +573,8 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.benchmark_suite,
         bundle.data_sources,
         bundle.adapter_registry,
+        bundle.model_registry,
+        bundle.model_cards,
         bundle.asr_collections,
         bundle.scenario_suite,
         bundle.case_studies,

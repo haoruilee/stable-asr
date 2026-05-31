@@ -55,9 +55,14 @@ from stable_asr.models.adapters import (
     validate_adapter_registry,
     validate_turn_prediction_jsonl,
 )
+from stable_asr.models.registry import (
+    load_model_registry,
+    model_registry_markdown,
+    validate_model_registry,
+)
 from stable_asr.paper.artifacts import paper_artifact_bundle
 from stable_asr.paper.audit import audit_paper_artifacts, audit_paper_release
-from stable_asr.paper.cards import dataset_card, experiment_card
+from stable_asr.paper.cards import dataset_card, experiment_card, model_card
 from stable_asr.paper.case_studies import paper_case_studies
 from stable_asr.paper.claims import audit_claims, paper_claims
 from stable_asr.paper.draft import paper_draft
@@ -470,6 +475,15 @@ def build_parser() -> argparse.ArgumentParser:
     adapter_registry_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     adapter_registry_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     adapter_registry_parser.add_argument("--validate-only", action="store_true")
+
+    model_registry_parser = subparsers.add_parser(
+        "model-registry",
+        help="Print or validate the Stable-ASR built-in model registry.",
+    )
+    model_registry_parser.add_argument("--registry", type=Path, help="Optional model registry JSON path.")
+    model_registry_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    model_registry_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
+    model_registry_parser.add_argument("--validate-only", action="store_true")
 
     asr_collections_parser = subparsers.add_parser(
         "asr-collections",
@@ -1074,6 +1088,7 @@ def build_parser() -> argparse.ArgumentParser:
     paper_release_audit_parser.add_argument("--latex-draft", type=Path)
     paper_release_audit_parser.add_argument("--dataset-card", type=Path)
     paper_release_audit_parser.add_argument("--experiment-card", type=Path)
+    paper_release_audit_parser.add_argument("--model-card", type=Path)
     paper_release_audit_parser.add_argument("--json", action="store_true", help="Print release audit as JSON.")
 
     paper_release_smoke_parser = subparsers.add_parser(
@@ -1116,11 +1131,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     card_parser = subparsers.add_parser(
         "make-card",
-        help="Generate dataset or experiment Markdown cards.",
+        help="Generate dataset, experiment, or model Markdown cards.",
     )
-    card_parser.add_argument("kind", choices=["dataset", "experiment"])
+    card_parser.add_argument("kind", choices=["dataset", "experiment", "model"])
     card_parser.add_argument("--input", type=Path, required=True)
     card_parser.add_argument("--output", type=Path, required=True)
+    card_parser.add_argument("--model-id", help="Model id used with kind=model and registry inputs.")
+    card_parser.add_argument("--metrics", type=Path, help="Optional NanoTurn metrics JSON used with kind=model.")
 
     return parser
 
@@ -1573,6 +1590,26 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"OK: {registry['id']} ({len(registry['adapters'])} adapter(s))")
                 return 0
             text = json.dumps(registry, ensure_ascii=False, indent=2) if args.json else adapter_registry_markdown(registry)
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+            print(text)
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.command == "model-registry":
+        try:
+            registry = load_model_registry(args.registry)
+            validation = validate_model_registry(registry)
+            if not validation.ok:
+                print(validation.to_text(), file=sys.stderr)
+                return 1
+            if args.validate_only:
+                print(f"OK: {registry['id']} ({len(registry['models'])} model(s))")
+                return 0
+            text = json.dumps(registry, ensure_ascii=False, indent=2) if args.json else model_registry_markdown(registry)
             if args.output:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
@@ -2196,6 +2233,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"provenance: {len(bundle.provenance)}")
             print(f"data_sources: {len(bundle.data_sources)}")
             print(f"adapter_registry: {len(bundle.adapter_registry)}")
+            print(f"model_registry: {len(bundle.model_registry)}")
+            print(f"model_cards: {len(bundle.model_cards)}")
             print(f"asr_collections: {len(bundle.asr_collections)}")
             print(f"scenario_suite: {len(bundle.scenario_suite)}")
             print(f"case_studies: {len(bundle.case_studies)}")
@@ -2648,6 +2687,7 @@ def main(argv: list[str] | None = None) -> int:
             latex_draft=args.latex_draft,
             dataset_card=args.dataset_card,
             experiment_card=args.experiment_card,
+            model_card=getattr(args, "model_card", None),
         )
         if args.json:
             print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
@@ -2683,8 +2723,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "make-card":
         if args.kind == "dataset":
             output = dataset_card(args.input, args.output)
-        else:
+        elif args.kind == "experiment":
             output = experiment_card(args.input, args.output)
+        else:
+            output = model_card(args.input, args.output, model_id=args.model_id, metrics_path=args.metrics)
         print(f"card: {output}")
         return 0
 

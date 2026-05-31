@@ -18,6 +18,7 @@ Expected outputs:
 - `paper.tex`
 - `DATASET_CARD.md`
 - `EXPERIMENT_CARD.md`
+- `MODEL_CARD.md`
 - `artifacts.tar.gz`
 - `artifacts.tar.gz.sha256`
 - `archive_verification.json`

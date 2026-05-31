@@ -1186,6 +1186,25 @@ def test_adapter_registry_cli_validate_config(capsys) -> None:
     assert "OK: stable_asr_adapters_v0" in captured.out
 
 
+def test_model_registry_cli(tmp_path, capsys) -> None:
+    output = tmp_path / "MODELS.md"
+    code = main(["model-registry", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Model Registry" in captured.out
+    assert output.exists()
+    assert "nanoturn_pico" in output.read_text(encoding="utf-8")
+
+
+def test_model_registry_cli_validate_config(capsys) -> None:
+    code = main(["model-registry", "--registry", "configs/models/stable_asr_models.json", "--validate-only"])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "OK: stable_asr_models_v0" in captured.out
+
+
 def test_prepare_validate_and_inspect_asr_manifest_cli(tmp_path, capsys) -> None:
     output = tmp_path / "asr_manifest.jsonl"
     code = main(
@@ -2340,6 +2359,8 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert "benchmark_suite:" in captured.out
     assert "provenance:" in captured.out
     assert "data_sources:" in captured.out
+    assert "model_registry:" in captured.out
+    assert "model_cards:" in captured.out
     assert "leaderboard_validation:" in captured.out
     assert "leaderboard_reports:" in captured.out
     assert "asr_collections:" in captured.out
@@ -2356,6 +2377,8 @@ def test_paper_bundle_cli(tmp_path, capsys) -> None:
     assert (output_dir / "artifact_hashes.json").exists()
     assert (output_dir / "PROVENANCE.md").exists()
     assert (output_dir / "provenance.json").exists()
+    assert (output_dir / "MODEL_CARD.md").exists()
+    assert (output_dir / "MODELS.md").exists()
     assert (output_dir / "tables" / "baselines.md").exists()
     assert (output_dir / "figures" / "baselines.svg").exists()
     assert (output_dir / "LEADERBOARD_VALIDATION.md").exists()
@@ -2739,6 +2762,7 @@ def test_paper_release_smoke_cli(tmp_path, capsys) -> None:
     assert "archive_verification: OK" in captured.out
     assert (tmp_path / "release_smoke" / "release_audit.json").exists()
     assert (tmp_path / "release_smoke" / "RELEASE_AUDIT.md").exists()
+    assert (tmp_path / "release_smoke" / "MODEL_CARD.md").exists()
     assert (tmp_path / "release_smoke" / "artifacts.tar.gz").exists()
     assert (tmp_path / "release_smoke" / "artifacts.tar.gz.sha256").exists()
     assert (tmp_path / "release_smoke" / "archive_verification.json").exists()
@@ -2791,6 +2815,27 @@ def test_make_card_cli(tmp_path, capsys) -> None:
     assert code == 0
     assert "card:" in captured.out
     assert output.exists()
+
+
+def test_make_model_card_cli(tmp_path, capsys) -> None:
+    output = tmp_path / "MODEL_CARD.md"
+    code = main(
+        [
+            "make-card",
+            "model",
+            "--input",
+            "configs/models/stable_asr_models.json",
+            "--model-id",
+            "nanoturn_pico",
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "card:" in captured.out
+    assert "NanoTurn Pico" in output.read_text(encoding="utf-8")
 
 
 def _has_import(name: str) -> bool:

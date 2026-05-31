@@ -46,6 +46,7 @@ stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 - `paper.tex`
 - `DATASET_CARD.md`
 - `EXPERIMENT_CARD.md`
+- `MODEL_CARD.md`
 - `release_audit.json`
 - `RELEASE_AUDIT.md`
 

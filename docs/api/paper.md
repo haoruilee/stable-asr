@@ -11,6 +11,7 @@ Core entry points:
 - `stable_asr.paper.integrity.verify_artifact_integrity`
 - `stable_asr.paper.provenance.paper_bundle_provenance`
 - `stable_asr.paper.release_smoke.run_paper_release_smoke`
+- `stable_asr.paper.cards.model_card`
 - `stable_asr.paper.audit.audit_paper_release`
 - `stable_asr.paper.parity.audit_paper_parity`
 - `stable_asr.paper.claims.audit_claims`

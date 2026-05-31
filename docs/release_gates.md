@@ -58,7 +58,7 @@ ready.
 - `paper_results.json` is copied into the artifact bundle and matches the audited source results file
 - publishable `artifacts.tar.gz` and `.sha256` sidecar are generated from an audited artifact bundle
 - `paper-archive-verify` validates the archive SHA256 sidecar, tar path safety, embedded bundle hashes, and benchmark artifact requirements
-- dataset and experiment cards are provided
+- dataset, experiment, and model cards are provided
 - leaderboard-ready JSONL/CSV exports are included in the artifact bundle
 - leaderboard validation JSON/Markdown files are included in the artifact bundle
 - ranked leaderboard report JSON/Markdown files are included in the artifact bundle
@@ -67,6 +67,7 @@ ready.
 - benchmark suite JSON/Markdown files are included in the artifact bundle
 - data source registry JSON/Markdown files are included in the artifact bundle
 - adapter registry JSON/Markdown files are included in the artifact bundle
+- model registry JSON/Markdown and NanoTurn model card JSON/Markdown files are included in the artifact bundle
 - ASR reference collection JSON/Markdown, paper reference, BibTeX, coverage audit, and readiness audit files are included in the artifact bundle
 - scenario suite JSON/Markdown files are included in the artifact bundle
 - case-study JSON/Markdown files are included in the artifact bundle
@@ -105,7 +106,8 @@ stable-asr paper-release-audit \
   --markdown-draft runs/paper/smoke/PAPER_DRAFT.md \
   --latex-draft runs/paper/smoke/paper.tex \
   --dataset-card runs/paper/smoke/DATASET_CARD.md \
-  --experiment-card runs/paper/smoke/EXPERIMENT_CARD.md
+  --experiment-card runs/paper/smoke/EXPERIMENT_CARD.md \
+  --model-card runs/paper/smoke/MODEL_CARD.md
 ```
 
 For a one-command smoke pass that generates the bundle, drafts, cards, and audit

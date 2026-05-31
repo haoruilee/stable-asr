@@ -163,7 +163,7 @@ stable-asr paper-release-audit \
 artifacts, a copied `paper_results.json`, artifact hash manifests, provenance
 manifests, case studies, final-run audits/action plans, final evidence matrix,
 claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
-dataset/experiment cards, `artifacts.tar.gz`, and
+dataset/experiment/model cards, `artifacts.tar.gz`, and
 `RELEASE_AUDIT.md`.
 
 Use `stable-asr doctor --check-release-env` before strict release smoke. A
@@ -300,12 +300,14 @@ is provided in `mkdocs.yaml`.
 - `leaderboard-report` for generating ranked per-task/per-metric Markdown or JSON leaderboard reports
 - machine-readable benchmark suite definition in `configs/benchmarks/stable_asr_v0.json`
 - `benchmark-suite` for validating and rendering benchmark suite definitions and required artifact coverage
+- machine-readable built-in model registry in `configs/models/stable_asr_models.json`
+- `model-registry` for validating and rendering built-in model/baseline metadata
 - `paper-audit` checks for paper result sections and bundled table/figure artifacts
 - `paper-release-audit` checks stricter platform-paper release gates and reports remaining gaps
 - `paper-release-smoke` runs the smoke pipeline, generates bundle/drafts/cards, and writes release audit files
 - `paper-draft` generation for editable Markdown preprint drafts
 - `paper-latex` generation for arXiv-style LaTeX preprint drafts
-- dataset and experiment card generation via `make-card`
+- dataset, experiment, and model card generation via `make-card`
 - `CITATION.cff` and project documentation under `docs/`
 - fixture dataset and tests
 - GitHub Actions test workflow

@@ -17,7 +17,7 @@ from stable_asr.paper.audit import (
     audit_paper_artifacts,
     audit_paper_release,
 )
-from stable_asr.paper.cards import dataset_card, experiment_card
+from stable_asr.paper.cards import dataset_card, experiment_card, model_card, model_card_payload, write_model_card_json
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.evidence import FinalEvidenceMatrixReport, final_evidence_matrix
 from stable_asr.paper.experiments import PaperRunResult, run_paper_smoke
@@ -89,6 +89,8 @@ __all__ = [
     "build_final_run_action_plan",
     "dataset_card",
     "experiment_card",
+    "model_card",
+    "model_card_payload",
     "export_leaderboard",
     "leaderboard_report",
     "audit_benchmark_required_artifacts",
@@ -113,6 +115,7 @@ __all__ = [
     "verify_paper_artifact_archive",
     "write_artifact_integrity",
     "write_benchmark_suite_json",
+    "write_model_card_json",
     "write_paper_archive_report",
     "write_paper_provenance",
 ]

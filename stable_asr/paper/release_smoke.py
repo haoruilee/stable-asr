@@ -14,7 +14,7 @@ from stable_asr.paper.archive import (
 )
 from stable_asr.paper.artifacts import paper_artifact_bundle
 from stable_asr.paper.audit import PaperReleaseAuditReport, audit_paper_release
-from stable_asr.paper.cards import dataset_card, experiment_card
+from stable_asr.paper.cards import dataset_card, experiment_card, model_card
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.experiments import run_paper_smoke
 from stable_asr.paper.latex import paper_latex
@@ -29,6 +29,7 @@ class PaperReleaseSmokeResult:
     latex_draft: str
     dataset_card: str
     experiment_card: str
+    model_card: str
     artifact_archive: str
     artifact_archive_sha256: str
     artifact_archive_verification_json: str
@@ -52,6 +53,7 @@ class PaperReleaseSmokeResult:
             "latex_draft": self.latex_draft,
             "dataset_card": self.dataset_card,
             "experiment_card": self.experiment_card,
+            "model_card": self.model_card,
             "artifact_archive": self.artifact_archive,
             "artifact_archive_sha256": self.artifact_archive_sha256,
             "artifact_archive_verification_json": self.artifact_archive_verification_json,
@@ -72,6 +74,7 @@ class PaperReleaseSmokeResult:
             f"latex_draft: {self.latex_draft}",
             f"dataset_card: {self.dataset_card}",
             f"experiment_card: {self.experiment_card}",
+            f"model_card: {self.model_card}",
             f"artifact_archive: {self.artifact_archive}",
             f"artifact_archive_sha256: {self.artifact_archive_sha256}",
             f"artifact_archive_verification_json: {self.artifact_archive_verification_json}",
@@ -104,6 +107,15 @@ def run_paper_release_smoke(
     latex = paper_latex(paper_run.results_path, output_dir / "paper.tex", artifacts_dir=bundle.output_dir)
     dataset = dataset_card(dataset_manifest, output_dir / "DATASET_CARD.md")
     experiment = experiment_card(paper_run.results_path, output_dir / "EXPERIMENT_CARD.md")
+    nanoturn_metrics_path = None
+    if paper_run.results.get("nanoturn", {}).get("status") == "completed":
+        nanoturn_metrics_path = paper_run.results["nanoturn"].get("metrics_path")
+    model = model_card(
+        "configs/models/stable_asr_models.json",
+        output_dir / "MODEL_CARD.md",
+        model_id="nanoturn_pico",
+        metrics_path=nanoturn_metrics_path,
+    )
 
     audit = audit_paper_release(
         repo_root=repo_root,
@@ -113,6 +125,7 @@ def run_paper_release_smoke(
         latex_draft=latex,
         dataset_card=dataset,
         experiment_card=experiment,
+        model_card=model,
     )
     audit_json = output_dir / "release_audit.json"
     audit_markdown = output_dir / "RELEASE_AUDIT.md"
@@ -136,6 +149,7 @@ def run_paper_release_smoke(
         latex_draft=latex,
         dataset_card=dataset,
         experiment_card=experiment,
+        model_card=model,
         artifact_archive=archive.archive_path,
         artifact_archive_sha256=archive.sha256_path,
         artifact_archive_verification_json=str(archive_verification_json),
