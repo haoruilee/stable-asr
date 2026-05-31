@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from stable_asr.eval.report import dict_table
+from stable_asr.resources import resolve_platform_path
 
 
 DEFAULT_SUITE_ID = "stable_asr_v0"
@@ -184,7 +185,7 @@ class BenchmarkSuiteCoverage:
 def load_benchmark_suite(path: str | Path | None = None) -> dict[str, Any]:
     if path is None:
         return json.loads(json.dumps(DEFAULT_BENCHMARK_SUITE))
-    with Path(path).open("r", encoding="utf-8") as handle:
+    with resolve_platform_path(path).open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     if not isinstance(payload, dict):
         raise ValueError("benchmark suite must be a JSON object")

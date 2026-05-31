@@ -51,6 +51,7 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "paper_release_audit: NOT_READY" in text
     assert "OK software/manifest_in" in text
     assert "OK software/source_manifest_content" in text
+    assert "OK software/wheel_data_files" in text
     assert "OK software/license" in text
     assert "OK software/contributing" in text
     assert "OK data/external_data_sources" in text

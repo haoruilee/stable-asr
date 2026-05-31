@@ -92,6 +92,7 @@ from stable_asr.references import (
     load_asr_collections,
     validate_asr_collections,
 )
+from stable_asr.resources import resolve_platform_path
 from stable_asr.roadmap import load_roadmap, roadmap_status, validate_roadmap
 from stable_asr.scenarios.voice_world import evaluate_voice_world
 from stable_asr.scenarios.synthetic_turn import generate_synthetic_turn_records, write_synthetic_turn_manifest
@@ -2114,7 +2115,7 @@ def _build_turn_comparison_predictors(args, *, dataset_parent: Path):
 def _load_paper_config(path: Path | None) -> dict[str, object]:
     if path is None:
         return {}
-    with path.open("r", encoding="utf-8") as handle:
+    with resolve_platform_path(path).open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     if not isinstance(payload, dict):
         raise ValueError("paper config must be a JSON object")

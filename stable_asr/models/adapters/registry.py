@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from stable_asr.eval.report import dict_table
+from stable_asr.resources import resolve_platform_path
 
 
 DEFAULT_ADAPTER_REGISTRY: dict[str, Any] = {
@@ -250,7 +251,7 @@ class AdapterRegistryValidation:
 def load_adapter_registry(path: str | Path | None = None) -> dict[str, Any]:
     if path is None:
         return json.loads(json.dumps(DEFAULT_ADAPTER_REGISTRY))
-    with Path(path).open("r", encoding="utf-8") as handle:
+    with resolve_platform_path(path).open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     if not isinstance(payload, dict):
         raise ValueError("adapter registry must be a JSON object")

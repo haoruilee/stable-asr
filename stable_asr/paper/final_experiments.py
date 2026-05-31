@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from stable_asr.eval.report import dict_table
+from stable_asr.resources import resolve_platform_path
 
 
 DEFAULT_FINAL_EXPERIMENTS: dict[str, Any] = {
@@ -193,7 +194,7 @@ class FinalExperimentValidation:
 def load_final_experiments(path: str | Path | None = None) -> dict[str, Any]:
     if path is None:
         return json.loads(json.dumps(DEFAULT_FINAL_EXPERIMENTS))
-    with Path(path).open("r", encoding="utf-8") as handle:
+    with resolve_platform_path(path).open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     if not isinstance(payload, dict):
         raise ValueError("final experiment registry must be a JSON object")

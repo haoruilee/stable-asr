@@ -496,7 +496,10 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
     return [
         _release_check("software", name, path.exists(), str(path.relative_to(repo_root) if path.is_relative_to(repo_root) else path))
         for name, path in required.items()
-    ] + [_source_manifest_content_check(repo_root / "MANIFEST.in")]
+    ] + [
+        _source_manifest_content_check(repo_root / "MANIFEST.in"),
+        _wheel_data_files_check(repo_root / "pyproject.toml"),
+    ]
 
 
 def _source_manifest_content_check(path: Path) -> PaperReleaseAuditCheck:
@@ -519,6 +522,34 @@ def _source_manifest_content_check(path: Path) -> PaperReleaseAuditCheck:
     return _release_check(
         "software",
         "source_manifest_content",
+        not missing,
+        "covers platform assets" if not missing else "missing: " + ", ".join(missing),
+    )
+
+
+def _wheel_data_files_check(path: Path) -> PaperReleaseAuditCheck:
+    required_patterns = (
+        "[tool.setuptools.data-files]",
+        "share/stable-asr/configs/adapters",
+        "share/stable-asr/configs/benchmarks",
+        "share/stable-asr/configs/datasets",
+        "share/stable-asr/configs/final",
+        "share/stable-asr/configs/paper",
+        "share/stable-asr/configs/references",
+        "share/stable-asr/configs/roadmap",
+        "share/stable-asr/configs/scenarios",
+        "share/stable-asr/docs",
+        "share/stable-asr/examples",
+        "share/stable-asr/scripts",
+        "share/stable-asr/tests/fixtures",
+    )
+    if not path.exists():
+        return _release_check("software", "wheel_data_files", False, f"missing: {path}")
+    text = path.read_text(encoding="utf-8")
+    missing = [pattern for pattern in required_patterns if pattern not in text]
+    return _release_check(
+        "software",
+        "wheel_data_files",
         not missing,
         "covers platform assets" if not missing else "missing: " + ", ".join(missing),
     )

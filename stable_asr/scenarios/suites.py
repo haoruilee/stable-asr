@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from stable_asr.eval.report import dict_table
+from stable_asr.resources import resolve_platform_path
 from stable_asr.scenarios.synthetic_turn import SCENARIO_NAMES
 from stable_asr.turn.labels import ACTION_LABELS, TURN_LABELS
 
@@ -148,7 +149,7 @@ class ScenarioSuiteValidation:
 def load_scenario_suite(path: str | Path | None = None) -> dict[str, Any]:
     if path is None:
         return json.loads(json.dumps(DEFAULT_SCENARIO_SUITE))
-    with Path(path).open("r", encoding="utf-8") as handle:
+    with resolve_platform_path(path).open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     if not isinstance(payload, dict):
         raise ValueError("scenario suite must be a JSON object")

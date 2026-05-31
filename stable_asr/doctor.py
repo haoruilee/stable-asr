@@ -17,6 +17,7 @@ from stable_asr.paper.final_experiments import load_final_experiments, validate_
 from stable_asr.paper.parity import load_paper_parity_checklist, validate_paper_parity_checklist
 from stable_asr.paper.suites import load_benchmark_suite, validate_benchmark_suite
 from stable_asr.references import load_asr_collections, validate_asr_collections
+from stable_asr.resources import resolve_platform_path
 from stable_asr.roadmap import load_roadmap, validate_roadmap
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
 
@@ -193,6 +194,7 @@ def _schema_check(
     path: Path,
     validator: Callable[[Path], str],
 ) -> DoctorCheck:
+    path = resolve_platform_path(path)
     if not path.exists():
         return DoctorCheck(category, name, False, True, f"missing: {path}")
     try:

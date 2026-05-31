@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from stable_asr.eval.report import dict_table
+from stable_asr.resources import resolve_platform_path
 
 
 DEFAULT_ROADMAP_PATH = Path("configs/roadmap/stable_asr_roadmap.json")
@@ -185,7 +186,7 @@ class RoadmapStatusReport:
 
 
 def load_roadmap(path: str | Path | None = None) -> dict[str, Any]:
-    roadmap_path = Path(path) if path else DEFAULT_ROADMAP_PATH
+    roadmap_path = resolve_platform_path(Path(path) if path else DEFAULT_ROADMAP_PATH)
     with roadmap_path.open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     if not isinstance(payload, dict):

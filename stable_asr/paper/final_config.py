@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from stable_asr.eval.report import dict_table
+from stable_asr.resources import resolve_platform_path
 
 
 DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
@@ -178,7 +179,7 @@ class FinalRunScaffoldReport:
 def load_final_run_config(path: str | Path | None = None) -> dict[str, Any]:
     if path is None:
         return json.loads(json.dumps(DEFAULT_FINAL_RUN_CONFIG))
-    with Path(path).open("r", encoding="utf-8") as handle:
+    with resolve_platform_path(path).open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     if not isinstance(payload, dict):
         raise ValueError("final run config must be a JSON object")
