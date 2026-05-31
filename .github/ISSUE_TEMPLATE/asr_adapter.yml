@@ -1,0 +1,78 @@
+name: External ASR Adapter
+description: Propose or implement a command-backed ASR adapter or transcript converter.
+title: "[adapter] "
+labels: ["adapter", "asr"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for Whisper, FunASR, WeNet, NeMo, ESPnet, SpeechBrain, icefall, sherpa-onnx, FireRedASR2S, Qwen3-ASR, whisper.cpp, WhisperX, Moonshine, HF, or similar systems.
+
+        Start with:
+
+        ```bash
+        stable-asr adapter-pack --output-dir runs/adapter_pack
+        stable-asr asr-collections --audit-readiness
+        ```
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream project or model
+      placeholder: FunASR / WeNet / Whisper / custom command
+    validations:
+      required: true
+  - type: input
+    id: reference_id
+    attributes:
+      label: ASR collection entry
+      description: Link to `configs/references/asr_collections.json` or explain why a new entry is needed.
+      placeholder: funasr
+    validations:
+      required: true
+  - type: dropdown
+    id: adapter_kind
+    attributes:
+      label: Adapter kind
+      options:
+        - command_streaming_asr
+        - transcript_converter
+        - prediction_manifest_adapter
+        - corpus_manifest_bridge
+        - runtime_latency_benchmark
+    validations:
+      required: true
+  - type: textarea
+    id: input_output
+    attributes:
+      label: Input and output contract
+      description: Describe input manifest, command, raw output, normalized output, and schema.
+      placeholder: |
+        Input:
+        Command:
+        Raw output:
+        Stable-ASR output:
+        Schema:
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation commands
+      placeholder: |
+        stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 2
+        stable-asr validate-schema-file --input runs/my_asr.jsonl --schema-id stable_asr.streaming_asr_record.v0
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Required checks
+      options:
+        - label: The upstream license or terms are linked and reviewed.
+          required: true
+        - label: The adapter does not vendor heavyweight upstream code into Stable-ASR.
+          required: true
+        - label: The normalized output uses an existing Stable-ASR schema or proposes a schema update.
+          required: true
+        - label: Tests or fixtures are included for the adapter contract.
+          required: true

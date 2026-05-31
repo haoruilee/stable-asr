@@ -1,0 +1,83 @@
+name: VoiceWorld Scenario
+description: Contribute or audit a full-duplex VoiceWorld scenario record set.
+title: "[voiceworld] "
+labels: ["voiceworld", "scenario"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for incomplete pause, backchannel, wait/stop, interruption, side conversation, ambient speech, noisy far-field, code-switching, or new full-duplex scenario records.
+
+        Start with:
+
+        ```bash
+        stable-asr scenario-pack --output-dir runs/scenario_pack
+        stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+        ```
+  - type: dropdown
+    id: scenario_id
+    attributes:
+      label: Scenario
+      options:
+        - normal_question
+        - incomplete_pause
+        - backchannel
+        - wait_stop
+        - user_interruption
+        - side_conversation
+        - ambient_speech
+        - noisy_farfield
+        - code_switching
+        - new_scenario_proposal
+    validations:
+      required: true
+  - type: textarea
+    id: records
+    attributes:
+      label: Record summary
+      description: Include count, language, speaker mix, audio format, and whether records are real, licensed, or composed.
+      placeholder: |
+        Records:
+        Language:
+        Audio format:
+        Source/provenance:
+    validations:
+      required: true
+  - type: textarea
+    id: factors
+    attributes:
+      label: Factors of variation
+      description: List SNR, reverb, speaking rate, overlap offset, network jitter, far-field distance, code-switch ratio, and accent coverage.
+      placeholder: |
+        snr_db:
+        reverb:
+        speaking_rate:
+        overlap_offset_ms:
+        network_jitter_ms:
+        farfield_distance_m:
+        code_switch_ratio:
+        accent:
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Validation commands
+      placeholder: |
+        stable-asr prepare-voiceworld --input data/voiceworld/metadata.tsv --output runs/final/voiceworld_real.jsonl
+        stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json --min-scenario-records 20
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Required checks
+      options:
+        - label: Consent, license, or synthetic-data provenance is recorded.
+          required: true
+        - label: Audio paths are stable and repo-relative or explicitly documented.
+          required: true
+        - label: Scenario labels use `configs/scenarios/stable_asr_voiceworld_v0.json`.
+          required: true
+        - label: Factor annotations are complete or missing factors are documented.
+          required: true

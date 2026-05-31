@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Stable-ASR documentation
+    url: https://github.com/haoruilee/stable-asr/tree/main/docs
+    about: Read the platform docs, schemas, and final-run guides before opening an issue.
+  - name: Final input acquisition pack
+    url: https://github.com/haoruilee/stable-asr/blob/main/docs/final_inputs.md
+    about: Use this guide for final-scale corpus, VoiceWorld, prediction, and artifact staging.

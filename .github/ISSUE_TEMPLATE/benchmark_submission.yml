@@ -1,0 +1,68 @@
+name: Benchmark Submission
+description: Submit or validate turn-taking, streaming ASR, or data-layer benchmark rows.
+title: "[submission] "
+labels: ["benchmark", "submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for external benchmark submissions. Start with:
+
+        ```bash
+        stable-asr benchmark-pack --output-dir runs/benchmark_pack
+        ```
+  - type: dropdown
+    id: task
+    attributes:
+      label: Benchmark task
+      options:
+        - turn_quality
+        - streaming_asr
+        - data_layer
+        - asr_transcript_conversion
+        - scenario
+        - policy
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System name
+      placeholder: smart_turn / easy_turn / whisper_final / funasr_final / custom
+    validations:
+      required: true
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Submission artifacts
+      description: List manifest, leaderboard rows, validation report, and source outputs.
+      placeholder: |
+        submission_manifest:
+        leaderboard_jsonl:
+        validation_report:
+        source_outputs:
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands run
+      placeholder: |
+        stable-asr turn-submission --dataset ... --predictions ... --system ...
+        stable-asr streaming-submission --input ... --system ...
+        stable-asr leaderboard-validate --input ...
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Required checks
+      options:
+        - label: Submission artifacts use Stable-ASR schemas.
+          required: true
+        - label: Validation reports are attached or paths are listed.
+          required: true
+        - label: Source data, model, or external-system license is documented.
+          required: true
+        - label: Metrics were produced on the declared split or scenario suite.
+          required: true

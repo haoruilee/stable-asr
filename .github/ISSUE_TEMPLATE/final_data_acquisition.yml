@@ -1,0 +1,89 @@
+name: Final Data Acquisition
+description: Track a final-scale corpus, VoiceWorld, prediction, checkpoint, or paper artifact input.
+title: "[final-data] "
+labels: ["final-data", "m5"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for M5 final-scale inputs. Generate the local checklist first:
+
+        ```bash
+        stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+        ```
+  - type: dropdown
+    id: collection_id
+    attributes:
+      label: Collection
+      description: Select the final input collection this issue stages.
+      options:
+        - librispeech_dev_clean
+        - aishell1_dev
+        - optional_public_corpora
+        - turn_splits
+        - voiceworld_real
+        - external_turn_predictions
+        - command_backed_asr_outputs
+        - nanoturn_final_artifacts
+        - final_paper_bundle
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: Owner
+      description: Person or team responsible for staging and verification.
+      placeholder: "@username"
+    validations:
+      required: true
+  - type: textarea
+    id: staged_paths
+    attributes:
+      label: Staged paths
+      description: List exact repo-relative paths, symlinks, or artifact locations.
+      placeholder: |
+        data/librispeech/LibriSpeech/dev-clean
+        runs/final/librispeech_dev_clean/asr_manifest.jsonl
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Source and license notes
+      description: Include upstream URLs, licenses, consent status, and redistribution constraints.
+      placeholder: |
+        Source:
+        License:
+        Consent:
+        Redistribution:
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands run
+      description: Paste the exact Stable-ASR commands used to normalize and verify this input.
+      placeholder: |
+        stable-asr final-config --config configs/final/paper_final.json --prepare-corpora
+        stable-asr final-config --config configs/final/paper_final.json --check-files
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Required checks
+      options:
+        - label: I used `runs/final_acquisition_pack/acquisition/staging_checklist.tsv` or the generated JSON checklist.
+          required: true
+        - label: I did not add placeholder data or synthetic smoke fixtures as final evidence.
+          required: true
+        - label: License, consent, or upstream terms are recorded for every staged input.
+          required: true
+        - label: The relevant Stable-ASR validation command passes or the failure is documented below.
+          required: true
+  - type: textarea
+    id: gaps
+    attributes:
+      label: Remaining gaps
+      description: Document missing files, failed commands, or unclear license/consent items.
+      placeholder: No known gaps.
