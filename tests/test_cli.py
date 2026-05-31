@@ -82,8 +82,14 @@ def test_roadmap_status_cli(capsys, tmp_path) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "Stable-ASR Platform Roadmap" in captured.out
+    assert "final_scale_ready: `NO`" in captured.out
     assert output.exists()
     assert "m2_data_reference_layer" in output.read_text(encoding="utf-8")
+
+    code = main(["roadmap-status", "--require-final-ready"])
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "Final-Scale Readiness" in captured.out
 
 
 def test_platform_parity_cli(capsys, tmp_path) -> None:

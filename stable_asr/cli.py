@@ -639,6 +639,11 @@ def build_parser() -> argparse.ArgumentParser:
     roadmap_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     roadmap_parser.add_argument("--json", action="store_true")
     roadmap_parser.add_argument("--validate-only", action="store_true")
+    roadmap_parser.add_argument(
+        "--require-final-ready",
+        action="store_true",
+        help="Fail when final-scale inputs, experiments, or artifact evidence are still missing.",
+    )
 
     prepare_asr_parser = subparsers.add_parser(
         "prepare-asr-manifest",
@@ -2042,6 +2047,8 @@ def main(argv: list[str] | None = None) -> int:
             print(text)
         except (OSError, ValueError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        if args.require_final_ready and not report.final_scale_ready:
             return 1
         return 0 if report.ok else 1
 

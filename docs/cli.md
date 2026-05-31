@@ -8,6 +8,7 @@ Stable-ASR exposes one command: `stable-asr`.
 stable-asr doctor
 stable-asr doctor --check-final-files
 stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
+stable-asr roadmap-status --require-final-ready
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only
 stable-asr platform-parity --output runs/PLATFORM_PARITY.md
 ```

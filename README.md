@@ -191,7 +191,7 @@ is provided in `mkdocs.yaml`.
 - `stable-asr` CLI
 - `doctor` command for environment, optional dependency, config, and final-input readiness checks
 - machine-readable roadmap registry in `configs/roadmap/stable_asr_roadmap.json`
-- `roadmap-status` for validating and rendering current milestone evidence without claiming final-scale completion
+- `roadmap-status` for validating current milestone evidence and surfacing final-scale blockers; use `--require-final-ready` to fail until real paper-scale inputs and artifacts exist
 - machine-readable stable-worldmodel-style repository parity registry in `configs/platform/stable_worldmodel_parity.json`
 - `platform-parity` for auditing install, data, scenarios, baselines, paper/release, contributor, and reference-collection repository surfaces
 - JSONL turn manifest validation

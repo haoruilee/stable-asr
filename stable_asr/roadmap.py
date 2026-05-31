@@ -87,16 +87,47 @@ class RoadmapMilestoneStatus:
 
 
 @dataclass(frozen=True)
+class RoadmapFinalReadiness:
+    checked: bool
+    ready: bool
+    missing_required_inputs: int
+    final_input_blockers: int
+    blocked_experiments: int
+    missing_expected_artifacts: int
+    asr_command_blockers: int
+    blockers: list[str]
+    error: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "checked": self.checked,
+            "ready": self.ready,
+            "missing_required_inputs": self.missing_required_inputs,
+            "final_input_blockers": self.final_input_blockers,
+            "blocked_experiments": self.blocked_experiments,
+            "missing_expected_artifacts": self.missing_expected_artifacts,
+            "asr_command_blockers": self.asr_command_blockers,
+            "blockers": self.blockers,
+            "error": self.error,
+        }
+
+
+@dataclass(frozen=True)
 class RoadmapStatusReport:
     id: str
     version: str
     title: str
     validation: RoadmapValidation
     milestones: list[RoadmapMilestoneStatus]
+    final_readiness: RoadmapFinalReadiness | None = None
 
     @property
     def ok(self) -> bool:
         return self.validation.ok and all(milestone.ok for milestone in self.milestones)
+
+    @property
+    def final_scale_ready(self) -> bool:
+        return bool(self.final_readiness and self.final_readiness.ready)
 
     @property
     def missing_required_artifacts(self) -> list[RoadmapArtifactCheck]:
@@ -113,6 +144,7 @@ class RoadmapStatusReport:
             "title": self.title,
             "validation": self.validation.to_dict(),
             "milestones": [milestone.to_dict() for milestone in self.milestones],
+            "final_readiness": self.final_readiness.to_dict() if self.final_readiness else None,
             "missing_required_artifacts": [
                 artifact.to_dict() for artifact in self.missing_required_artifacts
             ],
@@ -125,7 +157,17 @@ class RoadmapStatusReport:
             f"version: {self.version}",
             f"milestones: {len(self.milestones)}",
             f"missing_required_artifacts: {len(self.missing_required_artifacts)}",
+            f"final_scale_ready: {_yes_no(self.final_scale_ready) if self.final_readiness else 'NOT_CHECKED'}",
         ]
+        if self.final_readiness:
+            lines.extend(
+                [
+                    f"final_missing_required_inputs: {self.final_readiness.missing_required_inputs}",
+                    f"final_blocked_experiments: {self.final_readiness.blocked_experiments}",
+                    f"final_missing_expected_artifacts: {self.final_readiness.missing_expected_artifacts}",
+                    f"final_asr_command_blockers: {self.final_readiness.asr_command_blockers}",
+                ]
+            )
         for milestone in self.milestones:
             present = len([artifact for artifact in milestone.required_artifacts if artifact.exists])
             total = len(milestone.required_artifacts)
@@ -162,6 +204,7 @@ class RoadmapStatusReport:
             f"- version: `{self.version}`",
             f"- status: `{'OK' if self.ok else 'FAILED'}`",
             f"- missing_required_artifacts: `{len(self.missing_required_artifacts)}`",
+            f"- final_scale_ready: `{_yes_no(self.final_scale_ready) if self.final_readiness else 'NOT_CHECKED'}`",
             "",
             "## Milestones",
             "",
@@ -177,6 +220,28 @@ class RoadmapStatusReport:
             )
         else:
             lines.append("- none")
+        lines.extend(["", "## Final-Scale Readiness", ""])
+        if self.final_readiness is None:
+            lines.append("- not checked")
+        else:
+            readiness = self.final_readiness
+            lines.extend(
+                [
+                    f"- status: `{'READY' if readiness.ready else 'NOT_READY'}`",
+                    f"- missing_required_inputs: `{readiness.missing_required_inputs}`",
+                    f"- final_input_blockers: `{readiness.final_input_blockers}`",
+                    f"- blocked_experiments: `{readiness.blocked_experiments}`",
+                    f"- missing_expected_artifacts: `{readiness.missing_expected_artifacts}`",
+                    f"- asr_command_blockers: `{readiness.asr_command_blockers}`",
+                ]
+            )
+            if readiness.error:
+                lines.append(f"- error: `{readiness.error}`")
+            if readiness.blockers:
+                lines.extend(["", "### Final Blockers", ""])
+                lines.extend(f"- `{blocker}`" for blocker in readiness.blockers[:20])
+                if len(readiness.blockers) > 20:
+                    lines.append(f"- ... {len(readiness.blockers) - 20} more")
         lines.extend(["", "## Commands", ""])
         for milestone in self.milestones:
             lines.append(f"### {milestone.id}: {milestone.title}")
@@ -249,6 +314,7 @@ def roadmap_status(
     roadmap: dict[str, Any],
     *,
     repo_root: str | Path = ".",
+    include_final_readiness: bool = True,
 ) -> RoadmapStatusReport:
     validation = validate_roadmap(roadmap)
     milestones: list[RoadmapMilestoneStatus] = []
@@ -275,10 +341,61 @@ def roadmap_status(
                     success_criteria=[str(item) for item in milestone["success_criteria"]],
                 )
             )
+    final_readiness = (
+        _roadmap_final_readiness(repo_root)
+        if include_final_readiness and _has_final_milestone(milestones)
+        else None
+    )
     return RoadmapStatusReport(
         id=str(roadmap.get("id", "")),
         version=str(roadmap.get("version", "")),
         title=str(roadmap.get("title", "Stable-ASR Roadmap")),
         validation=validation,
         milestones=milestones,
+        final_readiness=final_readiness,
     )
+
+
+def _has_final_milestone(milestones: list[RoadmapMilestoneStatus]) -> bool:
+    return any(milestone.id == "m5_final_scale_evidence" for milestone in milestones)
+
+
+def _roadmap_final_readiness(repo_root: Path) -> RoadmapFinalReadiness:
+    try:
+        from stable_asr.paper.evidence import final_evidence_matrix
+        from stable_asr.paper.final_inputs import final_input_collection_report
+
+        input_report = final_input_collection_report(repo_root=repo_root)
+        evidence_report = final_evidence_matrix(repo_root=repo_root)
+        blockers = [
+            *[f"input:{path}" for path in input_report.missing_required],
+            *[f"evidence:{blocker}" for blocker in evidence_report.final_input_blockers],
+            *[f"asr_command:{blocker}" for blocker in evidence_report.asr_command_blockers],
+        ]
+        ready = input_report.ok and evidence_report.final_ready
+        return RoadmapFinalReadiness(
+            checked=True,
+            ready=ready,
+            missing_required_inputs=len(input_report.missing_required),
+            final_input_blockers=len(evidence_report.final_input_blockers),
+            blocked_experiments=evidence_report.blocked_experiment_count,
+            missing_expected_artifacts=evidence_report.missing_artifact_count,
+            asr_command_blockers=len(evidence_report.asr_command_blockers),
+            blockers=blockers,
+        )
+    except (OSError, ValueError) as exc:
+        return RoadmapFinalReadiness(
+            checked=False,
+            ready=False,
+            missing_required_inputs=0,
+            final_input_blockers=0,
+            blocked_experiments=0,
+            missing_expected_artifacts=0,
+            asr_command_blockers=0,
+            blockers=[],
+            error=str(exc),
+        )
+
+
+def _yes_no(value: bool) -> str:
+    return "YES" if value else "NO"
