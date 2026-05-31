@@ -133,6 +133,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
         "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions",
+        "stable-asr prepare-voiceworld --input data/voiceworld/metadata.tsv --audio-root data/voiceworld/audio --output runs/final/voiceworld_real.jsonl",
         "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
         "stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md",
@@ -1628,6 +1629,7 @@ def _voiceworld_action(
         status=_action_status(blockers),
         blockers=blockers,
         commands=[
+            f"stable-asr prepare-voiceworld --input data/voiceworld/metadata.tsv --audio-root data/voiceworld/audio --output {voiceworld_path}",
             f"stable-asr validate-manifest {voiceworld_path}",
             (
                 f"stable-asr final-config --config {config_path} --audit-voiceworld-real "

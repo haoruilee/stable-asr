@@ -68,6 +68,7 @@ def test_final_run_action_plan_maps_missing_inputs_to_commands() -> None:
     assert "stage_public_corpora" in markdown
     assert "prepare-public-asr --corpus librispeech" in markdown
     assert "collect_voiceworld_real" in markdown
+    assert "prepare-voiceworld" in markdown
     assert "prepare-external-predictions" in markdown
     assert "paper-parity-audit" in markdown
 

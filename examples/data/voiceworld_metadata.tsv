@@ -1,0 +1,3 @@
+id	audio	text	scenario	turn_label	action_label	assistant_speaking	overlap	start_ms	duration_ms	language	source	snr_db	reverb	speaking_rate	overlap_offset_ms	network_jitter_ms	farfield_distance_m	code_switch_ratio	accent
+vw_demo_001	audio/voiceworld_demo_001.wav	等一下不是这个	user_interruption	complete	stop_tts_and_listen	true	true	100	900	zh	voiceworld_demo	10	none	1.0	120	30	1.0	0.0	standard
+vw_demo_002	audio/voiceworld_demo_002.wav	嗯嗯	backchannel	backchannel	continue_speaking	true	true	0	650	zh	voiceworld_demo	20	small_room	0.9	200	10	0.8	0.0	standard

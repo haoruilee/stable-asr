@@ -489,6 +489,44 @@ def test_prepare_public_asr_common_voice_cli(tmp_path, capsys) -> None:
     assert output.exists()
 
 
+def test_prepare_voiceworld_cli(tmp_path, capsys) -> None:
+    audio_root = tmp_path / "voiceworld" / "audio"
+    audio_root.mkdir(parents=True)
+    (audio_root / "interrupt.wav").write_bytes(b"")
+    metadata = tmp_path / "voiceworld" / "metadata.tsv"
+    output = tmp_path / "voiceworld.jsonl"
+    metadata.write_text(
+        (
+            "id\taudio\ttext\tscenario\tturn_label\taction_label\tassistant_speaking\toverlap\t"
+            "start_ms\tduration_ms\tsnr_db\treverb\tspeaking_rate\toverlap_offset_ms\t"
+            "network_jitter_ms\tfarfield_distance_m\tcode_switch_ratio\taccent\n"
+            "vw1\tinterrupt.wav\twait a second\tuser_interruption\tcomplete\tstop_tts_and_listen\t"
+            "true\ttrue\t100\t900\t10\tnone\t1.0\t100\t30\t1.0\t0.0\tstandard\n"
+        ),
+        encoding="utf-8",
+    )
+
+    code = main(
+        [
+            "prepare-voiceworld",
+            "--input",
+            str(metadata),
+            "--output",
+            str(output),
+            "--audio-root",
+            str(audio_root),
+            "--language",
+            "en",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "wrote 1 VoiceWorld turn record" in captured.out
+    assert "user_interruption" in captured.out
+    assert output.exists()
+
+
 def test_prepare_public_asr_wenetspeech_cli(tmp_path, capsys) -> None:
     root = tmp_path / "WenetSpeech"
     audio_dir = root / "audio" / "dev" / "third_party" / "B00000"

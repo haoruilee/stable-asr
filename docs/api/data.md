@@ -7,6 +7,7 @@ Core data entry points:
 - `stable_asr.data.registry.load_turn_records`
 - `stable_asr.data.registry.write_turn_records`
 - `stable_asr.data.registry.convert_turn_manifest`
+- `stable_asr.data.recipes.prepare_voiceworld_manifest`
 - `stable_asr.data.benchmark.benchmark_data_formats`
 
 Supported turn manifest backends:

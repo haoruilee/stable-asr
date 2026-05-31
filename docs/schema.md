@@ -232,6 +232,31 @@ flattened JSONL exports, preserving segment offsets in metadata.
 The Common Voice recipe parses split TSV files such as `train.tsv`, `dev.tsv`,
 and `test.tsv`, with MP3 clips under `clips/`.
 
+## Real VoiceWorld Metadata
+
+Use `prepare-voiceworld` when you have collected or composed real
+full-duplex scenario examples and annotated them in TSV/CSV/JSONL form:
+
+```bash
+stable-asr prepare-voiceworld \
+  --input data/voiceworld/metadata.tsv \
+  --audio-root data/voiceworld/audio \
+  --output runs/final/voiceworld_real.jsonl \
+  --language zh
+
+stable-asr validate-manifest runs/final/voiceworld_real.jsonl
+stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json
+```
+
+Required annotation fields are `id`, `audio`, `scenario`, `turn_label`, and
+`action_label`. Provide either `end`/`end_time`/`window_end` or
+`duration`/`duration_sec`/`duration_ms`. Optional aliases include `text`,
+`asr_text`, `assistant_speaking`, `overlap`, `language`, and `source`.
+VoiceWorld factor columns such as `snr_db`, `reverb`, `speaking_rate`,
+`overlap_offset_ms`, `network_jitter_ms`, `farfield_distance_m`,
+`code_switch_ratio`, and `accent` are preserved in `metadata` for scenario
+coverage audits and robustness reports.
+
 ## ASR-to-Turn Weak Labels
 
 Public ASR corpora normally do not contain full-duplex turn labels. Use

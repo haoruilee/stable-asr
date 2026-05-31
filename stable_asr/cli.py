@@ -22,7 +22,13 @@ from stable_asr.data.converters import (
     convert_streaming_asr_jsonl,
 )
 from stable_asr.data.sources import data_sources_markdown, load_data_sources, validate_data_sources
-from stable_asr.data.recipes import PUBLIC_ASR_CORPORA, prepare_asr_manifest, prepare_public_asr_manifest
+from stable_asr.data.recipes import (
+    DEFAULT_VOICEWORLD_FACTOR_FIELDS,
+    PUBLIC_ASR_CORPORA,
+    prepare_asr_manifest,
+    prepare_public_asr_manifest,
+    prepare_voiceworld_manifest,
+)
 from stable_asr.data.registry import (
     TURN_FORMATS,
     convert_turn_manifest,
@@ -512,6 +518,30 @@ def build_parser() -> argparse.ArgumentParser:
     public_asr_parser.add_argument("--split", help="Optional corpus split/subset filter, for example dev-clean or dev.")
     public_asr_parser.add_argument("--sample-rate", type=int, default=16000)
     public_asr_parser.add_argument("--json", action="store_true", help="Print summary as JSON.")
+
+    voiceworld_prepare_parser = subparsers.add_parser(
+        "prepare-voiceworld",
+        help="Normalize real VoiceWorld TSV/CSV/JSONL annotations into a Stable-ASR turn manifest.",
+    )
+    voiceworld_prepare_parser.add_argument("--input", type=Path, required=True, help="Input VoiceWorld metadata table.")
+    voiceworld_prepare_parser.add_argument("--output", type=Path, required=True, help="Output turn manifest JSONL path.")
+    voiceworld_prepare_parser.add_argument("--audio-root", type=Path, help="Optional root joined to relative audio paths.")
+    voiceworld_prepare_parser.add_argument("--sample-rate", type=int, default=16000, help="Default sample rate.")
+    voiceworld_prepare_parser.add_argument("--language", default="unknown", help="Default language tag.")
+    voiceworld_prepare_parser.add_argument("--source", default="voiceworld_real", help="Default source name.")
+    voiceworld_prepare_parser.add_argument("--id-field", help="Override input id column/key.")
+    voiceworld_prepare_parser.add_argument("--audio-field", help="Override input audio column/key.")
+    voiceworld_prepare_parser.add_argument("--text-field", help="Override input text column/key.")
+    voiceworld_prepare_parser.add_argument("--scenario-field", help="Override input scenario column/key.")
+    voiceworld_prepare_parser.add_argument("--turn-label-field", help="Override input turn label column/key.")
+    voiceworld_prepare_parser.add_argument("--action-label-field", help="Override input action label column/key.")
+    voiceworld_prepare_parser.add_argument(
+        "--factor-field",
+        action="append",
+        default=None,
+        help="Metadata/factor field to preserve. Defaults to the VoiceWorld v0 factor set.",
+    )
+    voiceworld_prepare_parser.add_argument("--json", action="store_true", help="Print summary as JSON.")
 
     validate_asr_parser = subparsers.add_parser(
         "validate-asr-manifest",
@@ -1552,6 +1582,36 @@ def main(argv: list[str] | None = None) -> int:
             print(f"wrote {len(records)} {args.corpus} ASR record(s) to {args.output}")
             print(f"splits: {json.dumps(summary['splits'], ensure_ascii=False, sort_keys=True)}")
             print(f"languages: {json.dumps(summary['languages'], ensure_ascii=False, sort_keys=True)}")
+        return 0
+
+    if args.command == "prepare-voiceworld":
+        try:
+            records = prepare_voiceworld_manifest(
+                args.input,
+                args.output,
+                audio_root=args.audio_root,
+                default_sample_rate=args.sample_rate,
+                default_language=args.language,
+                default_source=args.source,
+                factor_fields=tuple(args.factor_field or DEFAULT_VOICEWORLD_FACTOR_FIELDS),
+                id_field=args.id_field,
+                audio_field=args.audio_field,
+                text_field=args.text_field,
+                scenario_field=args.scenario_field,
+                turn_label_field=args.turn_label_field,
+                action_label_field=args.action_label_field,
+            )
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        summary = summarize_records(records)
+        if args.json:
+            print(json.dumps({"output": str(args.output), **summary}, ensure_ascii=False, indent=2))
+        else:
+            print(f"wrote {len(records)} VoiceWorld turn record(s) to {args.output}")
+            print(f"scenarios: {json.dumps(summary['scenarios'], ensure_ascii=False, sort_keys=True)}")
+            print(f"turn_labels: {json.dumps(summary['turn_labels'], ensure_ascii=False, sort_keys=True)}")
+            print(f"action_labels: {json.dumps(summary['action_labels'], ensure_ascii=False, sort_keys=True)}")
         return 0
 
     if args.command == "validate-asr-manifest":

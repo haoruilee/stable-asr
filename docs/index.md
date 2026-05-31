@@ -53,6 +53,7 @@ stable-asr prepare-asr-manifest --input examples/data/asr_metadata.tsv --output 
 stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl
 stable-asr prepare-public-asr --corpus wenetspeech --input-dir data/wenetspeech/WenetSpeech --split dev --output runs/final/wenetspeech_dev/asr_manifest.jsonl
 stable-asr prepare-public-asr --corpus common_voice --input-dir data/common_voice/en --split dev --output runs/final/common_voice_en_dev/asr_manifest.jsonl
+stable-asr prepare-voiceworld --input examples/data/voiceworld_metadata.tsv --output runs/voiceworld_demo.jsonl
 stable-asr validate-asr-manifest runs/asr_manifest.jsonl
 stable-asr inspect-asr-manifest runs/asr_manifest.jsonl
 stable-asr asr-to-turn --input runs/asr_manifest.jsonl --output runs/asr_turn.jsonl --include-incomplete
@@ -86,6 +87,7 @@ stable-asr final-config --config configs/final/paper_final.json --prepare-corpor
 stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest
 stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits
 stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions
+stable-asr prepare-voiceworld --input data/voiceworld/metadata.tsv --audio-root data/voiceworld/audio --output runs/final/voiceworld_real.jsonl
 stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json
 stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands
 stable-asr final-config --config configs/final/paper_final.json --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md

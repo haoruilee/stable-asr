@@ -15,6 +15,7 @@ stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
 ```bash
 stable-asr validate-manifest examples/data/turn_demo.jsonl
 stable-asr inspect-manifest examples/data/turn_demo.jsonl
+stable-asr prepare-voiceworld --input examples/data/voiceworld_metadata.tsv --output runs/voiceworld_demo.jsonl
 stable-asr split-turn-data --input examples/data/turn_demo.jsonl --output-dir runs/splits
 stable-asr audit-turn-splits --train runs/splits/turn_train.jsonl --dev runs/splits/turn_dev.jsonl --test runs/splits/turn_test.jsonl
 stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir runs/data_bench --formats jsonl parquet lance
@@ -51,6 +52,7 @@ stable-asr final-config --config configs/final/paper_final.json --prepare-corpor
 stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest
 stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits
 stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions
+stable-asr prepare-voiceworld --input data/voiceworld/metadata.tsv --audio-root data/voiceworld/audio --output runs/final/voiceworld_real.jsonl
 stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json
 stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands
 stable-asr final-config --config configs/final/paper_final.json --check-files
