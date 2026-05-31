@@ -28,6 +28,8 @@ def test_adapter_registry_markdown_and_json_roundtrip(tmp_path: Path) -> None:
     assert "command_streaming_asr" in markdown
     assert "smart_turn_prediction" in markdown
     assert "whisper_transcript" in markdown
+    assert "espnet_command_template" in markdown
+    assert "hf_transformers_asr_template" in markdown
 
 
 def test_adapter_registry_validation_rejects_duplicate_id() -> None:

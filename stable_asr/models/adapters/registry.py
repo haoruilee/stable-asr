@@ -11,6 +11,7 @@ from stable_asr.eval.report import dict_table
 from stable_asr.resources import resolve_platform_path
 
 
+DEFAULT_ADAPTER_REGISTRY_PATH = Path("configs/adapters/stable_asr_adapters.json")
 DEFAULT_ADAPTER_REGISTRY: dict[str, Any] = {
     "id": "stable_asr_adapters_v0",
     "version": "0.1.0",
@@ -250,6 +251,13 @@ class AdapterRegistryValidation:
 
 def load_adapter_registry(path: str | Path | None = None) -> dict[str, Any]:
     if path is None:
+        registry_path = resolve_platform_path(DEFAULT_ADAPTER_REGISTRY_PATH)
+        if registry_path.exists():
+            with registry_path.open("r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+            if not isinstance(payload, dict):
+                raise ValueError("adapter registry must be a JSON object")
+            return payload
         return json.loads(json.dumps(DEFAULT_ADAPTER_REGISTRY))
     with resolve_platform_path(path).open("r", encoding="utf-8") as handle:
         payload = json.load(handle)

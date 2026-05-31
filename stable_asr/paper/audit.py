@@ -254,7 +254,11 @@ def audit_paper_release(
                 )
             )
             if collections_validation.ok and adapter_registry is not None:
-                coverage = audit_asr_collection_coverage(asr_collections, adapter_registry)
+                coverage = audit_asr_collection_coverage(
+                    asr_collections,
+                    adapter_registry,
+                    required_priorities=("p0", "p1"),
+                )
                 required = [check for check in coverage.checks if check.required]
                 covered = [check for check in required if check.covered]
                 checks.append(

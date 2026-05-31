@@ -35,10 +35,31 @@ def test_asr_collection_coverage_requires_p0_references() -> None:
     assert all(check.covered for check in required.values())
 
 
-def test_asr_collection_coverage_can_surface_missing_p1() -> None:
+def test_asr_collection_coverage_covers_p0_and_p1_references() -> None:
     report = audit_asr_collection_coverage(
         load_asr_collections(),
         load_adapter_registry(),
+        required_priorities=("p0", "p1"),
+    )
+
+    assert report.ok
+    required = {check.reference_id: check for check in report.checks if check.required}
+    assert {"kaldi", "espnet", "nemo", "speechbrain", "icefall", "huggingface_transformers_asr"}.issubset(required)
+    assert all(check.covered for check in required.values())
+
+
+def test_asr_collection_coverage_can_surface_missing_required_reference() -> None:
+    registry = load_adapter_registry()
+    registry["adapters"] = [
+        adapter
+        for adapter in registry["adapters"]
+        if "espnet" not in adapter.get("id", "")
+        and "espnet" not in " ".join(adapter.get("related_references", []))
+        and "espnet" not in adapter.get("notes", "").lower()
+    ]
+    report = audit_asr_collection_coverage(
+        load_asr_collections(),
+        registry,
         required_priorities=("p0", "p1"),
     )
 

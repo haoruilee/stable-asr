@@ -8,6 +8,7 @@ ASR ecosystem projects. The curated registry lives at
 stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
 stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
 stable-asr asr-collections --audit-coverage --output runs/ASR_COLLECTION_COVERAGE.md
+stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 ```
 
 The registry is not a vendoring list. It records what each upstream project is
@@ -33,5 +34,7 @@ isolated toolkit.
 `asr-collections --audit-coverage` checks whether required reference priorities
 have evidence in the adapter registry. By default it requires P0 references such
 as FunASR, WeNet, Lhotse, sherpa-onnx, and Whisper to have at least an
-implemented converter, command template, or bridge template. Add
-`--require-priority p1` when reviewing the broader research-toolkit roadmap.
+implemented converter, command template, or bridge template. For release review,
+require both P0 and P1 so Kaldi, ESPnet, NeMo Speech, SpeechBrain, icefall,
+faster-whisper, and Hugging Face Transformers ASR also have explicit adapter or
+bridge plans.

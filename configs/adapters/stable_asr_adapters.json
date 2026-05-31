@@ -180,6 +180,118 @@
       "notes": "Planning template for interoperating with Lhotse instead of duplicating mature corpus recipes."
     },
     {
+      "id": "kaldi_recipe_bridge_template",
+      "title": "Kaldi Recipe Bridge Template",
+      "task": "data_preparation",
+      "modality": "recipe_manifest",
+      "status": "template",
+      "interface": "ASRManifestBridge",
+      "entrypoint": "planned: Kaldi data dirs, wav.scp, segments, and text to Stable-ASR ASR manifests",
+      "input_schema": "Kaldi-style data directory metadata",
+      "output_schema": "Stable-ASR ASRManifestRecord JSONL",
+      "license": "depends_on_input_data",
+      "related_references": [
+        "kaldi"
+      ],
+      "notes": "Template for learning from Kaldi recipe structure and converting mature corpus metadata without vendoring Kaldi."
+    },
+    {
+      "id": "espnet_command_template",
+      "title": "ESPnet Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<espnet export script> --output {output}'",
+      "input_schema": "ESPnet recipe output or external transcript export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "espnet"
+      ],
+      "notes": "Template for comparing ESPnet recipe outputs with Stable-ASR latency, timestamp, and streaming metrics."
+    },
+    {
+      "id": "nemo_command_template",
+      "title": "NeMo Speech Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<nemo export script> --output {output}'",
+      "input_schema": "NeMo ASR transcript or timestamp export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "nemo"
+      ],
+      "notes": "Template for evaluating NeMo ASR checkpoints and deployment reports without adding a hard NeMo dependency."
+    },
+    {
+      "id": "speechbrain_command_template",
+      "title": "SpeechBrain Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<speechbrain export script> --output {output}'",
+      "input_schema": "SpeechBrain recipe output or pretrained ASR transcript export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "speechbrain"
+      ],
+      "notes": "Template for using SpeechBrain recipes and pretrained baselines as external systems in Stable-ASR reports."
+    },
+    {
+      "id": "icefall_command_template",
+      "title": "icefall Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<icefall export script> --output {output}'",
+      "input_schema": "icefall/k2 ASR recipe output",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "icefall"
+      ],
+      "notes": "Template for evaluating k2/icefall CTC and transducer recipes through the shared Stable-ASR command adapter."
+    },
+    {
+      "id": "faster_whisper_command_template",
+      "title": "faster-whisper Command Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<faster-whisper export script> --output {output}'",
+      "input_schema": "faster-whisper transcript segments",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "faster_whisper"
+      ],
+      "notes": "Template for benchmarking quantized and batched Whisper inference variants with RTF and latency metrics."
+    },
+    {
+      "id": "hf_transformers_asr_template",
+      "title": "Hugging Face Transformers ASR Template",
+      "task": "streaming_asr_eval",
+      "modality": "external_command",
+      "status": "template",
+      "interface": "CommandStreamingASRAdapter",
+      "entrypoint": "stable-asr eval-asr-command --command '<transformers pipeline export script> --output {output}'",
+      "input_schema": "Transformers ASR pipeline or model hub transcript export",
+      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "license": "depends_on_external_system",
+      "related_references": [
+        "huggingface_transformers_asr"
+      ],
+      "notes": "Template for evaluating Hugging Face ASR pipelines, hub checkpoints, and fine-tuned models under Stable-ASR metrics."
+    },
+    {
       "id": "smart_turn_prediction",
       "title": "SmartTurn Prediction Converter",
       "task": "turn_taking",
