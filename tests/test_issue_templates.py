@@ -17,6 +17,8 @@ def test_github_issue_templates_cover_contribution_tracks() -> None:
 
     final_data = (ISSUE_TEMPLATE_DIR / "final_data_acquisition.yml").read_text(encoding="utf-8")
     assert "stable-asr final-acquisition-pack" in final_data
+    assert "stable-asr final-assignment-audit" in final_data
+    assert "assignments.json" in final_data
     assert "I did not add placeholder data" in final_data
 
     adapter = (ISSUE_TEMPLATE_DIR / "asr_adapter.yml").read_text(encoding="utf-8")
@@ -39,6 +41,7 @@ def test_pull_request_template_requires_evidence_and_final_scale_context() -> No
     assert "Data, License, And Provenance" in template
     assert "Final-Scale Impact" in template
     assert "final-acquisition-pack" in template
+    assert "final-assignment-audit" in template
     assert "contributor-pack" in template
     assert "turn-collections" in template
     assert "paper-release-smoke" in template

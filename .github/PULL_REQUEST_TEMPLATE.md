@@ -38,6 +38,7 @@ Attach or list generated artifacts:
 
 - [ ] This PR does not affect M5 final-scale evidence.
 - [ ] This PR stages or verifies an M5 input and links the relevant `final-acquisition-pack` checklist row.
+- [ ] This PR updates or audits `final-acquisition-pack` assignment status when it changes M5 input ownership, due dates, or blockers.
 - [ ] This PR changes final-run configs, schemas, metrics, or release gates and updates docs/tests accordingly.
 
 ## Required Local Checks
@@ -58,6 +59,7 @@ stable-asr adapter-pack --output-dir /tmp/stable-asr-adapter-pack
 stable-asr scenario-pack --output-dir /tmp/stable-asr-scenario-pack
 stable-asr final-pack --output-dir /tmp/stable-asr-final-pack
 stable-asr final-acquisition-pack --output-dir /tmp/stable-asr-final-acquisition-pack
+stable-asr final-assignment-audit --input /tmp/stable-asr-final-acquisition-pack/acquisition/assignments.json
 stable-asr contributor-pack --output-dir /tmp/stable-asr-contributor-pack
 stable-asr asr-collections --format acquisition-markdown --output /tmp/stable-asr-asr-collection-acquisition.md
 stable-asr turn-collections --format acquisition-markdown --output /tmp/stable-asr-turn-collection-acquisition.md

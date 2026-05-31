@@ -10,6 +10,7 @@ body:
 
         ```bash
         stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
+        stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json
         ```
   - type: dropdown
     id: collection_id
@@ -74,6 +75,8 @@ body:
       label: Required checks
       options:
         - label: I used `runs/final_acquisition_pack/acquisition/staging_checklist.tsv` or the generated JSON checklist.
+          required: true
+        - label: I updated or referenced `runs/final_acquisition_pack/acquisition/assignments.json` for owner, due-date, and blocker status.
           required: true
         - label: I did not add placeholder data or synthetic smoke fixtures as final evidence.
           required: true
