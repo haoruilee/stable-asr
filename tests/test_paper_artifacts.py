@@ -18,6 +18,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert set(bundle.benchmark_suite) == {"json", "markdown"}
     assert set(bundle.data_sources) == {"json", "markdown"}
     assert set(bundle.adapter_registry) == {"json", "markdown"}
+    assert set(bundle.asr_collections) == {"json", "markdown", "coverage_json", "coverage_markdown"}
     assert set(bundle.scenario_suite) == {"json", "markdown"}
     assert set(bundle.case_studies) == {"json", "markdown"}
     assert set(bundle.paper_parity) == {"json", "markdown"}
@@ -35,6 +36,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "asr_transcript_conversion" in Path(bundle.benchmark_suite["markdown"]).read_text(encoding="utf-8")
     assert "synthetic_voiceworld" in Path(bundle.data_sources["markdown"]).read_text(encoding="utf-8")
     assert "command_streaming_asr" in Path(bundle.adapter_registry["markdown"]).read_text(encoding="utf-8")
+    assert "Stable-ASR Reference Collections" in Path(bundle.asr_collections["markdown"]).read_text(encoding="utf-8")
+    assert "funasr" in Path(bundle.asr_collections["coverage_markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR VoiceWorld v0 Scenario Suite" in Path(bundle.scenario_suite["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Case Studies" in Path(bundle.case_studies["markdown"]).read_text(encoding="utf-8")
     assert "final-scale ready" in Path(bundle.paper_parity["markdown"]).read_text(encoding="utf-8")

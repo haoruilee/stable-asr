@@ -1811,6 +1811,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"benchmark_suite: {len(bundle.benchmark_suite)}")
             print(f"data_sources: {len(bundle.data_sources)}")
             print(f"adapter_registry: {len(bundle.adapter_registry)}")
+            print(f"asr_collections: {len(bundle.asr_collections)}")
             print(f"scenario_suite: {len(bundle.scenario_suite)}")
             print(f"case_studies: {len(bundle.case_studies)}")
             print(f"paper_parity: {len(bundle.paper_parity)}")

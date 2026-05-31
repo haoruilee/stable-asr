@@ -47,6 +47,7 @@ ready.
 - benchmark suite JSON/Markdown files are included in the artifact bundle
 - data source registry JSON/Markdown files are included in the artifact bundle
 - adapter registry JSON/Markdown files are included in the artifact bundle
+- ASR reference collection JSON/Markdown and coverage audit files are included in the artifact bundle
 - scenario suite JSON/Markdown files are included in the artifact bundle
 - case-study JSON/Markdown files are included in the artifact bundle
 - paper parity JSON/Markdown files are included in the artifact bundle

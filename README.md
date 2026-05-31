@@ -222,6 +222,7 @@ Current M0 functionality:
 - `paper-table policy` extraction
 - `paper-figure` SVG generation for platform diagrams plus baseline, latency, data, streaming, scenario, and policy figures
 - `paper-bundle` generation for paper tables, figures, artifact index, and artifact manifest
+- ASR reference collection and P0 coverage artifacts in `paper-bundle`
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
 - `paper-claim-audit` for mapping platform-paper claims to concrete files, result keys, commands, and artifacts
 - `paper-status` for a single-page summary of smoke, structural, final-input, and final-paper readiness

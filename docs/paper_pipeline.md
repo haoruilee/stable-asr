@@ -68,7 +68,7 @@ latency, ASR manifest recipe summaries, failure-case taxonomy, streaming metrics
 streaming failure taxonomy, external ASR transcript conversion, scenario
 robustness, policy search, leaderboard-ready JSONL/CSV metric rows, a
 machine-readable benchmark suite definition, a data source registry, a
-baseline/adapter registry, a VoiceWorld scenario suite definition, and
+baseline/adapter registry, ASR reference collection and coverage artifacts, a VoiceWorld scenario suite definition, and
 case-study JSON/Markdown artifacts that link failure examples back to source
 records, a paper parity audit that separates smoke-level structural evidence
 from final-scale paper gaps, a final-scale experiment runbook, a final-run

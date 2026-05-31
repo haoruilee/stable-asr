@@ -32,6 +32,12 @@ from stable_asr.models.adapters.registry import (
     load_adapter_registry,
     write_adapter_registry_json,
 )
+from stable_asr.references import (
+    asr_collections_markdown,
+    audit_asr_collection_coverage,
+    load_asr_collections,
+    write_asr_collections_json,
+)
 from stable_asr.roadmap import load_roadmap, roadmap_status
 from stable_asr.scenarios.suites import scenario_suite_markdown, load_scenario_suite, write_scenario_suite_json
 
@@ -47,6 +53,7 @@ class PaperArtifactBundle:
     benchmark_suite: dict[str, str]
     data_sources: dict[str, str]
     adapter_registry: dict[str, str]
+    asr_collections: dict[str, str]
     scenario_suite: dict[str, str]
     case_studies: dict[str, str]
     paper_parity: dict[str, str]
@@ -68,6 +75,7 @@ class PaperArtifactBundle:
             "benchmark_suite": self.benchmark_suite,
             "data_sources": self.data_sources,
             "adapter_registry": self.adapter_registry,
+            "asr_collections": self.asr_collections,
             "scenario_suite": self.scenario_suite,
             "case_studies": self.case_studies,
             "paper_parity": self.paper_parity,
@@ -123,6 +131,20 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "markdown": str(output_dir / "ADAPTERS.md"),
     }
     Path(adapter_registry["markdown"]).write_text(adapter_registry_markdown(adapters), encoding="utf-8")
+    asr_reference_registry = load_asr_collections()
+    asr_reference_coverage = audit_asr_collection_coverage(asr_reference_registry, adapters)
+    asr_collections = {
+        "json": write_asr_collections_json(output_dir / "asr_collections.json", asr_reference_registry),
+        "markdown": str(output_dir / "ASR_COLLECTIONS.md"),
+        "coverage_json": str(output_dir / "asr_collection_coverage.json"),
+        "coverage_markdown": str(output_dir / "ASR_COLLECTION_COVERAGE.md"),
+    }
+    Path(asr_collections["markdown"]).write_text(asr_collections_markdown(asr_reference_registry), encoding="utf-8")
+    Path(asr_collections["coverage_json"]).write_text(
+        json.dumps(asr_reference_coverage.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(asr_collections["coverage_markdown"]).write_text(asr_reference_coverage.to_markdown(), encoding="utf-8")
     voiceworld_suite = load_scenario_suite()
     scenario_suite = {
         "json": write_scenario_suite_json(output_dir / "scenario_suite.json", voiceworld_suite),
@@ -212,6 +234,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         benchmark_suite=benchmark_suite,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
+        asr_collections=asr_collections,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
         paper_parity=paper_parity,
@@ -237,6 +260,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         benchmark_suite=benchmark_suite,
         data_sources=data_sources,
         adapter_registry=adapter_registry,
+        asr_collections=asr_collections,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
         paper_parity=paper_parity,
@@ -277,6 +301,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Adapter Registry", ""])
     for name, path in bundle.adapter_registry.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## ASR Reference Collections", ""])
+    for name, path in bundle.asr_collections.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Scenario Suite", ""])
     for name, path in bundle.scenario_suite.items():

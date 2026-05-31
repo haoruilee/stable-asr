@@ -110,6 +110,14 @@ def load_asr_collections(path: str | Path | None = None) -> dict[str, Any]:
     return payload
 
 
+def write_asr_collections_json(path: str | Path, registry: dict[str, Any] | None = None) -> str:
+    registry = registry or load_asr_collections()
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(registry, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return str(path)
+
+
 def validate_asr_collections(registry: dict[str, Any]) -> ASRCollectionsValidation:
     errors: list[str] = []
     for key in ("id", "version", "reviewed_at", "title", "entries"):

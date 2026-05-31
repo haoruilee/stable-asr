@@ -5,6 +5,7 @@ from stable_asr.references.collections import (
     asr_collections_markdown,
     load_asr_collections,
     validate_asr_collections,
+    write_asr_collections_json,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "asr_collections_markdown",
     "load_asr_collections",
     "validate_asr_collections",
+    "write_asr_collections_json",
 ]
