@@ -144,12 +144,18 @@ def test_schema_registry_cli(capsys, tmp_path) -> None:
     assert "Stable-ASR Schema Registry" in captured.out
     assert output.exists()
     assert "stable_asr.turn_manifest_record.v0" in output.read_text(encoding="utf-8")
+    assert "stable_asr.final_handoff.v0" in output.read_text(encoding="utf-8")
 
     code = main(["schema-registry", "--schema-id", "stable_asr.streaming_asr_record.v0", "--json"])
 
     captured = capsys.readouterr()
     assert code == 0
     assert '"id": "stable_asr.streaming_asr_record.v0"' in captured.out
+
+    code = main(["schema-registry", "--schema-id", "stable_asr.final_handoff.v0", "--json"])
+    captured = capsys.readouterr()
+    assert code == 0
+    assert '"id": "stable_asr.final_handoff.v0"' in captured.out
 
 
 def test_validate_schema_file_cli(capsys, tmp_path) -> None:

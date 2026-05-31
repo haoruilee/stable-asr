@@ -258,7 +258,7 @@ is provided in `mkdocs.yaml`.
 - `adapter-registry` for validating and rendering baseline, converter, command-backed, and external-system adapter entries
 - `adapter-pack` for generating an external ASR adapter starter kit with registries, command config, fixtures, per-reference license-review templates, and script templates
 - machine-readable JSON Schema registry in `configs/schemas/stable_asr_schemas.json`
-- `schema-registry` for validating and rendering public data, prediction, streaming, leaderboard, model, and final-input contracts
+- `schema-registry` for validating and rendering public data, prediction, streaming, leaderboard, model, final-input, and final-handoff contracts
 - `validate-schema-file` for checking JSON/JSONL files against those public contracts before publishing or submitting artifacts
 - machine-readable upstream ASR reference collection in `configs/references/asr_collections.json`
 - `asr-collections` for validating and rendering top ASR project references

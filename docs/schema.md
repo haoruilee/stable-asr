@@ -7,23 +7,28 @@ represents one training or evaluation window.
 
 Stable-ASR publishes versioned JSON Schemas for the public file contracts used
 by data converters, prediction adapters, streaming ASR evaluation, leaderboard
-exports, model cards, and final input collection plans.
+exports, model cards, final input collection plans, and final handoff evidence.
 
 ```bash
 stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only
 stable-asr schema-registry --output runs/SCHEMAS.md
 stable-asr schema-registry --schema-id stable_asr.turn_manifest_record.v0 --json
+stable-asr schema-registry --schema-id stable_asr.final_handoff.v0 --json
 stable-asr validate-schema-file \
   --input examples/data/turn_demo.jsonl \
   --schema-id stable_asr.turn_manifest_record.v0 \
   --output runs/turn_schema_validation.md
+stable-asr validate-schema-file \
+  --input runs/final/FINAL_INPUT_HANDOFF.json \
+  --schema-id stable_asr.final_handoff.v0
 ```
 
 The default registry is `configs/schemas/stable_asr_schemas.json`. Paper bundles
 also copy it to `schema_registry.json` and render `SCHEMAS.md`, so released
 artifacts carry the same machine-readable contracts as the repository.
 Use `validate-schema-file` before publishing converted datasets, external turn
-predictions, streaming ASR traces, model registries, or leaderboard submissions.
+predictions, streaming ASR traces, model registries, final handoff evidence, or
+leaderboard submissions.
 
 ## Required Fields
 
