@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -99,6 +101,31 @@ def test_convert_vap_predictions_to_stable_schema(tmp_path: Path) -> None:
     assert adapter.predict(records[1]).label == "incomplete"
     assert adapter.predict(records[2]).label == "backchannel"
     assert adapter.predict(records[3]).label == "wait"
+
+
+def test_export_turn_predictions_script_converts_and_validates(tmp_path: Path) -> None:
+    output = tmp_path / "smart_turn_converted.jsonl"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/export_turn_predictions.py",
+            "--schema",
+            "smart_turn",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--raw",
+            "tests/fixtures/smart_turn_predictions_sample.jsonl",
+            "--output",
+            str(output),
+        ],
+        check=True,
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+    )
+
+    assert "OK: turn prediction manifest validation" in result.stdout
+    assert output.read_text(encoding="utf-8").count("\n") == 4
 
 
 def test_export_turn_predictions_jsonl_roundtrip(tmp_path: Path) -> None:

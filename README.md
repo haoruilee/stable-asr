@@ -118,6 +118,11 @@ stable-asr benchmark-train-features \
   --json-output runs/final/reports/train_feature_benchmark.json
 ```
 
+The local 10k training-window benchmark reached `378.9x` speedup for the Lance
+log-mel cache over repeated source-audio open/decode/feature extraction. See
+`docs/data_layer_benchmark.md` for the exact command and cached-only 100k
+stress result.
+
 ## VoiceWorld Scenarios
 
 VoiceWorld is the speech interaction counterpart of stable-worldmodel's
@@ -357,7 +362,9 @@ is provided in `mkdocs.yaml`.
 - `eval-asr-command` for dependency-light external ASR command adapters
 - `compare-asr-commands` for JSON-configured multi-system command-backed ASR comparisons
 - `compare-asr-commands --validate-only` for auditing adapter commands, shared ASR manifests, output placeholders, and required raw exports before executing heavyweight systems
+- optional runtime runners: `scripts/run_whisper_streaming.py`, `scripts/run_funasr_streaming.py`, and `scripts/run_whisper_cpp_streaming.py`
 - `scripts/export_streaming_transcript.py` for normalizing precomputed Whisper, FunASR, Qwen3-ASR, FireRedASR2S, and other supported vendor ASR exports against one final manifest
+- `scripts/export_turn_predictions.py` for normalizing and coverage-checking SmartTurn, EasyTurn, and VAP prediction exports against one shared turn manifest
 - paper smoke conversion checks for external Whisper, FunASR, Qwen3-ASR, and FireRedASR2S transcript schemas
 - seedable VoiceWorld scenario evaluation with per-scenario breakdowns
 - threshold policy search and cost-sensitive interaction objective

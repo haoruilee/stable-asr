@@ -89,6 +89,49 @@ single bridge for Whisper, FunASR, Qwen3-ASR, and FireRedASR2S. The older
 Whisper/FunASR-specific scripts remain as compatibility wrappers for existing
 experiments.
 
+## Runtime Runners
+
+Stable-ASR now also ships optional runtime runners for upstream systems. They
+are intentionally thin wrappers: they read the Stable-ASR ASR manifest, run the
+upstream runtime, write a raw vendor JSONL export, and then the normalizer turns
+that export into `StreamingASRRecord` rows.
+
+```bash
+python3 scripts/run_whisper_streaming.py \
+  --manifest runs/final/asr_eval_manifest.jsonl \
+  --model tiny \
+  --device cpu \
+  --output runs/final/asr_commands/raw/whisper_tiny_raw.jsonl
+
+python3 scripts/export_streaming_transcript.py \
+  --schema whisper \
+  --manifest runs/final/asr_eval_manifest.jsonl \
+  --raw runs/final/asr_commands/raw/whisper_tiny_raw.jsonl \
+  --output runs/final/asr_commands/whisper_tiny_streaming.jsonl
+```
+
+Equivalent runners exist for FunASR and whisper.cpp:
+
+```bash
+python3 scripts/run_funasr_streaming.py --help
+python3 scripts/run_whisper_cpp_streaming.py --help
+```
+
+The wrappers import optional upstream dependencies only after argument parsing,
+so CI can validate the command surface without installing every ASR stack.
+
+For turn-taking systems, use the coverage-checked bridge:
+
+```bash
+python3 scripts/export_turn_predictions.py \
+  --schema easyturn \
+  --dataset runs/final/turn_test.jsonl \
+  --raw runs/final/external/easyturn_raw.jsonl \
+  --output runs/final/external/easyturn_predictions.jsonl
+```
+
+This fails if external predictions do not cover the shared turn manifest.
+
 ## Reference Coverage
 
 The curated reference collections are stored in

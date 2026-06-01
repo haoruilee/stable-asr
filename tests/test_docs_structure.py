@@ -11,6 +11,7 @@ def test_mkdocs_nav_targets_exist() -> None:
         "docs/voiceworld.md",
         "docs/schema.md",
         "docs/platform_parity.md",
+        "docs/public_benchmark_v0.md",
         "docs/paper_pipeline.md",
         "docs/release_gates.md",
         "docs/final_inputs.md",
@@ -38,6 +39,7 @@ def test_docs_index_links_platform_sections() -> None:
     assert "baselines.md" in text
     assert "voiceworld.md" in text
     assert "platform_parity.md" in text
+    assert "public_benchmark_v0.md" in text
     assert "final_inputs.md" in text
     assert "turn_collections.md" in text
     assert "api/data.md" in text

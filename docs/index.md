@@ -158,6 +158,7 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --resul
 - [Baselines](baselines.md)
 - [VoiceWorld](voiceworld.md)
 - [Platform parity](platform_parity.md)
+- [Public benchmark v0](public_benchmark_v0.md)
 - [Paper pipeline](paper_pipeline.md)
 - [Release gates](release_gates.md)
 - [Final inputs](final_inputs.md)

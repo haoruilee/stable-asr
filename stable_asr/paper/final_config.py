@@ -159,7 +159,9 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
         "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-external-predictions",
-        "stable-asr convert-predictions --schema vap --input runs/final/external/vap_raw.jsonl --output runs/final/external/vap_predictions.jsonl",
+        "python3 scripts/export_turn_predictions.py --schema smart_turn --dataset runs/final/turn_test.jsonl --raw runs/final/external/smartturn_raw.jsonl --output runs/final/external/smartturn_predictions.jsonl",
+        "python3 scripts/export_turn_predictions.py --schema easyturn --dataset runs/final/turn_test.jsonl --raw runs/final/external/easyturn_raw.jsonl --output runs/final/external/easyturn_predictions.jsonl",
+        "python3 scripts/export_turn_predictions.py --schema vap --dataset runs/final/turn_test.jsonl --raw runs/final/external/vap_raw.jsonl --output runs/final/external/vap_predictions.jsonl",
         "stable-asr final-config --config configs/final/paper_final.json --prepare-voiceworld-real",
         "stable-asr final-config --config configs/final/paper_final.json --audit-voiceworld-real --scenario-suite configs/scenarios/stable_asr_voiceworld_v0.json",
         "stable-asr final-config --config configs/final/paper_final.json --audit-asr-commands",
@@ -2008,7 +2010,9 @@ def _external_predictions_action(
 ) -> FinalRunActionItem:
     blockers = _missing_paths(missing_required, "external_prediction:")
     commands = [
-        f"stable-asr convert-predictions --schema {prediction['schema']} --input {prediction['raw']} --output {prediction['converted']}"
+        "python3 scripts/export_turn_predictions.py "
+        f"--schema {prediction['schema']} --dataset {config['turn_splits']['test']} "
+        f"--raw {prediction['raw']} --output {prediction['converted']}"
         for prediction in config.get("external_turn_predictions", [])
     ]
     commands.append(f"stable-asr final-config --config {config_path} --prepare-external-predictions --require-all-predictions")

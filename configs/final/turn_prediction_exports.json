@@ -1,0 +1,31 @@
+{
+  "id": "stable_asr_turn_prediction_exports_v0",
+  "dataset": "runs/final/turn_test.jsonl",
+  "exports": [
+    {
+      "name": "smart_turn",
+      "schema": "smart_turn",
+      "raw": "runs/final/external/smartturn_raw.jsonl",
+      "output": "runs/final/external/smartturn_predictions.jsonl",
+      "command": "python3 scripts/export_turn_predictions.py --schema smart_turn --dataset runs/final/turn_test.jsonl --raw runs/final/external/smartturn_raw.jsonl --output runs/final/external/smartturn_predictions.jsonl"
+    },
+    {
+      "name": "easy_turn",
+      "schema": "easyturn",
+      "raw": "runs/final/external/easyturn_raw.jsonl",
+      "output": "runs/final/external/easyturn_predictions.jsonl",
+      "command": "python3 scripts/export_turn_predictions.py --schema easyturn --dataset runs/final/turn_test.jsonl --raw runs/final/external/easyturn_raw.jsonl --output runs/final/external/easyturn_predictions.jsonl"
+    },
+    {
+      "name": "vap",
+      "schema": "vap",
+      "raw": "runs/final/external/vap_raw.jsonl",
+      "output": "runs/final/external/vap_predictions.jsonl",
+      "command": "python3 scripts/export_turn_predictions.py --schema vap --dataset runs/final/turn_test.jsonl --raw runs/final/external/vap_raw.jsonl --output runs/final/external/vap_predictions.jsonl"
+    }
+  ],
+  "validation": {
+    "coverage": "raw exports must cover every id in dataset unless --allow-extra is explicitly used",
+    "consumer": "stable-asr compare-turn --predictions name=path"
+  }
+}

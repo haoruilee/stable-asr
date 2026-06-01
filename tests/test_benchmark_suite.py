@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from stable_asr.paper.suites import (
@@ -37,6 +38,20 @@ def test_benchmark_suite_markdown_and_json_roundtrip(tmp_path: Path) -> None:
     assert "asr_manifest_recipe" in markdown
     assert "asr_transcript_conversion" in markdown
     assert "qwen3_asr" in markdown
+
+
+def test_public_benchmark_v0_config_covers_runtime_and_data_layer() -> None:
+    config = json.loads(Path("configs/benchmarks/stable_asr_public_v0.json").read_text(encoding="utf-8"))
+
+    assert config["id"] == "stable_asr_public_v0"
+    assert {corpus["id"] for corpus in config["corpora"]} >= {
+        "librispeech_dev_clean",
+        "aishell1_dev",
+        "voiceworld_real",
+    }
+    assert any("run_whisper_streaming.py" in command for command in config["runtime_adapter_commands"])
+    assert any("benchmark-train-features" in command for command in config["data_layer_commands"])
+    assert config["local_final_counts_observed_2026_06_01"]["asr_eval_manifest_records"] == 3067
 
 
 def test_benchmark_suite_validation_rejects_bad_metric() -> None:

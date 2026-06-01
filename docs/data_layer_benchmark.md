@@ -40,6 +40,20 @@ Commands:
   --formats source_audio source_audio_file_cache parquet lance \
   --sample-count 1000 \
   --json-output runs/final/reports/train_feature_benchmark.json
+
+.venv/bin/python -m stable_asr.cli benchmark-train-features \
+  --dataset runs/final/voiceworld_real.jsonl \
+  --output-dir runs/final/train_feature_bench_10k \
+  --formats source_audio source_audio_file_cache parquet lance \
+  --sample-count 10000 \
+  --json-output runs/final/reports/train_feature_benchmark_10k.json
+
+.venv/bin/python -m stable_asr.cli benchmark-train-features \
+  --dataset runs/final/voiceworld_real.jsonl \
+  --output-dir runs/final/train_feature_bench_100k_cached \
+  --formats parquet lance \
+  --sample-count 100000 \
+  --json-output runs/final/reports/train_feature_benchmark_100k_cached.json
 ```
 
 Manifest-only benchmark on `runs/final/turn_train.jsonl`:
@@ -68,14 +82,32 @@ Interpretation:
 
 Training log-mel feature benchmark on the same VoiceWorld records:
 
-| format | records | random samples/s | speedup vs source audio | size |
-| --- | ---: | ---: | ---: | ---: |
-| source audio | 180 | 91.2 | 1.0x | n/a |
-| source audio with file cache | 180 | 219.6 | 2.4x | n/a |
-| Parquet log-mel cache | 180 | 35188.2 | 385.8x | 54751 bytes |
-| Lance log-mel cache | 180 | 104082.5 | 1141.1x | 76184 bytes |
+| format | records | sample-count | random samples/s | speedup vs source audio | size |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| source audio | 180 | 1000 | 91.2 | 1.0x | n/a |
+| source audio with file cache | 180 | 1000 | 219.6 | 2.4x | n/a |
+| Parquet log-mel cache | 180 | 1000 | 35188.2 | 385.8x | 54751 bytes |
+| Lance log-mel cache | 180 | 1000 | 104082.5 | 1141.1x | 76184 bytes |
+| source audio | 180 | 10000 | 381.3 | 1.0x | n/a |
+| source audio with file cache | 180 | 10000 | 705.0 | 1.8x | n/a |
+| Parquet log-mel cache | 180 | 10000 | 113104.4 | 296.7x | 54751 bytes |
+| Lance log-mel cache | 180 | 10000 | 144444.3 | 378.9x | 76185 bytes |
 
 The train-time cache stores the 32-dimensional NanoTurn log-mel vector by
 record id. This is the most aggressive v0 acceleration path because repeated
 training runs skip audio open, decode, window slicing, and STFT. The cached
 feature path is now exposed through `train-turn --feature-cache`.
+
+Cached-only stress run:
+
+| format | records | sample-count | random samples/s | size |
+| --- | ---: | ---: | ---: | ---: |
+| Parquet log-mel cache | 180 | 100000 | 125620.1 | 54751 bytes |
+| Lance log-mel cache | 180 | 100000 | 131653.2 | 76185 bytes |
+
+The 10k result is the main paper-facing local result because it includes the
+uncached source-audio baseline. On this workload, cached Lance training windows
+are `378.9x` faster than repeatedly opening and decoding source audio. The 100k
+cached-only run checks that the cached path stays stable under heavier random
+sampling; it does not report a source-audio speedup because source decoding was
+intentionally skipped to keep the local run bounded.

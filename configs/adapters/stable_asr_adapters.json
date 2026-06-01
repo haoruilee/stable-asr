@@ -109,36 +109,36 @@
       "notes": "Normalizes FunASR sentence and timestamp exports."
     },
     {
-      "id": "whisper_command_template",
-      "title": "Whisper Command Template",
+      "id": "whisper_runtime_runner",
+      "title": "OpenAI Whisper Runtime Runner",
       "task": "streaming_asr_eval",
       "modality": "external_command",
-      "status": "template",
+      "status": "runner_implemented",
       "interface": "CommandStreamingASRAdapter",
-      "entrypoint": "stable-asr eval-asr-command --command '<whisper export script> --output {output}'",
-      "input_schema": "local audio or manifest handled by external script",
-      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "entrypoint": "bash -lc 'python3 scripts/run_whisper_streaming.py --manifest <asr_manifest.jsonl> --output <raw.jsonl> && python3 scripts/export_streaming_transcript.py --schema whisper --manifest <asr_manifest.jsonl> --raw <raw.jsonl> --output {output}'",
+      "input_schema": "Stable-ASR ASRManifestRecord JSONL",
+      "output_schema": "raw Whisper JSONL then Stable-ASR StreamingASRRecord JSONL",
       "license": "depends_on_external_system",
       "related_references": [
         "whisper"
       ],
-      "notes": "Template for wrapping Whisper or faster-whisper exporters without adding a hard dependency."
+      "notes": "Optional runner for OpenAI Whisper. The dependency is not imported until the script executes, so CI can validate the adapter contract without installing Whisper."
     },
     {
-      "id": "funasr_command_template",
-      "title": "FunASR Command Template",
+      "id": "funasr_runtime_runner",
+      "title": "FunASR Runtime Runner",
       "task": "streaming_asr_eval",
       "modality": "external_command",
-      "status": "template",
+      "status": "runner_implemented",
       "interface": "CommandStreamingASRAdapter",
-      "entrypoint": "stable-asr eval-asr-command --command '<funasr export script> --output {output}'",
-      "input_schema": "local audio or manifest handled by external script",
-      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "entrypoint": "bash -lc 'python3 scripts/run_funasr_streaming.py --manifest <asr_manifest.jsonl> --output <raw.jsonl> && python3 scripts/export_streaming_transcript.py --schema funasr --manifest <asr_manifest.jsonl> --raw <raw.jsonl> --output {output}'",
+      "input_schema": "Stable-ASR ASRManifestRecord JSONL",
+      "output_schema": "raw FunASR JSONL then Stable-ASR StreamingASRRecord JSONL",
       "license": "depends_on_external_system",
       "related_references": [
         "funasr"
       ],
-      "notes": "Template for evaluating FunASR-style systems through the command adapter."
+      "notes": "Optional runner for FunASR AutoModel. The dependency is not imported until the script executes."
     },
     {
       "id": "firered_asr2s_command_template",
@@ -219,19 +219,19 @@
     },
     {
       "id": "whisper_cpp_command_template",
-      "title": "whisper.cpp Command Template",
+      "title": "whisper.cpp Runtime Runner",
       "task": "streaming_asr_eval",
       "modality": "external_command",
-      "status": "template",
+      "status": "runner_implemented",
       "interface": "CommandStreamingASRAdapter",
-      "entrypoint": "stable-asr eval-asr-command --command '<whisper.cpp export script> --output {output}'",
-      "input_schema": "whisper.cpp transcript, segment, or word timestamp export",
-      "output_schema": "Stable-ASR StreamingASRRecord JSONL",
+      "entrypoint": "bash -lc 'python3 scripts/run_whisper_cpp_streaming.py --manifest <asr_manifest.jsonl> --model <ggml-model.bin> --output <raw.jsonl> && python3 scripts/export_streaming_transcript.py --schema whisper_cpp --manifest <asr_manifest.jsonl> --raw <raw.jsonl> --output {output}'",
+      "input_schema": "Stable-ASR ASRManifestRecord JSONL plus local whisper.cpp binary/model",
+      "output_schema": "raw whisper.cpp JSONL then Stable-ASR StreamingASRRecord JSONL",
       "license": "depends_on_external_system",
       "related_references": [
         "whisper_cpp"
       ],
-      "notes": "Template for evaluating C/C++ Whisper runtimes, quantized models, CPU latency, and edge deployment reports."
+      "notes": "Optional CLI bridge for evaluating C/C++ Whisper runtimes, quantized models, CPU latency, and edge deployment reports."
     },
     {
       "id": "lhotse_manifest_bridge_template",
@@ -416,7 +416,7 @@
       "modality": "external_prediction_jsonl",
       "status": "converter_implemented",
       "interface": "TurnPredictionManifestAdapter",
-      "entrypoint": "stable-asr convert-predictions --schema smart_turn",
+      "entrypoint": "python3 scripts/export_turn_predictions.py --schema smart_turn --dataset <turn_manifest.jsonl> --raw <raw.jsonl> --output <predictions.jsonl>",
       "input_schema": "SmartTurn-style completion probability JSONL",
       "output_schema": "Stable-ASR turn prediction JSONL",
       "license": "see_upstream",
@@ -430,7 +430,7 @@
       "modality": "external_prediction_jsonl",
       "status": "converter_implemented",
       "interface": "TurnPredictionManifestAdapter",
-      "entrypoint": "stable-asr convert-predictions --schema easyturn",
+      "entrypoint": "python3 scripts/export_turn_predictions.py --schema easyturn --dataset <turn_manifest.jsonl> --raw <raw.jsonl> --output <predictions.jsonl>",
       "input_schema": "EasyTurn-style four-state prediction JSONL",
       "output_schema": "Stable-ASR turn prediction JSONL",
       "license": "see_upstream",
@@ -444,7 +444,7 @@
       "modality": "external_prediction_jsonl",
       "status": "converter_implemented",
       "interface": "TurnPredictionManifestAdapter",
-      "entrypoint": "stable-asr convert-predictions --schema vap",
+      "entrypoint": "python3 scripts/export_turn_predictions.py --schema vap --dataset <turn_manifest.jsonl> --raw <raw.jsonl> --output <predictions.jsonl>",
       "input_schema": "VAP-style future voice activity JSONL",
       "output_schema": "Stable-ASR turn prediction JSONL",
       "license": "see_upstream",

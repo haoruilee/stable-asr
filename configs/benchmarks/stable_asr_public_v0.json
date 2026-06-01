@@ -1,0 +1,78 @@
+{
+  "id": "stable_asr_public_v0",
+  "version": "0.1.0",
+  "title": "Stable-ASR Public Benchmark v0",
+  "description": "Reproducible public-corpus and VoiceWorld benchmark configuration for real-time ASR, turn-taking, endpointing, data-layer acceleration, and external baseline adapters.",
+  "data_policy": {
+    "committed": [
+      "configuration files",
+      "schemas",
+      "small fixtures",
+      "scenario definitions",
+      "benchmark commands"
+    ],
+    "not_committed": [
+      "public corpus audio",
+      "generated manifests under runs/",
+      "model checkpoints",
+      "external ASR raw outputs"
+    ]
+  },
+  "corpora": [
+    {
+      "id": "librispeech_dev_clean",
+      "task": "asr",
+      "language": "en",
+      "source_root": "data/librispeech/LibriSpeech/dev-clean",
+      "manifest": "runs/final/librispeech_dev_clean/asr_manifest.jsonl",
+      "prepare_command": "stable-asr prepare-public-asr --corpus librispeech --input-dir data/librispeech/LibriSpeech/dev-clean --output runs/final/librispeech_dev_clean/asr_manifest.jsonl"
+    },
+    {
+      "id": "aishell1_dev",
+      "task": "asr",
+      "language": "zh",
+      "source_root": "data/aishell1/data_aishell",
+      "manifest": "runs/final/aishell1_dev/asr_manifest.jsonl",
+      "prepare_command": "stable-asr prepare-public-asr --corpus aishell1 --input-dir data/aishell1/data_aishell --split dev --output runs/final/aishell1_dev/asr_manifest.jsonl"
+    },
+    {
+      "id": "voiceworld_real",
+      "task": "turn_scenario",
+      "language": "zh_en",
+      "manifest": "runs/final/voiceworld_real.jsonl",
+      "prepare_command": "stable-asr final-config --config configs/final/paper_final.json --prepare-voiceworld-real"
+    }
+  ],
+  "local_final_counts_observed_2026_06_01": {
+    "asr_eval_manifest_records": 3067,
+    "turn_train_records": 4906,
+    "turn_dev_records": 614,
+    "turn_test_records": 614,
+    "voiceworld_real_records": 180
+  },
+  "baseline_commands": [
+    "stable-asr final-config --config configs/final/paper_final.json --prepare-asr-eval-manifest",
+    "stable-asr final-config --config configs/final/paper_final.json --bootstrap-turn-splits",
+    "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio --feature-cache runs/final/nanoturn/logmel_features.lance --feature-cache-format lance",
+    "stable-asr compare-turn --dataset runs/final/turn_test.jsonl --baseline rule_endpoint --baseline vad_pause --baseline text_turn --predictions smart_turn=runs/final/external/smartturn_predictions.jsonl --predictions easy_turn=runs/final/external/easyturn_predictions.jsonl --checkpoint nanoturn=runs/final/nanoturn/checkpoint.pt --report runs/final/reports/baselines.md --json-output runs/final/reports/baselines.json",
+    "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md --json-output runs/final/reports/asr_command_compare.json"
+  ],
+  "runtime_adapter_commands": [
+    "python3 scripts/run_whisper_streaming.py --manifest runs/final/asr_eval_manifest.jsonl --model tiny --device cpu --output runs/final/asr_commands/raw/whisper_tiny_raw.jsonl",
+    "python3 scripts/export_streaming_transcript.py --schema whisper --manifest runs/final/asr_eval_manifest.jsonl --raw runs/final/asr_commands/raw/whisper_tiny_raw.jsonl --output runs/final/asr_commands/whisper_tiny_streaming.jsonl",
+    "python3 scripts/run_funasr_streaming.py --manifest runs/final/asr_eval_manifest.jsonl --model paraformer-zh --device cpu --output runs/final/asr_commands/raw/funasr_paraformer_raw.jsonl",
+    "python3 scripts/export_streaming_transcript.py --schema funasr --manifest runs/final/asr_eval_manifest.jsonl --raw runs/final/asr_commands/raw/funasr_paraformer_raw.jsonl --output runs/final/asr_commands/funasr_paraformer_streaming.jsonl"
+  ],
+  "data_layer_commands": [
+    "stable-asr benchmark-data --dataset runs/final/turn_train.jsonl --output-dir runs/final/data_bench --formats jsonl parquet lance --sample-count 10000 --json-output runs/final/reports/data_benchmark.json",
+    "stable-asr benchmark-train-features --dataset runs/final/voiceworld_real.jsonl --output-dir runs/final/train_feature_bench_10k --formats source_audio source_audio_file_cache parquet lance --sample-count 10000 --json-output runs/final/reports/train_feature_benchmark_10k.json",
+    "stable-asr benchmark-train-features --dataset runs/final/voiceworld_real.jsonl --output-dir runs/final/train_feature_bench_100k_cached --formats parquet lance --sample-count 100000 --json-output runs/final/reports/train_feature_benchmark_100k_cached.json"
+  ],
+  "paper_alignment": {
+    "stable_worldmodel_data_layer": "JSONL/Parquet/Lance manifests plus Lance log-mel feature cache for training windows",
+    "stable_worldmodel_baselines": "rule endpoint, VAD pause, text turn, NanoTurn, prediction-manifest baselines, optional ASR runtimes",
+    "stable_worldmodel_environments": "VoiceWorld scenario manifests and suite-level factors",
+    "stable_worldmodel_solvers": "threshold and cost-sensitive turn policy optimization",
+    "stable_worldmodel_artifacts": "paper bundle, leaderboard, dataset/model/experiment cards, release audits"
+  }
+}

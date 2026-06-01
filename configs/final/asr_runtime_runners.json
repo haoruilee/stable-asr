@@ -1,0 +1,26 @@
+{
+  "timeout_sec": 86400,
+  "input_manifest": "runs/final/asr_eval_manifest.jsonl",
+  "adapters": [
+    {
+      "name": "openai_whisper_tiny",
+      "command": "bash -lc 'python3 scripts/run_whisper_streaming.py --manifest {input_manifest} --model tiny --device cpu --output runs/final/asr_commands/raw/whisper_tiny_raw.jsonl && python3 scripts/export_streaming_transcript.py --schema whisper --manifest {input_manifest} --raw runs/final/asr_commands/raw/whisper_tiny_raw.jsonl --output {output}'",
+      "output": "runs/final/asr_commands/whisper_tiny_streaming.jsonl",
+      "required_inputs": []
+    },
+    {
+      "name": "funasr_paraformer",
+      "command": "bash -lc 'python3 scripts/run_funasr_streaming.py --manifest {input_manifest} --model paraformer-zh --device cpu --output runs/final/asr_commands/raw/funasr_paraformer_raw.jsonl && python3 scripts/export_streaming_transcript.py --schema funasr --manifest {input_manifest} --raw runs/final/asr_commands/raw/funasr_paraformer_raw.jsonl --output {output}'",
+      "output": "runs/final/asr_commands/funasr_paraformer_streaming.jsonl",
+      "required_inputs": []
+    },
+    {
+      "name": "whisper_cpp_quantized",
+      "command": "bash -lc 'python3 scripts/run_whisper_cpp_streaming.py --manifest {input_manifest} --binary whisper-cli --model models/whisper.cpp/ggml-tiny.bin --output runs/final/asr_commands/raw/whisper_cpp_raw.jsonl && python3 scripts/export_streaming_transcript.py --schema whisper_cpp --manifest {input_manifest} --raw runs/final/asr_commands/raw/whisper_cpp_raw.jsonl --output {output}'",
+      "output": "runs/final/asr_commands/whisper_cpp_streaming.jsonl",
+      "required_inputs": [
+        "models/whisper.cpp/ggml-tiny.bin"
+      ]
+    }
+  ]
+}

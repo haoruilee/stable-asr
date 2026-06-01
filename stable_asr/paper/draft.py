@@ -87,6 +87,8 @@ def _draft_markdown(results_path: Path, results: dict[str, object], artifacts_di
         "",
         "Stable-ASR follows the loop: prepare or convert data, run baselines or adapters, evaluate static and scenario behavior, optimize policies, then generate paper artifacts.",
         "",
+        *(_stable_worldmodel_alignment_section()),
+        "",
         "## 4. Data Layer",
         "",
         "The current artifact includes turn manifest conversion, ASR corpus manifest preparation, and data-format benchmark rows.",
@@ -151,8 +153,9 @@ def _draft_markdown(results_path: Path, results: dict[str, object], artifacts_di
             "## 10. Limitations",
             "",
             "- Current smoke artifacts use small synthetic fixtures and are not final benchmark claims.",
-            "- Lance-backed data benchmarking is smoke-scale; final paper claims require larger local and object-storage runs.",
-            "- External SmartTurn/EasyTurn/VAP integration is currently represented through prediction-manifest adapters and converters.",
+            "- Lance-backed data benchmarking now includes local cached-feature runs, but final paper claims still require larger local and object-storage runs.",
+            "- External ASR runtime runners are optional wrappers; final upstream comparisons require logged model versions, weights, hardware, and raw outputs.",
+            "- External SmartTurn/EasyTurn/VAP integration is represented through coverage-checked prediction-manifest bridges; final claims require upstream prediction exports on the shared turn split.",
             "- Human user studies and full WebRTC voice-agent deployments remain future work.",
             "",
             "## 11. Reproducibility",
@@ -202,6 +205,42 @@ def _related_work_section() -> list[str]:
             "one scenario suite, one policy/evaluation interface, and audited artifact bundles that keep "
             "registry intent, external evidence, license review, smoke results, and final-scale claims separate."
         ),
+    ]
+
+
+def _stable_worldmodel_alignment_section() -> list[str]:
+    rows = [
+        {
+            "stable_worldmodel_role": "data layer",
+            "stable_asr_counterpart": "JSONL/Parquet/Lance manifests and log-mel training-window caches",
+        },
+        {
+            "stable_worldmodel_role": "baselines",
+            "stable_asr_counterpart": "rule endpoint, VAD pause, text turn, NanoTurn, and external prediction adapters",
+        },
+        {
+            "stable_worldmodel_role": "solvers",
+            "stable_asr_counterpart": "threshold and cost-sensitive turn policy search",
+        },
+        {
+            "stable_worldmodel_role": "environments",
+            "stable_asr_counterpart": "VoiceWorld full-duplex ASR and turn-taking scenarios",
+        },
+        {
+            "stable_worldmodel_role": "reproducible artifacts",
+            "stable_asr_counterpart": "benchmark configs, leaderboards, paper bundles, cards, and release audits",
+        },
+    ]
+    return [
+        "## Stable-WorldModel Platform Analogy",
+        "",
+        (
+            "The platform is intentionally structured as the real-time speech analogue of "
+            "stable-worldmodel: one data layer, one baseline/adapter interface, one "
+            "scenario/evaluation loop, one solver layer, and one reproducible artifact path."
+        ),
+        "",
+        dict_table(rows),
     ]
 
 

@@ -18,6 +18,7 @@ nav:
   - VoiceWorld: voiceworld.md
   - Data Schema: schema.md
   - Platform Parity: platform_parity.md
+  - Public Benchmark v0: public_benchmark_v0.md
   - Paper Pipeline: paper_pipeline.md
   - Release Gates: release_gates.md
   - Final Inputs: final_inputs.md
