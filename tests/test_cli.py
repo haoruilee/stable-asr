@@ -1742,6 +1742,18 @@ def test_model_registry_cli_validate_config(capsys) -> None:
     assert "OK: stable_asr_models_v0" in captured.out
 
 
+def test_model_registry_cli_audits_trainable_configs(tmp_path, capsys) -> None:
+    output = tmp_path / "MODEL_CONFIG_AUDIT.md"
+    code = main(["model-registry", "--audit-configs", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Model Config Audit" in captured.out
+    assert "nanoturn_nano" in captured.out
+    assert output.exists()
+    assert "configs/nanoturn_nano.json" in output.read_text(encoding="utf-8")
+
+
 def test_prepare_validate_and_inspect_asr_manifest_cli(tmp_path, capsys) -> None:
     output = tmp_path / "asr_manifest.jsonl"
     code = main(

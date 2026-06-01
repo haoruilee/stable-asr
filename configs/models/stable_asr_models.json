@@ -19,8 +19,21 @@
       "export_entrypoint": "stable-asr export-turn-onnx --checkpoint <checkpoint.pt> --output <model.onnx>",
       "input_schema": "TurnManifestRecord metadata feature vector",
       "output_schema": "TurnPrediction probabilities over four turn labels",
-      "labels": ["backchannel", "complete", "incomplete", "wait"],
-      "actions": ["continue_speaking", "hold", "ignore", "keep_listening", "light_ack", "stop_tts_and_listen", "take_turn"],
+      "labels": [
+        "backchannel",
+        "complete",
+        "incomplete",
+        "wait"
+      ],
+      "actions": [
+        "continue_speaking",
+        "hold",
+        "ignore",
+        "keep_listening",
+        "light_ack",
+        "stop_tts_and_listen",
+        "take_turn"
+      ],
       "config_path": "configs/nanoturn_pico.json",
       "license": "project_license",
       "intended_use": "Small checkpoint-backed baseline for validating Stable-ASR turn-taking, endpointing, policy search, latency, ONNX export, and paper artifact plumbing.",
@@ -45,14 +58,27 @@
       "export_entrypoint": "stable-asr export-turn-onnx --checkpoint <checkpoint.pt> --output <model.onnx>",
       "input_schema": "TurnManifestRecord metadata feature vector",
       "output_schema": "TurnPrediction probabilities over four turn labels",
-      "labels": ["backchannel", "complete", "incomplete", "wait"],
-      "actions": ["continue_speaking", "hold", "ignore", "keep_listening", "light_ack", "stop_tts_and_listen", "take_turn"],
-      "config_path": "planned: configs/nanoturn_nano.json",
+      "labels": [
+        "backchannel",
+        "complete",
+        "incomplete",
+        "wait"
+      ],
+      "actions": [
+        "continue_speaking",
+        "hold",
+        "ignore",
+        "keep_listening",
+        "light_ack",
+        "stop_tts_and_listen",
+        "take_turn"
+      ],
+      "config_path": "configs/nanoturn_nano.json",
       "license": "project_license",
       "intended_use": "Larger NanoTurn baseline intended for final-scale audio-feature and metadata-feature turn/action experiments.",
       "limitations": [
-        "audio frontend and final-scale training recipe are planned, not complete",
-        "requires the same Stable-ASR turn manifest and policy evaluation protocol"
+        "v0 uses the same manifest metadata feature family as NanoTurn Pico; audio-feature final-scale training remains a paper-scale target",
+        "requires real train/dev/test splits and external baseline comparisons before quality claims"
       ]
     },
     {
@@ -70,8 +96,21 @@
       "export_entrypoint": "not_applicable",
       "input_schema": "TurnManifestRecord with pause_ms metadata",
       "output_schema": "TurnPrediction complete/incomplete probabilities",
-      "labels": ["backchannel", "complete", "incomplete", "wait"],
-      "actions": ["continue_speaking", "hold", "ignore", "keep_listening", "light_ack", "stop_tts_and_listen", "take_turn"],
+      "labels": [
+        "backchannel",
+        "complete",
+        "incomplete",
+        "wait"
+      ],
+      "actions": [
+        "continue_speaking",
+        "hold",
+        "ignore",
+        "keep_listening",
+        "light_ack",
+        "stop_tts_and_listen",
+        "take_turn"
+      ],
       "config_path": "constructor argument: complete_pause_ms",
       "license": "project_license",
       "intended_use": "Lowest endpointing baseline for cost-sensitive turn policy comparisons.",
@@ -95,8 +134,21 @@
       "export_entrypoint": "not_applicable",
       "input_schema": "TurnManifestRecord with vad_pause_ms or pause_ms metadata",
       "output_schema": "TurnPrediction complete/incomplete probabilities",
-      "labels": ["backchannel", "complete", "incomplete", "wait"],
-      "actions": ["continue_speaking", "hold", "ignore", "keep_listening", "light_ack", "stop_tts_and_listen", "take_turn"],
+      "labels": [
+        "backchannel",
+        "complete",
+        "incomplete",
+        "wait"
+      ],
+      "actions": [
+        "continue_speaking",
+        "hold",
+        "ignore",
+        "keep_listening",
+        "light_ack",
+        "stop_tts_and_listen",
+        "take_turn"
+      ],
       "config_path": "constructor argument: complete_pause_ms",
       "license": "project_license",
       "intended_use": "Industrial-style pause threshold baseline for endpointing comparisons.",
@@ -120,8 +172,21 @@
       "export_entrypoint": "not_applicable",
       "input_schema": "TurnManifestRecord text or asr_text",
       "output_schema": "TurnPrediction probabilities over four turn labels",
-      "labels": ["backchannel", "complete", "incomplete", "wait"],
-      "actions": ["continue_speaking", "hold", "ignore", "keep_listening", "light_ack", "stop_tts_and_listen", "take_turn"],
+      "labels": [
+        "backchannel",
+        "complete",
+        "incomplete",
+        "wait"
+      ],
+      "actions": [
+        "continue_speaking",
+        "hold",
+        "ignore",
+        "keep_listening",
+        "light_ack",
+        "stop_tts_and_listen",
+        "take_turn"
+      ],
       "config_path": "constructor argument: prefer_asr_text",
       "license": "project_license",
       "intended_use": "Semantic rule baseline for comparing ASR-text cues against pause-only models.",
@@ -146,8 +211,21 @@
       "export_entrypoint": "not_applicable",
       "input_schema": "Stable-ASR turn prediction JSONL",
       "output_schema": "TurnPrediction probabilities over four turn labels",
-      "labels": ["backchannel", "complete", "incomplete", "wait"],
-      "actions": ["continue_speaking", "hold", "ignore", "keep_listening", "light_ack", "stop_tts_and_listen", "take_turn"],
+      "labels": [
+        "backchannel",
+        "complete",
+        "incomplete",
+        "wait"
+      ],
+      "actions": [
+        "continue_speaking",
+        "hold",
+        "ignore",
+        "keep_listening",
+        "light_ack",
+        "stop_tts_and_listen",
+        "take_turn"
+      ],
       "config_path": "prediction manifest path",
       "license": "depends_on_input_predictions",
       "intended_use": "Bridge for SmartTurn, EasyTurn, VAP, or vendor turn detector outputs.",

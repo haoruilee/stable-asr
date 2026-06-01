@@ -1,0 +1,7 @@
+{
+  "model_type": "nanoturn_nano",
+  "epochs": 150,
+  "lr": 0.005,
+  "seed": 0,
+  "feature_source": "manifest_metadata_v0"
+}

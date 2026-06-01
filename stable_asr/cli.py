@@ -57,6 +57,7 @@ from stable_asr.models.adapters import (
     validate_turn_prediction_jsonl,
 )
 from stable_asr.models.registry import (
+    audit_model_registry_configs,
     load_model_registry,
     model_registry_markdown,
     validate_model_registry,
@@ -567,6 +568,11 @@ def build_parser() -> argparse.ArgumentParser:
     model_registry_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     model_registry_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     model_registry_parser.add_argument("--validate-only", action="store_true")
+    model_registry_parser.add_argument(
+        "--audit-configs",
+        action="store_true",
+        help="Audit trainable model config paths referenced by the registry.",
+    )
 
     schema_registry_parser = subparsers.add_parser(
         "schema-registry",
@@ -2012,6 +2018,14 @@ def main(argv: list[str] | None = None) -> int:
             if not validation.ok:
                 print(validation.to_text(), file=sys.stderr)
                 return 1
+            if args.audit_configs:
+                report = audit_model_registry_configs(registry)
+                text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+                if args.output:
+                    args.output.parent.mkdir(parents=True, exist_ok=True)
+                    args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+                print(text)
+                return 0 if report.ok else 1
             if args.validate_only:
                 print(f"OK: {registry['id']} ({len(registry['models'])} model(s))")
                 return 0

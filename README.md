@@ -147,6 +147,7 @@ Reference coverage is tracked in `configs/references/asr_collections.json`,
 ```bash
 stable-asr catalog --output runs/PLATFORM_CATALOG.md
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
+stable-asr model-registry --audit-configs --output runs/MODEL_CONFIG_AUDIT.md
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
 stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE_REVIEW.md
@@ -262,6 +263,8 @@ is provided in `mkdocs.yaml`.
 - machine-readable adapter registry in `configs/adapters/stable_asr_adapters.json`
 - `adapter-registry` for validating and rendering baseline, converter, command-backed, and external-system adapter entries
 - `adapter-pack` for generating an external ASR adapter starter kit with registries, source manifest work queue, command config, fixtures, per-reference license-review templates, and script templates
+- machine-readable NanoTurn configs in `configs/nanoturn_pico.json` and `configs/nanoturn_nano.json`
+- `model-registry --audit-configs` for checking trainable NanoTurn config files before release use
 - machine-readable JSON Schema registry in `configs/schemas/stable_asr_schemas.json`
 - `schema-registry` for validating and rendering public data, prediction, streaming, leaderboard, model, final-input, and final-handoff contracts
 - `validate-schema-file` for checking JSON/JSONL files against those public contracts before publishing or submitting artifacts
@@ -368,7 +371,7 @@ is provided in `mkdocs.yaml`.
 - machine-readable benchmark suite definition in `configs/benchmarks/stable_asr_v0.json`
 - `benchmark-suite` for validating and rendering benchmark suite definitions and required artifact coverage
 - machine-readable built-in model registry in `configs/models/stable_asr_models.json`
-- `model-registry` for validating and rendering built-in model/baseline metadata
+- `model-registry` for validating, rendering, and auditing built-in model/baseline metadata
 - `paper-audit` checks for paper result sections and bundled table/figure artifacts
 - `paper-release-audit` checks stricter platform-paper release gates and reports remaining gaps
 - `paper-release-smoke` runs the smoke pipeline, generates bundle/drafts/cards, and writes release audit files

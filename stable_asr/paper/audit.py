@@ -10,7 +10,7 @@ from typing import Any
 
 from stable_asr.data.sources import load_data_sources, validate_data_sources
 from stable_asr.models.adapters.registry import load_adapter_registry, validate_adapter_registry
-from stable_asr.models.registry import load_model_registry, validate_model_registry
+from stable_asr.models.registry import audit_model_registry_configs, load_model_registry, validate_model_registry
 from stable_asr.paper.acquisition_pack import audit_acquisition_assignments
 from stable_asr.paper.final_config import audit_final_run_files, load_final_run_config, validate_final_run_config
 from stable_asr.paper.final_experiments import load_final_experiments, validate_final_experiments
@@ -316,6 +316,18 @@ def audit_paper_release(
                     else "; ".join(model_validation.errors[:3]),
                 )
             )
+            if model_validation.ok:
+                config_audit = audit_model_registry_configs(model_registry, repo_root=repo_root)
+                checks.append(
+                    _release_check(
+                        "model",
+                        "model_config_audit",
+                        config_audit.ok,
+                        f"{len(config_audit.rows)} trainable config(s)"
+                        if config_audit.ok
+                        else "; ".join(config_audit.errors[:3]),
+                    )
+                )
         except (OSError, ValueError) as exc:
             checks.append(_release_check("model", "model_registry_schema", False, str(exc)))
 

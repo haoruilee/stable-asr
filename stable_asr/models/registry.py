@@ -68,15 +68,15 @@ DEFAULT_MODEL_REGISTRY: dict[str, Any] = {
             "output_schema": "TurnPrediction probabilities over four turn labels",
             "labels": sorted(TURN_LABELS),
             "actions": sorted(ACTION_LABELS),
-            "config_path": "planned: configs/nanoturn_nano.json",
+            "config_path": "configs/nanoturn_nano.json",
             "license": "project_license",
             "intended_use": (
                 "Larger NanoTurn baseline intended for final-scale audio-feature and "
                 "metadata-feature turn/action experiments."
             ),
             "limitations": [
-                "audio frontend and final-scale training recipe are planned, not complete",
-                "requires the same Stable-ASR turn manifest and policy evaluation protocol",
+                "v0 uses the same manifest metadata feature family as NanoTurn Pico; audio-feature final-scale training remains a paper-scale target",
+                "requires real train/dev/test splits and external baseline comparisons before quality claims",
             ],
         },
         {
@@ -198,6 +198,73 @@ class ModelRegistryValidation:
         return "model_registry: FAILED\n" + "\n".join(f"- {error}" for error in self.errors)
 
 
+@dataclass(frozen=True)
+class ModelConfigAuditRow:
+    model_id: str
+    config_path: str
+    expected: bool
+    exists: bool
+    ok: bool
+    detail: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "model_id": self.model_id,
+            "config_path": self.config_path,
+            "expected": self.expected,
+            "exists": self.exists,
+            "ok": self.ok,
+            "detail": self.detail,
+        }
+
+
+@dataclass(frozen=True)
+class ModelConfigAuditReport:
+    ok: bool
+    rows: list[ModelConfigAuditRow]
+    errors: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "rows": [row.to_dict() for row in self.rows],
+            "errors": self.errors,
+        }
+
+    def to_markdown(self) -> str:
+        lines = [
+            "# Stable-ASR Model Config Audit",
+            "",
+            f"- status: `{'OK' if self.ok else 'FAILED'}`",
+            f"- rows: `{len(self.rows)}`",
+            "",
+            "## Configs",
+            "",
+            dict_table(
+                [
+                    {
+                        "model": row.model_id,
+                        "expected": row.expected,
+                        "exists": row.exists,
+                        "ok": row.ok,
+                        "config": row.config_path,
+                        "detail": row.detail,
+                    }
+                    for row in self.rows
+                ]
+            ),
+            "",
+            "## Errors",
+            "",
+        ]
+        if self.errors:
+            lines.extend(f"- `{error}`" for error in self.errors)
+        else:
+            lines.append("- None")
+        lines.append("")
+        return "\n".join(lines)
+
+
 def load_model_registry(path: str | Path | None = None) -> dict[str, Any]:
     if path is None:
         registry_path = resolve_platform_path(DEFAULT_MODEL_REGISTRY_PATH)
@@ -273,6 +340,34 @@ def validate_model_registry(registry: dict[str, Any]) -> ModelRegistryValidation
     return ModelRegistryValidation(ok=not errors, errors=errors)
 
 
+def audit_model_registry_configs(
+    registry: dict[str, Any] | None = None,
+    *,
+    repo_root: str | Path = ".",
+) -> ModelConfigAuditReport:
+    """Audit config files referenced by trainable built-in model registry entries."""
+
+    registry = registry or load_model_registry()
+    validation = validate_model_registry(registry)
+    if not validation.ok:
+        return ModelConfigAuditReport(ok=False, rows=[], errors=validation.errors)
+
+    repo_root = Path(repo_root)
+    rows: list[ModelConfigAuditRow] = []
+    errors: list[str] = []
+    for model in registry["models"]:
+        model_id = str(model["id"])
+        config_path = str(model.get("config_path", ""))
+        expected = model.get("model_type") == "trainable_baseline"
+        if not expected:
+            continue
+        row = _audit_model_config(model_id, config_path, repo_root=repo_root)
+        rows.append(row)
+        if not row.ok:
+            errors.append(f"{model_id}: {row.detail}")
+    return ModelConfigAuditReport(ok=not errors, rows=rows, errors=errors)
+
+
 def model_registry_markdown(registry: dict[str, Any]) -> str:
     validation = validate_model_registry(registry)
     if not validation.ok:
@@ -301,6 +396,66 @@ def find_model_entry(registry: dict[str, Any], model_id: str) -> dict[str, Any]:
         if model["id"] == model_id:
             return dict(model)
     raise ValueError(f"unknown model id: {model_id}")
+
+
+def _audit_model_config(model_id: str, config_path: str, *, repo_root: Path) -> ModelConfigAuditRow:
+    if not config_path or config_path.startswith("planned:"):
+        return ModelConfigAuditRow(
+            model_id=model_id,
+            config_path=config_path,
+            expected=True,
+            exists=False,
+            ok=False,
+            detail="config_path is planned or missing",
+        )
+    path = Path(config_path)
+    if not path.is_absolute():
+        repo_path = repo_root / path
+        path = repo_path if repo_path.exists() else resolve_platform_path(config_path)
+    exists = path.exists()
+    if not exists:
+        return ModelConfigAuditRow(
+            model_id=model_id,
+            config_path=config_path,
+            expected=True,
+            exists=False,
+            ok=False,
+            detail=f"missing: {config_path}",
+        )
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return ModelConfigAuditRow(
+            model_id=model_id,
+            config_path=config_path,
+            expected=True,
+            exists=True,
+            ok=False,
+            detail=str(exc),
+        )
+    errors: list[str] = []
+    if payload.get("model_type") != model_id:
+        errors.append(f"model_type={payload.get('model_type')!r}, expected {model_id!r}")
+    for key in ("epochs", "lr", "seed", "feature_source"):
+        if key not in payload:
+            errors.append(f"missing {key}")
+    if errors:
+        return ModelConfigAuditRow(
+            model_id=model_id,
+            config_path=config_path,
+            expected=True,
+            exists=True,
+            ok=False,
+            detail="; ".join(errors),
+        )
+    return ModelConfigAuditRow(
+        model_id=model_id,
+        config_path=config_path,
+        expected=True,
+        exists=True,
+        ok=True,
+        detail="ready",
+    )
 
 
 def _model_rows(registry: dict[str, Any]) -> list[dict[str, object]]:

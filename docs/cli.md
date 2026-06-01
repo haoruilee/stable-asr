@@ -133,6 +133,7 @@ stable-asr compare-asr-commands --config configs/final/asr_command_compare.json 
 ```bash
 stable-asr model-registry --registry configs/models/stable_asr_models.json --validate-only
 stable-asr model-registry --output runs/MODELS.md
+stable-asr model-registry --audit-configs --output runs/MODEL_CONFIG_AUDIT.md
 stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only
 stable-asr schema-registry --output runs/SCHEMAS.md
 stable-asr schema-registry --schema-id stable_asr.streaming_asr_record.v0 --json

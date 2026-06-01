@@ -12,7 +12,8 @@ listen, hold, or stop TTS.
 | `vad_pause` | `TurnPredictor` | pause and overlap metadata | turn probabilities | industrial pause-threshold baseline |
 | `text_turn` | `TurnPredictor` | reference or ASR text | turn probabilities | semantic text-only baseline |
 | `prediction_manifest` | `TurnPredictor` | external prediction JSONL | turn probabilities | bridge for SmartTurn/EasyTurn/VAP-style outputs |
-| `nanoturn_pico` | checkpoint predictor | log-spectral features | turn probabilities | trainable lightweight baseline |
+| `nanoturn_pico` | checkpoint predictor | manifest/audio-derived features | turn probabilities | trainable lightweight baseline |
+| `nanoturn_nano` | checkpoint predictor | manifest/audio-derived features | turn probabilities | larger trainable NanoTurn baseline with audited config |
 
 ## External Systems
 

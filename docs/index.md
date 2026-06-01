@@ -63,6 +63,7 @@ stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir r
 stable-asr audit-turn-splits --train runs/splits/turn_train.jsonl --dev runs/splits/turn_dev.jsonl --test runs/splits/turn_test.jsonl
 stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
+stable-asr model-registry --audit-configs --output runs/MODEL_CONFIG_AUDIT.md
 stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
 stable-asr asr-collections --audit-coverage
 stable-asr asr-collections --audit-readiness

@@ -206,6 +206,7 @@ def test_paper_release_audit_reports_remaining_release_gaps(tmp_path: Path) -> N
     assert "OK software/source_manifest_content" in text
     assert "OK software/wheel_data_files" in text
     assert "OK software/schema_registry" in text
+    assert "OK model/model_config_audit" in text
     assert "OK software/ci_wheel_smoke" in text
     assert "OK software/ci_lance_smoke" in text
     assert "OK software/pull_request_template" in text

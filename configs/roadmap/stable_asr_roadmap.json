@@ -10,13 +10,34 @@
       "status": "complete",
       "objective": "Provide an installable package, CLI, documentation entrypoint, CI, and release audit surface.",
       "artifacts": [
-        {"path": "pyproject.toml", "required_now": true},
-        {"path": "README.md", "required_now": true},
-        {"path": "ROADMAP.md", "required_now": true},
-        {"path": "docs/index.md", "required_now": true},
-        {"path": ".github/workflows/tests.yml", "required_now": true},
-        {"path": "stable_asr/cli.py", "required_now": true},
-        {"path": "CITATION.cff", "required_now": true}
+        {
+          "path": "pyproject.toml",
+          "required_now": true
+        },
+        {
+          "path": "README.md",
+          "required_now": true
+        },
+        {
+          "path": "ROADMAP.md",
+          "required_now": true
+        },
+        {
+          "path": "docs/index.md",
+          "required_now": true
+        },
+        {
+          "path": ".github/workflows/tests.yml",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/cli.py",
+          "required_now": true
+        },
+        {
+          "path": "CITATION.cff",
+          "required_now": true
+        }
       ],
       "commands": [
         "stable-asr doctor",
@@ -34,28 +55,67 @@
       "status": "complete",
       "objective": "Make turn-taking, endpointing, prediction manifests, and NanoTurn checkpoints reproducible under one interface.",
       "artifacts": [
-        {"path": "stable_asr/data/manifest.py", "required_now": true},
-        {"path": "stable_asr/turn/nanoturn.py", "required_now": true},
-        {"path": "stable_asr/models/baselines/vad_pause.py", "required_now": true},
-        {"path": "stable_asr/models/baselines/rule_endpoint.py", "required_now": true},
-        {"path": "stable_asr/models/baselines/text_turn.py", "required_now": true},
-        {"path": "stable_asr/models/adapters/turn_prediction.py", "required_now": true},
-        {"path": "stable_asr/models/adapters/prediction_audit.py", "required_now": true},
-        {"path": "stable_asr/eval/turn_eval.py", "required_now": true},
-        {"path": "stable_asr/eval/turn_compare.py", "required_now": true},
-        {"path": "stable_asr/train/turn_trainer.py", "required_now": true},
-        {"path": "tests/fixtures/turn_predictions_sample.jsonl", "required_now": true}
+        {
+          "path": "stable_asr/data/manifest.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/turn/nanoturn.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/models/baselines/vad_pause.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/models/baselines/rule_endpoint.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/models/baselines/text_turn.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/models/adapters/turn_prediction.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/models/adapters/prediction_audit.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/eval/turn_eval.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/eval/turn_compare.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/train/turn_trainer.py",
+          "required_now": true
+        },
+        {
+          "path": "tests/fixtures/turn_predictions_sample.jsonl",
+          "required_now": true
+        },
+        {
+          "path": "configs/nanoturn_nano.json",
+          "required_now": true
+        }
       ],
       "commands": [
         "stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause",
         "stable-asr predict-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --output /tmp/stable-asr-text-turn-predictions.jsonl",
         "stable-asr validate-turn-predictions --dataset examples/data/turn_demo.jsonl --predictions /tmp/stable-asr-text-turn-predictions.jsonl",
-        "stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl"
+        "stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause --baseline text_turn --predictions oracle=tests/fixtures/turn_predictions_sample.jsonl",
+        "stable-asr model-registry --audit-configs"
       ],
       "success_criteria": [
         "built-in baselines and external prediction manifests share one evaluator",
         "prediction manifests are coverage-checked before benchmark use",
-        "NanoTurn checkpoints can be trained, evaluated, benchmarked, and exported"
+        "NanoTurn checkpoints can be trained, evaluated, benchmarked, and exported",
+        "NanoTurn Pico and NanoTurn Nano registry configs are audited before release use"
       ]
     },
     {
@@ -64,21 +124,66 @@
       "status": "complete",
       "objective": "Standardize turn/ASR manifests, data conversions, ASR reference collections, and adapter planning around top open-source ASR systems.",
       "artifacts": [
-        {"path": "configs/datasets/stable_asr_sources.json", "required_now": true},
-        {"path": "configs/references/asr_collections.json", "required_now": true},
-        {"path": "configs/references/turn_collections.json", "required_now": true},
-        {"path": "configs/adapters/stable_asr_adapters.json", "required_now": true},
-        {"path": "docs/asr_collections.md", "required_now": true},
-        {"path": "docs/turn_collections.md", "required_now": true},
-        {"path": "stable_asr/data/asr_manifest.py", "required_now": true},
-        {"path": "stable_asr/data/recipes/asr_folder.py", "required_now": true},
-        {"path": "stable_asr/data/recipes/public_corpora.py", "required_now": true},
-        {"path": "stable_asr/data/turn_from_asr.py", "required_now": true},
-        {"path": "stable_asr/data/bootstrap.py", "required_now": true},
-        {"path": "stable_asr/references/collections.py", "required_now": true},
-        {"path": "stable_asr/references/turn_collections.py", "required_now": true},
-        {"path": "stable_asr/references/workqueue.py", "required_now": true},
-        {"path": "stable_asr/paper/adapter_pack.py", "required_now": true}
+        {
+          "path": "configs/datasets/stable_asr_sources.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/references/asr_collections.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/references/turn_collections.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/adapters/stable_asr_adapters.json",
+          "required_now": true
+        },
+        {
+          "path": "docs/asr_collections.md",
+          "required_now": true
+        },
+        {
+          "path": "docs/turn_collections.md",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/data/asr_manifest.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/data/recipes/asr_folder.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/data/recipes/public_corpora.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/data/turn_from_asr.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/data/bootstrap.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/references/collections.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/references/turn_collections.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/references/workqueue.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/adapter_pack.py",
+          "required_now": true
+        }
       ],
       "commands": [
         "stable-asr data-sources --registry configs/datasets/stable_asr_sources.json --validate-only",
@@ -109,16 +214,46 @@
       "status": "complete",
       "objective": "Evaluate streaming ASR traces and controllable full-duplex VoiceWorld scenarios beyond static WER/CER.",
       "artifacts": [
-        {"path": "configs/scenarios/stable_asr_voiceworld_v0.json", "required_now": true},
-        {"path": "stable_asr/streaming/metrics.py", "required_now": true},
-        {"path": "stable_asr/streaming/compare.py", "required_now": true},
-        {"path": "stable_asr/streaming/sweep.py", "required_now": true},
-        {"path": "stable_asr/streaming/command_compare.py", "required_now": true},
-        {"path": "stable_asr/scenarios/world.py", "required_now": true},
-        {"path": "stable_asr/scenarios/voice_world.py", "required_now": true},
-        {"path": "stable_asr/scenarios/synthetic_turn.py", "required_now": true},
-        {"path": "tests/fixtures/streaming_asr_sample.jsonl", "required_now": true},
-        {"path": "examples/configs/asr_command_compare_demo.json", "required_now": true}
+        {
+          "path": "configs/scenarios/stable_asr_voiceworld_v0.json",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/streaming/metrics.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/streaming/compare.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/streaming/sweep.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/streaming/command_compare.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/scenarios/world.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/scenarios/voice_world.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/scenarios/synthetic_turn.py",
+          "required_now": true
+        },
+        {
+          "path": "tests/fixtures/streaming_asr_sample.jsonl",
+          "required_now": true
+        },
+        {
+          "path": "examples/configs/asr_command_compare_demo.json",
+          "required_now": true
+        }
       ],
       "commands": [
         "stable-asr eval-streaming-asr --input tests/fixtures/streaming_asr_sample.jsonl",
@@ -139,32 +274,110 @@
       "status": "complete",
       "objective": "Keep paper artifacts, parity audits, release gates, final runbooks, and leaderboard exports reproducible from checked-in configs.",
       "artifacts": [
-        {"path": "configs/paper/paper_smoke.json", "required_now": true},
-        {"path": "configs/paper/paper_parity_checklist.json", "required_now": true},
-        {"path": "configs/paper/final_experiments.json", "required_now": true},
-        {"path": "configs/final/paper_final.json", "required_now": true},
-        {"path": "configs/final/input_collections.json", "required_now": true},
-        {"path": "configs/final/asr_command_compare.json", "required_now": true},
-        {"path": "configs/benchmarks/stable_asr_v0.json", "required_now": true},
-        {"path": "configs/schemas/stable_asr_schemas.json", "required_now": true},
-        {"path": "stable_asr/paper/artifacts.py", "required_now": true},
-        {"path": "stable_asr/paper/audit.py", "required_now": true},
-        {"path": "stable_asr/paper/benchmark_pack.py", "required_now": true},
-        {"path": "stable_asr/paper/scenario_pack.py", "required_now": true},
-        {"path": "stable_asr/paper/submissions.py", "required_now": true},
-        {"path": "stable_asr/paper/leaderboard.py", "required_now": true},
-        {"path": "stable_asr/schemas.py", "required_now": true},
-        {"path": "stable_asr/schema_validation.py", "required_now": true},
-        {"path": "stable_asr/paper/provenance.py", "required_now": true},
-        {"path": "stable_asr/paper/integrity.py", "required_now": true},
-        {"path": "stable_asr/paper/parity.py", "required_now": true},
-        {"path": "stable_asr/paper/final_experiments.py", "required_now": true},
-        {"path": "stable_asr/paper/final_inputs.py", "required_now": true},
-        {"path": "stable_asr/paper/final_config.py", "required_now": true},
-        {"path": "stable_asr/paper/final_pack.py", "required_now": true},
-        {"path": "stable_asr/paper/acquisition_pack.py", "required_now": true},
-        {"path": "stable_asr/paper/contributor_pack.py", "required_now": true},
-        {"path": "scripts/reproduce_paper.py", "required_now": true}
+        {
+          "path": "configs/paper/paper_smoke.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/paper/paper_parity_checklist.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/paper/final_experiments.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/final/paper_final.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/final/input_collections.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/final/asr_command_compare.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/benchmarks/stable_asr_v0.json",
+          "required_now": true
+        },
+        {
+          "path": "configs/schemas/stable_asr_schemas.json",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/artifacts.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/audit.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/benchmark_pack.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/scenario_pack.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/submissions.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/leaderboard.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/schemas.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/schema_validation.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/provenance.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/integrity.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/parity.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/final_experiments.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/final_inputs.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/final_config.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/final_pack.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/acquisition_pack.py",
+          "required_now": true
+        },
+        {
+          "path": "stable_asr/paper/contributor_pack.py",
+          "required_now": true
+        },
+        {
+          "path": "scripts/reproduce_paper.py",
+          "required_now": true
+        }
       ],
       "commands": [
         "stable-asr reproduce-paper --config configs/paper/paper_smoke.json",
@@ -208,26 +421,86 @@
       "status": "planned",
       "objective": "Run real corpora, external ASR systems, external turn models, and VoiceWorld robustness experiments at paper scale.",
       "artifacts": [
-        {"path": "runs/final/librispeech_dev_clean/asr_manifest.jsonl", "required_now": false},
-        {"path": "runs/final/aishell1_dev/asr_manifest.jsonl", "required_now": false},
-        {"path": "runs/final/asr_eval_manifest.jsonl", "required_now": false},
-        {"path": "runs/final/turn_train.jsonl", "required_now": false},
-        {"path": "runs/final/turn_dev.jsonl", "required_now": false},
-        {"path": "runs/final/turn_test.jsonl", "required_now": false},
-        {"path": "runs/final/external/smartturn_predictions.jsonl", "required_now": false},
-        {"path": "runs/final/external/easyturn_predictions.jsonl", "required_now": false},
-        {"path": "runs/final/external/vap_predictions.jsonl", "required_now": false},
-        {"path": "runs/final/asr_commands/whisper_streaming.jsonl", "required_now": false},
-        {"path": "runs/final/asr_commands/funasr_streaming.jsonl", "required_now": false},
-        {"path": "runs/final/asr_commands/qwen3_asr_streaming.jsonl", "required_now": false},
-        {"path": "runs/final/asr_commands/firered_asr2s_streaming.jsonl", "required_now": false},
-        {"path": "runs/final/reports/asr_transcript_conversions.json", "required_now": false},
-        {"path": "runs/final/nanoturn/checkpoint.pt", "required_now": false},
-        {"path": "runs/final/FINAL_INPUT_HANDOFF.json", "required_now": false},
-        {"path": "runs/final/FINAL_ASSIGNMENT_AUDIT.md", "required_now": false},
-        {"path": "runs/final/FINAL_HANDOFF_AUDIT.md", "required_now": false},
-        {"path": "runs/final/paper_results.json", "required_now": false},
-        {"path": "runs/final/artifacts", "required_now": false}
+        {
+          "path": "runs/final/librispeech_dev_clean/asr_manifest.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/aishell1_dev/asr_manifest.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/asr_eval_manifest.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/turn_train.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/turn_dev.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/turn_test.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/external/smartturn_predictions.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/external/easyturn_predictions.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/external/vap_predictions.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/asr_commands/whisper_streaming.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/asr_commands/funasr_streaming.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/asr_commands/qwen3_asr_streaming.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/asr_commands/firered_asr2s_streaming.jsonl",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/reports/asr_transcript_conversions.json",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/nanoturn/checkpoint.pt",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/FINAL_INPUT_HANDOFF.json",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/FINAL_ASSIGNMENT_AUDIT.md",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/FINAL_HANDOFF_AUDIT.md",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/paper_results.json",
+          "required_now": false
+        },
+        {
+          "path": "runs/final/artifacts",
+          "required_now": false
+        }
       ],
       "commands": [
         "stable-asr final-pack --output-dir runs/final_pack",

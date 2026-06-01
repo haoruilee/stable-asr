@@ -26,6 +26,7 @@ jobs:
           stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only
           stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only
           stable-asr platform-parity --output /tmp/stable-asr-platform-parity.md
+          stable-asr model-registry --audit-configs --output /tmp/stable-asr-model-config-audit.md
           stable-asr validate-manifest examples/data/turn_demo.jsonl
           stable-asr labels
           stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report /tmp/stable-asr-turn-profile.md
@@ -80,6 +81,7 @@ jobs:
           /tmp/stable-asr-wheel-venv/bin/stable-asr doctor
           /tmp/stable-asr-wheel-venv/bin/stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json --validate-only
           /tmp/stable-asr-wheel-venv/bin/stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only
+          /tmp/stable-asr-wheel-venv/bin/stable-asr model-registry --audit-configs --output /tmp/stable-asr-wheel-model-config-audit.md
           /tmp/stable-asr-wheel-venv/bin/stable-asr asr-collections --registry configs/references/asr_collections.json --audit-coverage
           /tmp/stable-asr-wheel-venv/bin/stable-asr turn-collections --registry configs/references/turn_collections.json --audit-coverage
           /tmp/stable-asr-wheel-venv/bin/stable-asr reference-workqueue --output /tmp/stable-asr-wheel-reference-workqueue.md
