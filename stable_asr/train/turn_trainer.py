@@ -1,17 +1,16 @@
-"""Minimal NanoTurn training loop for v0 reproducibility."""
+"""NanoTurn training entry points."""
 
 from __future__ import annotations
 
-import json
 import random
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from stable_asr.data.manifest import TurnManifestRecord
-from stable_asr.train.features import FEATURE_NAMES, feature_names, normalize_feature_source, records_to_features
+from stable_asr.train.features import records_to_features
+from stable_asr.train.framework import NanoTurnRunConfig, fit_nanoturn
 from stable_asr.turn.nanoturn import (
-    DEFAULT_LABELS,
     NanoTurnConfig,
     build_nanoturn_model,
     require_torch,
@@ -64,88 +63,45 @@ def train_nanoturn(
     feature_cache: str | Path | None = None,
     feature_cache_format: str | None = None,
     feature_cache_mode: str = "auto",
+    val_records: list[TurnManifestRecord] | None = None,
+    batch_size: int = 128,
+    validation_split: float = 0.0,
+    optimizer: str = "adam",
+    weight_decay: float = 0.0,
+    gradient_clip_norm: float | None = None,
+    checkpoint_interval: int = 1,
+    resume_from: str | Path | None = None,
+    device: str = "auto",
 ) -> TrainTurnResult:
     require_torch()
     if not records:
         raise ValueError("records must not be empty")
-    if epochs < 1:
-        raise ValueError("epochs must be at least 1")
 
     _seed_everything(seed)
-    feature_source = normalize_feature_source(feature_source)
-    labels = DEFAULT_LABELS
-    names = feature_names(feature_source)
-    model = build_nanoturn_model(model_type, labels=labels, input_dim=len(names))
-    model.config = NanoTurnConfig(
-        input_dim=len(names),
-        hidden_dim=model.config.hidden_dim,
-        depth=model.config.depth,
-        dropout=model.config.dropout,
-        labels=model.config.labels,
-        model_type=model.config.model_type,
+    config = NanoTurnRunConfig(
+        model_type=model_type,
+        epochs=epochs,
+        lr=lr,
+        seed=seed,
         feature_source=feature_source,
-    )
-    features = records_to_features(
-        records,
-        feature_source=feature_source,
-        audio_root=audio_root,
-        feature_cache=feature_cache,
+        batch_size=batch_size,
+        validation_split=validation_split,
+        optimizer=optimizer,
+        weight_decay=weight_decay,
+        gradient_clip_norm=gradient_clip_norm,
+        checkpoint_interval=checkpoint_interval,
+        device=device,
+        feature_cache=str(feature_cache) if feature_cache else None,
         feature_cache_format=feature_cache_format,
         feature_cache_mode=feature_cache_mode,
+        audio_root=str(audio_root) if audio_root else None,
+        resume_from=str(resume_from) if resume_from else None,
     )
-    targets = torch.tensor([labels.index(record.turn_label) for record in records], dtype=torch.long)
-
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    criterion = torch.nn.CrossEntropyLoss()
-    history: list[dict[str, float]] = []
-
-    for epoch in range(1, epochs + 1):
-        model.train()
-        optimizer.zero_grad()
-        logits = model(features)
-        loss = criterion(logits, targets)
-        loss.backward()
-        optimizer.step()
-
-        with torch.no_grad():
-            predictions = logits.argmax(dim=-1)
-            accuracy = (predictions == targets).float().mean().item()
-        history.append({"epoch": epoch, "loss": float(loss.item()), "accuracy": float(accuracy)})
-
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    checkpoint_path = output_dir / "checkpoint.pt"
-    metrics_path = output_dir / "metrics.json"
-
-    final_metrics = {
-        "model_type": model_type,
-        "records": len(records),
-        "epochs": epochs,
-        "lr": lr,
-        "seed": seed,
-        "feature_source": feature_source,
-        "feature_cache": str(feature_cache) if feature_cache else None,
-        "feature_cache_format": feature_cache_format,
-        "feature_cache_mode": feature_cache_mode if feature_cache else None,
-        "feature_names": list(names),
-        "labels": list(labels),
-        "final_loss": history[-1]["loss"],
-        "final_accuracy": history[-1]["accuracy"],
-        "history": history,
-    }
-    torch.save(
-        {
-            "config": model.config.to_dict(),
-            "state_dict": model.state_dict(),
-            "metrics": final_metrics,
-        },
-        checkpoint_path,
-    )
-    metrics_path.write_text(json.dumps(final_metrics, ensure_ascii=False, indent=2), encoding="utf-8")
+    result = fit_nanoturn(records, output_dir=output_dir, config=config, val_records=val_records)
     return TrainTurnResult(
-        checkpoint_path=str(checkpoint_path),
-        metrics_path=str(metrics_path),
-        metrics=final_metrics,
+        checkpoint_path=result.artifacts.checkpoint_path,
+        metrics_path=result.artifacts.metrics_path,
+        metrics=result.metrics,
     )
 
 

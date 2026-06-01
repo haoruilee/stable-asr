@@ -3,5 +3,13 @@
   "epochs": 150,
   "lr": 0.005,
   "seed": 0,
-  "feature_source": "manifest_metadata_v0"
+  "feature_source": "manifest_metadata_v0",
+  "batch_size": 128,
+  "validation_split": 0.1,
+  "optimizer": "adamw",
+  "weight_decay": 0.0001,
+  "gradient_clip_norm": 1.0,
+  "checkpoint_interval": 1,
+  "device": "auto",
+  "feature_cache_mode": "auto"
 }

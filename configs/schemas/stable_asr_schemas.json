@@ -333,6 +333,18 @@
           "epochs": {"type": "integer", "minimum": 1},
           "lr": {"type": "number", "exclusiveMinimum": 0},
           "seed": {"type": "integer"},
+          "batch_size": {"type": "integer", "minimum": 1},
+          "validation_split": {"type": "number", "minimum": 0, "exclusiveMaximum": 1},
+          "optimizer": {"type": "string", "enum": ["adam", "adamw", "sgd"]},
+          "weight_decay": {"type": "number", "minimum": 0},
+          "gradient_clip_norm": {"type": ["number", "null"], "exclusiveMinimum": 0},
+          "checkpoint_interval": {"type": "integer", "minimum": 1},
+          "device": {"type": "string", "minLength": 1},
+          "audio_root": {"type": "string"},
+          "feature_cache": {"type": ["string", "null"]},
+          "feature_cache_format": {"type": ["string", "null"], "enum": ["parquet", "lance", null]},
+          "feature_cache_mode": {"type": "string", "enum": ["auto", "read", "write", "off"]},
+          "resume_from": {"type": ["string", "null"]},
           "feature_source": {
             "type": "string",
             "enum": [

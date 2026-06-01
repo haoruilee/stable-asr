@@ -37,7 +37,7 @@ stable-asr turn-submission \
   --system oracle_fixture \
   --output-dir runs/submissions/oracle_fixture
 stable-asr benchmark-pack --output-dir runs/benchmark_pack
-stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
+stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn --validation-split 0.25 --batch-size 2
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn_nano --config configs/nanoturn_nano.json --epochs 5
 
 # 3. Package a streaming ASR trace for leaderboard-style review

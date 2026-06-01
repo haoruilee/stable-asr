@@ -2293,7 +2293,50 @@ def test_train_turn_cli_uses_config_file_and_overrides(tmp_path, capsys) -> None
     assert payload["epochs"] == 3
     assert payload["seed"] == 12
     assert payload["feature_source"] == "metadata"
+    assert payload["batch_size"] == 128
     assert (output_dir / "checkpoint.pt").exists()
+
+
+def test_train_turn_cli_framework_options(tmp_path, capsys) -> None:
+    pytest.importorskip("torch")
+
+    output_dir = tmp_path / "nanoturn_framework"
+    code = main(
+        [
+            "train-turn",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--output-dir",
+            str(output_dir),
+            "--epochs",
+            "2",
+            "--batch-size",
+            "2",
+            "--validation-split",
+            "0.25",
+            "--optimizer",
+            "adamw",
+            "--weight-decay",
+            "0.001",
+            "--gradient-clip-norm",
+            "1.0",
+            "--checkpoint-interval",
+            "1",
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["optimizer"] == "adamw"
+    assert payload["batch_size"] == 2
+    assert payload["train_records"] == 3
+    assert payload["val_records"] == 1
+    assert (output_dir / "run_config.json").exists()
+    assert (output_dir / "history.jsonl").exists()
+    assert (output_dir / "best.pt").exists()
+    assert (output_dir / "checkpoints" / "weights_epoch_1.pt").exists()
 
 
 def test_export_turn_onnx_cli(tmp_path, capsys) -> None:

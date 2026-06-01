@@ -8,6 +8,14 @@ from stable_asr.train.feature_cache import (
     load_logmel_feature_cache,
     write_logmel_feature_cache,
 )
+from stable_asr.train.framework import (
+    NanoTurnDataModule,
+    NanoTurnFitResult,
+    NanoTurnRunArtifacts,
+    NanoTurnRunConfig,
+    NanoTurnTrainer,
+    fit_nanoturn,
+)
 from stable_asr.train.turn_trainer import (
     NanoTurnCheckpointPredictor,
     TrainTurnResult,
@@ -17,11 +25,17 @@ from stable_asr.train.turn_trainer import (
 
 __all__ = [
     "NanoTurnCheckpointPredictor",
+    "NanoTurnDataModule",
+    "NanoTurnFitResult",
+    "NanoTurnRunArtifacts",
+    "NanoTurnRunConfig",
+    "NanoTurnTrainer",
     "TrainFeatureBenchmarkRow",
     "TrainTurnResult",
     "benchmark_train_feature_cache",
     "ensure_logmel_feature_cache",
     "export_nanoturn_onnx",
+    "fit_nanoturn",
     "load_logmel_feature_cache",
     "load_nanoturn_checkpoint",
     "train_nanoturn",

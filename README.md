@@ -67,7 +67,7 @@ stable-asr compare-turn \
   --report runs/turn_compare.md
 
 # 2. Train and evaluate NanoTurn
-stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
+stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn --validation-split 0.25 --batch-size 2
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn_nano --config configs/nanoturn_nano.json --epochs 5
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --checkpoint runs/nanoturn/checkpoint.pt
 
@@ -338,6 +338,7 @@ is provided in `mkdocs.yaml`.
 - `benchmark-turn` for latency, throughput, RTF, and artifact-size reports
 - optional NanoTurnPico/NanoTurnNano PyTorch models
 - `train-turn` checkpoint and metrics generation
+- `train-turn` stable-worldmodel-style run artifacts: `run_config.json`, `history.jsonl`, epoch checkpoints, `best.pt`, `metrics.json`, and `TRAINING_SUMMARY.md`
 - `train-turn --feature-source audio` for synthetic WAV manifests
 - `eval-turn --checkpoint` for NanoTurn checkpoints
 - `export-turn-onnx` for NanoTurn checkpoints

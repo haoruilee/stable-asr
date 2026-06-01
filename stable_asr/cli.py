@@ -1025,6 +1025,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Train a NanoTurn baseline on a JSONL manifest.",
     )
     train_parser.add_argument("--dataset", type=Path, required=True, help="Training manifest path.")
+    train_parser.add_argument("--dev-dataset", type=Path, help="Optional validation manifest path.")
     train_parser.add_argument("--output-dir", type=Path, required=True, help="Output directory.")
     train_parser.add_argument("--config", type=Path, help="Optional NanoTurn training config JSON.")
     train_parser.add_argument(
@@ -1036,6 +1037,17 @@ def build_parser() -> argparse.ArgumentParser:
     train_parser.add_argument("--epochs", type=int)
     train_parser.add_argument("--lr", type=float)
     train_parser.add_argument("--seed", type=int)
+    train_parser.add_argument("--batch-size", type=int)
+    train_parser.add_argument("--validation-split", type=float)
+    train_parser.add_argument("--optimizer", choices=["adam", "adamw", "sgd"])
+    train_parser.add_argument("--weight-decay", type=float)
+    train_parser.add_argument("--gradient-clip-norm", type=float)
+    train_parser.add_argument("--checkpoint-interval", type=int)
+    train_parser.add_argument("--resume-from", type=Path)
+    train_parser.add_argument(
+        "--device",
+        help="Torch device for training. Defaults to auto, which uses CUDA when available.",
+    )
     train_parser.add_argument(
         "--feature-source",
         choices=["metadata", "audio", "manifest_metadata_v0", "metadata_v0", "logmel_v0", "audio_logmel_v0"],
@@ -1060,7 +1072,7 @@ def build_parser() -> argparse.ArgumentParser:
     train_parser.add_argument(
         "--feature-cache-mode",
         choices=["auto", "read", "write", "off"],
-        default="auto",
+        default=None,
         help="auto builds a missing cache and reuses an existing one.",
     )
     train_parser.add_argument("--json", action="store_true", help="Print metrics as JSON.")
@@ -2912,19 +2924,56 @@ def main(argv: list[str] | None = None) -> int:
         epochs = args.epochs if args.epochs is not None else int(train_config.get("epochs", 100))
         lr = args.lr if args.lr is not None else float(train_config.get("lr", 1e-2))
         seed = args.seed if args.seed is not None else int(train_config.get("seed", 0))
+        batch_size = args.batch_size if args.batch_size is not None else int(train_config.get("batch_size", 128))
+        validation_split = (
+            args.validation_split
+            if args.validation_split is not None
+            else float(train_config.get("validation_split", 0.0))
+        )
+        optimizer = args.optimizer or str(train_config.get("optimizer", "adam"))
+        weight_decay = (
+            args.weight_decay if args.weight_decay is not None else float(train_config.get("weight_decay", 0.0))
+        )
+        gradient_clip_norm = (
+            args.gradient_clip_norm
+            if args.gradient_clip_norm is not None
+            else _optional_float(train_config.get("gradient_clip_norm"))
+        )
+        checkpoint_interval = (
+            args.checkpoint_interval
+            if args.checkpoint_interval is not None
+            else int(train_config.get("checkpoint_interval", 1))
+        )
         feature_source = args.feature_source or str(train_config.get("feature_source", "metadata"))
+        audio_root = args.audio_root or _optional_path(train_config.get("audio_root")) or args.dataset.parent
+        feature_cache = args.feature_cache or _optional_path(train_config.get("feature_cache"))
+        feature_cache_format = args.feature_cache_format or _optional_str(train_config.get("feature_cache_format"))
+        feature_cache_mode = args.feature_cache_mode or str(train_config.get("feature_cache_mode", "auto"))
+        resume_from = args.resume_from or _optional_path(train_config.get("resume_from"))
+        device = args.device or str(train_config.get("device", "auto"))
+        train_records = load_manifest(args.dataset)
+        val_records = load_manifest(args.dev_dataset) if args.dev_dataset else None
         result = train_nanoturn(
-            load_manifest(args.dataset),
+            train_records,
             output_dir=args.output_dir,
             model_type=model_type,
             epochs=epochs,
             lr=lr,
             seed=seed,
             feature_source=feature_source,
-            audio_root=args.audio_root or args.dataset.parent,
-            feature_cache=args.feature_cache,
-            feature_cache_format=args.feature_cache_format,
-            feature_cache_mode=args.feature_cache_mode,
+            audio_root=audio_root,
+            feature_cache=feature_cache,
+            feature_cache_format=feature_cache_format,
+            feature_cache_mode=feature_cache_mode,
+            val_records=val_records,
+            batch_size=batch_size,
+            validation_split=validation_split,
+            optimizer=optimizer,
+            weight_decay=weight_decay,
+            gradient_clip_norm=gradient_clip_norm,
+            checkpoint_interval=checkpoint_interval,
+            resume_from=resume_from,
+            device=device,
         )
         if args.json:
             print(json.dumps(result.metrics, ensure_ascii=False, indent=2))
@@ -3895,6 +3944,29 @@ def _load_train_turn_config(path: Path | None) -> dict[str, object]:
     if not isinstance(payload, dict):
         raise ValueError("NanoTurn training config must be a JSON object")
     return payload
+
+
+def _optional_path(value: object) -> Path | None:
+    if value is None:
+        return None
+    if isinstance(value, Path):
+        return value
+    if isinstance(value, str) and value:
+        return Path(value)
+    return None
+
+
+def _optional_float(value: object) -> float | None:
+    if value is None:
+        return None
+    return float(value)
+
+
+def _optional_str(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value)
+    return text or None
 
 
 def _required_config_path(config: dict[str, object], key: str) -> Path:

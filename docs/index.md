@@ -94,7 +94,7 @@ stable-asr inspect-asr-manifest runs/asr_manifest.jsonl
 stable-asr asr-to-turn --input runs/asr_manifest.jsonl --output runs/asr_turn.jsonl --include-incomplete
 stable-asr bootstrap-turn-data --input examples/data/asr_metadata.tsv --output-dir runs/bootstrap_turn --audio-root examples/data --sample-rate 16000 --include-incomplete
 stable-asr audit-audio --kind asr --manifest runs/asr_manifest.jsonl
-stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
+stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn --validation-split 0.25 --batch-size 2
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --baseline vad_pause
 stable-asr predict-turn --dataset examples/data/turn_demo.jsonl --baseline text_turn --output runs/text_turn_predictions.jsonl
 stable-asr validate-turn-predictions --dataset examples/data/turn_demo.jsonl --predictions runs/text_turn_predictions.jsonl
