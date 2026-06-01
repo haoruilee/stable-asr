@@ -114,12 +114,13 @@ stable-asr benchmark-train-features \
   --dataset runs/final/voiceworld_real.jsonl \
   --output-dir runs/final/train_feature_bench \
   --formats source_audio source_audio_file_cache parquet lance \
-  --sample-count 1000 \
+  --sample-count 10000 \
   --json-output runs/final/reports/train_feature_benchmark.json
 ```
 
-The local 10k training-window benchmark reached `378.9x` speedup for the Lance
-log-mel cache over repeated source-audio open/decode/feature extraction. See
+The local 10k training-window benchmark reached `3883.5x` speedup for the Lance
+log-mel cache over repeated source-audio open/decode/feature extraction after
+the cached Arrow table-to-tensor path was vectorized through NumPy. See
 `docs/data_layer_benchmark.md` for the exact command and cached-only 100k
 stress result.
 

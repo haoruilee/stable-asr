@@ -97,3 +97,16 @@ controlled environments. Stable-ASR mirrors those roles in the speech domain:
 The remaining paper-grade step is not more scaffolding; it is running the
 optional upstream systems on the full public benchmark with recorded model
 versions, weights, hardware, and license notes.
+
+## Local Metric Sanity Checks
+
+Streaming ASR scoring normalizes case, width, punctuation, and symbols before
+WER/CER calculation, with CJK characters split for word-level scoring. This
+prevents all-caps LibriSpeech references and punctuation-bearing vendor outputs
+from producing artificial errors.
+
+Observed CPU sanity run on 10 local manifest records with Whisper tiny:
+
+| model | records | WER | CER | RTF |
+| --- | ---: | ---: | ---: | ---: |
+| Whisper tiny CPU | 10 | 0.1120 | 0.0535 | 0.0312 |

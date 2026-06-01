@@ -280,19 +280,21 @@ def load_logmel_feature_cache_by_indices(path: str | Path, *, format: str | None
 
 
 def _table_to_feature_tensor(table: Any, *, record_ids: list[str] | None = None):
-    columns = table.to_pydict()
-    ids = [str(item) for item in columns["id"]]
-    rows = [
-        [float(columns[name][index]) for name in AUDIO_FEATURE_NAMES]
-        for index in range(len(ids))
+    import numpy as np
+
+    ids = [str(item) for item in table.column("id").to_pylist()]
+    feature_columns = [
+        table.column(name).combine_chunks().to_numpy(zero_copy_only=False).astype("float32", copy=False)
+        for name in AUDIO_FEATURE_NAMES
     ]
+    features = np.column_stack(feature_columns).astype("float32", copy=False)
     if record_ids is not None:
-        by_id = {record_id: rows[index] for index, record_id in enumerate(ids)}
+        by_id = {record_id: index for index, record_id in enumerate(ids)}
         missing = [record_id for record_id in record_ids if record_id not in by_id]
         if missing:
             raise RuntimeError(f"feature cache is missing {len(missing)} record id(s): {missing[:3]}")
-        rows = [by_id[record_id] for record_id in record_ids]
-    return torch.tensor(rows, dtype=torch.float32)
+        features = features[np.asarray([by_id[record_id] for record_id in record_ids], dtype=np.int64)]
+    return torch.from_numpy(np.array(features, dtype=np.float32, copy=True))
 
 
 def _write_feature_parquet(path: str | Path, rows: list[dict[str, Any]]) -> None:
@@ -380,4 +382,3 @@ def _require_pyarrow_lance():
     except Exception as exc:  # pragma: no cover - optional dependency.
         raise RuntimeError("Log-mel feature cache Lance support requires pyarrow. Install stable-asr[lance].") from exc
     return pa, _require_lance()
-

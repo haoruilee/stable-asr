@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from stable_asr.streaming.failures import StreamingFailureSummary, mine_streaming_failures
+from stable_asr.streaming.text_normalization import asr_char_tokens, asr_word_tokens, normalize_asr_text
 from stable_asr.streaming.types import StreamingASRRecord, WordTimestamp
 
 
@@ -56,20 +57,23 @@ def evaluate_streaming_records(records: list[StreamingASRRecord]) -> StreamingAS
     timestamp_drifts: list[float] = []
 
     for record in records:
-        ref_words = _words(record.reference)
-        hyp_words = _words(record.final_text)
+        ref_words = asr_word_tokens(record.reference)
+        hyp_words = asr_word_tokens(record.final_text)
         total_word_edits += _edit_distance(ref_words, hyp_words)
         total_words += len(ref_words)
-        total_char_edits += _edit_distance(list(record.reference), list(record.final_text))
-        total_chars += len(record.reference)
+        ref_chars = asr_char_tokens(record.reference)
+        hyp_chars = asr_char_tokens(record.final_text)
+        total_char_edits += _edit_distance(ref_chars, hyp_chars)
+        total_chars += len(ref_chars)
         total_processing += record.processing_time
         total_audio += record.audio_duration
 
         if record.partials:
             first_latencies.append(record.partials[0].time)
             final_latencies.append(record.partials[-1].time)
-            revision_rates.append(_partial_revision_rate([partial.text for partial in record.partials]))
-            stable_prefix_ratios.append(_stable_prefix_ratio(record.final_text, [partial.text for partial in record.partials]))
+            partials = [normalize_asr_text(partial.text) for partial in record.partials]
+            revision_rates.append(_partial_revision_rate(partials))
+            stable_prefix_ratios.append(_stable_prefix_ratio(normalize_asr_text(record.final_text), partials))
         else:
             first_latencies.append(0.0)
             final_latencies.append(record.audio_duration)
@@ -158,10 +162,6 @@ def _edit_distance(a: list[str], b: list[str]) -> int:
             )
         previous = current
     return previous[-1]
-
-
-def _words(text: str) -> list[str]:
-    return [token for token in text.strip().split() if token]
 
 
 def _safe_div(numerator: float, denominator: float) -> float:

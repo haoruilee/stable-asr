@@ -61,6 +61,12 @@ Supported transcript schemas include `whisper`, `funasr`, `whisper_cpp`,
 `whisperx`, `qwen3_asr`, `firered_asr2s`, `sensevoice`, `moonshine`, and
 `whisperkit`.
 
+Streaming WER/CER are computed after a conservative ASR normalization pass:
+Unicode width normalization, case folding, punctuation/symbol removal, and
+CJK character tokenization for word-level scoring. This keeps adapter
+comparisons focused on recognition errors instead of vendor-specific casing or
+punctuation conventions.
+
 The demo config below runs two command-backed adapters through the same
 comparison path without importing either upstream ASR package:
 

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from stable_asr.eval.report import dict_table
+from stable_asr.streaming.text_normalization import asr_word_tokens, normalize_asr_text
 from stable_asr.streaming.types import StreamingASRRecord, WordTimestamp
 
 
@@ -182,9 +183,9 @@ def _record_failures(
 
 
 def _record_metrics(record: StreamingASRRecord) -> dict[str, float]:
-    ref_words = _words(record.reference)
-    hyp_words = _words(record.final_text)
-    partial_texts = [partial.text for partial in record.partials]
+    ref_words = asr_word_tokens(record.reference)
+    hyp_words = asr_word_tokens(record.final_text)
+    partial_texts = [normalize_asr_text(partial.text) for partial in record.partials]
     first_partial_latency = record.partials[0].time if record.partials else 0.0
     return {
         "wer": _safe_div(_edit_distance(ref_words, hyp_words), len(ref_words)),
@@ -192,7 +193,7 @@ def _record_metrics(record: StreamingASRRecord) -> dict[str, float]:
         "first_partial_latency": first_partial_latency,
         "endpoint_delay": _endpoint_delay(record),
         "partial_revision_rate": _partial_revision_rate(partial_texts),
-        "stable_prefix_ratio": _stable_prefix_ratio(record.final_text, partial_texts),
+        "stable_prefix_ratio": _stable_prefix_ratio(normalize_asr_text(record.final_text), partial_texts),
         "timestamp_drift": _timestamp_drift(record.reference_word_timestamps, record.word_timestamps),
     }
 
@@ -258,10 +259,6 @@ def _edit_distance(a: list[str], b: list[str]) -> int:
             current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost))
         previous = current
     return previous[-1]
-
-
-def _words(text: str) -> list[str]:
-    return [token for token in text.strip().split() if token]
 
 
 def _safe_div(numerator: float, denominator: float) -> float:
