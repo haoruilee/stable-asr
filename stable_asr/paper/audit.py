@@ -1363,6 +1363,12 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     )
     checks.append(
         _exists_check(
+            "starter_pack:contributor_reference_license_review_templates",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_LICENSE_REVIEW_TEMPLATES.md",
+        )
+    )
+    checks.append(
+        _exists_check(
             "starter_pack:contributor_reference_assignments",
             artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_ASSIGNMENTS.md",
         )
@@ -1386,6 +1392,13 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
             "starter_pack:contributor_reference_issue_command",
             artifacts_dir / "starter_packs" / "contributor_pack" / "COMMANDS.md",
             contains="issues-markdown",
+        )
+    )
+    checks.append(
+        _contains_check(
+            "starter_pack:contributor_reference_license_review_command",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "COMMANDS.md",
+            contains="license-review-markdown",
         )
     )
     checks.append(
@@ -1455,6 +1468,13 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
             "reference_collection_issues:markdown",
             artifacts_dir / "REFERENCE_COLLECTION_ISSUES.md",
             contains="Shared Acceptance",
+        )
+    )
+    checks.append(
+        _contains_check(
+            "reference_license_review_templates:markdown",
+            artifacts_dir / "REFERENCE_LICENSE_REVIEW_TEMPLATES.md",
+            contains="Shared Review Rules",
         )
     )
     checks.append(_exists_check("reference_evidence_audit:json", artifacts_dir / "reference_evidence_audit.json"))

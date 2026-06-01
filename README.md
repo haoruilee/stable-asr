@@ -159,6 +159,7 @@ stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COL
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
 stable-asr reference-workqueue --format issues-markdown --output runs/REFERENCE_COLLECTION_ISSUES.md
+stable-asr reference-workqueue --format license-review-markdown --output runs/REFERENCE_LICENSE_REVIEW_TEMPLATES.md
 stable-asr reference-workqueue --audit-evidence --require-content --output runs/REFERENCE_EVIDENCE_AUDIT.md
 stable-asr compare-asr-commands --config examples/configs/asr_vendor_adapter_demo.json --report runs/asr_vendor_adapter.md
 stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --validate-only --require-input-manifest --min-adapters 4
@@ -296,6 +297,7 @@ is provided in `mkdocs.yaml`.
 - `reference-workqueue` for merging ASR and turn source manifests into one contributor-facing P0/P1 adapter, license-review, evidence-staging, and assignment-tracking queue
 - `reference-workqueue --format evidence-markdown` for contributor templates that spell out the exact version, command, output, metric, and license sections expected before an upstream reference counts as evidence
 - `reference-workqueue --format issues-markdown` for per-reference issue stubs with labels, context, work checklists, commands, and acceptance criteria
+- `reference-workqueue --format license-review-markdown` for copyable human-review templates that keep pending license decisions separate from release evidence
 - `reference-workqueue --audit-evidence --require-content` for checking that collection workqueue evidence targets and required license-review files actually exist and are not empty placeholder templates before treating references as release evidence
 - `reference-assignment-audit` for checking reference assignment owners, due dates, release blockers, evidence targets, and license-review targets
 - machine-readable VoiceWorld scenario suite in `configs/scenarios/stable_asr_voiceworld_v0.json`

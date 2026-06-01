@@ -28,6 +28,7 @@ def test_build_final_pack_writes_runbook_without_fake_evidence(tmp_path: Path) -
     assert (output_dir / "reports" / "turn_collection_source_manifest.json").exists()
     assert (output_dir / "reports" / "REFERENCE_WORKQUEUE.md").exists()
     assert (output_dir / "reports" / "REFERENCE_COLLECTION_ISSUES.md").exists()
+    assert (output_dir / "reports" / "REFERENCE_LICENSE_REVIEW_TEMPLATES.md").exists()
     assert (output_dir / "reports" / "reference_workqueue.json").exists()
     assert (output_dir / "reports" / "REFERENCE_ASSIGNMENTS.md").exists()
     assert (output_dir / "reports" / "reference_assignments.tsv").exists()
@@ -48,6 +49,9 @@ def test_build_final_pack_writes_runbook_without_fake_evidence(tmp_path: Path) -
     assert "turn:smart_turn" in (output_dir / "reports" / "REFERENCE_WORKQUEUE.md").read_text(encoding="utf-8")
     assert "Stable-ASR Reference Collection Issues" in (
         output_dir / "reports" / "REFERENCE_COLLECTION_ISSUES.md"
+    ).read_text(encoding="utf-8")
+    assert "Stable-ASR Reference License Review Templates" in (
+        output_dir / "reports" / "REFERENCE_LICENSE_REVIEW_TEMPLATES.md"
     ).read_text(encoding="utf-8")
     assert "blocked_license_review" in (output_dir / "reports" / "reference_assignments.tsv").read_text(encoding="utf-8")
     assert "stable-asr final-results" in (output_dir / "NEXT_COMMANDS.md").read_text(encoding="utf-8")

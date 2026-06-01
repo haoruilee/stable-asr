@@ -39,6 +39,7 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     assert (output_dir / "references" / "reference_evidence_audit.json").exists()
     assert (output_dir / "references" / "REFERENCE_EVIDENCE_TEMPLATES.md").exists()
     assert (output_dir / "references" / "REFERENCE_COLLECTION_ISSUES.md").exists()
+    assert (output_dir / "references" / "REFERENCE_LICENSE_REVIEW_TEMPLATES.md").exists()
     assert (output_dir / "references" / "REFERENCE_ASSIGNMENTS.md").exists()
     assert (output_dir / "references" / "reference_assignments.tsv").exists()
 
@@ -56,6 +57,7 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     assert "--audit-evidence" in commands
     assert "evidence-markdown" in commands
     assert "issues-markdown" in commands
+    assert "license-review-markdown" in commands
     assert "reference-assignment-audit" in commands
     assert "asr:funasr" in (output_dir / "references" / "REFERENCE_WORKQUEUE.md").read_text(encoding="utf-8")
     assert "Reference Evidence Audit" in (output_dir / "references" / "REFERENCE_EVIDENCE_AUDIT.md").read_text(
@@ -66,5 +68,8 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     ).read_text(encoding="utf-8")
     assert "Stable-ASR Reference Collection Issues" in (
         output_dir / "references" / "REFERENCE_COLLECTION_ISSUES.md"
+    ).read_text(encoding="utf-8")
+    assert "Stable-ASR Reference License Review Templates" in (
+        output_dir / "references" / "REFERENCE_LICENSE_REVIEW_TEMPLATES.md"
     ).read_text(encoding="utf-8")
     assert "Owner Workflow" in (output_dir / "references" / "REFERENCE_ASSIGNMENTS.md").read_text(encoding="utf-8")

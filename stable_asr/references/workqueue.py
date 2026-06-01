@@ -587,6 +587,87 @@ def reference_workqueue_issues_markdown(workqueue: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def reference_workqueue_license_review_markdown(workqueue: dict[str, Any]) -> str:
+    """Render license-review templates for workqueue tasks that require review."""
+
+    validation = validate_reference_workqueue(workqueue)
+    if not validation.ok:
+        raise ValueError(validation.to_text())
+    review_tasks = [task for task in workqueue["tasks"] if task["license_review_required"]]
+    rows = [
+        {
+            "task": task["task_id"],
+            "priority": task["priority"],
+            "license": task["license"],
+            "target": task["license_review_target"],
+        }
+        for task in review_tasks
+    ]
+    lines = [
+        "# Stable-ASR Reference License Review Templates",
+        "",
+        (
+            "Fill these templates before copying upstream code, weights, generated fixtures, datasets, or long snippets. "
+            "Keeping a template pending is allowed for link-only notes and command adapters, but it is not release evidence."
+        ),
+        "",
+        f"- source_workqueue_id: `{workqueue.get('id', '')}`",
+        f"- review_required: `{len(review_tasks)}`",
+        "",
+        dict_table(rows) if rows else "No reference tasks require manual license review.",
+        "",
+        "## Shared Review Rules",
+        "",
+        "- Confirm the upstream repository, model, dataset, and documentation licenses separately when they differ.",
+        "- Record whether Stable-ASR uses only links and command adapters or copies any upstream asset.",
+        "- Do not commit copied upstream code, weights, generated fixtures, datasets, or long snippets unless approved below.",
+        "- A copied review is complete only when `status`, `reviewer`, `approved_uses`, `prohibited_uses`, and `required_notices` are filled.",
+        "",
+    ]
+    for task in review_tasks:
+        actions = task.get("stable_asr_actions", [])
+        action_text = ", ".join(str(action) for action in actions) if isinstance(actions, list) else ""
+        lines.extend(
+            [
+                f"## {task['task_id']}",
+                "",
+                f"Copy this section into `{task['license_review_target']}` after a human review is complete.",
+                "",
+                f"# License Review: {task['name']}",
+                "",
+                f"- reference_id: `{task['reference_id']}`",
+                f"- collection_type: `{task['collection_type']}`",
+                f"- priority: `{task['priority']}`",
+                f"- declared_license: `{task['license']}`",
+                f"- default_policy: `{task['policy']}`",
+                f"- source_url: `{task['source_url']}`",
+                f"- docs_url: `{task['docs_url']}`",
+                f"- intended_stable_asr_use: {task['reference_use']}",
+                f"- planned_actions: {action_text}",
+                "",
+                "### Review Checklist",
+                "",
+                "- [ ] Confirm upstream repository license.",
+                "- [ ] Confirm model, dataset, checkpoint, fixture, and documentation licenses if separate.",
+                "- [ ] Decide whether Stable-ASR remains link/command-adapter-only or may redistribute specific assets.",
+                "- [ ] Record required notices, attribution text, redistribution limits, and commercial-use limits.",
+                "- [ ] Confirm no copied upstream asset is committed before this review is approved.",
+                "",
+                "## Decision",
+                "",
+                "- status: pending",
+                "- reviewer:",
+                "- reviewed_at:",
+                "- approved_uses:",
+                "- prohibited_uses:",
+                "- required_notices:",
+                "- notes:",
+                "",
+            ]
+        )
+    return "\n".join(lines)
+
+
 def reference_workqueue_jsonl(workqueue: dict[str, Any]) -> str:
     validation = validate_reference_workqueue(workqueue)
     if not validation.ok:

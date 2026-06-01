@@ -954,6 +954,28 @@ def test_reference_workqueue_cli_writes_issue_templates(tmp_path, capsys) -> Non
     assert "reference-collection" in output.read_text(encoding="utf-8")
 
 
+def test_reference_workqueue_cli_writes_license_review_templates(tmp_path, capsys) -> None:
+    output = tmp_path / "REFERENCE_LICENSE_REVIEW_TEMPLATES.md"
+    code = main(
+        [
+            "reference-workqueue",
+            "--format",
+            "license-review-markdown",
+            "--require-priority",
+            "p0",
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Reference License Review Templates" in captured.out
+    assert "runs/collections/funasr/LICENSE_REVIEW.md" in captured.out
+    assert output.exists()
+    assert "Shared Review Rules" in output.read_text(encoding="utf-8")
+
+
 def test_reference_workqueue_cli_audits_evidence_targets(tmp_path, capsys) -> None:
     output = tmp_path / "REFERENCE_EVIDENCE_AUDIT.md"
     code = main(["reference-workqueue", "--audit-evidence", "--output", str(output)])

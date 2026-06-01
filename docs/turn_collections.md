@@ -13,6 +13,7 @@ stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTI
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
 stable-asr reference-workqueue --format issues-markdown --output runs/REFERENCE_COLLECTION_ISSUES.md
+stable-asr reference-workqueue --format license-review-markdown --output runs/REFERENCE_LICENSE_REVIEW_TEMPLATES.md
 stable-asr reference-workqueue --audit-evidence --require-content --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
@@ -68,6 +69,10 @@ output, metric, failure-note, and license-decision sections.
 issue-ready Markdown so Smart Turn, Easy Turn, VAP, Full-Duplex-Bench, Pipecat,
 and VAD collection tasks can be assigned without treating the issue body as
 completed evidence.
+
+`reference-workqueue --format license-review-markdown` provides the matching
+license-review templates for turn/full-duplex references whose code, weights,
+datasets, fixtures, or long snippets need a manual redistribution decision.
 
 Run `reference-workqueue --audit-evidence --require-content` when you need a
 direct release-readiness answer from the generated queue. It checks evidence

@@ -19,6 +19,7 @@ stable-asr asr-collections --audit-licenses --require-license-reviewed
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
 stable-asr reference-workqueue --format issues-markdown --output runs/REFERENCE_COLLECTION_ISSUES.md
+stable-asr reference-workqueue --format license-review-markdown --output runs/REFERENCE_LICENSE_REVIEW_TEMPLATES.md
 stable-asr reference-workqueue --audit-evidence --require-content --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
@@ -56,6 +57,12 @@ marking an upstream reference as evidence.
 `reference-workqueue --format issues-markdown` renders per-reference issue stubs
 with labels, source links, action checklists, strict audit commands, and
 acceptance criteria for assigning upstream collection work.
+
+`reference-workqueue --format license-review-markdown` renders copyable review
+templates for references whose license policy requires a human decision before
+vendoring or redistributing upstream assets. These templates are intentionally
+separate from the target review files, so a pending template is not counted as
+release evidence.
 
 `reference-workqueue --audit-evidence --require-content` checks the generated
 queue directly against the filesystem for release gates. It rejects

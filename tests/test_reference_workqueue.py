@@ -9,6 +9,7 @@ from stable_asr.references import (
     reference_workqueue_evidence_markdown,
     reference_workqueue_from_registries,
     reference_workqueue_issues_markdown,
+    reference_workqueue_license_review_markdown,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
     validate_reference_workqueue,
@@ -42,6 +43,7 @@ def test_reference_workqueue_markdown_and_jsonl_render() -> None:
     markdown = reference_workqueue_markdown(workqueue)
     evidence_templates = reference_workqueue_evidence_markdown(workqueue)
     issue_templates = reference_workqueue_issues_markdown(workqueue)
+    license_templates = reference_workqueue_license_review_markdown(workqueue)
     jsonl = reference_workqueue_jsonl(workqueue)
 
     assert "# Stable-ASR Reference Work Queue" in markdown
@@ -56,6 +58,9 @@ def test_reference_workqueue_markdown_and_jsonl_render() -> None:
     assert "Collect `FunASR` reference evidence" in issue_templates
     assert "reference-collection" in issue_templates
     assert "stable-asr reference-workqueue --audit-evidence --require-content" in issue_templates
+    assert "Stable-ASR Reference License Review Templates" in license_templates
+    assert "runs/collections/funasr/LICENSE_REVIEW.md" in license_templates
+    assert "status: pending" in license_templates
     rows = [json.loads(line) for line in jsonl.splitlines()]
     assert len(rows) == len(workqueue["tasks"])
     assert rows[0]["task_id"]

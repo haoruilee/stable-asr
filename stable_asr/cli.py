@@ -158,6 +158,7 @@ from stable_asr.references import (
     reference_workqueue_evidence_markdown,
     reference_workqueue_from_registries,
     reference_workqueue_issues_markdown,
+    reference_workqueue_license_review_markdown,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
     turn_collections_acquisition_markdown,
@@ -692,6 +693,7 @@ def build_parser() -> argparse.ArgumentParser:
             "assignments-markdown",
             "evidence-markdown",
             "issues-markdown",
+            "license-review-markdown",
         ],
         default="markdown",
         help="Output format for the unified reference work queue.",
@@ -2287,6 +2289,8 @@ def main(argv: list[str] | None = None) -> int:
                 text = reference_workqueue_evidence_markdown(workqueue)
             elif args.format == "issues-markdown":
                 text = reference_workqueue_issues_markdown(workqueue)
+            elif args.format == "license-review-markdown":
+                text = reference_workqueue_license_review_markdown(workqueue)
             else:
                 text = reference_workqueue_markdown(workqueue)
             if args.output:

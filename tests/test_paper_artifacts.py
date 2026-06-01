@@ -76,6 +76,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         "markdown",
         "evidence_templates_markdown",
         "issues_markdown",
+        "license_review_templates_markdown",
         "evidence_audit_json",
         "evidence_audit_markdown",
         "assignments_json",
@@ -183,6 +184,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR Reference Collection Issues" in Path(bundle.reference_workqueue["issues_markdown"]).read_text(
         encoding="utf-8"
     )
+    assert "Stable-ASR Reference License Review Templates" in Path(
+        bundle.reference_workqueue["license_review_templates_markdown"]
+    ).read_text(encoding="utf-8")
     assert '"ok": false' in Path(bundle.reference_workqueue["evidence_audit_json"]).read_text(encoding="utf-8")
     assert "Stable-ASR Reference Assignments" in Path(bundle.reference_workqueue["assignments_markdown"]).read_text(
         encoding="utf-8"
