@@ -54,7 +54,7 @@ stable-asr reference-workqueue --format assignments-json --output runs/reference
 stable-asr reference-workqueue --format assignments-markdown --output runs/REFERENCE_ASSIGNMENTS.md
 stable-asr reference-assignment-audit --input runs/reference_assignments.json --output runs/REFERENCE_ASSIGNMENT_AUDIT.md
 stable-asr final-config --config configs/final/paper_final.json --plan-missing
-stable-asr paper-status --repo-root . --require-checksums
+stable-asr paper-status --repo-root . --output runs/final/PAPER_STATUS.md
 ```
 
 `paper-status` includes the strict final assignment and handoff gates, so a
@@ -63,7 +63,9 @@ final run stays `NOT_READY` until the owner assignment tracker exists, passes
 the `FINAL_ASSIGNMENT_AUDIT.md` evidence file is present, and the filled
 `FINAL_INPUT_HANDOFF.json` has generated checksums from `final-handoff-checksums`
 plus schema evidence from `validate-schema-file --schema-id stable_asr.final_handoff.v0`,
-and passes `final-handoff-audit --require-checksums`.
+and passes `final-handoff-audit --require-checksums`. Its `Next Actions`
+section maps missing final inputs, owner assignment work, handoff work, and
+final release assembly to concrete commands and expected artifacts.
 
 `final-acquisition-pack` is the collaborator-facing version of the final input
 plan. It writes a TSV/JSON staging checklist, owner assignment tracker, license

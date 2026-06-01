@@ -101,7 +101,9 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --resul
 The `paper-status` output reports the final assignment and handoff gates
 separately from final input paths, so missing owners, due dates, release
 blockers, missing audit files, or invalid handoff metadata stay visible before
-the final handoff is accepted.
+the final handoff is accepted. Its `Next Actions` section also prints the
+commands for collecting final inputs, filling assignment trackers, completing
+handoff checksums, and assembling final release artifacts.
 
 The bundle includes Markdown tables and SVG figures for platform architecture,
 data registry, VoiceWorld timelines, policy state transitions, baseline quality,

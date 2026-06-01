@@ -23,10 +23,20 @@ def test_paper_status_summarizes_smoke_and_final_gaps(tmp_path: Path) -> None:
     assert not report.final_assignment_ready
     assert not report.final_handoff_ready
     assert report.final_assignment.missing
+    assert {action.id for action in report.next_actions} == {
+        "collect_final_inputs",
+        "fill_final_assignment",
+        "complete_final_handoff",
+        "assemble_final_release",
+    }
+    assert report.next_actions[0].status == "needed"
     assert "Stable-ASR Paper Status" in markdown
     assert "final_inputs_ready" in markdown
     assert "final_assignment_ready" in markdown
     assert "final_handoff_ready" in markdown
+    assert "Next Actions" in markdown
+    assert "stable-asr final-config --config configs/final/paper_final.json --plan-missing" in markdown
+    assert "stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack" in markdown
     assert "runs/final_acquisition_pack/acquisition/assignments.json" in markdown
     assert "runs/final/FINAL_INPUT_HANDOFF.json" in markdown
     assert "runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md" in markdown
@@ -51,6 +61,7 @@ def test_paper_status_without_results_is_not_smoke_ready() -> None:
     assert report.ok
     assert not report.smoke_ready
     assert not report.final_ready
+    assert report.next_actions[-1].status == "blocked"
 
 
 def test_paper_status_accepts_strict_final_assignment_gate(tmp_path: Path) -> None:
@@ -82,6 +93,8 @@ def test_paper_status_accepts_strict_final_assignment_gate(tmp_path: Path) -> No
     assert report.final_assignment_ready
     assert payload["final_assignment_ready"] is True
     assert payload["final_assignment"]["missing"] == []
+    assignment_action = next(action for action in report.next_actions if action.id == "fill_final_assignment")
+    assert assignment_action.status == "done"
     assert "final_assignment_ready" in report.to_markdown()
 
 
@@ -127,4 +140,6 @@ def test_paper_status_accepts_strict_final_handoff_gate(tmp_path: Path) -> None:
     assert payload["final_handoff"]["missing"] == []
     assert payload["final_handoff"]["handoff_schema_validation"].endswith("runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md")
     assert payload["final_handoff"]["checked_paths"] == ["data.txt"]
+    handoff_action = next(action for action in report.next_actions if action.id == "complete_final_handoff")
+    assert handoff_action.status == "done"
     assert "final_handoff_ready" in report.to_markdown()

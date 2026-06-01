@@ -124,6 +124,7 @@ stable-asr paper-artifact-integrity --manifest runs/paper/smoke/artifacts/artifa
 stable-asr paper-archive --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/artifacts.tar.gz
 stable-asr paper-archive-verify --archive runs/paper/smoke/artifacts.tar.gz
 stable-asr paper-status --release-dir runs/paper/smoke
+stable-asr paper-status --repo-root . --output runs/final/PAPER_STATUS.md
 stable-asr completion-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --allow-incomplete
 stable-asr paper-case-studies --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output-dir runs/paper/smoke/artifacts

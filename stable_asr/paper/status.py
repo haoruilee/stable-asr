@@ -65,6 +65,26 @@ class FinalHandoffStatus:
 
 
 @dataclass(frozen=True)
+class PaperStatusNextAction:
+    id: str
+    title: str
+    status: str
+    reason: str
+    commands: list[str]
+    artifacts: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "status": self.status,
+            "reason": self.reason,
+            "commands": self.commands,
+            "artifacts": self.artifacts,
+        }
+
+
+@dataclass(frozen=True)
 class PaperStatusReport:
     ok: bool
     smoke_ready: bool
@@ -76,6 +96,7 @@ class PaperStatusReport:
     final_assignment: FinalAssignmentStatus
     final_handoff_ready: bool
     final_handoff: FinalHandoffStatus
+    next_actions: list[PaperStatusNextAction]
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -89,6 +110,7 @@ class PaperStatusReport:
             "final_assignment": self.final_assignment.to_dict(),
             "final_handoff_ready": self.final_handoff_ready,
             "final_handoff": self.final_handoff.to_dict(),
+            "next_actions": [action.to_dict() for action in self.next_actions],
         }
 
     def to_markdown(self) -> str:
@@ -123,6 +145,39 @@ class PaperStatusReport:
         ]
         if self.missing_final_inputs:
             lines.extend(f"- `{path}`" for path in self.missing_final_inputs)
+        else:
+            lines.append("- None")
+        lines.extend(["", "## Next Actions", ""])
+        if self.next_actions:
+            lines.append(
+                dict_table(
+                    [
+                        {
+                            "id": action.id,
+                            "status": action.status,
+                            "title": action.title,
+                            "artifacts": len(action.artifacts),
+                        }
+                        for action in self.next_actions
+                    ]
+                )
+            )
+            for action in self.next_actions:
+                lines.extend(
+                    [
+                        "",
+                        f"### {action.id}",
+                        "",
+                        f"- status: `{action.status}`",
+                        f"- reason: {action.reason}",
+                        "",
+                        "Commands:",
+                        "",
+                    ]
+                )
+                _extend_markdown_list(lines, action.commands)
+                lines.extend(["", "Artifacts:", ""])
+                _extend_markdown_list(lines, action.artifacts)
         else:
             lines.append("- None")
         lines.extend(
@@ -211,6 +266,14 @@ def paper_status(
         for check in final_files.checks
         if check.required and not check.ok
     ]
+    next_actions = _paper_status_next_actions(
+        config,
+        missing_final_inputs=missing,
+        final_inputs_ready=final_files.ok,
+        assignment=assignment,
+        handoff=handoff,
+        final_ready=parity.final_ready and final_files.ok and assignment.ready and handoff.ready,
+    )
     return PaperStatusReport(
         ok=doctor.ok,
         smoke_ready=smoke_ready,
@@ -222,6 +285,7 @@ def paper_status(
         final_assignment=assignment,
         final_handoff_ready=handoff.ready,
         final_handoff=handoff,
+        next_actions=next_actions,
     )
 
 
@@ -333,6 +397,112 @@ def _final_handoff_status(config: dict[str, Any], *, repo_root: Path) -> FinalHa
         warnings=warnings,
         checked_paths=checked_paths,
     )
+
+
+def _paper_status_next_actions(
+    config: dict[str, Any],
+    *,
+    missing_final_inputs: list[str],
+    final_inputs_ready: bool,
+    assignment: FinalAssignmentStatus,
+    handoff: FinalHandoffStatus,
+    final_ready: bool,
+) -> list[PaperStatusNextAction]:
+    artifacts = config.get("artifacts", {}) if isinstance(config.get("artifacts", {}), dict) else {}
+    paper_results = str(artifacts.get("paper_results", "runs/final/paper_results.json"))
+    bundle_dir = str(artifacts.get("bundle_dir", "runs/final/artifacts"))
+    model_card = str(artifacts.get("model_card", "runs/final/MODEL_CARD.md"))
+    archive = str(artifacts.get("artifact_archive", "runs/final/artifacts.tar.gz"))
+    config_path = "configs/final/paper_final.json"
+    actions = [
+        PaperStatusNextAction(
+            id="collect_final_inputs",
+            title="Collect real final corpora, turn splits, VoiceWorld records, external predictions, and ASR command exports",
+            status="done" if final_inputs_ready else "needed",
+            reason=(
+                "all required final input paths exist"
+                if final_inputs_ready
+                else f"{len(missing_final_inputs)} required final input path(s) are missing"
+            ),
+            commands=[
+                f"stable-asr final-config --config {config_path} --check-files",
+                f"stable-asr final-config --config {config_path} --plan-missing --output runs/final/FINAL_RUN_ACTION_PLAN.md",
+                "stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack --repo-root .",
+            ],
+            artifacts=["runs/final/FINAL_RUN_ACTION_PLAN.md", *missing_final_inputs],
+        ),
+        PaperStatusNextAction(
+            id="fill_final_assignment",
+            title="Assign owners, due dates, release-blocker state, and evidence handoff status",
+            status="done" if assignment.ready else "needed",
+            reason=(
+                "assignment tracker and strict audit are ready"
+                if assignment.ready
+                else _gate_reason(
+                    missing=len(assignment.missing),
+                    errors=len(assignment.errors),
+                    blockers=len(assignment.blocking_release),
+                    unassigned=len(assignment.unassigned),
+                    missing_due_dates=len(assignment.missing_due_dates),
+                )
+            ),
+            commands=[
+                "stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack --repo-root .",
+                (
+                    f"stable-asr final-assignment-audit --input {assignment.assignment_tracker} "
+                    f"--require-owner --require-due-date --require-ready --output {assignment.assignment_audit}"
+                ),
+            ],
+            artifacts=[assignment.assignment_tracker, assignment.assignment_audit],
+        ),
+        PaperStatusNextAction(
+            id="complete_final_handoff",
+            title="Fill final handoff metadata, checksums, schema validation, and handoff audit",
+            status="done" if handoff.ready else "needed",
+            reason=(
+                "handoff, schema validation, and checksum audit are ready"
+                if handoff.ready
+                else _gate_reason(
+                    missing=len(handoff.missing),
+                    errors=len(handoff.errors),
+                    warnings=len(handoff.warnings),
+                    checked_paths=len(handoff.checked_paths),
+                )
+            ),
+            commands=[
+                f"stable-asr final-handoff-template --output {handoff.handoff}",
+                f"stable-asr final-handoff-checksums --input {handoff.handoff} --repo-root . --output {handoff.handoff}",
+                f"stable-asr validate-schema-file --input {handoff.handoff} --schema-id stable_asr.final_handoff.v0 --output {handoff.handoff_schema_validation}",
+                f"stable-asr final-handoff-audit --input {handoff.handoff} --repo-root . --require-checksums --output {handoff.handoff_audit}",
+            ],
+            artifacts=[handoff.handoff, handoff.handoff_schema_validation, handoff.handoff_audit],
+        ),
+        PaperStatusNextAction(
+            id="assemble_final_release",
+            title="Build final paper results, artifact bundle, model card, archive, and release audit",
+            status="done" if final_ready else ("ready" if final_inputs_ready and assignment.ready and handoff.ready else "blocked"),
+            reason=(
+                "final release gates are ready"
+                if final_ready
+                else "requires final inputs, assignment audit, handoff audit, and final parity gates"
+            ),
+            commands=[
+                f"stable-asr final-results --config {config_path} --output {paper_results}",
+                f"stable-asr paper-bundle --results {paper_results} --output-dir {bundle_dir}",
+                f"stable-asr make-card model --input configs/models/stable_asr_models.json --model-id nanoturn_pico --metrics runs/final/nanoturn/metrics.json --output {model_card}",
+                f"stable-asr paper-archive --artifacts-dir {bundle_dir} --output {archive}",
+                f"stable-asr paper-archive-verify --archive {archive}",
+                f"stable-asr paper-release-audit --repo-root . --results {paper_results} --artifacts-dir {bundle_dir} --model-card {model_card} --require-final-ready",
+            ],
+            artifacts=[paper_results, bundle_dir, model_card, archive],
+        ),
+    ]
+    return actions
+
+
+def _gate_reason(**counts: int) -> str:
+    parts = [f"{name}={count}" for name, count in counts.items() if count]
+    return "; ".join(parts) if parts else "gate is not ready"
 
 
 def _resolve_repo_path(path: object, *, repo_root: Path) -> Path:

@@ -78,6 +78,8 @@ def test_paper_status_cli(capsys) -> None:
     assert "final_inputs_ready" in captured.out
     assert "final_assignment_ready" in captured.out
     assert "final_handoff_ready" in captured.out
+    assert "Next Actions" in captured.out
+    assert "final-acquisition-pack" in captured.out
 
 
 def test_paper_status_cli_accepts_release_dir(tmp_path, capsys) -> None:
