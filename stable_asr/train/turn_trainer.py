@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from stable_asr.data.manifest import TurnManifestRecord
-from stable_asr.train.features import FEATURE_NAMES, feature_names, records_to_features
+from stable_asr.train.features import FEATURE_NAMES, feature_names, normalize_feature_source, records_to_features
 from stable_asr.turn.nanoturn import (
     DEFAULT_LABELS,
     NanoTurnConfig,
@@ -69,6 +69,7 @@ def train_nanoturn(
         raise ValueError("epochs must be at least 1")
 
     _seed_everything(seed)
+    feature_source = normalize_feature_source(feature_source)
     labels = DEFAULT_LABELS
     names = feature_names(feature_source)
     model = build_nanoturn_model(model_type, labels=labels, input_dim=len(names))

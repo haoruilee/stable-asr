@@ -68,6 +68,7 @@ stable-asr compare-turn \
 
 # 2. Train and evaluate NanoTurn
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn
+stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn_nano --config configs/nanoturn_nano.json --epochs 5
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --checkpoint runs/nanoturn/checkpoint.pt
 
 # 3. Generate stable-worldmodel-style paper evidence

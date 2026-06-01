@@ -977,19 +977,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     train_parser.add_argument("--dataset", type=Path, required=True, help="Training manifest path.")
     train_parser.add_argument("--output-dir", type=Path, required=True, help="Output directory.")
+    train_parser.add_argument("--config", type=Path, help="Optional NanoTurn training config JSON.")
     train_parser.add_argument(
         "--model",
         choices=["nanoturn_pico", "nanoturn_nano"],
-        default="nanoturn_pico",
+        default=None,
         help="NanoTurn model size.",
     )
-    train_parser.add_argument("--epochs", type=int, default=100)
-    train_parser.add_argument("--lr", type=float, default=1e-2)
-    train_parser.add_argument("--seed", type=int, default=0)
+    train_parser.add_argument("--epochs", type=int)
+    train_parser.add_argument("--lr", type=float)
+    train_parser.add_argument("--seed", type=int)
     train_parser.add_argument(
         "--feature-source",
-        choices=["metadata", "audio"],
-        default="metadata",
+        choices=["metadata", "audio", "manifest_metadata_v0", "metadata_v0", "logmel_v0", "audio_logmel_v0"],
+        default=None,
         help="Feature source used by NanoTurn v0.",
     )
     train_parser.add_argument(
@@ -2741,14 +2742,20 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "train-turn":
+        train_config = _load_train_turn_config(args.config)
+        model_type = args.model or str(train_config.get("model_type", "nanoturn_pico"))
+        epochs = args.epochs if args.epochs is not None else int(train_config.get("epochs", 100))
+        lr = args.lr if args.lr is not None else float(train_config.get("lr", 1e-2))
+        seed = args.seed if args.seed is not None else int(train_config.get("seed", 0))
+        feature_source = args.feature_source or str(train_config.get("feature_source", "metadata"))
         result = train_nanoturn(
             load_manifest(args.dataset),
             output_dir=args.output_dir,
-            model_type=args.model,
-            epochs=args.epochs,
-            lr=args.lr,
-            seed=args.seed,
-            feature_source=args.feature_source,
+            model_type=model_type,
+            epochs=epochs,
+            lr=lr,
+            seed=seed,
+            feature_source=feature_source,
             audio_root=args.audio_root or args.dataset.parent,
         )
         if args.json:
@@ -3649,6 +3656,16 @@ def _load_paper_config(path: Path | None) -> dict[str, object]:
         payload = json.load(handle)
     if not isinstance(payload, dict):
         raise ValueError("paper config must be a JSON object")
+    return payload
+
+
+def _load_train_turn_config(path: Path | None) -> dict[str, object]:
+    if path is None:
+        return {}
+    with resolve_platform_path(path).open("r", encoding="utf-8") as handle:
+        payload = json.load(handle)
+    if not isinstance(payload, dict):
+        raise ValueError("NanoTurn training config must be a JSON object")
     return payload
 
 

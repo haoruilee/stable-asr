@@ -19,6 +19,12 @@ FEATURE_NAMES = (
     "network_jitter_ms",
 )
 AUDIO_FEATURE_NAMES = tuple(f"logmel_{index:02d}" for index in range(32))
+FEATURE_SOURCE_ALIASES = {
+    "manifest_metadata_v0": "metadata",
+    "metadata_v0": "metadata",
+    "logmel_v0": "audio",
+    "audio_logmel_v0": "audio",
+}
 
 
 def records_to_features(
@@ -28,6 +34,7 @@ def records_to_features(
     audio_root: str | Path | None = None,
 ):
     require_torch()
+    feature_source = normalize_feature_source(feature_source)
     if feature_source == "metadata":
         return torch.tensor([record_to_features(record) for record in records], dtype=torch.float32)
     if feature_source == "audio":
@@ -36,11 +43,16 @@ def records_to_features(
 
 
 def feature_names(feature_source: str) -> tuple[str, ...]:
+    feature_source = normalize_feature_source(feature_source)
     if feature_source == "metadata":
         return FEATURE_NAMES
     if feature_source == "audio":
         return AUDIO_FEATURE_NAMES
     raise ValueError(f"unknown feature_source: {feature_source}")
+
+
+def normalize_feature_source(feature_source: str) -> str:
+    return FEATURE_SOURCE_ALIASES.get(feature_source, feature_source)
 
 
 def record_to_logmel_features(

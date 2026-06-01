@@ -15,6 +15,17 @@ listen, hold, or stop TTS.
 | `nanoturn_pico` | checkpoint predictor | manifest/audio-derived features | turn probabilities | trainable lightweight baseline |
 | `nanoturn_nano` | checkpoint predictor | manifest/audio-derived features | turn probabilities | larger trainable NanoTurn baseline with audited config |
 
+Trainable NanoTurn configs live in `configs/nanoturn_pico.json` and
+`configs/nanoturn_nano.json`. Use `stable-asr model-registry --audit-configs`
+to verify registry/config alignment, and pass a config directly to training:
+
+```bash
+stable-asr train-turn \
+  --dataset examples/data/turn_demo.jsonl \
+  --output-dir runs/nanoturn_nano \
+  --config configs/nanoturn_nano.json
+```
+
 ## External Systems
 
 External ASR or turn-taking systems should not be vendored into Stable-ASR.

@@ -2050,6 +2050,37 @@ def test_train_turn_cli_audio_features(tmp_path, capsys) -> None:
     assert "checkpoint:" in captured.out
 
 
+def test_train_turn_cli_uses_config_file_and_overrides(tmp_path, capsys) -> None:
+    pytest.importorskip("torch")
+
+    output_dir = tmp_path / "nanoturn_nano"
+    code = main(
+        [
+            "train-turn",
+            "--dataset",
+            "examples/data/turn_demo.jsonl",
+            "--output-dir",
+            str(output_dir),
+            "--config",
+            "configs/nanoturn_nano.json",
+            "--epochs",
+            "3",
+            "--seed",
+            "12",
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["model_type"] == "nanoturn_nano"
+    assert payload["epochs"] == 3
+    assert payload["seed"] == 12
+    assert payload["feature_source"] == "metadata"
+    assert (output_dir / "checkpoint.pt").exists()
+
+
 def test_export_turn_onnx_cli(tmp_path, capsys) -> None:
     pytest.importorskip("torch")
     pytest.importorskip("onnx")
