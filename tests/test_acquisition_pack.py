@@ -26,6 +26,9 @@ def test_build_final_acquisition_pack_writes_staging_checklists(tmp_path: Path) 
     assert (output_dir / "acquisition" / "assignments.tsv").exists()
     assert (output_dir / "acquisition" / "assignments.json").exists()
     assert (output_dir / "acquisition" / "ASSIGNMENTS.md").exists()
+    assert (output_dir / "acquisition" / "issues.json").exists()
+    assert (output_dir / "acquisition" / "ISSUE_INDEX.md").exists()
+    assert (output_dir / "acquisition" / "issues" / "librispeech_dev_clean.md").exists()
     assert (output_dir / "acquisition" / "LICENSE_REVIEW.md").exists()
     assert (output_dir / "acquisition" / "VOICEWORLD_RECORDING_CHECKLIST.md").exists()
     assert (output_dir / "acquisition" / "HANDOFF_TEMPLATE.md").exists()
@@ -46,6 +49,16 @@ def test_build_final_acquisition_pack_writes_staging_checklists(tmp_path: Path) 
     assignment_markdown = (output_dir / "acquisition" / "ASSIGNMENTS.md").read_text(encoding="utf-8")
     assert "Stable-ASR Final Acquisition Assignments" in assignment_markdown
     assert "Owner Workflow" in assignment_markdown
+
+    issue_index = (output_dir / "acquisition" / "ISSUE_INDEX.md").read_text(encoding="utf-8")
+    assert "Stable-ASR Final Acquisition Issue Index" in issue_index
+    assert "acquisition/issues/librispeech_dev_clean.md" in issue_index
+    issue_template = (output_dir / "acquisition" / "issues" / "librispeech_dev_clean.md").read_text(
+        encoding="utf-8"
+    )
+    assert "[Final data] LibriSpeech dev-clean" in issue_template
+    assert "Acceptance Checklist" in issue_template
+    assert "final-handoff-audit --require-checksums" in issue_template
 
     acquisition = (output_dir / "acquisition" / "DATA_ACQUISITION.md").read_text(encoding="utf-8")
     assert "Stable-ASR Final Data Acquisition" in acquisition

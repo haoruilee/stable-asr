@@ -29,6 +29,10 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     assert (output_dir / "packs" / "scenario_pack" / "README.md").exists()
     assert (output_dir / "packs" / "final_pack" / "README.md").exists()
     assert (output_dir / "packs" / "final_acquisition_pack" / "README.md").exists()
+    assert (output_dir / "packs" / "final_acquisition_pack" / "acquisition" / "ISSUE_INDEX.md").exists()
+    assert (
+        output_dir / "packs" / "final_acquisition_pack" / "acquisition" / "issues" / "external_turn_predictions.md"
+    ).exists()
     assert (output_dir / "references" / "REFERENCE_WORKQUEUE.md").exists()
     assert (output_dir / "references" / "reference_workqueue.json").exists()
     assert (output_dir / "references" / "REFERENCE_EVIDENCE_AUDIT.md").exists()

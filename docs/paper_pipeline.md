@@ -121,6 +121,9 @@ parity audit, a final-scale experiment runbook, a final-run
 configuration template, a final-run file audit/action plan, a final evidence matrix, a roadmap status report, and a claim evidence matrix
 that links platform-paper claims to files, result keys, artifacts, and
 reproduction commands. `PAPER_STATUS.md` summarizes these signals in one page.
+The final acquisition pack also emits per-collection issue templates under
+`acquisition/issues/`, so the final-scale blockers can be assigned as concrete
+work items with commands, verification, and handoff acceptance checks.
 For final-scale release gates, fill and audit the acquisition assignment
 tracker before handoff, then fill `runs/final/FINAL_INPUT_HANDOFF.json` with
 real owner, license/consent, verification, staged path, and checksum evidence

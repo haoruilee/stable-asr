@@ -1294,6 +1294,19 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
         )
     )
     checks.append(
+        _exists_check(
+            "starter_pack:final_acquisition_issue_index",
+            artifacts_dir / "starter_packs" / "final_acquisition_pack" / "acquisition" / "ISSUE_INDEX.md",
+        )
+    )
+    checks.append(
+        _contains_check(
+            "starter_pack:final_acquisition_issue_template",
+            artifacts_dir / "starter_packs" / "final_acquisition_pack" / "acquisition" / "issues" / "voiceworld_real.md",
+            contains="Acceptance Checklist",
+        )
+    )
+    checks.append(
         _contains_check(
             "starter_pack:final_acquisition_assignment_audit_command",
             artifacts_dir / "starter_packs" / "final_acquisition_pack" / "COMMANDS.md",

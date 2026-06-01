@@ -33,6 +33,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "final_acquisition_pack:checklist_tsv" in bundle.starter_packs
     assert "final_acquisition_pack:assignments_json" in bundle.starter_packs
     assert "final_acquisition_pack:assignments_markdown" in bundle.starter_packs
+    assert "final_acquisition_pack:issue_index_markdown" in bundle.starter_packs
+    assert "final_acquisition_pack:issue_template:librispeech_dev_clean" in bundle.starter_packs
     assert "final_acquisition_pack:handoff_json_template" in bundle.starter_packs
     assert "final_acquisition_pack:handoff_schema_markdown" in bundle.starter_packs
     assert "contributor_pack:readme" in bundle.starter_packs
@@ -119,6 +121,12 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR Final Acquisition Pack" in Path(bundle.starter_packs["final_acquisition_pack:readme"]).read_text(encoding="utf-8")
     assert "Stable-ASR Final Acquisition Assignments" in Path(
         bundle.starter_packs["final_acquisition_pack:assignments_markdown"]
+    ).read_text(encoding="utf-8")
+    assert "Stable-ASR Final Acquisition Issue Index" in Path(
+        bundle.starter_packs["final_acquisition_pack:issue_index_markdown"]
+    ).read_text(encoding="utf-8")
+    assert "Acceptance Checklist" in Path(
+        bundle.starter_packs["final_acquisition_pack:issue_template:librispeech_dev_clean"]
     ).read_text(encoding="utf-8")
     assert "Stable-ASR Contributor Pack" in Path(bundle.starter_packs["contributor_pack:readme"]).read_text(encoding="utf-8")
     assert "Stable-ASR Reference Work Queue" in Path(

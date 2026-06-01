@@ -98,11 +98,12 @@ bash commands.sh
 
 The generated pack converts `configs/final/input_collections.json` into a
 staging checklist, source URL index, owner assignment tracker,
-license/consent review sheet, VoiceWorld recording checklist, and structured
-final input handoff template. The assignment audit checks owner, due-date, and
-release-blocker status before handoff. The handoff audit checks staged paths,
-owner metadata, license/consent notes, verification outputs, and optional
-checksums before M5 final runs.
+per-collection GitHub issue templates, license/consent review sheet, VoiceWorld
+recording checklist, and structured final input handoff template. The
+assignment audit checks owner, due-date, and release-blocker status before
+handoff. The handoff audit checks staged paths, owner metadata,
+license/consent notes, verification outputs, and optional checksums before M5
+final runs.
 
 ## Contributor Pack
 

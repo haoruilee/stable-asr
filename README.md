@@ -191,6 +191,10 @@ manifests, case studies, paper/platform parity audits, a platform catalog, refer
 status, final handoff templates/audits, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
 dataset/experiment/model cards, `artifacts.tar.gz`, and
 `RELEASE_AUDIT.md`.
+The final acquisition starter pack includes owner-ready issue templates under
+`acquisition/issues/` so missing corpora, VoiceWorld data, external predictions,
+ASR exports, NanoTurn artifacts, and final bundle tasks can be assigned without
+treating plans as evidence.
 
 The smoke path can be `READY` while final paper-scale evidence is still
 `NOT_READY`; `paper-release-smoke` prints `final_scale_ready`, and

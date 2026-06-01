@@ -280,6 +280,8 @@ def test_final_acquisition_pack_cli(capsys, tmp_path) -> None:
     assert (output_dir / "COMMANDS.md").exists()
     assert (output_dir / "acquisition" / "staging_checklist.tsv").exists()
     assert (output_dir / "acquisition" / "ASSIGNMENTS.md").exists()
+    assert (output_dir / "acquisition" / "ISSUE_INDEX.md").exists()
+    assert (output_dir / "acquisition" / "issues" / "voiceworld_real.md").exists()
     assert (output_dir / "acquisition" / "LICENSE_REVIEW.md").exists()
 
 

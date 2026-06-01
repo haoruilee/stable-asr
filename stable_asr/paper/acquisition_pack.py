@@ -338,6 +338,20 @@ def build_final_acquisition_pack(
         output_dir / "acquisition" / "ASSIGNMENTS.md",
         _assignments_markdown(assignments),
     )
+    issue_templates = _issue_templates(registry, checklist, assignments)
+    files["issue_index_json"] = _write_json(
+        output_dir / "acquisition" / "issues.json",
+        {"issues": [_issue_manifest_row(issue) for issue in issue_templates]},
+    )
+    files["issue_index_markdown"] = _write_text(
+        output_dir / "acquisition" / "ISSUE_INDEX.md",
+        _issue_index_markdown(issue_templates),
+    )
+    for issue in issue_templates:
+        files[f"issue_template:{issue['collection_id']}"] = _write_text(
+            output_dir / str(issue["path"]),
+            str(issue["markdown"]),
+        )
     license_items = _license_review_rows(registry)
     files["license_review_markdown"] = _write_text(
         output_dir / "acquisition" / "LICENSE_REVIEW.md",
@@ -584,6 +598,167 @@ def _assignment_rows(
             )
         )
     return rows
+
+
+def _issue_templates(
+    registry: dict[str, Any],
+    checklist: list[AcquisitionChecklistRow],
+    assignments: list[AcquisitionAssignmentRow],
+) -> list[dict[str, Any]]:
+    grouped_paths: dict[str, list[AcquisitionChecklistRow]] = {}
+    for row in checklist:
+        grouped_paths.setdefault(row.collection_id, []).append(row)
+    assignments_by_id = {row.collection_id: row for row in assignments}
+
+    issues: list[dict[str, Any]] = []
+    for collection in registry["collections"]:
+        collection_id = str(collection["id"])
+        assignment = assignments_by_id[collection_id]
+        path_rows = grouped_paths.get(collection_id, [])
+        labels = [
+            "final-data",
+            f"priority:{assignment.priority}",
+            f"category:{assignment.category}",
+            "blocking-release" if assignment.blocking_release else "non-blocking",
+        ]
+        path = f"acquisition/issues/{_issue_slug(collection_id)}.md"
+        issue = {
+            "collection_id": collection_id,
+            "title": f"[Final data] {assignment.title}",
+            "labels": labels,
+            "path": path,
+            "status": assignment.status,
+            "blocking_release": assignment.blocking_release,
+            "owner": assignment.owner,
+            "due_date": assignment.due_date,
+            "required": assignment.required,
+            "license": assignment.license,
+            "license_review_required": assignment.license_review_required,
+            "handoff_required": assignment.handoff_required,
+            "missing_required_paths": assignment.missing_required_paths,
+            "pending_generated_paths": assignment.pending_generated_paths,
+            "source_urls": assignment.source_urls,
+            "commands": list(collection.get("commands", [])),
+            "verification": list(collection.get("verification", [])),
+            "markdown": "",
+        }
+        issue["markdown"] = _issue_markdown(issue, collection=collection, path_rows=path_rows)
+        issues.append(issue)
+    return issues
+
+
+def _issue_manifest_row(issue: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in issue.items() if key != "markdown"}
+
+
+def _issue_index_markdown(issues: list[dict[str, Any]]) -> str:
+    rows = [
+        {
+            "collection_id": issue["collection_id"],
+            "priority": issue["labels"][1],
+            "status": issue["status"],
+            "blocking_release": str(issue["blocking_release"]),
+            "issue_template": issue["path"],
+        }
+        for issue in issues
+    ]
+    lines = [
+        "# Stable-ASR Final Acquisition Issue Index",
+        "",
+        (
+            "These issue templates convert the final input registry into owner-ready "
+            "tasks. They are coordination artifacts only; final evidence still needs "
+            "real staged paths, verification outputs, and a checksummed handoff."
+        ),
+        "",
+        dict_table(rows),
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def _issue_markdown(
+    issue: dict[str, Any],
+    *,
+    collection: dict[str, Any],
+    path_rows: list[AcquisitionChecklistRow],
+) -> str:
+    path_table = [
+        {
+            "kind": row.path_kind,
+            "path": row.path,
+            "status": row.status,
+        }
+        for row in path_rows
+    ]
+    lines = [
+        f"# {issue['title']}",
+        "",
+        "## Metadata",
+        "",
+        f"- collection_id: `{issue['collection_id']}`",
+        f"- category: `{collection['category']}`",
+        f"- priority: `{collection['priority']}`",
+        f"- required: `{collection['required']}`",
+        f"- status: `{issue['status']}`",
+        f"- blocking_release: `{issue['blocking_release']}`",
+        f"- owner: `{issue['owner']}`",
+        f"- due_date: `{issue['due_date'] or 'TBD'}`",
+        f"- labels: `{', '.join(issue['labels'])}`",
+        f"- license: `{issue['license']}`",
+        f"- license_review_required: `{issue['license_review_required']}`",
+        f"- handoff_required: `{issue['handoff_required']}`",
+        "",
+        "## Why This Matters",
+        "",
+        str(collection.get("notes", "")) or "Final-scale input required by the Stable-ASR release gates.",
+        "",
+        "## Source URLs",
+        "",
+    ]
+    if issue["source_urls"]:
+        lines.extend(f"- {url}" for url in issue["source_urls"])
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Paths", "", dict_table(path_table), "", "## Commands", ""])
+    if issue["commands"]:
+        lines.extend(f"```bash\n{command}\n```" for command in issue["commands"])
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Verification", ""])
+    if issue["verification"]:
+        lines.extend(f"```bash\n{command}\n```" for command in issue["verification"])
+    else:
+        lines.append("- none")
+    handoff_note = (
+        "Do not attach upstream data, model weights, private recordings, or long copied snippets to the issue "
+        "unless the license review explicitly allows redistribution."
+    )
+    lines.extend(
+        [
+            "",
+            "## Acceptance Checklist",
+            "",
+            "- [ ] Owner and due date are set in `acquisition/assignments.json`.",
+            "- [ ] Required input paths are staged with real data, not smoke fixtures.",
+            "- [ ] Generated artifacts are produced by the commands above.",
+            "- [ ] Verification commands pass and outputs are recorded.",
+            "- [ ] License or consent notes are filled for this collection.",
+            "- [ ] `acquisition/handoff_template.json` contains this collection with staged paths.",
+            "- [ ] `stable-asr final-handoff-checksums` has populated byte sizes and SHA256 values.",
+            "- [ ] `stable-asr final-handoff-audit --require-checksums` passes for the handoff.",
+            "",
+            "## Handoff Notes",
+            "",
+            handoff_note,
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _issue_slug(collection_id: str) -> str:
+    return "".join(char if char.isalnum() or char in {"-", "_"} else "_" for char in collection_id).strip("_")
 
 
 def _assignment_status(
