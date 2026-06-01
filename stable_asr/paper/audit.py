@@ -1326,6 +1326,14 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("asr_collections:bibtex", artifacts_dir / "ASR_REFERENCES.bib"))
     checks.append(_exists_check("asr_collections:acquisition_markdown", artifacts_dir / "ASR_COLLECTION_ACQUISITION.md"))
     checks.append(_exists_check("asr_collections:source_manifest", artifacts_dir / "asr_collection_source_manifest.json"))
+    checks.append(
+        _reference_source_manifest_content_check(
+            "asr_collections:source_manifest_content",
+            artifacts_dir / "asr_collection_source_manifest.json",
+            registry_path=artifacts_dir / "asr_collections.json",
+            collection_type="asr",
+        )
+    )
     checks.append(_exists_check("asr_collection_license_review:json", artifacts_dir / "asr_collection_license_review.json"))
     checks.append(_exists_check("asr_collection_license_review:markdown", artifacts_dir / "ASR_COLLECTION_LICENSE_REVIEW.md"))
     checks.append(_exists_check("asr_collection_coverage:json", artifacts_dir / "asr_collection_coverage.json"))
@@ -1336,6 +1344,14 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("turn_collections:markdown", artifacts_dir / "TURN_COLLECTIONS.md"))
     checks.append(_exists_check("turn_collections:acquisition_markdown", artifacts_dir / "TURN_COLLECTION_ACQUISITION.md"))
     checks.append(_exists_check("turn_collections:source_manifest", artifacts_dir / "turn_collection_source_manifest.json"))
+    checks.append(
+        _reference_source_manifest_content_check(
+            "turn_collections:source_manifest_content",
+            artifacts_dir / "turn_collection_source_manifest.json",
+            registry_path=artifacts_dir / "turn_collections.json",
+            collection_type="turn",
+        )
+    )
     checks.append(_exists_check("turn_collection_coverage:json", artifacts_dir / "turn_collection_coverage.json"))
     checks.append(_exists_check("turn_collection_coverage:markdown", artifacts_dir / "TURN_COLLECTION_COVERAGE.md"))
     checks.append(_exists_check("scenario_suite:json", artifacts_dir / "scenario_suite.json"))
@@ -1412,6 +1428,56 @@ def _benchmark_required_artifacts_check(artifacts_dir: Path) -> PaperAuditCheck:
         else "missing: " + ", ".join(report.missing[:5])
     )
     return PaperAuditCheck("benchmark_suite:required_artifacts", report.ok, detail)
+
+
+def _reference_source_manifest_content_check(
+    name: str,
+    path: Path,
+    *,
+    registry_path: Path,
+    collection_type: str,
+) -> PaperAuditCheck:
+    if not path.exists():
+        return PaperAuditCheck(name, False, f"missing: {path}")
+    if not registry_path.exists():
+        return PaperAuditCheck(name, False, f"missing registry: {registry_path}")
+    try:
+        schema_report = validate_schema_file(path, schema_id="stable_asr.reference_source_manifest.v0")
+        if not schema_report.ok:
+            issues = "; ".join(f"{issue.path}: {issue.detail}" for issue in schema_report.issues[:5])
+            return PaperAuditCheck(name, False, issues)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return PaperAuditCheck(name, False, str(exc))
+
+    sources = payload.get("sources", [])
+    registry_entries = registry.get("entries", [])
+    if not isinstance(sources, list) or not isinstance(registry_entries, list):
+        return PaperAuditCheck(name, False, "sources and registry entries must be lists")
+
+    errors: list[str] = []
+    if payload.get("collection_type") != collection_type:
+        errors.append(f"collection_type={payload.get('collection_type')!r}, expected {collection_type!r}")
+    source_ids = {str(source.get("reference_id", "")) for source in sources if isinstance(source, dict)}
+    registry_ids = {str(entry.get("id", "")) for entry in registry_entries if isinstance(entry, dict)}
+    if source_ids != registry_ids:
+        missing = sorted(registry_ids - source_ids)
+        extra = sorted(source_ids - registry_ids)
+        if missing:
+            errors.append("missing: " + ", ".join(missing[:5]))
+        if extra:
+            errors.append("extra: " + ", ".join(extra[:5]))
+    wrong_type = [
+        str(source.get("reference_id", ""))
+        for source in sources
+        if isinstance(source, dict) and source.get("collection_type") != collection_type
+    ]
+    if wrong_type:
+        errors.append("wrong source collection_type: " + ", ".join(wrong_type[:5]))
+    if errors:
+        return PaperAuditCheck(name, False, "; ".join(errors))
+    return PaperAuditCheck(name, True, f"{len(source_ids)} {collection_type} source(s)")
 
 
 def _integrity_check(artifacts_dir: Path) -> PaperAuditCheck:
