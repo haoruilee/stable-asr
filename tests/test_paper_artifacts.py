@@ -38,6 +38,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "contributor_pack:readme" in bundle.starter_packs
     assert "contributor_pack:tracks" in bundle.starter_packs
     assert "contributor_pack:reference_workqueue_markdown" in bundle.starter_packs
+    assert "contributor_pack:reference_evidence_audit_markdown" in bundle.starter_packs
     assert "contributor_pack:reference_assignments_markdown" in bundle.starter_packs
     assert set(bundle.data_sources) == {"json", "markdown"}
     assert set(bundle.adapter_registry) == {"json", "markdown"}

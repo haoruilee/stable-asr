@@ -1332,8 +1332,21 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     )
     checks.append(
         _exists_check(
+            "starter_pack:contributor_reference_evidence_audit",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_EVIDENCE_AUDIT.md",
+        )
+    )
+    checks.append(
+        _exists_check(
             "starter_pack:contributor_reference_assignments",
             artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_ASSIGNMENTS.md",
+        )
+    )
+    checks.append(
+        _contains_check(
+            "starter_pack:contributor_reference_evidence_audit_command",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "COMMANDS.md",
+            contains="--audit-evidence",
         )
     )
     checks.append(

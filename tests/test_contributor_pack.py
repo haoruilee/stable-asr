@@ -31,6 +31,8 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     assert (output_dir / "packs" / "final_acquisition_pack" / "README.md").exists()
     assert (output_dir / "references" / "REFERENCE_WORKQUEUE.md").exists()
     assert (output_dir / "references" / "reference_workqueue.json").exists()
+    assert (output_dir / "references" / "REFERENCE_EVIDENCE_AUDIT.md").exists()
+    assert (output_dir / "references" / "reference_evidence_audit.json").exists()
     assert (output_dir / "references" / "REFERENCE_ASSIGNMENTS.md").exists()
     assert (output_dir / "references" / "reference_assignments.tsv").exists()
 
@@ -45,6 +47,10 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     assert "packs/benchmark_pack" in commands
     assert "packs/final_acquisition_pack" in commands
     assert "reference-workqueue" in commands
+    assert "--audit-evidence" in commands
     assert "reference-assignment-audit" in commands
     assert "asr:funasr" in (output_dir / "references" / "REFERENCE_WORKQUEUE.md").read_text(encoding="utf-8")
+    assert "Reference Evidence Audit" in (output_dir / "references" / "REFERENCE_EVIDENCE_AUDIT.md").read_text(
+        encoding="utf-8"
+    )
     assert "Owner Workflow" in (output_dir / "references" / "REFERENCE_ASSIGNMENTS.md").read_text(encoding="utf-8")

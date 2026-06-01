@@ -15,6 +15,7 @@ from stable_asr.paper.benchmark_pack import build_benchmark_pack
 from stable_asr.paper.final_pack import build_final_pack
 from stable_asr.paper.scenario_pack import build_scenario_pack
 from stable_asr.references import (
+    audit_reference_workqueue_evidence,
     reference_workqueue_assignments,
     reference_workqueue_assignments_markdown,
     reference_workqueue_assignments_tsv,
@@ -127,6 +128,15 @@ def build_contributor_pack(output_dir: str | Path) -> ContributorPackReport:
         output_dir / "references" / "REFERENCE_WORKQUEUE.md",
         reference_workqueue_markdown(reference_workqueue),
     )
+    reference_evidence = audit_reference_workqueue_evidence(reference_workqueue, repo_root=output_dir)
+    files["reference_evidence_audit_json"] = _write_json(
+        output_dir / "references" / "reference_evidence_audit.json",
+        reference_evidence.to_dict(),
+    )
+    files["reference_evidence_audit_markdown"] = _write_text(
+        output_dir / "references" / "REFERENCE_EVIDENCE_AUDIT.md",
+        reference_evidence.to_markdown(),
+    )
     reference_assignments = reference_workqueue_assignments(reference_workqueue)
     files["reference_assignments_json"] = _write_json(
         output_dir / "references" / "reference_assignments.json",
@@ -166,6 +176,7 @@ def _starter_commands() -> list[str]:
         "(cd packs/final_pack && bash commands.sh)",
         "(cd packs/final_acquisition_pack && bash commands.sh)",
         "stable-asr reference-workqueue --output references/REFERENCE_WORKQUEUE_CURRENT.md",
+        "stable-asr reference-workqueue --audit-evidence --repo-root . --output references/REFERENCE_EVIDENCE_AUDIT_CURRENT.md || true",
         "stable-asr reference-workqueue --format assignments-markdown --output references/REFERENCE_ASSIGNMENTS_CURRENT.md",
         "stable-asr reference-assignment-audit --input references/reference_assignments.json --repo-root . --output references/REFERENCE_ASSIGNMENT_AUDIT.md || true",
     ]
