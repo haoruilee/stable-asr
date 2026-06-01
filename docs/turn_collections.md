@@ -12,6 +12,7 @@ stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COL
 stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
+stable-asr reference-workqueue --format issues-markdown --output runs/REFERENCE_COLLECTION_ISSUES.md
 stable-asr reference-workqueue --audit-evidence --require-content --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
@@ -62,6 +63,11 @@ reviews.
 `reference-workqueue --format evidence-markdown` renders per-reference evidence
 templates for the same queue, including required version, input, command,
 output, metric, failure-note, and license-decision sections.
+
+`reference-workqueue --format issues-markdown` turns the same queue into
+issue-ready Markdown so Smart Turn, Easy Turn, VAP, Full-Duplex-Bench, Pipecat,
+and VAD collection tasks can be assigned without treating the issue body as
+completed evidence.
 
 Run `reference-workqueue --audit-evidence --require-content` when you need a
 direct release-readiness answer from the generated queue. It checks evidence

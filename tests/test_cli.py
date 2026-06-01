@@ -932,6 +932,28 @@ def test_reference_workqueue_cli_writes_evidence_templates(tmp_path, capsys) -> 
     assert "asr:funasr" in output.read_text(encoding="utf-8")
 
 
+def test_reference_workqueue_cli_writes_issue_templates(tmp_path, capsys) -> None:
+    output = tmp_path / "REFERENCE_COLLECTION_ISSUES.md"
+    code = main(
+        [
+            "reference-workqueue",
+            "--format",
+            "issues-markdown",
+            "--require-priority",
+            "p0",
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Reference Collection Issues" in captured.out
+    assert "Collect `FunASR` reference evidence" in captured.out
+    assert output.exists()
+    assert "reference-collection" in output.read_text(encoding="utf-8")
+
+
 def test_reference_workqueue_cli_audits_evidence_targets(tmp_path, capsys) -> None:
     output = tmp_path / "REFERENCE_EVIDENCE_AUDIT.md"
     code = main(["reference-workqueue", "--audit-evidence", "--output", str(output)])

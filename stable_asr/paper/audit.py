@@ -1357,6 +1357,12 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     )
     checks.append(
         _exists_check(
+            "starter_pack:contributor_reference_collection_issues",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_COLLECTION_ISSUES.md",
+        )
+    )
+    checks.append(
+        _exists_check(
             "starter_pack:contributor_reference_assignments",
             artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_ASSIGNMENTS.md",
         )
@@ -1373,6 +1379,13 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
             "starter_pack:contributor_reference_evidence_template_command",
             artifacts_dir / "starter_packs" / "contributor_pack" / "COMMANDS.md",
             contains="evidence-markdown",
+        )
+    )
+    checks.append(
+        _contains_check(
+            "starter_pack:contributor_reference_issue_command",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "COMMANDS.md",
+            contains="issues-markdown",
         )
     )
     checks.append(
@@ -1435,6 +1448,13 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
             "reference_evidence_templates:markdown",
             artifacts_dir / "REFERENCE_EVIDENCE_TEMPLATES.md",
             contains="Acceptance Rule",
+        )
+    )
+    checks.append(
+        _contains_check(
+            "reference_collection_issues:markdown",
+            artifacts_dir / "REFERENCE_COLLECTION_ISSUES.md",
+            contains="Shared Acceptance",
         )
     )
     checks.append(_exists_check("reference_evidence_audit:json", artifacts_dir / "reference_evidence_audit.json"))

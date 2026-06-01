@@ -59,6 +59,7 @@ stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.j
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --output runs/paper/smoke/artifacts/PLATFORM_PARITY.md
 stable-asr reference-workqueue --output runs/paper/smoke/artifacts/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format evidence-markdown --output runs/paper/smoke/artifacts/REFERENCE_EVIDENCE_TEMPLATES.md
+stable-asr reference-workqueue --format issues-markdown --output runs/paper/smoke/artifacts/REFERENCE_COLLECTION_ISSUES.md
 stable-asr final-experiments --registry configs/paper/final_experiments.json --output runs/paper/smoke/artifacts/FINAL_EXPERIMENTS.md
 stable-asr final-config --config configs/final/paper_final.json --output runs/paper/smoke/artifacts/FINAL_RUN_CONFIG.md
 stable-asr final-config --config configs/final/paper_final.json --scaffold

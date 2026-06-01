@@ -21,6 +21,7 @@ from stable_asr.references import (
     reference_workqueue_assignments_tsv,
     reference_workqueue_evidence_markdown,
     reference_workqueue_from_registries,
+    reference_workqueue_issues_markdown,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
 )
@@ -142,6 +143,10 @@ def build_contributor_pack(output_dir: str | Path) -> ContributorPackReport:
         output_dir / "references" / "REFERENCE_EVIDENCE_TEMPLATES.md",
         reference_workqueue_evidence_markdown(reference_workqueue),
     )
+    files["reference_collection_issues_markdown"] = _write_text(
+        output_dir / "references" / "REFERENCE_COLLECTION_ISSUES.md",
+        reference_workqueue_issues_markdown(reference_workqueue),
+    )
     reference_assignments = reference_workqueue_assignments(reference_workqueue)
     files["reference_assignments_json"] = _write_json(
         output_dir / "references" / "reference_assignments.json",
@@ -182,6 +187,7 @@ def _starter_commands() -> list[str]:
         "(cd packs/final_acquisition_pack && bash commands.sh)",
         "stable-asr reference-workqueue --output references/REFERENCE_WORKQUEUE_CURRENT.md",
         "stable-asr reference-workqueue --format evidence-markdown --output references/REFERENCE_EVIDENCE_TEMPLATES_CURRENT.md",
+        "stable-asr reference-workqueue --format issues-markdown --output references/REFERENCE_COLLECTION_ISSUES_CURRENT.md",
         "stable-asr reference-workqueue --audit-evidence --require-content --repo-root . --output references/REFERENCE_EVIDENCE_AUDIT_CURRENT.md || true",
         "stable-asr reference-workqueue --format assignments-markdown --output references/REFERENCE_ASSIGNMENTS_CURRENT.md",
         "stable-asr reference-assignment-audit --input references/reference_assignments.json --repo-root . --output references/REFERENCE_ASSIGNMENT_AUDIT.md || true",

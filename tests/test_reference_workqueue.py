@@ -8,6 +8,7 @@ from stable_asr.references import (
     reference_workqueue_assignments_tsv,
     reference_workqueue_evidence_markdown,
     reference_workqueue_from_registries,
+    reference_workqueue_issues_markdown,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
     validate_reference_workqueue,
@@ -40,6 +41,7 @@ def test_reference_workqueue_markdown_and_jsonl_render() -> None:
     workqueue = reference_workqueue_from_registries()
     markdown = reference_workqueue_markdown(workqueue)
     evidence_templates = reference_workqueue_evidence_markdown(workqueue)
+    issue_templates = reference_workqueue_issues_markdown(workqueue)
     jsonl = reference_workqueue_jsonl(workqueue)
 
     assert "# Stable-ASR Reference Work Queue" in markdown
@@ -50,6 +52,10 @@ def test_reference_workqueue_markdown_and_jsonl_render() -> None:
     assert "--require-content" in evidence_templates
     assert "asr:funasr" in evidence_templates
     assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in evidence_templates
+    assert "Stable-ASR Reference Collection Issues" in issue_templates
+    assert "Collect `FunASR` reference evidence" in issue_templates
+    assert "reference-collection" in issue_templates
+    assert "stable-asr reference-workqueue --audit-evidence --require-content" in issue_templates
     rows = [json.loads(line) for line in jsonl.splitlines()]
     assert len(rows) == len(workqueue["tasks"])
     assert rows[0]["task_id"]

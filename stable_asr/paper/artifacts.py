@@ -73,6 +73,7 @@ from stable_asr.references import (
     reference_workqueue_assignments_tsv,
     reference_workqueue_evidence_markdown,
     reference_workqueue_from_registries,
+    reference_workqueue_issues_markdown,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
     turn_collections_acquisition_markdown,
@@ -374,6 +375,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "jsonl": str(output_dir / "reference_workqueue.jsonl"),
         "markdown": str(output_dir / "REFERENCE_WORKQUEUE.md"),
         "evidence_templates_markdown": str(output_dir / "REFERENCE_EVIDENCE_TEMPLATES.md"),
+        "issues_markdown": str(output_dir / "REFERENCE_COLLECTION_ISSUES.md"),
         "evidence_audit_json": str(output_dir / "reference_evidence_audit.json"),
         "evidence_audit_markdown": str(output_dir / "REFERENCE_EVIDENCE_AUDIT.md"),
         "assignments_json": str(output_dir / "reference_assignments.json"),
@@ -400,6 +402,10 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     )
     Path(reference_workqueue["evidence_templates_markdown"]).write_text(
         reference_workqueue_evidence_markdown(reference_workqueue_report),
+        encoding="utf-8",
+    )
+    Path(reference_workqueue["issues_markdown"]).write_text(
+        reference_workqueue_issues_markdown(reference_workqueue_report),
         encoding="utf-8",
     )
     Path(reference_workqueue["evidence_audit_json"]).write_text(

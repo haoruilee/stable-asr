@@ -491,6 +491,102 @@ def reference_workqueue_evidence_markdown(workqueue: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def reference_workqueue_issues_markdown(workqueue: dict[str, Any]) -> str:
+    """Render issue-ready Markdown tasks for collecting reference evidence."""
+
+    validation = validate_reference_workqueue(workqueue)
+    if not validation.ok:
+        raise ValueError(validation.to_text())
+    tasks = workqueue["tasks"]
+    rows = [
+        {
+            "task": task["task_id"],
+            "priority": task["priority"],
+            "track": task["acquisition_track"],
+            "license_review": "yes" if task["license_review_required"] else "no",
+        }
+        for task in tasks
+    ]
+    lines = [
+        "# Stable-ASR Reference Collection Issues",
+        "",
+        (
+            "Use these issue stubs to assign upstream ASR, turn-taking, and full-duplex collection work. "
+            "They are task descriptions only; they do not count as evidence until the strict evidence audit passes."
+        ),
+        "",
+        f"- source_workqueue_id: `{workqueue.get('id', '')}`",
+        f"- tasks: `{len(tasks)}`",
+        "",
+        dict_table(rows),
+        "",
+        "## Shared Acceptance",
+        "",
+        "- The evidence target contains concrete upstream version, input, command, output, metric, and failure-note details.",
+        "- Required license reviews are completed before vendoring code, weights, fixtures, or long snippets.",
+        "- `stable-asr reference-workqueue --audit-evidence --require-content --repo-root .` reports the task as READY.",
+        "",
+    ]
+    for task in tasks:
+        actions = task.get("stable_asr_actions", [])
+        action_text = "\n".join(f"- [ ] `{action}`" for action in actions) if isinstance(actions, list) else "- [ ] collect evidence"
+        labels = ", ".join(
+            [
+                "stable-asr",
+                "reference-collection",
+                str(task["collection_type"]),
+                str(task["priority"]),
+            ]
+        )
+        license_command = (
+            f"- [ ] Fill `{task['license_review_target']}` and record the redistribution decision."
+            if task["license_review_required"]
+            else "- [x] No separate license review required by registry policy."
+        )
+        lines.extend(
+            [
+                f"## {task['task_id']}",
+                "",
+                f"**Title:** Collect `{task['name']}` reference evidence for Stable-ASR",
+                "",
+                f"**Labels:** `{labels}`",
+                "",
+                "### Context",
+                "",
+                f"- collection_type: `{task['collection_type']}`",
+                f"- reference_id: `{task['reference_id']}`",
+                f"- priority: `{task['priority']}`",
+                f"- category: `{task['category']}`",
+                f"- acquisition_track: `{task['acquisition_track']}`",
+                f"- source_url: `{task['source_url']}`",
+                f"- docs_url: `{task['docs_url']}`",
+                f"- reference_use: {task['reference_use']}",
+                "",
+                "### Work",
+                "",
+                action_text,
+                license_command,
+                f"- [ ] Write evidence to `{task['evidence_target']}`.",
+                "- [ ] Run the strict evidence audit and attach the failing/passing summary.",
+                "",
+                "### Commands",
+                "",
+                "```bash",
+                "stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md",
+                "stable-asr reference-workqueue --audit-evidence --require-content --repo-root . --output runs/REFERENCE_EVIDENCE_AUDIT.md",
+                "```",
+                "",
+                "### Acceptance",
+                "",
+                f"- [ ] `{task['evidence_target']}` exists and passes strict content audit.",
+                license_command,
+                "- [ ] No vendored upstream asset is added unless the license review explicitly allows it.",
+                "",
+            ]
+        )
+    return "\n".join(lines)
+
+
 def reference_workqueue_jsonl(workqueue: dict[str, Any]) -> str:
     validation = validate_reference_workqueue(workqueue)
     if not validation.ok:

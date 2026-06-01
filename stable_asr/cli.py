@@ -157,6 +157,7 @@ from stable_asr.references import (
     reference_workqueue_assignments_tsv,
     reference_workqueue_evidence_markdown,
     reference_workqueue_from_registries,
+    reference_workqueue_issues_markdown,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
     turn_collections_acquisition_markdown,
@@ -690,6 +691,7 @@ def build_parser() -> argparse.ArgumentParser:
             "assignments-tsv",
             "assignments-markdown",
             "evidence-markdown",
+            "issues-markdown",
         ],
         default="markdown",
         help="Output format for the unified reference work queue.",
@@ -2283,6 +2285,8 @@ def main(argv: list[str] | None = None) -> int:
                 text = reference_workqueue_assignments_markdown(reference_workqueue_assignments(workqueue))
             elif args.format == "evidence-markdown":
                 text = reference_workqueue_evidence_markdown(workqueue)
+            elif args.format == "issues-markdown":
+                text = reference_workqueue_issues_markdown(workqueue)
             else:
                 text = reference_workqueue_markdown(workqueue)
             if args.output:

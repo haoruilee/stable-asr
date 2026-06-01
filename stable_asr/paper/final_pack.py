@@ -45,6 +45,7 @@ from stable_asr.references import (
     reference_workqueue_assignments_markdown,
     reference_workqueue_assignments_tsv,
     reference_workqueue_from_registries,
+    reference_workqueue_issues_markdown,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
     turn_collections_markdown,
@@ -259,6 +260,10 @@ def build_final_pack(
     files["reference_workqueue_markdown"] = _write_text(
         output_dir / "reports" / "REFERENCE_WORKQUEUE.md",
         reference_workqueue_markdown(reference_workqueue),
+    )
+    files["reference_collection_issues_markdown"] = _write_text(
+        output_dir / "reports" / "REFERENCE_COLLECTION_ISSUES.md",
+        reference_workqueue_issues_markdown(reference_workqueue),
     )
     reference_assignments = reference_workqueue_assignments(reference_workqueue)
     files["reference_assignments_json"] = _write_json(

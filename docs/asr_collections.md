@@ -18,6 +18,7 @@ stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE
 stable-asr asr-collections --audit-licenses --require-license-reviewed
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
+stable-asr reference-workqueue --format issues-markdown --output runs/REFERENCE_COLLECTION_ISSUES.md
 stable-asr reference-workqueue --audit-evidence --require-content --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
@@ -51,6 +52,10 @@ reference collection plan as ready for release work.
 templates so contributors collect upstream versions, input manifests, commands,
 output paths, metrics, failure notes, and license decisions consistently before
 marking an upstream reference as evidence.
+
+`reference-workqueue --format issues-markdown` renders per-reference issue stubs
+with labels, source links, action checklists, strict audit commands, and
+acceptance criteria for assigning upstream collection work.
 
 `reference-workqueue --audit-evidence --require-content` checks the generated
 queue directly against the filesystem for release gates. It rejects
