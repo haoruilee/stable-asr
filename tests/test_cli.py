@@ -2160,6 +2160,7 @@ def test_train_turn_cli_audio_features(tmp_path, capsys) -> None:
             "--write-audio",
         ]
     )
+    capsys.readouterr()
     output_dir = tmp_path / "nanoturn_audio"
     code = main(
         [
@@ -2177,6 +2178,91 @@ def test_train_turn_cli_audio_features(tmp_path, capsys) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "checkpoint:" in captured.out
+
+
+def test_train_turn_cli_audio_feature_cache(tmp_path, capsys) -> None:
+    pytest.importorskip("torch")
+    pytest.importorskip("pyarrow")
+
+    manifest = tmp_path / "synthetic.jsonl"
+    main(
+        [
+            "make-synthetic-turn-data",
+            "--output",
+            str(manifest),
+            "--episodes",
+            "4",
+            "--seed",
+            "8",
+            "--write-audio",
+        ]
+    )
+    capsys.readouterr()
+    cache = tmp_path / "features.parquet"
+    output_dir = tmp_path / "nanoturn_audio_cache"
+    code = main(
+        [
+            "train-turn",
+            "--dataset",
+            str(manifest),
+            "--output-dir",
+            str(output_dir),
+            "--feature-source",
+            "audio",
+            "--feature-cache",
+            str(cache),
+            "--feature-cache-format",
+            "parquet",
+            "--epochs",
+            "2",
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["feature_cache"] == str(cache)
+    assert cache.exists()
+
+
+def test_benchmark_train_features_cli(tmp_path, capsys) -> None:
+    pytest.importorskip("torch")
+    pytest.importorskip("pyarrow")
+
+    manifest = tmp_path / "synthetic.jsonl"
+    main(
+        [
+            "make-synthetic-turn-data",
+            "--output",
+            str(manifest),
+            "--episodes",
+            "4",
+            "--seed",
+            "9",
+            "--write-audio",
+        ]
+    )
+    output = tmp_path / "train_feature_bench.json"
+    code = main(
+        [
+            "benchmark-train-features",
+            "--dataset",
+            str(manifest),
+            "--output-dir",
+            str(tmp_path / "feature_bench"),
+            "--formats",
+            "source_audio",
+            "parquet",
+            "--sample-count",
+            "8",
+            "--json-output",
+            str(output),
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "speedup_vs_source_audio=" in captured.out
+    assert output.exists()
 
 
 def test_train_turn_cli_uses_config_file_and_overrides(tmp_path, capsys) -> None:

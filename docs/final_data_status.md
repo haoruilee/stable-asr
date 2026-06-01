@@ -35,6 +35,7 @@ Generated on 2026-06-01 in the local final run tree.
 - `runs/final/reports/whisper_sweep.json`
 - `runs/final/reports/data_benchmark.json`
 - `runs/final/reports/audio_window_benchmark.json`
+- `runs/final/reports/train_feature_benchmark.json`
 
 ## Source Notes
 

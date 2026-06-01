@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 
-from stable_asr.data.audio import load_wav_mono
+from stable_asr.data.audio import load_audio_mono
 from stable_asr.data.manifest import TurnManifestRecord
 from stable_asr.turn.nanoturn import require_torch, torch
 
@@ -32,13 +33,34 @@ def records_to_features(
     *,
     feature_source: str = "metadata",
     audio_root: str | Path | None = None,
+    feature_cache: str | Path | None = None,
+    feature_cache_format: str | None = None,
+    feature_cache_mode: str = "auto",
 ):
     require_torch()
     feature_source = normalize_feature_source(feature_source)
     if feature_source == "metadata":
         return torch.tensor([record_to_features(record) for record in records], dtype=torch.float32)
     if feature_source == "audio":
-        return torch.stack([record_to_logmel_features(record, audio_root=audio_root) for record in records])
+        if feature_cache:
+            from stable_asr.train.feature_cache import ensure_logmel_feature_cache, load_logmel_feature_cache
+
+            ensure_logmel_feature_cache(
+                records,
+                feature_cache,
+                format=feature_cache_format,
+                mode=feature_cache_mode,
+                audio_root=audio_root,
+            )
+            return load_logmel_feature_cache(
+                feature_cache,
+                format=feature_cache_format,
+                record_ids=[record.id for record in records],
+            )
+        audio_cache: dict[Path, tuple[list[float], int]] = {}
+        return torch.stack(
+            [record_to_logmel_features(record, audio_root=audio_root, audio_cache=audio_cache) for record in records]
+        )
     raise ValueError(f"unknown feature_source: {feature_source}")
 
 
@@ -59,6 +81,7 @@ def record_to_logmel_features(
     record: TurnManifestRecord,
     *,
     audio_root: str | Path | None = None,
+    audio_cache: dict[Path, tuple[list[float], int]] | None = None,
 ):
     """Compute fixed-size log spectral features from a WAV file.
 
@@ -69,25 +92,38 @@ def record_to_logmel_features(
 
     require_torch()
     path = Path(record.audio)
-    if not path.is_absolute() and audio_root is not None:
+    if not path.is_absolute() and audio_root is not None and not path.exists():
         path = Path(audio_root) / path
-    samples, sample_rate = load_wav_mono(path)
+    if audio_cache is not None and path in audio_cache:
+        samples, sample_rate = audio_cache[path]
+    else:
+        samples, sample_rate = load_audio_mono(path, target_sample_rate=record.sample_rate)
+        if audio_cache is not None:
+            audio_cache[path] = (samples, sample_rate)
     if sample_rate != record.sample_rate:
         raise ValueError(f"sample rate mismatch for {path}: audio={sample_rate}, manifest={record.sample_rate}")
-    waveform = torch.tensor(samples, dtype=torch.float32)
+    start = max(0, int(round(record.start * sample_rate)))
+    end = min(len(samples), int(round(record.end * sample_rate)))
+    if end <= start:
+        raise ValueError(f"empty audio window for {record.id}: start={record.start} end={record.end}")
+    waveform = torch.tensor(samples[start:end], dtype=torch.float32)
     if waveform.numel() < 400:
         waveform = torch.nn.functional.pad(waveform, (0, 400 - waveform.numel()))
-    window = torch.hann_window(400)
     spectrum = torch.stft(
         waveform,
         n_fft=512,
         hop_length=160,
         win_length=400,
-        window=window,
+        window=_hann_window(400),
         return_complex=True,
     ).abs()
     bands = _pool_frequency_bands(spectrum, bands=len(AUDIO_FEATURE_NAMES))
     return torch.log1p(bands.mean(dim=1))
+
+
+@lru_cache(maxsize=8)
+def _hann_window(win_length: int):
+    return torch.hann_window(win_length)
 
 
 def _pool_frequency_bands(spectrum, *, bands: int):

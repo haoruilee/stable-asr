@@ -190,6 +190,7 @@ from stable_asr.streaming.compare import compare_streaming_transcript_jsonl
 from stable_asr.streaming.metrics import evaluate_streaming_records
 from stable_asr.streaming.sweep import sweep_streaming_schedule
 from stable_asr.train.export import export_nanoturn_onnx
+from stable_asr.train.feature_cache import TRAIN_FEATURE_BENCHMARK_FORMATS, benchmark_train_feature_cache
 from stable_asr.train.turn_trainer import NanoTurnCheckpointPredictor, train_nanoturn
 from stable_asr.turn.labels import ACTION_LABELS, TURN_LABELS
 from stable_asr.turn.policy import TurnPolicy, TurnPolicyConfig
@@ -1046,7 +1047,43 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Base directory for relative audio paths. Defaults to the dataset parent.",
     )
+    train_parser.add_argument(
+        "--feature-cache",
+        type=Path,
+        help="Optional Parquet/Lance log-mel feature cache for --feature-source audio.",
+    )
+    train_parser.add_argument(
+        "--feature-cache-format",
+        choices=["parquet", "lance"],
+        help="Feature cache format. Defaults to the cache path suffix.",
+    )
+    train_parser.add_argument(
+        "--feature-cache-mode",
+        choices=["auto", "read", "write", "off"],
+        default="auto",
+        help="auto builds a missing cache and reuses an existing one.",
+    )
     train_parser.add_argument("--json", action="store_true", help="Print metrics as JSON.")
+
+    train_feature_benchmark_parser = subparsers.add_parser(
+        "benchmark-train-features",
+        help="Benchmark raw audio feature extraction against cached log-mel feature stores.",
+    )
+    train_feature_benchmark_parser.add_argument("--dataset", type=Path, required=True)
+    train_feature_benchmark_parser.add_argument("--format", choices=TURN_FORMATS.names())
+    train_feature_benchmark_parser.add_argument("--output-dir", type=Path, required=True)
+    train_feature_benchmark_parser.add_argument(
+        "--formats",
+        nargs="+",
+        choices=TRAIN_FEATURE_BENCHMARK_FORMATS,
+        default=list(TRAIN_FEATURE_BENCHMARK_FORMATS),
+    )
+    train_feature_benchmark_parser.add_argument("--sample-count", type=int, default=1000)
+    train_feature_benchmark_parser.add_argument("--seed", type=int, default=0)
+    train_feature_benchmark_parser.add_argument("--max-records", type=int)
+    train_feature_benchmark_parser.add_argument("--audio-root", type=Path)
+    train_feature_benchmark_parser.add_argument("--json", action="store_true")
+    train_feature_benchmark_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     export_parser = subparsers.add_parser(
         "export-turn-onnx",
@@ -2885,6 +2922,9 @@ def main(argv: list[str] | None = None) -> int:
             seed=seed,
             feature_source=feature_source,
             audio_root=args.audio_root or args.dataset.parent,
+            feature_cache=args.feature_cache,
+            feature_cache_format=args.feature_cache_format,
+            feature_cache_mode=args.feature_cache_mode,
         )
         if args.json:
             print(json.dumps(result.metrics, ensure_ascii=False, indent=2))
@@ -2893,6 +2933,44 @@ def main(argv: list[str] | None = None) -> int:
             print(f"metrics: {result.metrics_path}")
             print(f"final_loss: {result.metrics['final_loss']:.6f}")
             print(f"final_accuracy: {result.metrics['final_accuracy']:.4f}")
+        return 0
+
+    if args.command == "benchmark-train-features":
+        try:
+            rows = benchmark_train_feature_cache(
+                load_turn_records(args.dataset, format=args.format),
+                output_dir=args.output_dir,
+                formats=args.formats,
+                sample_count=args.sample_count,
+                seed=args.seed,
+                max_records=args.max_records,
+                audio_root=args.audio_root or args.dataset.parent,
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        payload = [row.to_dict() for row in rows]
+        _write_json_output(args.json_output, payload)
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            for row in rows:
+                print(
+                    " ".join(
+                        [
+                            f"format={row.format}",
+                            f"records={row.records}",
+                            f"write_seconds={row.write_seconds:.6f}",
+                            f"sample_count={row.sample_count}",
+                            f"sample_seconds={row.sample_seconds:.6f}",
+                            f"samples_per_second={row.samples_per_second:.2f}",
+                            f"speedup_vs_source_audio={row.speedup_vs_source_audio:.2f}",
+                            f"size_bytes={row.size_bytes}",
+                            f"sample_strategy={row.sample_strategy}",
+                            f"path={row.output_path}",
+                        ]
+                    )
+                )
         return 0
 
     if args.command == "export-turn-onnx":

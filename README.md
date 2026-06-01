@@ -109,6 +109,13 @@ stable-asr benchmark-audio-windows \
   --formats source_wav parquet lance \
   --sample-count 5000 \
   --json-output runs/final/reports/audio_window_benchmark.json
+
+stable-asr benchmark-train-features \
+  --dataset runs/final/voiceworld_real.jsonl \
+  --output-dir runs/final/train_feature_bench \
+  --formats source_audio source_audio_file_cache parquet lance \
+  --sample-count 1000 \
+  --json-output runs/final/reports/train_feature_benchmark.json
 ```
 
 ## VoiceWorld Scenarios

@@ -11,6 +11,8 @@ Core data entry points:
 - `stable_asr.data.benchmark.benchmark_data_formats`
 - `stable_asr.data.audio_window_cache.materialize_audio_windows`
 - `stable_asr.data.audio_window_cache.benchmark_audio_window_formats`
+- `stable_asr.train.feature_cache.write_logmel_feature_cache`
+- `stable_asr.train.feature_cache.benchmark_train_feature_cache`
 
 Supported turn manifest backends:
 
@@ -49,3 +51,19 @@ rows = benchmark_audio_window_formats(
 `source_wav` is the baseline that opens the original WAV file for every random
 sample. `parquet` and `lance` first materialize fixed turn windows into a
 columnar cache and then benchmark random row retrieval.
+
+Training feature cache:
+
+```python
+from stable_asr.train.feature_cache import benchmark_train_feature_cache
+
+rows = benchmark_train_feature_cache(
+    records,
+    output_dir="runs/final/train_feature_bench",
+    formats=["source_audio", "source_audio_file_cache", "parquet", "lance"],
+    sample_count=1000,
+)
+```
+
+This cache stores the 32-dimensional NanoTurn log-mel vector by record id, so
+subsequent training runs can skip audio open, decode, slicing, and STFT work.

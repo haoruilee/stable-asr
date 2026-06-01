@@ -9,7 +9,7 @@ from stable_asr.data.asr_manifest import (
     validate_asr_manifest,
     write_asr_manifest,
 )
-from stable_asr.data.audio import load_wav_mono, synth_tone, write_wav_mono
+from stable_asr.data.audio import load_audio_mono, load_wav_mono, synth_tone, write_wav_mono
 from stable_asr.data.audio_window_cache import (
     AudioWindowBenchmarkRow,
     benchmark_audio_window_formats,
@@ -61,6 +61,7 @@ __all__ = [
     "convert_rows",
     "convert_turn_manifest",
     "load_asr_manifest",
+    "load_audio_mono",
     "load_wav_mono",
     "load_manifest",
     "load_turn_records",

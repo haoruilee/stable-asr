@@ -61,6 +61,9 @@ def train_nanoturn(
     seed: int = 0,
     feature_source: str = "metadata",
     audio_root: str | Path | None = None,
+    feature_cache: str | Path | None = None,
+    feature_cache_format: str | None = None,
+    feature_cache_mode: str = "auto",
 ) -> TrainTurnResult:
     require_torch()
     if not records:
@@ -82,7 +85,14 @@ def train_nanoturn(
         model_type=model.config.model_type,
         feature_source=feature_source,
     )
-    features = records_to_features(records, feature_source=feature_source, audio_root=audio_root)
+    features = records_to_features(
+        records,
+        feature_source=feature_source,
+        audio_root=audio_root,
+        feature_cache=feature_cache,
+        feature_cache_format=feature_cache_format,
+        feature_cache_mode=feature_cache_mode,
+    )
     targets = torch.tensor([labels.index(record.turn_label) for record in records], dtype=torch.long)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -114,6 +124,9 @@ def train_nanoturn(
         "lr": lr,
         "seed": seed,
         "feature_source": feature_source,
+        "feature_cache": str(feature_cache) if feature_cache else None,
+        "feature_cache_format": feature_cache_format,
+        "feature_cache_mode": feature_cache_mode if feature_cache else None,
         "feature_names": list(names),
         "labels": list(labels),
         "final_loss": history[-1]["loss"],

@@ -212,9 +212,13 @@ DEFAULT_FINAL_INPUT_COLLECTIONS: dict[str, Any] = {
             "license": "project_license",
             "source_urls": [],
             "required_paths": ["runs/final/nanoturn/checkpoint.pt", "runs/final/nanoturn/metrics.json"],
-            "generated_paths": ["runs/final/nanoturn/nanoturn.onnx", "runs/final/MODEL_CARD.md"],
+            "generated_paths": [
+                "runs/final/nanoturn/logmel_features.lance",
+                "runs/final/nanoturn/nanoturn.onnx",
+                "runs/final/MODEL_CARD.md",
+            ],
             "commands": [
-                "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
+                "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio --feature-cache runs/final/nanoturn/logmel_features.lance --feature-cache-format lance",
                 "stable-asr export-turn-onnx --checkpoint runs/final/nanoturn/checkpoint.pt --output runs/final/nanoturn/nanoturn.onnx",
                 "stable-asr make-card model --input configs/models/stable_asr_models.json --model-id nanoturn_pico --metrics runs/final/nanoturn/metrics.json --output runs/final/MODEL_CARD.md",
             ],

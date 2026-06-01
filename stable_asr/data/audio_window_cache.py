@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from stable_asr.data.audio import load_wav_mono
+from stable_asr.data.audio import load_audio_mono
 from stable_asr.data.manifest import TurnManifestRecord
 
 
@@ -241,9 +241,9 @@ def _record_to_window_samples(
     audio_root: str | Path | None,
 ) -> list[float]:
     path = Path(record.audio)
-    if not path.is_absolute() and audio_root is not None:
+    if not path.is_absolute() and audio_root is not None and not path.exists():
         path = Path(audio_root) / path
-    samples, sample_rate = load_wav_mono(path)
+    samples, sample_rate = load_audio_mono(path, target_sample_rate=record.sample_rate)
     if sample_rate != record.sample_rate:
         raise ValueError(f"sample rate mismatch for {path}: audio={sample_rate}, manifest={record.sample_rate}")
     start = max(0, int(round(record.start * sample_rate)))
@@ -349,4 +349,3 @@ def _require_pyarrow_lance():
     except Exception as exc:  # pragma: no cover - optional dependency.
         raise RuntimeError("Audio-window Lance support requires pyarrow. Install stable-asr[lance].") from exc
     return pa, _require_lance()
-

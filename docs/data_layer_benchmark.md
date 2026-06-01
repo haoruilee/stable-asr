@@ -33,6 +33,13 @@ Commands:
   --formats source_wav parquet lance \
   --sample-count 10000 \
   --json-output runs/final/reports/audio_window_benchmark.json
+
+.venv/bin/python -m stable_asr.cli benchmark-train-features \
+  --dataset runs/final/voiceworld_real.jsonl \
+  --output-dir runs/final/train_feature_bench \
+  --formats source_audio source_audio_file_cache parquet lance \
+  --sample-count 1000 \
+  --json-output runs/final/reports/train_feature_benchmark.json
 ```
 
 Manifest-only benchmark on `runs/final/turn_train.jsonl`:
@@ -59,3 +66,16 @@ Interpretation:
 - Lance still removes per-sample WAV open/decode cost and is 10.2x faster than the source WAV baseline while using the smallest cache footprint in this run.
 - The next paper-grade benchmark should repeat this on larger real ASR/turn corpora, with cold-cache and warm-cache variants, because stable-worldmodel's Lance advantage is most relevant for larger random-access and remote-storage workloads.
 
+Training log-mel feature benchmark on the same VoiceWorld records:
+
+| format | records | random samples/s | speedup vs source audio | size |
+| --- | ---: | ---: | ---: | ---: |
+| source audio | 180 | 91.2 | 1.0x | n/a |
+| source audio with file cache | 180 | 219.6 | 2.4x | n/a |
+| Parquet log-mel cache | 180 | 35188.2 | 385.8x | 54751 bytes |
+| Lance log-mel cache | 180 | 104082.5 | 1141.1x | 76184 bytes |
+
+The train-time cache stores the 32-dimensional NanoTurn log-mel vector by
+record id. This is the most aggressive v0 acceleration path because repeated
+training runs skip audio open, decode, window slicing, and STFT. The cached
+feature path is now exposed through `train-turn --feature-cache`.

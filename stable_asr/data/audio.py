@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import struct
+import subprocess
 import wave
 from dataclasses import dataclass
 from pathlib import Path
@@ -58,6 +59,21 @@ def load_wav_mono(path: str | Path) -> tuple[list[float], int]:
     return samples, sample_rate
 
 
+def load_audio_mono(path: str | Path, *, target_sample_rate: int | None = None) -> tuple[list[float], int]:
+    """Load an audio file as mono float samples in [-1, 1].
+
+    WAV files use the dependency-free stdlib decoder. Other formats, including
+    FLAC from LibriSpeech, are decoded through ffmpeg when available.
+    """
+
+    path = Path(path)
+    if path.suffix.lower() == ".wav":
+        samples, sample_rate = load_wav_mono(path)
+        if target_sample_rate is None or target_sample_rate == sample_rate:
+            return samples, sample_rate
+    return _load_audio_mono_ffmpeg(path, target_sample_rate=target_sample_rate)
+
+
 def write_wav_mono(path: str | Path, samples: list[float], sample_rate: int = 16000) -> None:
     """Write mono float samples in [-1, 1] as 16-bit PCM WAV."""
 
@@ -70,6 +86,64 @@ def write_wav_mono(path: str | Path, samples: list[float], sample_rate: int = 16
         handle.setsampwidth(2)
         handle.setframerate(sample_rate)
         handle.writeframes(payload)
+
+
+def _load_audio_mono_ffmpeg(path: Path, *, target_sample_rate: int | None) -> tuple[list[float], int]:
+    if target_sample_rate is None:
+        target_sample_rate = _probe_sample_rate(path)
+    command = [
+        "ffmpeg",
+        "-nostdin",
+        "-v",
+        "error",
+        "-i",
+        str(path),
+        "-ac",
+        "1",
+        "-ar",
+        str(target_sample_rate),
+        "-f",
+        "s16le",
+        "-acodec",
+        "pcm_s16le",
+        "-",
+    ]
+    try:
+        completed = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except FileNotFoundError as exc:
+        raise RuntimeError("ffmpeg is required to decode non-WAV audio files") from exc
+    except subprocess.CalledProcessError as exc:
+        detail = exc.stderr.decode("utf-8", errors="replace").strip()
+        raise RuntimeError(f"ffmpeg failed to decode {path}: {detail}") from exc
+    payload = completed.stdout
+    values = struct.unpack("<" + "h" * (len(payload) // 2), payload)
+    return [value / 32768.0 for value in values], target_sample_rate
+
+
+def _probe_sample_rate(path: Path) -> int:
+    command = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-select_streams",
+        "a:0",
+        "-show_entries",
+        "stream=sample_rate",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        str(path),
+    ]
+    try:
+        completed = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    except FileNotFoundError as exc:
+        raise RuntimeError("ffprobe is required when target_sample_rate is not provided") from exc
+    except subprocess.CalledProcessError as exc:
+        detail = exc.stderr.strip()
+        raise RuntimeError(f"ffprobe failed for {path}: {detail}") from exc
+    value = completed.stdout.strip()
+    if not value:
+        raise RuntimeError(f"ffprobe did not return a sample rate for {path}")
+    return int(value)
 
 
 def synth_tone(
