@@ -65,8 +65,9 @@
   ],
   "data_layer_commands": [
     "stable-asr benchmark-data --dataset runs/final/turn_train.jsonl --output-dir runs/final/data_bench --formats jsonl parquet lance --sample-count 10000 --json-output runs/final/reports/data_benchmark.json",
-    "stable-asr benchmark-train-features --dataset runs/final/voiceworld_real.jsonl --output-dir runs/final/train_feature_bench_10k --formats source_audio source_audio_file_cache parquet lance --sample-count 10000 --json-output runs/final/reports/train_feature_benchmark_10k.json",
-    "stable-asr benchmark-train-features --dataset runs/final/voiceworld_real.jsonl --output-dir runs/final/train_feature_bench_100k_cached --formats parquet lance --sample-count 100000 --json-output runs/final/reports/train_feature_benchmark_100k_cached.json"
+    "stable-asr benchmark-audio-windows --dataset runs/final/voiceworld_real.jsonl --output-dir runs/final/audio_window_bench_correctness --formats source_wav parquet lance --sample-count 10000 --correctness-sample-count 10000 --json-output runs/final/reports/audio_window_benchmark_correctness.json",
+    "stable-asr benchmark-train-features --dataset runs/final/voiceworld_real.jsonl --output-dir runs/final/train_feature_bench_10k_correctness --formats source_audio source_audio_file_cache parquet lance --sample-count 10000 --correctness-sample-count 10000 --json-output runs/final/reports/train_feature_benchmark_10k_correctness.json",
+    "stable-asr benchmark-train-features --dataset runs/final/voiceworld_real.jsonl --output-dir runs/final/train_feature_bench_100k_cached_correctness --formats parquet lance --sample-count 100000 --correctness-sample-count 10000 --json-output runs/final/reports/train_feature_benchmark_100k_cached_correctness.json"
   ],
   "paper_alignment": {
     "stable_worldmodel_data_layer": "JSONL/Parquet/Lance manifests plus Lance log-mel feature cache for training windows",

@@ -416,6 +416,7 @@ is provided in `mkdocs.yaml`.
 - `final-config --audit-asr-commands` for checking final command-backed ASR comparison inputs without executing the adapters
 - `final-config --prepare-asr-transcript-conversions` for turning configured ASR adapter outputs into the final transcript-conversion result input
 - `final-config --plan-missing` for turning the final-run file audit into an actionable data-staging and experiment runbook
+- `scripts/run_final_machine.sh` and `docs/guides/cloud_machine_runbook.md` for phase-based execution on a rented GPU machine
 - `final-inputs` for validating and rendering the final-scale input collection plan in `configs/final/input_collections.json`
 - `final-assignment-audit`, `final-handoff-template`, `final-handoff-checksums`, `validate-schema-file --schema-id stable_asr.final_handoff.v0`, and `final-handoff-audit` for turning real final-scale staged inputs into auditable owner, due-date, release-blocker, license/consent, verification, path, and checksum evidence
 - `final-results` for assembling audited final-scale JSON outputs into `runs/final/paper_results.json`

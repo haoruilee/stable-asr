@@ -151,6 +151,15 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --valid
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --results runs/paper/smoke/paper_results.json --validate-only
 ```
 
+For rented GPU machines, use the phase-based runner:
+
+```bash
+bash scripts/run_final_machine.sh setup
+bash scripts/run_final_machine.sh status
+bash scripts/run_final_machine.sh data-layer
+bash scripts/run_final_machine.sh train
+```
+
 ## Documents
 
 - [Quick start](quick_start.md)
@@ -166,4 +175,4 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --resul
 - [ASR reference collections](asr_collections.md)
 - [Turn and full-duplex reference collections](turn_collections.md)
 - API: [Data](api/data.md), [Turn](api/turn.md), [Scenarios](api/scenarios.md), [Paper](api/paper.md)
-- Guides: [External ASR adapters](guides/adapters.md), [Release smoke](guides/release_smoke.md)
+- Guides: [External ASR adapters](guides/adapters.md), [Cloud machine runbook](guides/cloud_machine_runbook.md), [Release smoke](guides/release_smoke.md)
