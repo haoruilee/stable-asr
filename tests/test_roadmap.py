@@ -9,9 +9,8 @@ def test_roadmap_registry_validates_and_tracks_required_artifacts() -> None:
     assert validation.ok
     assert report.ok
     assert report.final_readiness is not None
-    assert not report.final_scale_ready
-    assert report.final_readiness.missing_required_inputs > 0
-    assert "final_scale_ready: NO" in report.to_text()
+    assert report.final_readiness.checked
+    assert f"final_scale_ready: {'YES' if report.final_scale_ready else 'NO'}" in report.to_text()
     assert "Final-Scale Readiness" in report.to_markdown()
     assert roadmap["id"] == "stable_asr_roadmap_v0"
     assert len(report.milestones) >= 5

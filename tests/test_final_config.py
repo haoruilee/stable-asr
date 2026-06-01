@@ -58,16 +58,16 @@ def test_final_run_config_validation_rejects_missing_split() -> None:
     assert "turn_splits missing" in report.to_text()
 
 
-def test_final_run_file_audit_reports_missing_default_inputs() -> None:
-    report = audit_final_run_files(load_final_run_config())
+def test_final_run_file_audit_reports_missing_default_inputs(tmp_path: Path) -> None:
+    report = audit_final_run_files(load_final_run_config(), repo_root=tmp_path)
 
     assert not report.ok
     assert "missing required input" in report.to_text()
     assert "librispeech_dev_clean" in final_run_file_audit_markdown(report)
 
 
-def test_final_run_action_plan_maps_missing_inputs_to_commands() -> None:
-    report = build_final_run_action_plan(load_final_run_config())
+def test_final_run_action_plan_maps_missing_inputs_to_commands(tmp_path: Path) -> None:
+    report = build_final_run_action_plan(load_final_run_config(), repo_root=tmp_path)
 
     markdown = report.to_markdown()
     assert not report.ok

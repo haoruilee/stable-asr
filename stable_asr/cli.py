@@ -1874,11 +1874,13 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
+        payload = {"name": _benchmark_turn_name(args), **report.to_dict()}
+        _write_json_output(args.json_output, payload)
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(report.to_markdown(), encoding="utf-8")
         if args.json:
-            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
         else:
             print(
                 "\n".join(
@@ -3967,6 +3969,16 @@ def _optional_str(value: object) -> str | None:
         return None
     text = str(value)
     return text or None
+
+
+def _benchmark_turn_name(args: argparse.Namespace) -> str:
+    if getattr(args, "checkpoint", None):
+        return "nanoturn"
+    if getattr(args, "predictions", None):
+        return "prediction_manifest"
+    if getattr(args, "baseline", None):
+        return str(args.baseline)
+    return "system"
 
 
 def _required_config_path(config: dict[str, object], key: str) -> Path:

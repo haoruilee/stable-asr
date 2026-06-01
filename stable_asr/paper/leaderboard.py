@@ -746,7 +746,18 @@ def _streaming_rows(results: dict[str, object], *, source: str) -> list[Leaderbo
     streaming = _dict(results.get("streaming_asr"))
     comparison = _dict(streaming.get("adapter_comparison"))
     comparison_rows = comparison.get("rows")
+    comparison_systems: set[str] = set()
     if isinstance(comparison_rows, list):
+        comparison_systems = {
+            str(_dict(payload).get("adapter", "unknown"))
+            for payload in comparison_rows
+        }
+    metrics = _dict(streaming.get("metrics"))
+    if metrics and "balanced_fixture" not in comparison_systems:
+        rows.extend(_streaming_metric_rows("balanced_fixture", "adapter", metrics, source=source))
+    if isinstance(comparison_rows, list):
+        if comparison_rows and "fast_unstable_fixture" not in comparison_systems:
+            rows.extend(_streaming_metric_rows("fast_unstable_fixture", "adapter", _dict(comparison_rows[0]), source=source))
         for payload in comparison_rows:
             payload = _dict(payload)
             system = str(payload.get("adapter", "unknown"))

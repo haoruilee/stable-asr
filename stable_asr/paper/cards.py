@@ -57,15 +57,34 @@ def experiment_card(results_path: str | Path, output_path: str | Path) -> str:
         ),
     )
     data = results["data"]
-    report.add_section(
-        "Artifacts",
-        "\n".join(
-            [
-                f"- manifest: `{data['manifest_path']}`",
-                f"- converted: `{data['converted_path']}`",
-            ]
-        ),
-    )
+    artifact_lines = []
+    if isinstance(data, dict):
+        if "manifest_path" in data:
+            artifact_lines.append(f"- manifest: `{data['manifest_path']}`")
+        if "converted_path" in data:
+            artifact_lines.append(f"- converted: `{data['converted_path']}`")
+    result_inputs = meta.get("result_inputs", {}) if isinstance(meta, dict) else {}
+    if isinstance(result_inputs, dict):
+        artifact_lines.extend(f"- {key}: `{value}`" for key, value in sorted(result_inputs.items()))
+    report.add_section("Artifacts", "\n".join(artifact_lines) if artifact_lines else "- not recorded")
+    summary = data.get("summary", {}) if isinstance(data, dict) else {}
+    if isinstance(summary, dict) and summary:
+        report.add_section(
+            "Data Summary",
+            dict_table(
+                [
+                    {
+                        "records": summary.get("records", 0),
+                        "languages": ", ".join(sorted(summary.get("languages", {}).keys()))
+                        if isinstance(summary.get("languages"), dict)
+                        else "",
+                        "scenarios": len(summary.get("scenarios", {}))
+                        if isinstance(summary.get("scenarios"), dict)
+                        else 0,
+                    }
+                ]
+            ),
+        )
     if "streaming_asr" in results:
         streaming = results["streaming_asr"]["metrics"]
         report.add_section(

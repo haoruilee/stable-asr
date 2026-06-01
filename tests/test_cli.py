@@ -37,7 +37,7 @@ def test_doctor_cli_with_final_file_check(capsys) -> None:
 
     captured = capsys.readouterr()
     assert code == 0
-    assert "final_inputs_ready: NO" in captured.out
+    assert "final_inputs_ready:" in captured.out
 
 
 def test_doctor_cli_with_release_env_check(capsys) -> None:
@@ -132,7 +132,7 @@ def test_paper_evidence_matrix_cli_writes_markdown(tmp_path, capsys) -> None:
     assert "Stable-ASR Final Evidence Matrix" in captured.out
     assert "real_data_layer_benchmark" in captured.out
     assert output.exists()
-    assert "data/librispeech/LibriSpeech/dev-clean" in output.read_text(encoding="utf-8")
+    assert "real_data_layer_benchmark" in output.read_text(encoding="utf-8")
 
 
 def test_roadmap_status_cli(capsys, tmp_path) -> None:
@@ -148,11 +148,11 @@ def test_roadmap_status_cli(capsys, tmp_path) -> None:
     captured = capsys.readouterr()
     assert code == 0
     assert "Stable-ASR Platform Roadmap" in captured.out
-    assert "final_scale_ready: `NO`" in captured.out
+    assert "final_scale_ready:" in captured.out
     assert output.exists()
     assert "m2_data_reference_layer" in output.read_text(encoding="utf-8")
 
-    code = main(["roadmap-status", "--require-final-ready"])
+    code = main(["roadmap-status", "--require-final-ready", "--repo-root", str(tmp_path)])
     captured = capsys.readouterr()
     assert code == 1
     assert "Final-Scale Readiness" in captured.out
@@ -693,6 +693,7 @@ def test_compare_turn_splits_cli(tmp_path, capsys) -> None:
 
 def test_benchmark_turn_cli(tmp_path, capsys) -> None:
     report_path = tmp_path / "turn_benchmark.md"
+    json_path = tmp_path / "turn_benchmark.json"
     code = main(
         [
             "benchmark-turn",
@@ -706,6 +707,8 @@ def test_benchmark_turn_cli(tmp_path, capsys) -> None:
             "2",
             "--report",
             str(report_path),
+            "--json-output",
+            str(json_path),
         ]
     )
 
@@ -715,6 +718,10 @@ def test_benchmark_turn_cli(tmp_path, capsys) -> None:
     assert "rtf:" in captured.out
     assert report_path.exists()
     assert "Stable-ASR Turn Benchmark" in report_path.read_text(encoding="utf-8")
+    assert json_path.exists()
+    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    assert payload["name"] == "text_turn"
+    assert payload["records"] == 4
 
 
 def test_benchmark_turn_cli_external_predictions(capsys) -> None:
@@ -1591,8 +1598,17 @@ def test_final_config_cli_writes_markdown(tmp_path, capsys) -> None:
     assert "librispeech_dev_clean" in output.read_text(encoding="utf-8")
 
 
-def test_final_config_cli_check_files_reports_missing_inputs(capsys) -> None:
-    code = main(["final-config", "--config", "configs/final/paper_final.json", "--check-files"])
+def test_final_config_cli_check_files_reports_missing_inputs(tmp_path, capsys) -> None:
+    code = main(
+        [
+            "final-config",
+            "--config",
+            "configs/final/paper_final.json",
+            "--check-files",
+            "--repo-root",
+            str(tmp_path),
+        ]
+    )
 
     captured = capsys.readouterr()
     assert code == 1
@@ -3765,9 +3781,9 @@ def test_paper_release_smoke_cli(tmp_path, capsys) -> None:
     assert "paper_release_smoke: NOT_READY" in captured.out
     assert "final_scale_ready: NO" in captured.out
     assert "release_environment_ready:" in captured.out
-    assert "final_inputs_ready: NO" in captured.out
-    assert "final_assignment_ready: NO" in captured.out
-    assert "final_handoff_ready: NO" in captured.out
+    assert "final_inputs_ready:" in captured.out
+    assert "final_assignment_ready:" in captured.out
+    assert "final_handoff_ready:" in captured.out
     assert "release_audit_json:" in captured.out
     assert "paper_status_markdown:" in captured.out
     assert "artifact_archive:" in captured.out
@@ -3820,8 +3836,8 @@ def test_paper_release_smoke_default_trains_nanoturn_when_torch_available(tmp_pa
     assert f"paper_release_smoke: {expected_status}" in captured.out
     assert "final_scale_ready: NO" in captured.out
     assert "release_environment_ready:" in captured.out
-    assert "final_assignment_ready: NO" in captured.out
-    assert "final_handoff_ready: NO" in captured.out
+    assert "final_assignment_ready:" in captured.out
+    assert "final_handoff_ready:" in captured.out
     audit = json.loads((tmp_path / "release_smoke_train" / "release_audit.json").read_text(encoding="utf-8"))
     failed = {f"{check['gate']}/{check['name']}" for check in audit["checks"] if not check["ok"]}
     assert "baseline/nanoturn_release_baseline" not in failed

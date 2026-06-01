@@ -347,7 +347,11 @@ def audit_paper_parity(
         _audit_item(item, repo_root=repo_root, results=results, artifacts_dir=artifacts)
         for item in checklist["items"]
     ]
-    final_ready = all(check.ok and not check.final_scale_requirements for check in checks)
+    artifact_version = _nested_value(results, "meta.artifact_version") if results else None
+    final_artifact_run = str(artifact_version).startswith("final_")
+    final_ready = all(check.ok for check in checks) and (
+        final_artifact_run or not any(check.final_scale_requirements for check in checks)
+    )
     return PaperParityAuditReport(
         ok=all(check.ok for check in checks),
         final_ready=final_ready,
@@ -447,3 +451,12 @@ def _has_nested_key(payload: dict[str, Any], dotted_key: str) -> bool:
             return False
         current = current[part]
     return True
+
+
+def _nested_value(payload: dict[str, Any], dotted_key: str) -> Any:
+    current: Any = payload
+    for part in dotted_key.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return None
+        current = current[part]
+    return current

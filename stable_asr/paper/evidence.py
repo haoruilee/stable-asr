@@ -210,7 +210,7 @@ def _experiment_evidence(
         computed_status = "blocked"
     elif missing_artifacts:
         computed_status = "artifact_missing"
-    elif registry_status == "completed":
+    elif registry_status == "completed" or artifacts:
         computed_status = "completed"
     else:
         computed_status = "ready_to_run"

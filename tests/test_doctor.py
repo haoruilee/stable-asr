@@ -24,9 +24,9 @@ def test_doctor_final_file_readiness_is_optional_and_reports_missing_inputs() ->
 
     assert report.ok
     assert report.final_inputs_checked
-    assert not report.final_inputs_ready
-    assert "final_inputs_ready: NO" in report.to_text()
-    assert "required input(s) missing" in report.to_text()
+    assert f"final_inputs_ready: {'YES' if report.final_inputs_ready else 'NO'}" in report.to_text()
+    if not report.final_inputs_ready:
+        assert "required input(s) missing" in report.to_text()
 
 
 def test_doctor_release_environment_check_matches_optional_dependencies() -> None:

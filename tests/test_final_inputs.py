@@ -8,10 +8,10 @@ from stable_asr.paper.final_inputs import (
 )
 
 
-def test_final_input_collections_validate_and_report_missing_inputs() -> None:
+def test_final_input_collections_validate_and_report_missing_inputs(tmp_path: Path) -> None:
     registry = load_final_input_collections("configs/final/input_collections.json")
     validation = validate_final_input_collections(registry)
-    report = final_input_collection_report(registry)
+    report = final_input_collection_report(registry, repo_root=tmp_path)
 
     assert validation.ok
     assert not report.ok

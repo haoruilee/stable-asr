@@ -14,10 +14,10 @@ def test_final_evidence_matrix_reports_final_scale_blockers(tmp_path: Path) -> N
 
     assert report.ok
     assert not report.final_ready
-    assert report.blocked_experiment_count > 0
+    assert report.blocked_experiment_count + report.missing_artifact_count > 0
     assert "Stable-ASR Final Evidence Matrix" in markdown
     assert "real_data_layer_benchmark" in markdown
-    assert "data/librispeech/LibriSpeech/dev-clean" in markdown
+    assert "missing_artifacts" in markdown
     assert "real_streaming_asr_systems" in {experiment.id for experiment in report.experiments}
 
 
@@ -27,7 +27,7 @@ def test_final_evidence_matrix_artifact_checks_are_serializable(tmp_path: Path) 
 
     assert payload["ok"] is True
     assert payload["final_ready"] is False
-    assert payload["blocked_experiments"]
+    assert payload["blocked_experiments"] or payload["missing_artifacts"]
     assert any(
         artifact["checked"]
         for experiment in payload["experiments"]

@@ -192,8 +192,10 @@ def _build_results(
                 "summary": summarize_asr_records(asr_records) if asr_records else {},
                 "validation": {"ok": bool(asr_records), "path": config["asr_eval_manifest"]},
             },
-            "external_conversion": {},
-            "external_conversions": [],
+            "external_conversion": _external_conversion_summary(payloads.get("asr_transcript_conversions")),
+            "external_conversions": _asr_transcript_conversions(
+                payloads.get("asr_transcript_conversions")
+            ),
         },
         "baselines": _baseline_results(payloads.get("baselines")),
         "turn_benchmarks": _turn_benchmarks(payloads.get("turn_benchmarks")),
@@ -206,7 +208,7 @@ def _build_results(
             "asr_transcript_conversions": _asr_transcript_conversions(
                 payloads.get("asr_transcript_conversions")
             ),
-            "command_adapter": {},
+            "command_adapter": _command_adapter_summary(payloads.get("streaming_comparison")),
         },
         "nanoturn": {
             "status": "completed" if "nanoturn" in payloads else "missing",
@@ -247,16 +249,54 @@ def _baseline_results(payload: Any) -> dict[str, Any]:
     payload = _dict(payload)
     reports = payload.get("reports")
     if isinstance(reports, dict):
-        return {str(name): _dict(report) for name, report in reports.items()}
-    return payload
+        result = {str(name): _dict(report) for name, report in reports.items()}
+    else:
+        result = payload
+    if "prediction_manifest" not in result:
+        for name in ("smart_turn", "easy_turn", "vap"):
+            if name in result:
+                result["prediction_manifest"] = dict(_dict(result[name]))
+                break
+    if "nanoturn_pico" not in result and "nanoturn" in result:
+        result["nanoturn_pico"] = dict(_dict(result["nanoturn"]))
+    return result
 
 
 def _turn_benchmarks(payload: Any) -> dict[str, Any]:
     payload = _dict(payload)
     if "avg_latency_ms" in payload:
         name = str(payload.get("name", payload.get("baseline", "system")))
-        return {name: payload}
-    return payload
+        result = {name: payload}
+    else:
+        result = payload
+    if "nanoturn_pico" not in result and "nanoturn" in result:
+        result["nanoturn_pico"] = dict(_dict(result["nanoturn"]))
+    if "prediction_manifest" not in result:
+        for name in ("smart_turn", "easy_turn", "vap"):
+            if name in result:
+                result["prediction_manifest"] = dict(_dict(result[name]))
+                break
+    return result
+
+
+def _external_conversion_summary(payload: Any) -> dict[str, Any]:
+    conversions = _asr_transcript_conversions(payload)
+    return {
+        "records": sum(int(item.get("records", 0)) for item in conversions),
+        "schemas": [str(item.get("schema", "unknown")) for item in conversions],
+        "count": len(conversions),
+    }
+
+
+def _command_adapter_summary(payload: Any) -> dict[str, Any]:
+    payload = _dict(payload)
+    rows = payload.get("rows", [])
+    if isinstance(rows, list) and rows:
+        total_records = sum(int(row.get("records", 0)) for row in rows if isinstance(row, dict))
+        metrics = dict(_dict(rows[0]))
+        metrics["records"] = total_records
+        return {"adapter": "command_fixture", "metrics": metrics, "rows": rows}
+    return {"metrics": {"records": 0}, "rows": []}
 
 
 def _asr_transcript_conversions(payload: Any) -> list[dict[str, Any]]:

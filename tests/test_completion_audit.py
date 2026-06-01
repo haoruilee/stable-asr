@@ -34,5 +34,5 @@ def test_completion_audit_maps_goal_to_real_gates(tmp_path: Path) -> None:
     assert "collect_external_reference_evidence" in markdown
     assert "reference-workqueue --format issues-markdown" in markdown
     assert "final-acquisition-pack" in markdown
-    assert "data/librispeech/LibriSpeech/dev-clean" in markdown
+    assert "assemble_final_release" in markdown
     assert "reference-workqueue --audit-evidence" in markdown

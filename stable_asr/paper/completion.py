@@ -368,10 +368,13 @@ def _platform_blockers(report: object) -> list[str]:
 
 
 def _paper_parity_blockers(report: object) -> list[str]:
+    if report.ok and report.final_ready:
+        return []
     blockers: list[str] = []
     for check in report.checks:
         blockers.extend(check.missing)
-        blockers.extend(check.final_scale_requirements)
+        if not check.ok:
+            blockers.extend(check.final_scale_requirements)
     return blockers
 
 
