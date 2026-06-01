@@ -3,7 +3,11 @@ import json
 import pytest
 
 from stable_asr.paper.handoff import final_handoff_template
-from stable_asr.references import asr_collections_source_manifest, load_asr_collections
+from stable_asr.references import (
+    asr_collections_source_manifest,
+    load_asr_collections,
+    reference_workqueue_from_registries,
+)
 from stable_asr.schema_validation import validate_schema_file
 from stable_asr.schemas import (
     get_schema_entry,
@@ -34,6 +38,7 @@ def test_schema_registry_exposes_core_contracts() -> None:
         "stable_asr.model_registry.v0",
         "stable_asr.final_input_collection.v0",
         "stable_asr.reference_source_manifest.v0",
+        "stable_asr.reference_workqueue.v0",
         "stable_asr.final_handoff.v0",
     }
 
@@ -63,6 +68,19 @@ def test_schema_registry_validates_reference_source_manifest(tmp_path) -> None:
     )
 
     report = validate_schema_file(manifest, schema_id="stable_asr.reference_source_manifest.v0")
+
+    assert report.ok
+    assert report.records == 1
+
+
+def test_schema_registry_validates_reference_workqueue(tmp_path) -> None:
+    workqueue = tmp_path / "reference_workqueue.json"
+    workqueue.write_text(
+        json.dumps(reference_workqueue_from_registries(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    report = validate_schema_file(workqueue, schema_id="stable_asr.reference_workqueue.v0")
 
     assert report.ok
     assert report.records == 1

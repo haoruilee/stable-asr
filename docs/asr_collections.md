@@ -16,6 +16,7 @@ stable-asr asr-collections --audit-coverage --require-priority p0 --require-prio
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
 stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE_REVIEW.md
 stable-asr asr-collections --audit-licenses --require-license-reviewed
+stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 ```
 
 The registry is not a vendoring list. It records what each upstream project is
@@ -34,6 +35,11 @@ the expected evidence artifact for each upstream reference.
 source/docs URLs, license policy, license review targets, acquisition tracks,
 evidence targets, citation keys, and Stable-ASR action queues. Use it as the
 work queue for adapter, transcript export, and collection-review tasks.
+
+`reference-workqueue` merges this ASR source manifest with the turn/full-duplex
+source manifest into one P0/P1 contributor queue. The generated JSON/Markdown
+names the next action, evidence target, and license-review blocker for each
+upstream reference without claiming that the collection work is already done.
 
 `--audit-licenses` renders the reuse policy for each reference and names the
 manual review file to fill before copying upstream code, weights, fixtures, or

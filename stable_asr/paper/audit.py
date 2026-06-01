@@ -914,6 +914,7 @@ def _ci_wheel_smoke_check(path: Path) -> PaperReleaseAuditCheck:
         "stable-asr-wheel-venv/bin/stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only",
         "stable-asr-wheel-venv/bin/stable-asr asr-collections --registry configs/references/asr_collections.json --audit-coverage",
         "stable-asr-wheel-venv/bin/stable-asr turn-collections --registry configs/references/turn_collections.json --audit-coverage",
+        "stable-asr-wheel-venv/bin/stable-asr reference-workqueue --output /tmp/stable-asr-wheel-reference-workqueue.md",
         "stable-asr-wheel-venv/bin/stable-asr paper-release-smoke --output-dir /tmp/stable-asr-wheel-release-smoke --episodes 9 --seed 6 --skip-train",
     )
     if not path.exists():
@@ -1354,6 +1355,10 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     )
     checks.append(_exists_check("turn_collection_coverage:json", artifacts_dir / "turn_collection_coverage.json"))
     checks.append(_exists_check("turn_collection_coverage:markdown", artifacts_dir / "TURN_COLLECTION_COVERAGE.md"))
+    checks.append(_exists_check("reference_workqueue:json", artifacts_dir / "reference_workqueue.json"))
+    checks.append(_exists_check("reference_workqueue:jsonl", artifacts_dir / "reference_workqueue.jsonl"))
+    checks.append(_exists_check("reference_workqueue:markdown", artifacts_dir / "REFERENCE_WORKQUEUE.md"))
+    checks.append(_reference_workqueue_content_check(artifacts_dir / "reference_workqueue.json"))
     checks.append(_exists_check("scenario_suite:json", artifacts_dir / "scenario_suite.json"))
     checks.append(_exists_check("scenario_suite:markdown", artifacts_dir / "SCENARIO_SUITE.md"))
     checks.append(_exists_check("case_studies:json", artifacts_dir / "case_studies.json"))
@@ -1478,6 +1483,36 @@ def _reference_source_manifest_content_check(
     if errors:
         return PaperAuditCheck(name, False, "; ".join(errors))
     return PaperAuditCheck(name, True, f"{len(source_ids)} {collection_type} source(s)")
+
+
+def _reference_workqueue_content_check(path: Path) -> PaperAuditCheck:
+    name = "reference_workqueue:content"
+    if not path.exists():
+        return PaperAuditCheck(name, False, f"missing: {path}")
+    try:
+        schema_report = validate_schema_file(path, schema_id="stable_asr.reference_workqueue.v0")
+        if not schema_report.ok:
+            issues = "; ".join(f"{issue.path}: {issue.detail}" for issue in schema_report.issues[:5])
+            return PaperAuditCheck(name, False, issues)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return PaperAuditCheck(name, False, str(exc))
+
+    tasks = payload.get("tasks", [])
+    if not isinstance(tasks, list) or not tasks:
+        return PaperAuditCheck(name, False, "tasks must be a non-empty list")
+    task_ids = [str(task.get("task_id", "")) for task in tasks if isinstance(task, dict)]
+    collection_types = {str(task.get("collection_type", "")) for task in tasks if isinstance(task, dict)}
+    errors: list[str] = []
+    if len(task_ids) != len(set(task_ids)):
+        errors.append("duplicate task_id")
+    if not {"asr", "turn"}.issubset(collection_types):
+        errors.append("requires both asr and turn tasks")
+    if not any(isinstance(task, dict) and task.get("license_review_required") is True for task in tasks):
+        errors.append("requires at least one license_review_required task")
+    if errors:
+        return PaperAuditCheck(name, False, "; ".join(errors))
+    return PaperAuditCheck(name, True, f"{len(tasks)} reference task(s)")
 
 
 def _integrity_check(artifacts_dir: Path) -> PaperAuditCheck:

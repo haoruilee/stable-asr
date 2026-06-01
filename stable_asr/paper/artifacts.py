@@ -66,6 +66,9 @@ from stable_asr.references import (
     audit_turn_collection_coverage,
     load_asr_collections,
     load_turn_collections,
+    reference_workqueue_from_registries,
+    reference_workqueue_jsonl,
+    reference_workqueue_markdown,
     turn_collections_acquisition_markdown,
     turn_collections_markdown,
     turn_collections_source_manifest,
@@ -100,6 +103,7 @@ class PaperArtifactBundle:
     schema_registry: dict[str, str]
     asr_collections: dict[str, str]
     turn_collections: dict[str, str]
+    reference_workqueue: dict[str, str]
     scenario_suite: dict[str, str]
     case_studies: dict[str, str]
     paper_parity: dict[str, str]
@@ -136,6 +140,7 @@ class PaperArtifactBundle:
             "schema_registry": self.schema_registry,
             "asr_collections": self.asr_collections,
             "turn_collections": self.turn_collections,
+            "reference_workqueue": self.reference_workqueue,
             "scenario_suite": self.scenario_suite,
             "case_studies": self.case_studies,
             "paper_parity": self.paper_parity,
@@ -349,6 +354,28 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         encoding="utf-8",
     )
     Path(turn_collections["coverage_markdown"]).write_text(turn_reference_coverage.to_markdown(), encoding="utf-8")
+    reference_workqueue_report = reference_workqueue_from_registries(
+        asr_registry=asr_reference_registry,
+        turn_registry=turn_reference_registry,
+        required_priorities=("p0", "p1"),
+    )
+    reference_workqueue = {
+        "json": str(output_dir / "reference_workqueue.json"),
+        "jsonl": str(output_dir / "reference_workqueue.jsonl"),
+        "markdown": str(output_dir / "REFERENCE_WORKQUEUE.md"),
+    }
+    Path(reference_workqueue["json"]).write_text(
+        json.dumps(reference_workqueue_report, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(reference_workqueue["jsonl"]).write_text(
+        reference_workqueue_jsonl(reference_workqueue_report),
+        encoding="utf-8",
+    )
+    Path(reference_workqueue["markdown"]).write_text(
+        reference_workqueue_markdown(reference_workqueue_report),
+        encoding="utf-8",
+    )
     voiceworld_suite = load_scenario_suite()
     scenario_suite = {
         "json": write_scenario_suite_json(output_dir / "scenario_suite.json", voiceworld_suite),
@@ -502,6 +529,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         schema_registry=schema_registry,
         asr_collections=asr_collections,
         turn_collections=turn_collections,
+        reference_workqueue=reference_workqueue,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
         paper_parity=paper_parity,
@@ -544,6 +572,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         schema_registry=schema_registry,
         asr_collections=asr_collections,
         turn_collections=turn_collections,
+        reference_workqueue=reference_workqueue,
         scenario_suite=scenario_suite,
         case_studies=case_studies,
         paper_parity=paper_parity,
@@ -623,6 +652,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Turn Reference Collections", ""])
     for name, path in bundle.turn_collections.items():
+        lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Reference Work Queue", ""])
+    for name, path in bundle.reference_workqueue.items():
         lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Scenario Suite", ""])
     for name, path in bundle.scenario_suite.items():
@@ -715,6 +747,7 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.schema_registry,
         bundle.asr_collections,
         bundle.turn_collections,
+        bundle.reference_workqueue,
         bundle.scenario_suite,
         bundle.case_studies,
         bundle.paper_parity,

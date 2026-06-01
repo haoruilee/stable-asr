@@ -56,6 +56,7 @@ stable-asr paper-case-studies --results runs/paper/smoke/paper_results.json --ou
 stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output-dir runs/paper/smoke/artifacts
 stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --output runs/paper/smoke/artifacts/PLATFORM_PARITY.md
+stable-asr reference-workqueue --output runs/paper/smoke/artifacts/REFERENCE_WORKQUEUE.md
 stable-asr final-experiments --registry configs/paper/final_experiments.json --output runs/paper/smoke/artifacts/FINAL_EXPERIMENTS.md
 stable-asr final-config --config configs/final/paper_final.json --output runs/paper/smoke/artifacts/FINAL_RUN_CONFIG.md
 stable-asr final-config --config configs/final/paper_final.json --scaffold
@@ -108,7 +109,10 @@ robustness, policy search, leaderboard-ready JSONL/CSV metric rows, a
 leaderboard validation report, ranked leaderboard reports, a copied `paper_results.json`, sha256 artifact
 integrity manifests, provenance manifests for git/config/result traceability,
 machine-readable benchmark suite definition, a data source registry, a
-baseline/adapter registry, ASR and turn/full-duplex reference collections, paper-reference, BibTeX, source manifests, coverage artifacts, readiness artifacts, acquisition plans, a VoiceWorld scenario suite definition, and
+baseline/adapter registry, ASR and turn/full-duplex reference collections,
+paper-reference notes, BibTeX, source manifests, a unified reference work
+queue, coverage artifacts, readiness artifacts, acquisition plans, a VoiceWorld
+scenario suite definition, and
 case-study JSON/Markdown artifacts that link failure examples back to source
 records, a paper parity audit that separates smoke-level structural evidence
 from final-scale paper gaps, a repository-level stable-worldmodel platform

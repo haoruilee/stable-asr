@@ -55,6 +55,7 @@ ready.
 - ASR reference collection exports an acquisition plan and source manifest that map upstream projects to license policy, review targets, acquisition tracks, and evidence targets
 - turn/full-duplex reference collection JSON exists in `configs/references/turn_collections.json`
 - required P0 turn/full-duplex references have data-source or adapter coverage evidence
+- `reference-workqueue` can merge ASR and turn source manifests into a contributor-facing P0/P1 queue with evidence targets and license-review blockers
 - VoiceWorld scenario suite JSON exists in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - ASR manifest schema and metadata-table recipe exist
 - data benchmark sections exist
@@ -86,6 +87,7 @@ ready.
 - model registry JSON/Markdown and NanoTurn model card JSON/Markdown files are included in the artifact bundle
 - ASR reference collection JSON/Markdown, paper reference, BibTeX, coverage audit, and readiness audit files are included in the artifact bundle
 - turn/full-duplex reference collection JSON/Markdown, source manifest, acquisition plan, and coverage audit files are included in the artifact bundle
+- unified reference work queue JSON/JSONL/Markdown files are included in the artifact bundle and pass schema/content audit
 - scenario suite JSON/Markdown files are included in the artifact bundle
 - case-study JSON/Markdown files are included in the artifact bundle
 - paper parity JSON/Markdown files are included in the artifact bundle

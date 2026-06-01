@@ -71,6 +71,7 @@ stable-asr turn-collections --registry configs/references/turn_collections.json 
 stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
 stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
+stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr adapter-pack --output-dir runs/adapter_pack
 stable-asr scenario-pack --output-dir runs/scenario_pack
 stable-asr final-pack --output-dir runs/final_pack

@@ -64,6 +64,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         "coverage_json",
         "coverage_markdown",
     }
+    assert set(bundle.reference_workqueue) == {"json", "jsonl", "markdown"}
     assert set(bundle.scenario_suite) == {"json", "markdown"}
     assert set(bundle.case_studies) == {"json", "markdown"}
     assert set(bundle.paper_parity) == {"json", "markdown"}
@@ -139,6 +140,10 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         bundle.turn_collections["source_manifest_json"]
     ).read_text(encoding="utf-8")
     assert "missing_required: `0`" in Path(bundle.turn_collections["coverage_markdown"]).read_text(encoding="utf-8")
+    assert "Stable-ASR Reference Work Queue" in Path(bundle.reference_workqueue["markdown"]).read_text(encoding="utf-8")
+    assert "stable_asr_reference_workqueue_v0" in Path(bundle.reference_workqueue["json"]).read_text(encoding="utf-8")
+    assert '"task_id": "asr:funasr"' in Path(bundle.reference_workqueue["jsonl"]).read_text(encoding="utf-8")
+    assert "Reference Work Queue" in Path(bundle.index_path).read_text(encoding="utf-8")
     assert "Stable-ASR VoiceWorld v0 Scenario Suite" in Path(bundle.scenario_suite["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Case Studies" in Path(bundle.case_studies["markdown"]).read_text(encoding="utf-8")
     assert "final-scale ready" in Path(bundle.paper_parity["markdown"]).read_text(encoding="utf-8")
@@ -160,6 +165,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "model_cards" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "schema_registry" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "turn_collections" in Path(bundle.manifest_path).read_text(encoding="utf-8")
+    assert "reference_workqueue" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "starter_packs" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "artifact_integrity" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "provenance" in Path(bundle.manifest_path).read_text(encoding="utf-8")

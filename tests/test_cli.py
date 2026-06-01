@@ -844,6 +844,30 @@ def test_turn_collections_cli_writes_source_manifest(tmp_path, capsys) -> None:
     assert '"reference_id": "smart_turn"' in output.read_text(encoding="utf-8")
 
 
+def test_reference_workqueue_cli_writes_markdown(tmp_path, capsys) -> None:
+    output = tmp_path / "REFERENCE_WORKQUEUE.md"
+    code = main(["reference-workqueue", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Reference Work Queue" in captured.out
+    assert output.exists()
+    assert "asr:funasr" in output.read_text(encoding="utf-8")
+    assert "turn:smart_turn" in output.read_text(encoding="utf-8")
+
+
+def test_reference_workqueue_cli_writes_json(tmp_path, capsys) -> None:
+    output = tmp_path / "reference_workqueue.json"
+    code = main(["reference-workqueue", "--format", "json", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "stable_asr_reference_workqueue_v0" in captured.out
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert any(task["task_id"] == "asr:funasr" for task in payload["tasks"])
+    assert any(task["task_id"] == "turn:smart_turn" for task in payload["tasks"])
+
+
 def test_audit_audio_cli_with_generated_turn_wavs(tmp_path, capsys) -> None:
     manifest = tmp_path / "turn.jsonl"
     code = main(["make-synthetic-turn-data", "--output", str(manifest), "--episodes", "2", "--write-audio"])

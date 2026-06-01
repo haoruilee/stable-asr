@@ -25,11 +25,20 @@ from stable_asr.references.turn_collections import (
     validate_turn_collections,
     write_turn_collections_json,
 )
+from stable_asr.references.workqueue import (
+    ReferenceWorkQueueValidation,
+    reference_workqueue_from_registries,
+    reference_workqueue_from_source_manifests,
+    reference_workqueue_jsonl,
+    reference_workqueue_markdown,
+    validate_reference_workqueue,
+)
 
 __all__ = [
     "ASRCollectionReadinessReport",
     "ASRCollectionLicenseReport",
     "TurnCollectionCoverageReport",
+    "ReferenceWorkQueueValidation",
     "audit_asr_collection_coverage",
     "audit_asr_collection_licenses",
     "audit_asr_collection_readiness",
@@ -41,9 +50,14 @@ __all__ = [
     "asr_collections_source_manifest",
     "load_asr_collections",
     "load_turn_collections",
+    "reference_workqueue_from_registries",
+    "reference_workqueue_from_source_manifests",
+    "reference_workqueue_jsonl",
+    "reference_workqueue_markdown",
     "turn_collections_acquisition_markdown",
     "turn_collections_markdown",
     "turn_collections_source_manifest",
+    "validate_reference_workqueue",
     "validate_asr_collections",
     "validate_turn_collections",
     "write_asr_collections_json",

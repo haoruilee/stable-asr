@@ -147,6 +147,9 @@ from stable_asr.references import (
     audit_turn_collection_coverage,
     load_asr_collections,
     load_turn_collections,
+    reference_workqueue_from_registries,
+    reference_workqueue_jsonl,
+    reference_workqueue_markdown,
     turn_collections_acquisition_markdown,
     turn_collections_markdown,
     turn_collections_source_manifest,
@@ -645,6 +648,27 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         choices=["p0", "p1", "p2"],
         help="Reference priority required by --audit-coverage. Defaults to p0.",
+    )
+
+    reference_workqueue_parser = subparsers.add_parser(
+        "reference-workqueue",
+        help="Merge ASR and turn reference source manifests into a contributor work queue.",
+    )
+    reference_workqueue_parser.add_argument("--asr-registry", type=Path, help="Optional ASR collections JSON path.")
+    reference_workqueue_parser.add_argument("--turn-registry", type=Path, help="Optional turn collections JSON path.")
+    reference_workqueue_parser.add_argument("--output", type=Path, help="Optional output path.")
+    reference_workqueue_parser.add_argument(
+        "--format",
+        choices=["markdown", "json", "jsonl"],
+        default="markdown",
+        help="Output format for the unified reference work queue.",
+    )
+    reference_workqueue_parser.add_argument(
+        "--require-priority",
+        action="append",
+        default=None,
+        choices=["p0", "p1", "p2"],
+        help="Reference priorities to include. Defaults to p0 and p1.",
     )
 
     roadmap_parser = subparsers.add_parser(
@@ -2119,6 +2143,28 @@ def main(argv: list[str] | None = None) -> int:
                 text = json.dumps(turn_collections_source_manifest(registry), ensure_ascii=False, indent=2)
             else:
                 text = turn_collections_markdown(registry)
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+            print(text)
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.command == "reference-workqueue":
+        try:
+            workqueue = reference_workqueue_from_registries(
+                asr_registry=load_asr_collections(args.asr_registry),
+                turn_registry=load_turn_collections(args.turn_registry),
+                required_priorities=tuple(args.require_priority or ["p0", "p1"]),
+            )
+            if args.format == "json":
+                text = json.dumps(workqueue, ensure_ascii=False, indent=2)
+            elif args.format == "jsonl":
+                text = reference_workqueue_jsonl(workqueue)
+            else:
+                text = reference_workqueue_markdown(workqueue)
             if args.output:
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
