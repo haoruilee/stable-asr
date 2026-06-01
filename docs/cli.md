@@ -108,9 +108,9 @@ bash commands.sh
 ```
 
 The contributor pack gathers benchmark, adapter, VoiceWorld, final-run, and
-final acquisition starter packs into one workspace, then copies the GitHub issue
-and pull request templates so contributors can choose the right track before
-opening a PR.
+final acquisition starter packs into one workspace, adds the unified reference
+work queue under `references/`, then copies the GitHub issue and pull request
+templates so contributors can choose the right track before opening a PR.
 
 ## Streaming ASR
 

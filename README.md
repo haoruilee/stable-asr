@@ -281,7 +281,7 @@ is provided in `mkdocs.yaml`.
 - `final-acquisition-pack` for generating a collaborator-facing final input staging checklist, owner assignment tracker, license/consent review sheet, VoiceWorld recording checklist, and handoff template
 - `final-assignment-audit` for checking final input owners, due dates, and release-blocking collection status before handoff
 - `final-handoff-template`, `final-handoff-checksums`, `validate-schema-file --schema-id stable_asr.final_handoff.v0`, and `final-handoff-audit` for structured owner/license/path/checksum verification before accepting final inputs
-- `contributor-pack` for generating all public contribution starter packs plus copied issue and PR templates in one onboarding workspace
+- `contributor-pack` for generating all public contribution starter packs plus the unified reference work queue and copied issue/PR templates in one onboarding workspace
 - utterance-level ASR manifest schema and metadata-table recipe via `prepare-asr-manifest`
 - `validate-asr-manifest` and `inspect-asr-manifest` for public ASR corpus manifests
 - `prepare-public-asr` recipes for local LibriSpeech, AISHELL-1, Common Voice, and WenetSpeech directories

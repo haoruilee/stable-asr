@@ -29,8 +29,11 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     assert (output_dir / "packs" / "scenario_pack" / "README.md").exists()
     assert (output_dir / "packs" / "final_pack" / "README.md").exists()
     assert (output_dir / "packs" / "final_acquisition_pack" / "README.md").exists()
+    assert (output_dir / "references" / "REFERENCE_WORKQUEUE.md").exists()
+    assert (output_dir / "references" / "reference_workqueue.json").exists()
 
     tracks = (output_dir / "CONTRIBUTION_TRACKS.md").read_text(encoding="utf-8")
+    assert "Reference collection and license review" in tracks
     assert "Benchmark submission" in tracks
     assert "External ASR adapter" in tracks
     assert "Final input acquisition" in tracks
@@ -39,3 +42,5 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     commands = (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "packs/benchmark_pack" in commands
     assert "packs/final_acquisition_pack" in commands
+    assert "reference-workqueue" in commands
+    assert "asr:funasr" in (output_dir / "references" / "REFERENCE_WORKQUEUE.md").read_text(encoding="utf-8")

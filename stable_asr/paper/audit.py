@@ -1311,6 +1311,12 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
             artifacts_dir / "starter_packs" / "contributor_pack" / "CONTRIBUTION_TRACKS.md",
         )
     )
+    checks.append(
+        _exists_check(
+            "starter_pack:contributor_reference_workqueue",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_WORKQUEUE.md",
+        )
+    )
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))
     checks.append(_exists_check("data_sources:markdown", artifacts_dir / "DATA_SOURCES.md"))
     checks.append(_exists_check("adapter_registry:json", artifacts_dir / "adapter_registry.json"))

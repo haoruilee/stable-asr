@@ -37,6 +37,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "final_acquisition_pack:handoff_schema_markdown" in bundle.starter_packs
     assert "contributor_pack:readme" in bundle.starter_packs
     assert "contributor_pack:tracks" in bundle.starter_packs
+    assert "contributor_pack:reference_workqueue_markdown" in bundle.starter_packs
     assert set(bundle.data_sources) == {"json", "markdown"}
     assert set(bundle.adapter_registry) == {"json", "markdown"}
     assert set(bundle.model_registry) == {"json", "markdown"}
@@ -106,6 +107,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         bundle.starter_packs["final_acquisition_pack:assignments_markdown"]
     ).read_text(encoding="utf-8")
     assert "Stable-ASR Contributor Pack" in Path(bundle.starter_packs["contributor_pack:readme"]).read_text(encoding="utf-8")
+    assert "Stable-ASR Reference Work Queue" in Path(
+        bundle.starter_packs["contributor_pack:reference_workqueue_markdown"]
+    ).read_text(encoding="utf-8")
     assert "synthetic_voiceworld" in Path(bundle.data_sources["markdown"]).read_text(encoding="utf-8")
     assert "command_streaming_asr" in Path(bundle.adapter_registry["markdown"]).read_text(encoding="utf-8")
     assert "nanoturn_pico" in Path(bundle.model_registry["markdown"]).read_text(encoding="utf-8")

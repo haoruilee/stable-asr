@@ -41,6 +41,9 @@ from stable_asr.references import (
     asr_collections_source_manifest,
     load_asr_collections,
     load_turn_collections,
+    reference_workqueue_from_registries,
+    reference_workqueue_jsonl,
+    reference_workqueue_markdown,
     turn_collections_markdown,
     turn_collections_source_manifest,
     write_asr_collections_json,
@@ -237,6 +240,23 @@ def build_final_pack(
         output_dir / "reports" / "turn_collection_source_manifest.json",
         turn_collections_source_manifest(turn_collections),
     )
+    reference_workqueue = reference_workqueue_from_registries(
+        asr_registry=collections,
+        turn_registry=turn_collections,
+        required_priorities=("p0", "p1"),
+    )
+    files["reference_workqueue_json"] = _write_json(
+        output_dir / "reports" / "reference_workqueue.json",
+        reference_workqueue,
+    )
+    files["reference_workqueue_jsonl"] = _write_text(
+        output_dir / "reports" / "reference_workqueue.jsonl",
+        reference_workqueue_jsonl(reference_workqueue),
+    )
+    files["reference_workqueue_markdown"] = _write_text(
+        output_dir / "reports" / "REFERENCE_WORKQUEUE.md",
+        reference_workqueue_markdown(reference_workqueue),
+    )
 
     file_audit = audit_final_run_files(config, repo_root=output_dir)
     missing_required = [f"{check.name}: {check.path}" for check in file_audit.checks if check.required and not check.ok]
@@ -325,6 +345,12 @@ def _starter_commands() -> list[str]:
             f"--config {PACK_FINAL_CONFIG_PATH} "
             "--repo-root . --artifacts-dir runs/final/artifacts "
             "--output reports/FINAL_EVIDENCE_MATRIX_CURRENT.md"
+        ),
+        (
+            "stable-asr reference-workqueue "
+            "--asr-registry configs/references/asr_collections.json "
+            "--turn-registry configs/references/turn_collections.json "
+            "--output reports/REFERENCE_WORKQUEUE_CURRENT.md"
         ),
         (
             f"stable-asr final-config --config {PACK_FINAL_CONFIG_PATH} --repo-root . "

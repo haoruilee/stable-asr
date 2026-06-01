@@ -77,6 +77,7 @@
         {"path": "stable_asr/data/bootstrap.py", "required_now": true},
         {"path": "stable_asr/references/collections.py", "required_now": true},
         {"path": "stable_asr/references/turn_collections.py", "required_now": true},
+        {"path": "stable_asr/references/workqueue.py", "required_now": true},
         {"path": "stable_asr/paper/adapter_pack.py", "required_now": true}
       ],
       "commands": [
@@ -89,11 +90,13 @@
         "stable-asr turn-collections --registry configs/references/turn_collections.json --validate-only",
         "stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1",
         "stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json",
+        "stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md",
         "stable-asr adapter-pack --output-dir runs/adapter_pack"
       ],
       "success_criteria": [
         "P0/P1 ASR references have adapter or bridge evidence",
         "top ASR reference collection has acquisition and source manifests that map every entry to an evidence target, license policy, and review target",
+        "ASR and turn source manifests can be merged into one contributor work queue with evidence and license-review targets",
         "P0/P1 turn/full-duplex references have data-source or adapter evidence",
         "public ASR metadata can be normalized into canonical ASR manifests",
         "ASR manifests can bootstrap weak turn windows and leakage-audited splits",
@@ -192,7 +195,7 @@
         "external scenario contributors can generate a self-contained VoiceWorld starter pack with suite metadata, editable annotations, and runnable evaluation commands",
         "paper contributors can generate a self-contained final-run starter pack with configs, audits, runbooks, references, and scaffold directories without fake benchmark evidence",
         "paper contributors can generate a self-contained final input acquisition pack with staging, license/consent, recording, and handoff checklists",
-        "contributors can generate one onboarding pack containing every public contribution starter pack plus GitHub issue and PR templates",
+        "contributors can generate one onboarding pack containing every public contribution starter pack, unified reference work queue, and GitHub issue and PR templates",
         "external turn model submissions can produce auditable validation, evaluation, and leaderboard packages",
         "external streaming ASR submissions can produce auditable validation, evaluation, and leaderboard packages",
         "submission directories can be indexed into a community submission report and merged leaderboard",

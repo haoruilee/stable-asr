@@ -14,6 +14,11 @@ from stable_asr.paper.adapter_pack import build_adapter_pack
 from stable_asr.paper.benchmark_pack import build_benchmark_pack
 from stable_asr.paper.final_pack import build_final_pack
 from stable_asr.paper.scenario_pack import build_scenario_pack
+from stable_asr.references import (
+    reference_workqueue_from_registries,
+    reference_workqueue_jsonl,
+    reference_workqueue_markdown,
+)
 from stable_asr.resources import resolve_platform_path
 
 
@@ -106,6 +111,20 @@ def build_contributor_pack(output_dir: str | Path) -> ContributorPackReport:
     for path in template_files:
         files[f"template:{Path(path).name}"] = path
 
+    reference_workqueue = reference_workqueue_from_registries(required_priorities=("p0", "p1"))
+    files["reference_workqueue_json"] = _write_json(
+        output_dir / "references" / "reference_workqueue.json",
+        reference_workqueue,
+    )
+    files["reference_workqueue_jsonl"] = _write_text(
+        output_dir / "references" / "reference_workqueue.jsonl",
+        reference_workqueue_jsonl(reference_workqueue),
+    )
+    files["reference_workqueue_markdown"] = _write_text(
+        output_dir / "references" / "REFERENCE_WORKQUEUE.md",
+        reference_workqueue_markdown(reference_workqueue),
+    )
+
     commands = _starter_commands()
     files["tracks"] = _write_text(output_dir / "CONTRIBUTION_TRACKS.md", _tracks_markdown())
     files["commands_markdown"] = _write_text(output_dir / "COMMANDS.md", _commands_markdown(commands))
@@ -130,6 +149,7 @@ def _starter_commands() -> list[str]:
         "(cd packs/scenario_pack && bash commands.sh)",
         "(cd packs/final_pack && bash commands.sh)",
         "(cd packs/final_acquisition_pack && bash commands.sh)",
+        "stable-asr reference-workqueue --output references/REFERENCE_WORKQUEUE_CURRENT.md",
     ]
 
 
@@ -154,6 +174,12 @@ def _copy_templates(output_dir: Path) -> list[str]:
 
 def _tracks_markdown() -> str:
     rows = [
+        {
+            "track": "Reference collection and license review",
+            "pack": "references/REFERENCE_WORKQUEUE.md",
+            "github_template": "asr_adapter.yml, voiceworld_scenario.yml",
+            "first_command": "stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md",
+        },
         {
             "track": "Benchmark submission",
             "pack": "packs/benchmark_pack",

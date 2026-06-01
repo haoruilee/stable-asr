@@ -33,7 +33,7 @@ streaming ASR and voice-agent control:
 - benchmark starter packs for external contributors
 - adapter starter packs for external ASR systems
 - VoiceWorld scenario starter packs for external scenario contributors
-- unified contributor pack for onboarding across benchmark, adapter, scenario, final-run, and final-acquisition tracks
+- unified contributor pack for onboarding across benchmark, adapter, scenario, final-run, final-acquisition, and reference-workqueue tracks
 - machine-readable roadmap status for milestone evidence and planned final-scale work
 - repository doctor for environment, config, explicit final-input readiness, and release dependency checks
 - paper tables, figures, bundles, audits, and drafts

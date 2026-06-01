@@ -32,6 +32,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "starter_pack:final_acquisition_handoff_template" in report.to_text()
     assert "starter_pack:final_acquisition_handoff_schema" in report.to_text()
     assert "starter_pack:contributor_tracks" in report.to_text()
+    assert "starter_pack:contributor_reference_workqueue" in report.to_text()
     assert "model_card:markdown" in report.to_text()
     assert "model_registry:markdown" in report.to_text()
     assert "schema_registry:markdown" in report.to_text()

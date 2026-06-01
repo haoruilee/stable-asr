@@ -49,6 +49,7 @@ Use this together with:
 stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
 stable-asr contributor-pack --output-dir runs/contributor_pack
+stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr final-config --config configs/final/paper_final.json --plan-missing
 stable-asr paper-status --repo-root . --require-checksums
 ```
@@ -63,13 +64,16 @@ and passes `final-handoff-audit --require-checksums`.
 
 `final-acquisition-pack` is the collaborator-facing version of the final input
 plan. It writes a TSV/JSON staging checklist, owner assignment tracker, license
-and consent review sheet, VoiceWorld recording checklist, and structured
-handoff template so real corpora and external model outputs can be collected
-without inventing placeholder evidence. Use `final-assignment-audit` before
-handoff, then use `final-handoff-checksums`, `validate-schema-file --schema-id stable_asr.final_handoff.v0`, and `final-handoff-audit --require-checksums` on a filled handoff JSON before treating
-the staged inputs as final release evidence. `paper-release-audit
---require-final-ready` now checks that assignment and handoff evidence exist
-and audit cleanly.
+and consent templates, VoiceWorld recording checklist, plus a handoff template.
+Use `reference-workqueue` alongside it to assign upstream ASR/turn adapter,
+evidence, and license-review work without treating registry entries as finished
+evidence. Use `final-assignment-audit` before handoff, then use
+`final-handoff-checksums`,
+`validate-schema-file --schema-id stable_asr.final_handoff.v0`, and
+`final-handoff-audit --require-checksums` on a filled handoff JSON before
+treating the staged inputs as final release evidence.
+`paper-release-audit --require-final-ready` checks that assignment and handoff
+evidence exist and audit cleanly.
 
 Before handoff, use `final-assignment-audit` on the generated
 `acquisition/assignments.json` file. The default audit reports unassigned
