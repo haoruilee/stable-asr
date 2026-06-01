@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from stable_asr.eval.report import dict_table
 from stable_asr.paper.figures import PAPER_FIGURES
 from stable_asr.paper.tables import PAPER_TABLES, load_paper_results, paper_table
+from stable_asr.references import load_asr_collections, load_turn_collections
 
 
 def paper_draft(
@@ -78,6 +80,8 @@ def _draft_markdown(results_path: Path, results: dict[str, object], artifacts_di
         "- A VoiceWorld scenario suite for incomplete pauses, backchannels, waits, interruptions, side conversations, ambient speech, noisy far-field speech, and code-switching.",
         "- Cost-sensitive policy search and latency benchmarking for interaction-level decisions.",
         "- Reproducible paper tables, figures, bundles, claim audits, paper-parity audits, final-experiment runbooks, final-run configs/action plans, and this draft generator.",
+        "",
+        *(_related_work_section()),
         "",
         "## 3. Platform Overview",
         "",
@@ -168,6 +172,56 @@ def _draft_markdown(results_path: Path, results: dict[str, object], artifacts_di
         ]
     )
     return "\n".join(lines)
+
+
+def _related_work_section() -> list[str]:
+    asr_registry = load_asr_collections()
+    turn_registry = load_turn_collections()
+    asr_entries = asr_registry.get("entries", [])
+    turn_entries = turn_registry.get("entries", [])
+    asr_rows = _reference_rows(asr_entries, priorities={"p0", "p1"})
+    turn_rows = _reference_rows(turn_entries, priorities={"p0", "p1"})
+    return [
+        "## Related Work And Positioning",
+        "",
+        (
+            "Stable-ASR is intentionally positioned as a reproducible evaluation and control layer, "
+            "not as a replacement for mature ASR toolkits, deployment runtimes, or voice-agent frameworks."
+        ),
+        "",
+        "ASR ecosystem references shape adapter and benchmark boundaries:",
+        "",
+        dict_table(asr_rows),
+        "",
+        "Turn-taking and full-duplex references shape turn labels, VoiceWorld scenarios, and external baselines:",
+        "",
+        dict_table(turn_rows),
+        "",
+        (
+            "The platform contribution is the connection layer: one manifest, one streaming trace schema, "
+            "one scenario suite, one policy/evaluation interface, and audited artifact bundles that keep "
+            "registry intent, external evidence, license review, smoke results, and final-scale claims separate."
+        ),
+    ]
+
+
+def _reference_rows(entries: object, *, priorities: set[str]) -> list[dict[str, object]]:
+    if not isinstance(entries, list):
+        return []
+    rows = []
+    for entry in sorted(
+        (item for item in entries if isinstance(item, dict) and str(item.get("priority", "")) in priorities),
+        key=lambda item: (str(item.get("priority", "")), str(item.get("category", "")), str(item.get("id", ""))),
+    ):
+        rows.append(
+            {
+                "project": entry.get("name", ""),
+                "priority": entry.get("priority", ""),
+                "category": entry.get("category", ""),
+                "stable_asr_use": entry.get("reference_use", ""),
+            }
+        )
+    return rows
 
 
 def _table(results_path: Path, name: str) -> str:

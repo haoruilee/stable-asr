@@ -16,6 +16,10 @@ def test_paper_draft_generates_editable_markdown(tmp_path: Path) -> None:
     assert generated == str(output)
     assert "# Stable-ASR:" in draft
     assert "## Abstract" in draft
+    assert "## Related Work And Positioning" in draft
+    assert "FunASR" in draft
+    assert "Smart Turn" in draft
+    assert "not as a replacement for mature ASR toolkits" in draft
     assert "## 6. Turn Latency And Deployment" in draft
     assert "| records | valid | languages |" in draft
     assert "| baseline | accuracy |" in draft
