@@ -25,6 +25,7 @@ ready.
 - GitHub issue templates exist for final data acquisition, ASR adapters, VoiceWorld scenarios, and benchmark submissions
 - paper config and reproduction script exist
 - roadmap registry exists and `roadmap-status` separates current milestone evidence from final-scale readiness; `roadmap-status --require-final-ready` must fail until real paper-scale inputs and artifacts exist
+- `catalog` exists as a one-page platform asset index for checked-in data, model, adapter, scenario, benchmark, schema, reference, roadmap, and parity registries
 - platform parity registry exists and `platform-parity` can audit stable-worldmodel-style repository shape
 - `stable-asr doctor` reports required config schemas as OK
 - paper parity checklist JSON exists in `configs/paper/paper_parity_checklist.json`

@@ -19,10 +19,10 @@
     {
       "id": "installable_cli_surface",
       "stable_worldmodel_reference": "A package-level CLI for inspecting, converting, listing, and running platform tasks.",
-      "required_paths": ["stable_asr/cli.py", ".github/workflows/tests.yml", "docs/cli.md"],
-      "required_commands": ["stable-asr doctor", "stable-asr labels", "stable-asr data-sources --validate-only", "stable-asr scenario-suite --validate-only"],
+      "required_paths": ["stable_asr/cli.py", "stable_asr/catalog.py", ".github/workflows/tests.yml", "docs/cli.md"],
+      "required_commands": ["stable-asr doctor", "stable-asr catalog", "stable-asr labels", "stable-asr data-sources --validate-only", "stable-asr scenario-suite --validate-only"],
       "required_markers": [
-        {"path": "README.md", "contains": ["stable-asr doctor", "stable-asr paper-release-smoke"]}
+        {"path": "README.md", "contains": ["stable-asr doctor", "stable-asr catalog", "stable-asr paper-release-smoke"]}
       ]
     },
     {

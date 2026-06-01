@@ -777,6 +777,7 @@ def _repo_release_checks(repo_root: Path) -> list[PaperReleaseAuditCheck]:
         "code_of_conduct": "CODE_OF_CONDUCT.md",
         "roadmap": "ROADMAP.md",
         "roadmap_registry": "configs/roadmap/stable_asr_roadmap.json",
+        "platform_catalog": "stable_asr/catalog.py",
         "ci_workflow": ".github/workflows/tests.yml",
         "pull_request_template": ".github/PULL_REQUEST_TEMPLATE.md",
         "issue_template_config": ".github/ISSUE_TEMPLATE/config.yml",
