@@ -7,6 +7,7 @@ Stable-ASR exposes one command: `stable-asr`.
 ```bash
 stable-asr doctor
 stable-asr doctor --check-final-files
+stable-asr catalog --output runs/PLATFORM_CATALOG.md
 stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
 stable-asr roadmap-status --require-final-ready
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only
@@ -16,6 +17,9 @@ stable-asr platform-parity --output runs/PLATFORM_PARITY.md
 `doctor` reports final input readiness as `NOT_CHECKED` unless
 `--check-final-files` is supplied. Use `--check-release-env` separately for the
 optional Torch/Lance dependency gate needed by strict release smoke.
+`catalog` is the quickest repository tour: it summarizes the checked-in
+data-source, model, adapter, scenario, benchmark, schema, reference, roadmap,
+and stable-worldmodel-style parity registries in one report.
 
 ## Turn Data
 

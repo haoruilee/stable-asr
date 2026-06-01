@@ -18,6 +18,9 @@ python -m pip install -e ".[lance,train]"  # paper-release-smoke READY path
 ## Three-Step Platform Flow
 
 ```bash
+# 0. Inspect the checked-in platform catalog
+stable-asr catalog --output runs/PLATFORM_CATALOG.md
+
 # 1. Validate and profile turn data
 stable-asr validate-manifest examples/data/turn_demo.jsonl
 stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report runs/turn_profile.md

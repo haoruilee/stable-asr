@@ -145,6 +145,7 @@ Reference coverage is tracked in `configs/references/asr_collections.json`,
 `configs/references/turn_collections.json`, and `configs/adapters/stable_asr_adapters.json`.
 
 ```bash
+stable-asr catalog --output runs/PLATFORM_CATALOG.md
 stable-asr adapter-registry --registry configs/adapters/stable_asr_adapters.json --validate-only
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
@@ -218,6 +219,7 @@ is provided in `mkdocs.yaml`.
 - installable package
 - `stable-asr` CLI
 - `doctor` command for environment, optional dependency, config, and explicit `--check-final-files` readiness checks
+- `catalog` command for a one-page Stable-ASR platform asset index across data sources, models, adapters, VoiceWorld scenarios, benchmarks, schemas, references, roadmap, and stable-worldmodel-style parity
 - machine-readable roadmap registry in `configs/roadmap/stable_asr_roadmap.json`
 - `roadmap-status` for validating current milestone evidence and surfacing final-scale blockers; use `--require-final-ready` to fail until real paper-scale inputs and artifacts exist
 - machine-readable stable-worldmodel-style repository parity registry in `configs/platform/stable_worldmodel_parity.json`

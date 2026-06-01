@@ -35,6 +35,7 @@ streaming ASR and voice-agent control:
 - VoiceWorld scenario starter packs for external scenario contributors
 - unified contributor pack for onboarding across benchmark, adapter, scenario, final-run, final-acquisition, and reference-workqueue tracks
 - reference assignment audit for owner, due-date, evidence, and license-review readiness on upstream collection tasks
+- platform catalog for a one-page view of data, model, adapter, scenario, benchmark, schema, reference, roadmap, and stable-worldmodel-style parity registries
 - machine-readable roadmap status for milestone evidence and planned final-scale work
 - repository doctor for environment, config, explicit final-input readiness, and release dependency checks
 - paper tables, figures, bundles, audits, and drafts
@@ -50,6 +51,7 @@ real-time behavior, latency, policies, and interaction failures.
 stable-asr doctor
 stable-asr doctor --check-release-env
 stable-asr doctor --check-final-files
+stable-asr catalog --output runs/PLATFORM_CATALOG.md
 stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
 stable-asr roadmap-status --require-final-ready
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only

@@ -50,6 +50,25 @@ def test_doctor_cli_with_release_env_check(capsys) -> None:
     assert "release/environment" in captured.out
 
 
+def test_catalog_cli_writes_platform_catalog(tmp_path, capsys) -> None:
+    output = tmp_path / "CATALOG.md"
+    code = main(["catalog", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Platform Catalog" in captured.out
+    assert "stable_asr_sources_v0" in captured.out
+    assert output.exists()
+    assert "Stable-WorldModel-Style Parity" in output.read_text(encoding="utf-8")
+
+    code = main(["catalog", "--json"])
+    captured = capsys.readouterr()
+    assert code == 0
+    payload = json.loads(captured.out)
+    assert payload["ok"] is True
+    assert payload["stable_worldmodel_parity"]["ok"] is True
+
+
 def test_paper_status_cli(capsys) -> None:
     code = main(["paper-status"])
 

@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from stable_asr import __version__
+from stable_asr.catalog import build_platform_catalog, write_platform_catalog_json, write_platform_catalog_markdown
 from stable_asr.data.asr_manifest import load_asr_manifest, summarize_asr_records, validate_asr_manifest
 from stable_asr.data.audio_audit import audit_audio_records
 from stable_asr.data.bootstrap import BootstrapTurnDataConfig, bootstrap_turn_data
@@ -209,6 +210,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Fail if optional Torch and Lance dependencies needed for READY release smoke are missing.",
     )
     doctor_parser.add_argument("--json", action="store_true")
+
+    catalog_parser = subparsers.add_parser(
+        "catalog",
+        help="Print a one-page catalog of Stable-ASR platform assets.",
+    )
+    catalog_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    catalog_parser.add_argument("--output", type=Path, help="Optional Markdown or JSON output path.")
+    catalog_parser.add_argument("--json", action="store_true")
 
     validate_parser = subparsers.add_parser(
         "validate-manifest",
@@ -1500,6 +1509,19 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
         else:
             print(report.to_text())
+        return 0 if report.ok else 1
+
+    if args.command == "catalog":
+        report = build_platform_catalog(repo_root=args.repo_root)
+        if args.output:
+            if args.json:
+                write_platform_catalog_json(report, args.output)
+            else:
+                write_platform_catalog_markdown(report, args.output)
+        if args.json:
+            print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print(report.to_markdown())
         return 0 if report.ok else 1
 
     if args.command == "labels":
