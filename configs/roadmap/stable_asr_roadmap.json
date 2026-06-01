@@ -96,7 +96,7 @@
       "success_criteria": [
         "P0/P1 ASR references have adapter or bridge evidence",
         "top ASR reference collection has acquisition and source manifests that map every entry to an evidence target, license policy, and review target",
-        "ASR and turn source manifests can be merged into one contributor work queue with evidence and license-review targets",
+        "ASR and turn source manifests can be merged into one contributor work queue with evidence, license-review, owner, and due-date targets",
         "P0/P1 turn/full-duplex references have data-source or adapter evidence",
         "public ASR metadata can be normalized into canonical ASR manifests",
         "ASR manifests can bootstrap weak turn windows and leakage-audited splits",

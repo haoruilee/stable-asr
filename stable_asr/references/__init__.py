@@ -27,6 +27,9 @@ from stable_asr.references.turn_collections import (
 )
 from stable_asr.references.workqueue import (
     ReferenceWorkQueueValidation,
+    reference_workqueue_assignments,
+    reference_workqueue_assignments_markdown,
+    reference_workqueue_assignments_tsv,
     reference_workqueue_from_registries,
     reference_workqueue_from_source_manifests,
     reference_workqueue_jsonl,
@@ -39,6 +42,9 @@ __all__ = [
     "ASRCollectionLicenseReport",
     "TurnCollectionCoverageReport",
     "ReferenceWorkQueueValidation",
+    "reference_workqueue_assignments",
+    "reference_workqueue_assignments_markdown",
+    "reference_workqueue_assignments_tsv",
     "audit_asr_collection_coverage",
     "audit_asr_collection_licenses",
     "audit_asr_collection_readiness",

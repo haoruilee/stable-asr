@@ -868,6 +868,17 @@ def test_reference_workqueue_cli_writes_json(tmp_path, capsys) -> None:
     assert any(task["task_id"] == "turn:smart_turn" for task in payload["tasks"])
 
 
+def test_reference_workqueue_cli_writes_assignment_tracker(tmp_path, capsys) -> None:
+    output = tmp_path / "reference_assignments.tsv"
+    code = main(["reference-workqueue", "--format", "assignments-tsv", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "task_id\tcollection_type\treference_id" in captured.out
+    assert output.exists()
+    assert "blocked_license_review" in output.read_text(encoding="utf-8")
+
+
 def test_audit_audio_cli_with_generated_turn_wavs(tmp_path, capsys) -> None:
     manifest = tmp_path / "turn.jsonl"
     code = main(["make-synthetic-turn-data", "--output", str(manifest), "--episodes", "2", "--write-audio"])

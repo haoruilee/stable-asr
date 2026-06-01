@@ -33,6 +33,7 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "starter_pack:final_acquisition_handoff_schema" in report.to_text()
     assert "starter_pack:contributor_tracks" in report.to_text()
     assert "starter_pack:contributor_reference_workqueue" in report.to_text()
+    assert "starter_pack:contributor_reference_assignments" in report.to_text()
     assert "model_card:markdown" in report.to_text()
     assert "model_registry:markdown" in report.to_text()
     assert "schema_registry:markdown" in report.to_text()
@@ -45,6 +46,8 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "turn_collection_coverage:markdown" in report.to_text()
     assert "reference_workqueue:json" in report.to_text()
     assert "reference_workqueue:content" in report.to_text()
+    assert "reference_assignments:json" in report.to_text()
+    assert "reference_assignments:content" in report.to_text()
     assert report.to_dict()["ok"] is True
 
 
@@ -76,6 +79,24 @@ def test_paper_audit_rejects_tampered_reference_workqueue(tmp_path: Path) -> Non
     assert not report.ok
     assert "reference_workqueue:content" in report.to_text()
     assert "requires both asr and turn tasks" in report.to_text()
+
+
+def test_paper_audit_rejects_tampered_reference_assignments(tmp_path: Path) -> None:
+    result = run_paper_smoke(tmp_path / "paper", episodes=9, seed=6, train_model=False)
+    bundle = paper_artifact_bundle(result.results_path, tmp_path / "artifacts")
+    assignments = Path(bundle.reference_workqueue["assignments_json"])
+    payload = json.loads(assignments.read_text(encoding="utf-8"))
+    for row in payload["rows"]:
+        if row.get("priority") == "p0":
+            row["blocking_release"] = False
+            break
+    assignments.write_text(json.dumps(payload), encoding="utf-8")
+
+    report = audit_paper_artifacts(result.results_path, bundle.output_dir)
+
+    assert not report.ok
+    assert "reference_assignments:content" in report.to_text()
+    assert "all P0 rows must default to blocking_release=true" in report.to_text()
 
 
 def test_paper_audit_requires_four_asr_transcript_conversions(tmp_path: Path) -> None:

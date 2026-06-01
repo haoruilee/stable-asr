@@ -38,6 +38,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "contributor_pack:readme" in bundle.starter_packs
     assert "contributor_pack:tracks" in bundle.starter_packs
     assert "contributor_pack:reference_workqueue_markdown" in bundle.starter_packs
+    assert "contributor_pack:reference_assignments_markdown" in bundle.starter_packs
     assert set(bundle.data_sources) == {"json", "markdown"}
     assert set(bundle.adapter_registry) == {"json", "markdown"}
     assert set(bundle.model_registry) == {"json", "markdown"}
@@ -65,7 +66,14 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         "coverage_json",
         "coverage_markdown",
     }
-    assert set(bundle.reference_workqueue) == {"json", "jsonl", "markdown"}
+    assert set(bundle.reference_workqueue) == {
+        "json",
+        "jsonl",
+        "markdown",
+        "assignments_json",
+        "assignments_tsv",
+        "assignments_markdown",
+    }
     assert set(bundle.scenario_suite) == {"json", "markdown"}
     assert set(bundle.case_studies) == {"json", "markdown"}
     assert set(bundle.paper_parity) == {"json", "markdown"}
@@ -110,6 +118,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR Reference Work Queue" in Path(
         bundle.starter_packs["contributor_pack:reference_workqueue_markdown"]
     ).read_text(encoding="utf-8")
+    assert "Stable-ASR Reference Assignments" in Path(
+        bundle.starter_packs["contributor_pack:reference_assignments_markdown"]
+    ).read_text(encoding="utf-8")
     assert "synthetic_voiceworld" in Path(bundle.data_sources["markdown"]).read_text(encoding="utf-8")
     assert "command_streaming_asr" in Path(bundle.adapter_registry["markdown"]).read_text(encoding="utf-8")
     assert "nanoturn_pico" in Path(bundle.model_registry["markdown"]).read_text(encoding="utf-8")
@@ -147,6 +158,13 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR Reference Work Queue" in Path(bundle.reference_workqueue["markdown"]).read_text(encoding="utf-8")
     assert "stable_asr_reference_workqueue_v0" in Path(bundle.reference_workqueue["json"]).read_text(encoding="utf-8")
     assert '"task_id": "asr:funasr"' in Path(bundle.reference_workqueue["jsonl"]).read_text(encoding="utf-8")
+    assert "Stable-ASR Reference Assignments" in Path(bundle.reference_workqueue["assignments_markdown"]).read_text(
+        encoding="utf-8"
+    )
+    assert "stable_asr_reference_assignments_v0" in Path(bundle.reference_workqueue["assignments_json"]).read_text(
+        encoding="utf-8"
+    )
+    assert "blocked_license_review" in Path(bundle.reference_workqueue["assignments_tsv"]).read_text(encoding="utf-8")
     assert "Reference Work Queue" in Path(bundle.index_path).read_text(encoding="utf-8")
     assert "Stable-ASR VoiceWorld v0 Scenario Suite" in Path(bundle.scenario_suite["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Case Studies" in Path(bundle.case_studies["markdown"]).read_text(encoding="utf-8")

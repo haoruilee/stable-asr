@@ -1,6 +1,9 @@
 import json
 
 from stable_asr.references import (
+    reference_workqueue_assignments,
+    reference_workqueue_assignments_markdown,
+    reference_workqueue_assignments_tsv,
     reference_workqueue_from_registries,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
@@ -41,3 +44,18 @@ def test_reference_workqueue_markdown_and_jsonl_render() -> None:
     rows = [json.loads(line) for line in jsonl.splitlines()]
     assert len(rows) == len(workqueue["tasks"])
     assert rows[0]["task_id"]
+
+
+def test_reference_workqueue_assignment_templates_render() -> None:
+    workqueue = reference_workqueue_from_registries()
+    assignments = reference_workqueue_assignments(workqueue)
+    markdown = reference_workqueue_assignments_markdown(assignments)
+    tsv = reference_workqueue_assignments_tsv(assignments)
+
+    assert assignments["id"] == "stable_asr_reference_assignments_v0"
+    assert any(row["task_id"] == "asr:funasr" and row["blocking_release"] for row in assignments["rows"])
+    assert any(row["task_id"] == "turn:smart_turn" for row in assignments["rows"])
+    assert "Stable-ASR Reference Assignments" in markdown
+    assert "Owner Workflow" in markdown
+    assert "task_id\tcollection_type\treference_id" in tsv
+    assert "blocked_license_review" in tsv

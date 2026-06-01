@@ -15,6 +15,9 @@ from stable_asr.paper.benchmark_pack import build_benchmark_pack
 from stable_asr.paper.final_pack import build_final_pack
 from stable_asr.paper.scenario_pack import build_scenario_pack
 from stable_asr.references import (
+    reference_workqueue_assignments,
+    reference_workqueue_assignments_markdown,
+    reference_workqueue_assignments_tsv,
     reference_workqueue_from_registries,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
@@ -124,6 +127,19 @@ def build_contributor_pack(output_dir: str | Path) -> ContributorPackReport:
         output_dir / "references" / "REFERENCE_WORKQUEUE.md",
         reference_workqueue_markdown(reference_workqueue),
     )
+    reference_assignments = reference_workqueue_assignments(reference_workqueue)
+    files["reference_assignments_json"] = _write_json(
+        output_dir / "references" / "reference_assignments.json",
+        reference_assignments,
+    )
+    files["reference_assignments_tsv"] = _write_text(
+        output_dir / "references" / "reference_assignments.tsv",
+        reference_workqueue_assignments_tsv(reference_assignments),
+    )
+    files["reference_assignments_markdown"] = _write_text(
+        output_dir / "references" / "REFERENCE_ASSIGNMENTS.md",
+        reference_workqueue_assignments_markdown(reference_assignments),
+    )
 
     commands = _starter_commands()
     files["tracks"] = _write_text(output_dir / "CONTRIBUTION_TRACKS.md", _tracks_markdown())
@@ -150,6 +166,7 @@ def _starter_commands() -> list[str]:
         "(cd packs/final_pack && bash commands.sh)",
         "(cd packs/final_acquisition_pack && bash commands.sh)",
         "stable-asr reference-workqueue --output references/REFERENCE_WORKQUEUE_CURRENT.md",
+        "stable-asr reference-workqueue --format assignments-markdown --output references/REFERENCE_ASSIGNMENTS_CURRENT.md",
     ]
 
 

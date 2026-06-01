@@ -51,4 +51,6 @@ can be collected without relying on a manually copied checklist.
 `reference-workqueue` merges the turn source manifest with the ASR source
 manifest into a single contributor queue. It is useful when collecting external
 turn predictions, scenario bridges, command ASR exports, and license reviews in
-one release plan.
+one release plan. Use `--format assignments-tsv` or
+`--format assignments-markdown` when the queue needs owners, due dates, and
+release-blocker status.

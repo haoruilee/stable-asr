@@ -198,6 +198,116 @@ def reference_workqueue_jsonl(workqueue: dict[str, Any]) -> str:
     return "\n".join(json.dumps(task, ensure_ascii=False, sort_keys=True) for task in workqueue["tasks"]) + "\n"
 
 
+def reference_workqueue_assignments(workqueue: dict[str, Any]) -> dict[str, object]:
+    """Turn a reference work queue into an owner-fillable assignment tracker."""
+
+    validation = validate_reference_workqueue(workqueue)
+    if not validation.ok:
+        raise ValueError(validation.to_text())
+    rows = []
+    for task in workqueue["tasks"]:
+        rows.append(
+            {
+                "task_id": task["task_id"],
+                "collection_type": task["collection_type"],
+                "reference_id": task["reference_id"],
+                "name": task["name"],
+                "priority": task["priority"],
+                "category": task["category"],
+                "owner": "",
+                "due_date": "",
+                "status": _assignment_status(task),
+                "blocking_release": task["priority"] == "p0",
+                "evidence_target": task["evidence_target"],
+                "license": task["license"],
+                "license_review_required": task["license_review_required"],
+                "license_review_target": task["license_review_target"],
+                "next_action": task["next_action"],
+                "blocked_by": task["blocked_by"],
+                "source_url": task["source_url"],
+                "docs_url": task["docs_url"],
+                "notes": "",
+            }
+        )
+    return {
+        "id": "stable_asr_reference_assignments_v0",
+        "version": "0.1.0",
+        "generated_by": "stable-asr reference-workqueue --format assignments-json",
+        "source_workqueue_id": workqueue["id"],
+        "rows": rows,
+    }
+
+
+def reference_workqueue_assignments_tsv(assignments: dict[str, Any]) -> str:
+    rows = assignments.get("rows", [])
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("reference assignments rows must be a non-empty list")
+    columns = [
+        "task_id",
+        "collection_type",
+        "reference_id",
+        "name",
+        "priority",
+        "category",
+        "owner",
+        "due_date",
+        "status",
+        "blocking_release",
+        "evidence_target",
+        "license_review_required",
+        "license_review_target",
+        "next_action",
+        "blocked_by",
+        "source_url",
+        "docs_url",
+        "notes",
+    ]
+    lines = ["\t".join(columns)]
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        lines.append("\t".join(_tsv_cell(row.get(column, "")) for column in columns))
+    return "\n".join(lines) + "\n"
+
+
+def reference_workqueue_assignments_markdown(assignments: dict[str, Any]) -> str:
+    rows = assignments.get("rows", [])
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("reference assignments rows must be a non-empty list")
+    table_rows = [
+        {
+            "task": row["task_id"],
+            "priority": row["priority"],
+            "owner": row["owner"] or "unassigned",
+            "due": row["due_date"] or "unset",
+            "status": row["status"],
+            "blocking": "yes" if row["blocking_release"] else "no",
+            "evidence": row["evidence_target"],
+        }
+        for row in rows
+        if isinstance(row, dict)
+    ]
+    return "\n".join(
+        [
+            "# Stable-ASR Reference Assignments",
+            "",
+            f"- status: `TEMPLATE`",
+            f"- source_workqueue_id: `{assignments.get('source_workqueue_id', '')}`",
+            f"- rows: `{len(table_rows)}`",
+            "",
+            dict_table(table_rows),
+            "",
+            "## Owner Workflow",
+            "",
+            "1. Fill `owner` and `due_date` for every P0 task first.",
+            "2. Keep `blocking_release` true for P0 tasks until the evidence target exists and any license review is complete.",
+            "3. Do not vendor upstream code, weights, fixtures, or long snippets before the linked license review is filled.",
+            "4. Update `status` to `ready_for_review` only after evidence and review artifacts are staged.",
+            "",
+        ]
+    )
+
+
 def write_reference_workqueue_json(path: str | Path, workqueue: dict[str, Any]) -> str:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -222,3 +332,15 @@ def _blocked_by(license_review_required: bool) -> list[str]:
     if license_review_required:
         return ["license_review_before_vendoring"]
     return []
+
+
+def _assignment_status(task: dict[str, Any]) -> str:
+    if task.get("license_review_required"):
+        return "blocked_license_review"
+    return "needs_evidence"
+
+
+def _tsv_cell(value: object) -> str:
+    if isinstance(value, list):
+        value = ",".join(str(item) for item in value)
+    return str(value).replace("\t", " ").replace("\n", " ").replace("\r", " ")

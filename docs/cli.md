@@ -151,6 +151,7 @@ stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COL
 stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format json --output runs/reference_workqueue.json
+stable-asr reference-workqueue --format assignments-tsv --output runs/reference_assignments.tsv
 ```
 
 ## Paper Artifacts

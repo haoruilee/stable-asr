@@ -41,6 +41,9 @@ from stable_asr.references import (
     asr_collections_source_manifest,
     load_asr_collections,
     load_turn_collections,
+    reference_workqueue_assignments,
+    reference_workqueue_assignments_markdown,
+    reference_workqueue_assignments_tsv,
     reference_workqueue_from_registries,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
@@ -257,6 +260,19 @@ def build_final_pack(
         output_dir / "reports" / "REFERENCE_WORKQUEUE.md",
         reference_workqueue_markdown(reference_workqueue),
     )
+    reference_assignments = reference_workqueue_assignments(reference_workqueue)
+    files["reference_assignments_json"] = _write_json(
+        output_dir / "reports" / "reference_assignments.json",
+        reference_assignments,
+    )
+    files["reference_assignments_tsv"] = _write_text(
+        output_dir / "reports" / "reference_assignments.tsv",
+        reference_workqueue_assignments_tsv(reference_assignments),
+    )
+    files["reference_assignments_markdown"] = _write_text(
+        output_dir / "reports" / "REFERENCE_ASSIGNMENTS.md",
+        reference_workqueue_assignments_markdown(reference_assignments),
+    )
 
     file_audit = audit_final_run_files(config, repo_root=output_dir)
     missing_required = [f"{check.name}: {check.path}" for check in file_audit.checks if check.required and not check.ok]
@@ -351,6 +367,12 @@ def _starter_commands() -> list[str]:
             "--asr-registry configs/references/asr_collections.json "
             "--turn-registry configs/references/turn_collections.json "
             "--output reports/REFERENCE_WORKQUEUE_CURRENT.md"
+        ),
+        (
+            "stable-asr reference-workqueue --format assignments-markdown "
+            "--asr-registry configs/references/asr_collections.json "
+            "--turn-registry configs/references/turn_collections.json "
+            "--output reports/REFERENCE_ASSIGNMENTS_CURRENT.md"
         ),
         (
             f"stable-asr final-config --config {PACK_FINAL_CONFIG_PATH} --repo-root . "

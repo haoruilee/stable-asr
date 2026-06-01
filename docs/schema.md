@@ -15,6 +15,7 @@ stable-asr schema-registry --output runs/SCHEMAS.md
 stable-asr schema-registry --schema-id stable_asr.turn_manifest_record.v0 --json
 stable-asr schema-registry --schema-id stable_asr.reference_source_manifest.v0 --json
 stable-asr schema-registry --schema-id stable_asr.reference_workqueue.v0 --json
+stable-asr schema-registry --schema-id stable_asr.reference_assignments.v0 --json
 stable-asr schema-registry --schema-id stable_asr.final_handoff.v0 --json
 stable-asr validate-schema-file \
   --input examples/data/turn_demo.jsonl \
@@ -31,6 +32,10 @@ stable-asr reference-workqueue --format json --output runs/reference_workqueue.j
 stable-asr validate-schema-file \
   --input runs/reference_workqueue.json \
   --schema-id stable_asr.reference_workqueue.v0
+stable-asr reference-workqueue --format assignments-json --output runs/reference_assignments.json
+stable-asr validate-schema-file \
+  --input runs/reference_assignments.json \
+  --schema-id stable_asr.reference_assignments.v0
 ```
 
 The default registry is `configs/schemas/stable_asr_schemas.json`. Paper bundles
@@ -38,7 +43,8 @@ also copy it to `schema_registry.json` and render `SCHEMAS.md`, so released
 artifacts carry the same machine-readable contracts as the repository.
 Use `validate-schema-file` before publishing converted datasets, external turn
 predictions, streaming ASR traces, model registries, reference source manifests,
-reference work queues, final handoff evidence, or leaderboard submissions.
+reference work queues, reference assignment trackers, final handoff evidence, or
+leaderboard submissions.
 
 ## Required Fields
 

@@ -1317,6 +1317,12 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
             artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_WORKQUEUE.md",
         )
     )
+    checks.append(
+        _exists_check(
+            "starter_pack:contributor_reference_assignments",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_ASSIGNMENTS.md",
+        )
+    )
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))
     checks.append(_exists_check("data_sources:markdown", artifacts_dir / "DATA_SOURCES.md"))
     checks.append(_exists_check("adapter_registry:json", artifacts_dir / "adapter_registry.json"))
@@ -1365,6 +1371,10 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("reference_workqueue:jsonl", artifacts_dir / "reference_workqueue.jsonl"))
     checks.append(_exists_check("reference_workqueue:markdown", artifacts_dir / "REFERENCE_WORKQUEUE.md"))
     checks.append(_reference_workqueue_content_check(artifacts_dir / "reference_workqueue.json"))
+    checks.append(_exists_check("reference_assignments:json", artifacts_dir / "reference_assignments.json"))
+    checks.append(_exists_check("reference_assignments:tsv", artifacts_dir / "reference_assignments.tsv"))
+    checks.append(_exists_check("reference_assignments:markdown", artifacts_dir / "REFERENCE_ASSIGNMENTS.md"))
+    checks.append(_reference_assignments_content_check(artifacts_dir / "reference_assignments.json"))
     checks.append(_exists_check("scenario_suite:json", artifacts_dir / "scenario_suite.json"))
     checks.append(_exists_check("scenario_suite:markdown", artifacts_dir / "SCENARIO_SUITE.md"))
     checks.append(_exists_check("case_studies:json", artifacts_dir / "case_studies.json"))
@@ -1519,6 +1529,32 @@ def _reference_workqueue_content_check(path: Path) -> PaperAuditCheck:
     if errors:
         return PaperAuditCheck(name, False, "; ".join(errors))
     return PaperAuditCheck(name, True, f"{len(tasks)} reference task(s)")
+
+
+def _reference_assignments_content_check(path: Path) -> PaperAuditCheck:
+    name = "reference_assignments:content"
+    if not path.exists():
+        return PaperAuditCheck(name, False, f"missing: {path}")
+    try:
+        schema_report = validate_schema_file(path, schema_id="stable_asr.reference_assignments.v0")
+        if not schema_report.ok:
+            issues = "; ".join(f"{issue.path}: {issue.detail}" for issue in schema_report.issues[:5])
+            return PaperAuditCheck(name, False, issues)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return PaperAuditCheck(name, False, str(exc))
+
+    rows = payload.get("rows", [])
+    if not isinstance(rows, list) or not rows:
+        return PaperAuditCheck(name, False, "rows must be a non-empty list")
+    collection_types = {str(row.get("collection_type", "")) for row in rows if isinstance(row, dict)}
+    p0_rows = [row for row in rows if isinstance(row, dict) and row.get("priority") == "p0"]
+    blocking_p0 = [row for row in p0_rows if row.get("blocking_release") is True]
+    if not {"asr", "turn"}.issubset(collection_types):
+        return PaperAuditCheck(name, False, "requires both asr and turn assignment rows")
+    if len(blocking_p0) != len(p0_rows):
+        return PaperAuditCheck(name, False, "all P0 rows must default to blocking_release=true")
+    return PaperAuditCheck(name, True, f"{len(rows)} reference assignment row(s)")
 
 
 def _integrity_check(artifacts_dir: Path) -> PaperAuditCheck:

@@ -273,7 +273,7 @@ is provided in `mkdocs.yaml`.
 - `asr-collections --format source-manifest` for generating machine-readable source, license, acquisition-track, and evidence-target queues from upstream ASR references
 - machine-readable turn/full-duplex reference collection in `configs/references/turn_collections.json`
 - `turn-collections` for validating Smart Turn, Easy Turn, VAP, Full-Duplex-Bench, VAD, and voice-agent framework references, including source-manifest export for adapter and VoiceWorld bridge collection
-- `reference-workqueue` for merging ASR and turn source manifests into one contributor-facing P0/P1 adapter, license-review, and evidence-staging queue
+- `reference-workqueue` for merging ASR and turn source manifests into one contributor-facing P0/P1 adapter, license-review, evidence-staging, and assignment-tracking queue
 - machine-readable VoiceWorld scenario suite in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - `scenario-suite` for validating and rendering scenario suite definitions
 - `scenario-pack` for generating a VoiceWorld scenario contribution kit with suite metadata, editable annotations, and runnable evaluation commands

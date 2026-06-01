@@ -66,6 +66,9 @@ from stable_asr.references import (
     audit_turn_collection_coverage,
     load_asr_collections,
     load_turn_collections,
+    reference_workqueue_assignments,
+    reference_workqueue_assignments_markdown,
+    reference_workqueue_assignments_tsv,
     reference_workqueue_from_registries,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
@@ -363,7 +366,11 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "json": str(output_dir / "reference_workqueue.json"),
         "jsonl": str(output_dir / "reference_workqueue.jsonl"),
         "markdown": str(output_dir / "REFERENCE_WORKQUEUE.md"),
+        "assignments_json": str(output_dir / "reference_assignments.json"),
+        "assignments_tsv": str(output_dir / "reference_assignments.tsv"),
+        "assignments_markdown": str(output_dir / "REFERENCE_ASSIGNMENTS.md"),
     }
+    reference_assignments = reference_workqueue_assignments(reference_workqueue_report)
     Path(reference_workqueue["json"]).write_text(
         json.dumps(reference_workqueue_report, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -374,6 +381,18 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     )
     Path(reference_workqueue["markdown"]).write_text(
         reference_workqueue_markdown(reference_workqueue_report),
+        encoding="utf-8",
+    )
+    Path(reference_workqueue["assignments_json"]).write_text(
+        json.dumps(reference_assignments, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(reference_workqueue["assignments_tsv"]).write_text(
+        reference_workqueue_assignments_tsv(reference_assignments),
+        encoding="utf-8",
+    )
+    Path(reference_workqueue["assignments_markdown"]).write_text(
+        reference_workqueue_assignments_markdown(reference_assignments),
         encoding="utf-8",
     )
     voiceworld_suite = load_scenario_suite()
