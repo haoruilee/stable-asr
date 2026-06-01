@@ -29,10 +29,11 @@ Commands:
 
 .venv/bin/python -m stable_asr.cli benchmark-audio-windows \
   --dataset runs/final/voiceworld_real.jsonl \
-  --output-dir runs/final/audio_window_bench \
+  --output-dir runs/final/audio_window_bench_correctness \
   --formats source_wav parquet lance \
   --sample-count 10000 \
-  --json-output runs/final/reports/audio_window_benchmark.json
+  --correctness-sample-count 10000 \
+  --json-output runs/final/reports/audio_window_benchmark_correctness.json
 
 .venv/bin/python -m stable_asr.cli benchmark-train-features \
   --dataset runs/final/voiceworld_real.jsonl \
@@ -71,17 +72,19 @@ This metadata-only case is too small to show Lance's strengths; the JSONL path l
 
 Audio-window benchmark on `runs/final/voiceworld_real.jsonl`:
 
-| format | records | random samples/s | speedup vs source WAV | size |
-| --- | ---: | ---: | ---: | ---: |
-| source WAV | 180 | 2612.8 | 1.0x | 5883120 bytes |
-| Parquet cache | 180 | 215109.8 | 82.3x | 2359584 bytes |
-| Lance cache | 180 | 26616.1 | 10.2x | 647193 bytes |
+| format | records | random samples/s | speedup vs source WAV | correctness samples | max abs error | size |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| source WAV | 180 | 2720.2 | 1.0x | 0 | 0.0 | 5883120 bytes |
+| Parquet cache | 180 | 213919.0 | 78.6x | 10000 | 0.0 | 2359584 bytes |
+| Lance cache | 180 | 27349.4 | 10.1x | 10000 | 0.0 | 647193 bytes |
 
 Interpretation:
 
 - For small local audio-window data, Parquet is fastest because it can read one compact column into memory and select rows there.
-- Lance still removes per-sample WAV open/decode cost and is 10.2x faster than the source WAV baseline while using the smallest cache footprint in this run.
+- Lance still removes per-sample WAV open/decode cost and is 10.1x faster than the source WAV baseline while using the smallest cache footprint in this run.
 - The next paper-grade benchmark should repeat this on larger real ASR/turn corpora, with cold-cache and warm-cache variants, because stable-worldmodel's Lance advantage is most relevant for larger random-access and remote-storage workloads.
+- Parquet and Lance both reloaded 10000 sampled source WAV windows and matched
+  the materialized cache with `max_abs_error=0.0`.
 
 Training log-mel feature benchmark on the same VoiceWorld records:
 

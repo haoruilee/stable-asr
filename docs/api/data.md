@@ -50,7 +50,9 @@ rows = benchmark_audio_window_formats(
 
 `source_wav` is the baseline that opens the original WAV file for every random
 sample. `parquet` and `lance` first materialize fixed turn windows into a
-columnar cache and then benchmark random row retrieval.
+columnar cache and then benchmark random row retrieval. Benchmark rows include
+`correctness_sample_count`, `max_abs_error_vs_source`, and
+`allclose_to_source` so speedups are tied to source-window equivalence checks.
 
 Training feature cache:
 

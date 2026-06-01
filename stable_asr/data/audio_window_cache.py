@@ -33,6 +33,11 @@ class AudioWindowBenchmarkRow:
     size_bytes: int
     output_path: str
     sample_strategy: str
+    correctness_sample_count: int = 0
+    max_abs_error_vs_source: float = 0.0
+    mean_abs_error_vs_source: float = 0.0
+    allclose_to_source: bool = True
+    correctness_tolerance: float = 1e-6
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -46,6 +51,11 @@ class AudioWindowBenchmarkRow:
             "size_bytes": self.size_bytes,
             "output_path": self.output_path,
             "sample_strategy": self.sample_strategy,
+            "correctness_sample_count": self.correctness_sample_count,
+            "max_abs_error_vs_source": self.max_abs_error_vs_source,
+            "mean_abs_error_vs_source": self.mean_abs_error_vs_source,
+            "allclose_to_source": self.allclose_to_source,
+            "correctness_tolerance": self.correctness_tolerance,
         }
 
 
@@ -58,6 +68,8 @@ def benchmark_audio_window_formats(
     seed: int = 0,
     max_records: int | None = None,
     audio_root: str | Path | None = None,
+    correctness_sample_count: int = 32,
+    correctness_tolerance: float = 1e-6,
 ) -> list[AudioWindowBenchmarkRow]:
     """Benchmark source WAV reads against materialized Parquet/Lance rows."""
 
@@ -65,6 +77,10 @@ def benchmark_audio_window_formats(
         raise ValueError("records must not be empty")
     if sample_count <= 0:
         raise ValueError("sample_count must be positive")
+    if correctness_sample_count < 0:
+        raise ValueError("correctness_sample_count must be non-negative")
+    if correctness_tolerance < 0:
+        raise ValueError("correctness_tolerance must be non-negative")
     requested = list(formats)
     unknown = sorted(set(requested) - set(WINDOW_CACHE_FORMATS))
     if unknown:
@@ -93,6 +109,8 @@ def benchmark_audio_window_formats(
                 output_path=output_dir / "audio_windows.parquet",
                 audio_root=audio_root,
                 source_samples_per_second=baseline_sps,
+                correctness_sample_count=correctness_sample_count,
+                correctness_tolerance=correctness_tolerance,
             )
             rows.append(row)
             continue
@@ -104,6 +122,8 @@ def benchmark_audio_window_formats(
                 output_path=output_dir / "audio_windows.lance",
                 audio_root=audio_root,
                 source_samples_per_second=baseline_sps,
+                correctness_sample_count=correctness_sample_count,
+                correctness_tolerance=correctness_tolerance,
             )
             rows.append(row)
             continue
@@ -123,6 +143,11 @@ def benchmark_audio_window_formats(
                 size_bytes=row.size_bytes,
                 output_path=row.output_path,
                 sample_strategy=row.sample_strategy,
+                correctness_sample_count=row.correctness_sample_count,
+                max_abs_error_vs_source=row.max_abs_error_vs_source,
+                mean_abs_error_vs_source=row.mean_abs_error_vs_source,
+                allclose_to_source=row.allclose_to_source,
+                correctness_tolerance=row.correctness_tolerance,
             )
             for row in rows
         ]
@@ -182,6 +207,8 @@ def _benchmark_materialized_format(
     output_path: Path,
     audio_root: str | Path | None,
     source_samples_per_second: float,
+    correctness_sample_count: int,
+    correctness_tolerance: float,
 ) -> AudioWindowBenchmarkRow:
     write_start = time.perf_counter()
     materialize_audio_windows(records, output_path, format=name, audio_root=audio_root)
@@ -197,6 +224,14 @@ def _benchmark_materialized_format(
     sample_seconds = time.perf_counter() - sample_start
     if total_samples <= 0:
         raise RuntimeError(f"{name} benchmark decoded no samples")
+    correctness = _validate_materialized_windows(
+        name,
+        records,
+        output_path,
+        indices[: min(len(indices), correctness_sample_count)],
+        audio_root=audio_root,
+        tolerance=correctness_tolerance,
+    )
     samples_per_second = len(indices) / sample_seconds if sample_seconds > 0 else float("inf")
     return AudioWindowBenchmarkRow(
         format=name,
@@ -211,6 +246,11 @@ def _benchmark_materialized_format(
         size_bytes=_path_size_bytes(output_path),
         output_path=str(output_path),
         sample_strategy=sample_strategy,
+        correctness_sample_count=correctness["sample_count"],
+        max_abs_error_vs_source=correctness["max_abs_error"],
+        mean_abs_error_vs_source=correctness["mean_abs_error"],
+        allclose_to_source=correctness["allclose"],
+        correctness_tolerance=correctness_tolerance,
     )
 
 
@@ -273,17 +313,72 @@ def _write_window_lance(path: str | Path, rows: list[dict[str, Any]]) -> None:
 
 
 def _sample_parquet_windows(path: str | Path, indices: list[int]) -> int:
-    _, pq = _require_pyarrow()
-    table = pq.read_table(path, columns=["pcm_f32"])
-    payloads = table.column("pcm_f32").to_pylist()
-    return sum(len(_f32_array(payloads[index])) for index in indices)
+    return sum(len(_f32_array(payload)) for payload in _parquet_window_payloads(path, indices))
 
 
 def _sample_lance_windows(path: str | Path, indices: list[int]) -> int:
+    return sum(len(_f32_array(payload)) for payload in _lance_window_payloads(path, indices))
+
+
+def _parquet_window_payloads(path: str | Path, indices: list[int]) -> list[bytes]:
+    _, pq = _require_pyarrow()
+    table = pq.read_table(path, columns=["pcm_f32"])
+    payloads = table.column("pcm_f32").to_pylist()
+    return [payloads[index] for index in indices]
+
+
+def _lance_window_payloads(path: str | Path, indices: list[int]) -> list[bytes]:
     lance = _require_lance()
     table = lance.dataset(str(path)).take(indices, columns=["pcm_f32"])
-    payloads = table.column("pcm_f32").to_pylist()
-    return sum(len(_f32_array(payload)) for payload in payloads)
+    return table.column("pcm_f32").to_pylist()
+
+
+def _validate_materialized_windows(
+    name: str,
+    records: list[TurnManifestRecord],
+    cache_path: Path,
+    indices: list[int],
+    *,
+    audio_root: str | Path | None,
+    tolerance: float,
+) -> dict[str, float | int | bool]:
+    if not indices:
+        return {
+            "sample_count": 0,
+            "max_abs_error": 0.0,
+            "mean_abs_error": 0.0,
+            "allclose": True,
+        }
+    payloads = _parquet_window_payloads(cache_path, indices) if name == "parquet" else _lance_window_payloads(cache_path, indices)
+    max_abs_error = 0.0
+    total_abs_error = 0.0
+    total_values = 0
+    for index, payload in zip(indices, payloads):
+        source = _record_to_window_samples(records[index], audio_root=audio_root)
+        cached = _f32_array(payload)
+        if len(source) != len(cached):
+            raise RuntimeError(
+                f"{name} audio-window correctness check length mismatch for {records[index].id}: "
+                f"cached={len(cached)} source={len(source)}"
+            )
+        for source_value, cached_value in zip(source, cached):
+            abs_error = abs(float(cached_value) - float(source_value))
+            max_abs_error = max(max_abs_error, abs_error)
+            total_abs_error += abs_error
+            total_values += 1
+    mean_abs_error = total_abs_error / total_values if total_values else 0.0
+    allclose = max_abs_error <= tolerance
+    if not allclose:
+        raise RuntimeError(
+            f"{name} audio-window correctness check failed: max_abs_error={max_abs_error:.8g} "
+            f"mean_abs_error={mean_abs_error:.8g} tolerance={tolerance:.8g}"
+        )
+    return {
+        "sample_count": len(indices),
+        "max_abs_error": max_abs_error,
+        "mean_abs_error": mean_abs_error,
+        "allclose": allclose,
+    }
 
 
 def _columns(rows: list[dict[str, Any]]) -> dict[str, list[Any]]:

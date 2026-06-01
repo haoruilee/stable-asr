@@ -108,6 +108,7 @@ stable-asr benchmark-audio-windows \
   --output-dir runs/final/audio_window_bench \
   --formats source_wav parquet lance \
   --sample-count 5000 \
+  --correctness-sample-count 5000 \
   --json-output runs/final/reports/audio_window_benchmark.json
 
 stable-asr benchmark-train-features \

@@ -13,19 +13,27 @@ pytest.importorskip("pyarrow")
 def test_audio_window_cache_benchmarks_source_and_parquet(tmp_path: Path) -> None:
     records = _records(tmp_path)
 
+    formats = ["source_wav", "parquet"]
+    if _has_pylance():
+        formats.append("lance")
+
     rows = benchmark_audio_window_formats(
         records,
         output_dir=tmp_path / "bench",
-        formats=["source_wav", "parquet"],
+        formats=formats,
         sample_count=8,
         seed=2,
     )
 
-    assert [row.format for row in rows] == ["source_wav", "parquet"]
+    assert [row.format for row in rows] == formats
     assert all(row.records == 3 for row in rows)
     assert all(row.sample_count == 8 for row in rows)
     assert all(row.samples_per_second > 0 for row in rows)
     assert rows[0].speedup_vs_source_wav == pytest.approx(1.0)
+    cached_rows = [row for row in rows if row.format in {"parquet", "lance"}]
+    assert all(row.correctness_sample_count == 8 for row in cached_rows)
+    assert all(row.allclose_to_source for row in cached_rows)
+    assert all(row.max_abs_error_vs_source <= row.correctness_tolerance for row in cached_rows)
     assert (tmp_path / "bench" / "audio_windows.parquet").exists()
 
 
@@ -75,4 +83,3 @@ def _has_pylance() -> bool:
     import lance
 
     return hasattr(lance, "dataset") and hasattr(lance, "write_dataset")
-
