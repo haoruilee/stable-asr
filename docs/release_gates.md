@@ -33,8 +33,9 @@ ready.
 - `paper-release-audit --require-final-ready` audits the filled
   `runs/final/FINAL_INPUT_HANDOFF.json` and fails until
   `runs/final/FINAL_ASSIGNMENT_AUDIT.md` records owner, due-date, and blocker
-  readiness and `runs/final/FINAL_HANDOFF_AUDIT.md` can be produced without
-  handoff errors
+  readiness, `runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md` records a clean
+  `stable_asr.final_handoff.v0` schema check, and
+  `runs/final/FINAL_HANDOFF_AUDIT.md` can be produced without handoff errors
 - final ASR command comparison config exists in `configs/final/asr_command_compare.json` and `compare-asr-commands --validate-only --require-input-manifest` audits shared manifests, raw exports, output placeholders, and at least four adapters
 - final generic raw-export bridge script exists under `scripts/` and validates manifest coverage before writing normalized Whisper, FunASR, Qwen3-ASR, and FireRedASR2S streaming rows
 - `final-config --prepare-asr-transcript-conversions` can convert configured normalized ASR outputs into the final transcript-conversion result input

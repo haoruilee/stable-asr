@@ -58,6 +58,7 @@ final run stays `NOT_READY` until the owner assignment tracker exists, passes
 `final-assignment-audit --require-owner --require-due-date --require-ready`,
 the `FINAL_ASSIGNMENT_AUDIT.md` evidence file is present, and the filled
 `FINAL_INPUT_HANDOFF.json` has generated checksums from `final-handoff-checksums`
+plus schema evidence from `validate-schema-file --schema-id stable_asr.final_handoff.v0`,
 and passes `final-handoff-audit --require-checksums`.
 
 `final-acquisition-pack` is the collaborator-facing version of the final input
@@ -65,7 +66,7 @@ plan. It writes a TSV/JSON staging checklist, owner assignment tracker, license
 and consent review sheet, VoiceWorld recording checklist, and structured
 handoff template so real corpora and external model outputs can be collected
 without inventing placeholder evidence. Use `final-assignment-audit` before
-handoff, then use `final-handoff-checksums` and `final-handoff-audit --require-checksums` on a filled handoff JSON before treating
+handoff, then use `final-handoff-checksums`, `validate-schema-file --schema-id stable_asr.final_handoff.v0`, and `final-handoff-audit --require-checksums` on a filled handoff JSON before treating
 the staged inputs as final release evidence. `paper-release-audit
 --require-final-ready` now checks that assignment and handoff evidence exist
 and audit cleanly.

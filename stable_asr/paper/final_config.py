@@ -134,6 +134,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "model_card": "runs/final/MODEL_CARD.md",
         "handoff": "runs/final/FINAL_INPUT_HANDOFF.json",
         "assignment_audit": "runs/final/FINAL_ASSIGNMENT_AUDIT.md",
+        "handoff_schema_validation": "runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md",
         "handoff_audit": "runs/final/FINAL_HANDOFF_AUDIT.md",
     },
     "result_inputs": {
@@ -166,6 +167,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
         "stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md",
         "stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json",
         "stable-asr final-handoff-checksums --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_INPUT_HANDOFF.json",
+        "stable-asr validate-schema-file --input runs/final/FINAL_INPUT_HANDOFF.json --schema-id stable_asr.final_handoff.v0 --output runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md",
         "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --require-checksums --output runs/final/FINAL_HANDOFF_AUDIT.md",
         "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
         "stable-asr compare-asr-commands --config configs/final/asr_command_compare.json --report runs/final/reports/asr_command_compare.md --json-output runs/final/reports/asr_command_compare.json",
@@ -2092,6 +2094,7 @@ def _final_artifacts_action(
         str(config["artifacts"].get("model_card", "runs/final/MODEL_CARD.md")),
         str(config["artifacts"].get("assignment_audit", "runs/final/FINAL_ASSIGNMENT_AUDIT.md")),
         str(config["artifacts"].get("handoff", "runs/final/FINAL_INPUT_HANDOFF.json")),
+        str(config["artifacts"].get("handoff_schema_validation", "runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md")),
         str(config["artifacts"].get("handoff_audit", "runs/final/FINAL_HANDOFF_AUDIT.md")),
     ]
     return FinalRunActionItem(
@@ -2103,6 +2106,7 @@ def _final_artifacts_action(
             f"stable-asr final-results --config {config_path} --output {config['artifacts']['paper_results']}",
             f"stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output {config['artifacts'].get('assignment_audit', 'runs/final/FINAL_ASSIGNMENT_AUDIT.md')}",
             f"stable-asr final-handoff-checksums --input {config['artifacts'].get('handoff', 'runs/final/FINAL_INPUT_HANDOFF.json')} --repo-root . --output {config['artifacts'].get('handoff', 'runs/final/FINAL_INPUT_HANDOFF.json')}",
+            f"stable-asr validate-schema-file --input {config['artifacts'].get('handoff', 'runs/final/FINAL_INPUT_HANDOFF.json')} --schema-id stable_asr.final_handoff.v0 --output {config['artifacts'].get('handoff_schema_validation', 'runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md')}",
             f"stable-asr final-handoff-audit --input {config['artifacts'].get('handoff', 'runs/final/FINAL_INPUT_HANDOFF.json')} --repo-root . --require-checksums --output {config['artifacts'].get('handoff_audit', 'runs/final/FINAL_HANDOFF_AUDIT.md')}",
             f"stable-asr paper-bundle --results {config['artifacts']['paper_results']} --output-dir {config['artifacts']['bundle_dir']}",
             f"stable-asr make-card model --input configs/models/stable_asr_models.json --model-id {config.get('nanoturn', {}).get('model', 'nanoturn_pico')} --metrics {config.get('nanoturn', {}).get('metrics', 'runs/final/nanoturn/metrics.json')} --output {config['artifacts'].get('model_card', 'runs/final/MODEL_CARD.md')}",

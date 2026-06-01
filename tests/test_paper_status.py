@@ -29,6 +29,7 @@ def test_paper_status_summarizes_smoke_and_final_gaps(tmp_path: Path) -> None:
     assert "final_handoff_ready" in markdown
     assert "runs/final_acquisition_pack/acquisition/assignments.json" in markdown
     assert "runs/final/FINAL_INPUT_HANDOFF.json" in markdown
+    assert "runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md" in markdown
     assert "data/librispeech/LibriSpeech/dev-clean" in markdown
 
 
@@ -90,6 +91,7 @@ def test_paper_status_accepts_strict_final_handoff_gate(tmp_path: Path) -> None:
     staged.write_text("stable-asr\n", encoding="utf-8")
     digest = hashlib.sha256(staged.read_bytes()).hexdigest()
     handoff = tmp_path / "runs/final/FINAL_INPUT_HANDOFF.json"
+    handoff_schema_validation = tmp_path / "runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md"
     handoff_audit = tmp_path / "runs/final/FINAL_HANDOFF_AUDIT.md"
     handoff.parent.mkdir(parents=True)
     handoff.write_text(
@@ -114,6 +116,7 @@ def test_paper_status_accepts_strict_final_handoff_gate(tmp_path: Path) -> None:
         + "\n",
         encoding="utf-8",
     )
+    handoff_schema_validation.write_text("# schema validation\n", encoding="utf-8")
     handoff_audit.write_text("# audit\n", encoding="utf-8")
 
     report = paper_status(repo_root=tmp_path)
@@ -122,5 +125,6 @@ def test_paper_status_accepts_strict_final_handoff_gate(tmp_path: Path) -> None:
     assert report.final_handoff_ready
     assert payload["final_handoff_ready"] is True
     assert payload["final_handoff"]["missing"] == []
+    assert payload["final_handoff"]["handoff_schema_validation"].endswith("runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md")
     assert payload["final_handoff"]["checked_paths"] == ["data.txt"]
     assert "final_handoff_ready" in report.to_markdown()

@@ -13,6 +13,7 @@ from stable_asr.paper.audit import audit_paper_artifacts
 from stable_asr.paper.final_config import audit_final_run_files, load_final_run_config
 from stable_asr.paper.handoff import audit_final_handoff
 from stable_asr.paper.parity import audit_paper_parity
+from stable_asr.schema_validation import validate_schema_file
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,7 @@ class FinalAssignmentStatus:
 class FinalHandoffStatus:
     ready: bool
     handoff: str
+    handoff_schema_validation: str
     handoff_audit: str
     missing: list[str]
     errors: list[str]
@@ -53,6 +55,7 @@ class FinalHandoffStatus:
         return {
             "ready": self.ready,
             "handoff": self.handoff,
+            "handoff_schema_validation": self.handoff_schema_validation,
             "handoff_audit": self.handoff_audit,
             "missing": self.missing,
             "errors": self.errors,
@@ -149,6 +152,7 @@ class PaperStatusReport:
                 "## Final Handoff Gate",
                 "",
                 f"- handoff: `{self.final_handoff.handoff}`",
+                f"- handoff schema validation: `{self.final_handoff.handoff_schema_validation}`",
                 f"- handoff audit: `{self.final_handoff.handoff_audit}`",
                 "",
                 "Missing evidence:",
@@ -294,6 +298,10 @@ def _final_handoff_status(config: dict[str, Any], *, repo_root: Path) -> FinalHa
         artifacts.get("handoff", "runs/final/FINAL_INPUT_HANDOFF.json"),
         repo_root=repo_root,
     )
+    handoff_schema_validation = _resolve_repo_path(
+        artifacts.get("handoff_schema_validation", "runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md"),
+        repo_root=repo_root,
+    )
     handoff_audit = _resolve_repo_path(
         artifacts.get("handoff_audit", "runs/final/FINAL_HANDOFF_AUDIT.md"),
         repo_root=repo_root,
@@ -305,15 +313,20 @@ def _final_handoff_status(config: dict[str, Any], *, repo_root: Path) -> FinalHa
     if not handoff.exists():
         missing.append(str(handoff))
     else:
+        schema_report = validate_schema_file(handoff, schema_id="stable_asr.final_handoff.v0")
+        errors.extend(f"schema:{issue.path}:{issue.detail}" for issue in schema_report.issues)
         report = audit_final_handoff(handoff, repo_root=repo_root, require_checksums=True)
         errors.extend(report.errors)
         warnings.extend(report.warnings)
         checked_paths.extend(report.checked_paths)
+    if not handoff_schema_validation.exists():
+        missing.append(str(handoff_schema_validation))
     if not handoff_audit.exists():
         missing.append(str(handoff_audit))
     return FinalHandoffStatus(
         ready=not missing and not errors,
         handoff=str(handoff),
+        handoff_schema_validation=str(handoff_schema_validation),
         handoff_audit=str(handoff_audit),
         missing=missing,
         errors=errors,

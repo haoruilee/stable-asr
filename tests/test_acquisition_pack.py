@@ -60,6 +60,7 @@ def test_build_final_acquisition_pack_writes_staging_checklists(tmp_path: Path) 
     assert "librispeech_dev_clean" in handoff
     commands = (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "final-assignment-audit" in commands
+    assert "validate-schema-file" in commands
     assert "final-handoff-audit" in commands
 
 

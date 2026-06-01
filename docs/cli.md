@@ -85,6 +85,7 @@ stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
 stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --output runs/final_acquisition_pack/reports/FINAL_ASSIGNMENT_AUDIT.md
 stable-asr final-handoff-template --output runs/final_acquisition_pack/acquisition/handoff_template.json
 stable-asr final-handoff-checksums --input runs/final_acquisition_pack/acquisition/handoff_template.json --repo-root . --output runs/final_acquisition_pack/acquisition/handoff_template.json
+stable-asr validate-schema-file --input runs/final_acquisition_pack/acquisition/handoff_template.json --schema-id stable_asr.final_handoff.v0 --output runs/final_acquisition_pack/reports/FINAL_HANDOFF_SCHEMA_VALIDATION.md
 stable-asr final-handoff-audit --input runs/final_acquisition_pack/acquisition/handoff_template.json --require-checksums --output runs/final_acquisition_pack/reports/FINAL_HANDOFF_AUDIT.md
 cd runs/final_acquisition_pack
 bash commands.sh
@@ -171,6 +172,7 @@ stable-asr final-inputs --registry configs/final/input_collections.json --output
 stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md
 stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json
 stable-asr final-handoff-checksums --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_INPUT_HANDOFF.json
+stable-asr validate-schema-file --input runs/final/FINAL_INPUT_HANDOFF.json --schema-id stable_asr.final_handoff.v0 --output runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md
 stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --require-checksums --output runs/final/FINAL_HANDOFF_AUDIT.md
 stable-asr paper-evidence-matrix --output runs/final/FINAL_EVIDENCE_MATRIX.md
 stable-asr make-card model --input configs/models/stable_asr_models.json --model-id nanoturn_pico --metrics runs/final/nanoturn/metrics.json --output runs/final/MODEL_CARD.md

@@ -38,6 +38,7 @@ from stable_asr.references import (
 )
 from stable_asr.resources import resolve_platform_path
 from stable_asr.scenarios.suites import load_scenario_suite, validate_scenario_suite
+from stable_asr.schema_validation import validate_schema_file
 from stable_asr.schemas import load_schema_registry, validate_schema_registry
 
 
@@ -530,8 +531,24 @@ def _final_ready_release_checks(
     try:
         handoff_path = _final_handoff_path(config, repo_root=repo_root)
         if not handoff_path.exists():
+            checks.append(_release_check("final", "final_handoff_schema_validation", False, f"missing: {handoff_path}"))
             checks.append(_release_check("final", "final_handoff_audit", False, f"missing: {handoff_path}"))
         else:
+            handoff_schema_validation_path = _final_handoff_schema_validation_path(config, repo_root=repo_root)
+            schema_report = validate_schema_file(handoff_path, schema_id="stable_asr.final_handoff.v0")
+            schema_output_exists = handoff_schema_validation_path.exists()
+            schema_detail = (
+                f"{schema_report.records} record(s), {len(schema_report.issues)} issue(s), "
+                f"output={'present' if schema_output_exists else 'missing'}"
+            )
+            checks.append(
+                _release_check(
+                    "final",
+                    "final_handoff_schema_validation",
+                    schema_report.ok and schema_output_exists,
+                    schema_detail,
+                )
+            )
             handoff = audit_final_handoff(handoff_path, repo_root=repo_root, require_checksums=True)
             detail = (
                 f"{handoff.entries} entries, {len(handoff.checked_paths)} staged path(s), "
@@ -555,6 +572,17 @@ def _final_handoff_path(config: dict[str, Any] | None, *, repo_root: Path) -> Pa
     artifacts = config.get("artifacts", {}) if isinstance(config, dict) else {}
     handoff = artifacts.get("handoff", "runs/final/FINAL_INPUT_HANDOFF.json") if isinstance(artifacts, dict) else None
     path = Path(str(handoff or "runs/final/FINAL_INPUT_HANDOFF.json"))
+    return path if path.is_absolute() else repo_root / path
+
+
+def _final_handoff_schema_validation_path(config: dict[str, Any] | None, *, repo_root: Path) -> Path:
+    artifacts = config.get("artifacts", {}) if isinstance(config, dict) else {}
+    handoff_schema_validation = (
+        artifacts.get("handoff_schema_validation", "runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md")
+        if isinstance(artifacts, dict)
+        else None
+    )
+    path = Path(str(handoff_schema_validation or "runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md"))
     return path if path.is_absolute() else repo_root / path
 
 

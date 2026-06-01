@@ -104,6 +104,7 @@
     "model_card": "runs/final/MODEL_CARD.md",
     "handoff": "runs/final/FINAL_INPUT_HANDOFF.json",
     "assignment_audit": "runs/final/FINAL_ASSIGNMENT_AUDIT.md",
+    "handoff_schema_validation": "runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md",
     "handoff_audit": "runs/final/FINAL_HANDOFF_AUDIT.md"
   },
   "result_inputs": {
@@ -136,6 +137,7 @@
     "stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md",
     "stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json",
     "stable-asr final-handoff-checksums --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_INPUT_HANDOFF.json",
+    "stable-asr validate-schema-file --input runs/final/FINAL_INPUT_HANDOFF.json --schema-id stable_asr.final_handoff.v0 --output runs/final/FINAL_HANDOFF_SCHEMA_VALIDATION.md",
     "stable-asr final-handoff-audit --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --require-checksums --output runs/final/FINAL_HANDOFF_AUDIT.md",
     "stable-asr train-turn --dataset runs/final/turn_train.jsonl --output-dir runs/final/nanoturn --model nanoturn_pico --feature-source audio",
     "stable-asr benchmark-data --dataset runs/final/turn_train.jsonl --output-dir runs/final/data_bench --formats jsonl parquet lance --sample-count 10000 --json-output runs/final/reports/data_benchmark.json",
