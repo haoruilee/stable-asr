@@ -184,7 +184,7 @@ stable-asr paper-release-audit --repo-root . --require-final-ready
 
 `paper-release-smoke` writes `paper_results.json`, tables, figures, starter packs, registry
 artifacts, a copied `paper_results.json`, artifact hash manifests, provenance
-manifests, case studies, paper/platform parity audits, final-run audits/action plans, final input collection
+manifests, case studies, paper/platform parity audits, a platform catalog, final-run audits/action plans, final input collection
 status, final handoff templates/audits, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
 dataset/experiment/model cards, `artifacts.tar.gz`, and
 `RELEASE_AUDIT.md`.

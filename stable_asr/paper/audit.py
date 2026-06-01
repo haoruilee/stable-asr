@@ -1391,6 +1391,9 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("paper_parity:markdown", artifacts_dir / "PAPER_PARITY.md"))
     checks.append(_exists_check("platform_parity:json", artifacts_dir / "platform_parity.json"))
     checks.append(_exists_check("platform_parity:markdown", artifacts_dir / "PLATFORM_PARITY.md"))
+    checks.append(_exists_check("platform_catalog:json", artifacts_dir / "platform_catalog.json"))
+    checks.append(_exists_check("platform_catalog:markdown", artifacts_dir / "PLATFORM_CATALOG.md"))
+    checks.append(_platform_catalog_content_check(artifacts_dir / "platform_catalog.json"))
     checks.append(_exists_check("final_experiments:json", artifacts_dir / "final_experiments.json"))
     checks.append(_exists_check("final_experiments:markdown", artifacts_dir / "FINAL_EXPERIMENTS.md"))
     checks.append(_exists_check("final_input_collections:json", artifacts_dir / "final_input_collections.json"))
@@ -1563,6 +1566,40 @@ def _reference_assignments_content_check(path: Path) -> PaperAuditCheck:
     if len(blocking_p0) != len(p0_rows):
         return PaperAuditCheck(name, False, "all P0 rows must default to blocking_release=true")
     return PaperAuditCheck(name, True, f"{len(rows)} reference assignment row(s)")
+
+
+def _platform_catalog_content_check(path: Path) -> PaperAuditCheck:
+    name = "platform_catalog:content"
+    if not path.exists():
+        return PaperAuditCheck(name, False, f"missing: {path}")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return PaperAuditCheck(name, False, str(exc))
+
+    sections = payload.get("sections", [])
+    if not isinstance(sections, list) or not sections:
+        return PaperAuditCheck(name, False, "sections must be a non-empty list")
+    section_names = {str(section.get("name", "")) for section in sections if isinstance(section, dict)}
+    required = {
+        "data_sources",
+        "models",
+        "adapters",
+        "voiceworld_scenarios",
+        "benchmark_suite",
+        "schemas",
+        "asr_references",
+        "turn_references",
+        "roadmap",
+    }
+    missing = sorted(required - section_names)
+    parity = payload.get("stable_worldmodel_parity", {})
+    parity_ok = isinstance(parity, dict) and parity.get("ok") is True
+    if missing:
+        return PaperAuditCheck(name, False, "missing section(s): " + ", ".join(missing))
+    if not parity_ok:
+        return PaperAuditCheck(name, False, "stable_worldmodel_parity must be ok")
+    return PaperAuditCheck(name, True, f"{len(sections)} catalog section(s)")
 
 
 def _integrity_check(artifacts_dir: Path) -> PaperAuditCheck:

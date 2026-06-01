@@ -21,6 +21,8 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "benchmark_suite:required_artifacts" in report.to_text()
     assert "platform_parity:json" in report.to_text()
     assert "platform_parity:markdown" in report.to_text()
+    assert "platform_catalog:json" in report.to_text()
+    assert "platform_catalog:content" in report.to_text()
     assert "leaderboard_report:markdown" in report.to_text()
     assert "artifact_integrity:sha256" in report.to_text()
     assert "provenance:json" in report.to_text()
@@ -98,6 +100,23 @@ def test_paper_audit_rejects_tampered_reference_assignments(tmp_path: Path) -> N
     assert not report.ok
     assert "reference_assignments:content" in report.to_text()
     assert "all P0 rows must default to blocking_release=true" in report.to_text()
+
+
+def test_paper_audit_rejects_tampered_platform_catalog(tmp_path: Path) -> None:
+    result = run_paper_smoke(tmp_path / "paper", episodes=9, seed=6, train_model=False)
+    bundle = paper_artifact_bundle(result.results_path, tmp_path / "artifacts")
+    catalog = Path(bundle.platform_catalog["json"])
+    payload = json.loads(catalog.read_text(encoding="utf-8"))
+    payload["sections"] = [
+        section for section in payload["sections"] if section.get("name") != "adapters"
+    ]
+    catalog.write_text(json.dumps(payload), encoding="utf-8")
+
+    report = audit_paper_artifacts(result.results_path, bundle.output_dir)
+
+    assert not report.ok
+    assert "platform_catalog:content" in report.to_text()
+    assert "missing section(s): adapters" in report.to_text()
 
 
 def test_paper_audit_requires_four_asr_transcript_conversions(tmp_path: Path) -> None:

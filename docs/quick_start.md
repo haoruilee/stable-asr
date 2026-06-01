@@ -69,6 +69,7 @@ stable-asr contributor-pack --output-dir runs/contributor_pack
 
 - `paper/paper_results.json`
 - `artifacts/` with copied paper results, tables, figures, registries, case studies, paper/platform parity audits, claims, roadmap status, benchmark suite files, provenance, and integrity hashes
+- `artifacts/PLATFORM_CATALOG.md` and `artifacts/platform_catalog.json`
 - `artifacts.tar.gz` and `artifacts.tar.gz.sha256`
 - `PAPER_DRAFT.md`
 - `paper.tex`

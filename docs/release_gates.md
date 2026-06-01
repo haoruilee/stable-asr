@@ -93,6 +93,7 @@ ready.
 - scenario suite JSON/Markdown files are included in the artifact bundle
 - case-study JSON/Markdown files are included in the artifact bundle
 - paper parity JSON/Markdown files are included in the artifact bundle
+- platform catalog JSON/Markdown files are included in the artifact bundle and audit cleanly
 - final experiment JSON/Markdown files are included in the artifact bundle
 - final input collection JSON/status/Markdown files are included in the artifact bundle
 - final assignment tracker and strict `FINAL_ASSIGNMENT_AUDIT.md` evidence are

@@ -111,6 +111,7 @@ class PaperArtifactBundle:
     case_studies: dict[str, str]
     paper_parity: dict[str, str]
     platform_parity: dict[str, str]
+    platform_catalog: dict[str, str]
     final_experiments: dict[str, str]
     final_input_collections: dict[str, str]
     final_run_config: dict[str, str]
@@ -148,6 +149,7 @@ class PaperArtifactBundle:
             "case_studies": self.case_studies,
             "paper_parity": self.paper_parity,
             "platform_parity": self.platform_parity,
+            "platform_catalog": self.platform_catalog,
             "final_experiments": self.final_experiments,
             "final_input_collections": self.final_input_collections,
             "final_run_config": self.final_run_config,
@@ -445,6 +447,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         encoding="utf-8",
     )
     Path(platform_parity["markdown"]).write_text(platform_report.to_markdown(), encoding="utf-8")
+    platform_catalog = _write_platform_catalog(output_dir)
     final_experiment_registry = load_final_experiments()
     final_experiments = {
         "json": write_final_experiments_json(output_dir / "final_experiments.json", final_experiment_registry),
@@ -553,6 +556,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         case_studies=case_studies,
         paper_parity=paper_parity,
         platform_parity=platform_parity,
+        platform_catalog=platform_catalog,
         final_experiments=final_experiments,
         final_input_collections=final_input_collections,
         final_run_config=final_run_config,
@@ -596,6 +600,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         case_studies=case_studies,
         paper_parity=paper_parity,
         platform_parity=platform_parity,
+        platform_catalog=platform_catalog,
         final_experiments=final_experiments,
         final_input_collections=final_input_collections,
         final_run_config=final_run_config,
@@ -687,6 +692,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
     lines.extend(["", "## Platform Parity", ""])
     for name, path in bundle.platform_parity.items():
         lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Platform Catalog", ""])
+    for name, path in bundle.platform_catalog.items():
+        lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Final Experiments", ""])
     for name, path in bundle.final_experiments.items():
         lines.append(f"- `{name}`: `{path}`")
@@ -747,6 +755,19 @@ def _write_bundle_provenance(results_path: Path, bundle: PaperArtifactBundle) ->
     )
 
 
+def _write_platform_catalog(output_dir: Path) -> dict[str, str]:
+    from stable_asr.catalog import build_platform_catalog, write_platform_catalog_json, write_platform_catalog_markdown
+
+    report = build_platform_catalog(repo_root=Path("."))
+    artifacts = {
+        "json": str(output_dir / "platform_catalog.json"),
+        "markdown": str(output_dir / "PLATFORM_CATALOG.md"),
+    }
+    write_platform_catalog_json(report, artifacts["json"])
+    write_platform_catalog_markdown(report, artifacts["markdown"])
+    return artifacts
+
+
 def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
     paths = [bundle.index_path, bundle.manifest_path]
     sections = (
@@ -771,6 +792,7 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.case_studies,
         bundle.paper_parity,
         bundle.platform_parity,
+        bundle.platform_catalog,
         bundle.final_experiments,
         bundle.final_input_collections,
         bundle.final_run_config,
