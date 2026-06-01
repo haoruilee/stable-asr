@@ -40,7 +40,7 @@ def test_turn_collections_acquisition_markdown_maps_evidence_targets() -> None:
     assert "runs/final/external/easyturn_predictions.jsonl" in markdown
     assert "runs/final/external/vap_raw.jsonl" in markdown
     assert "runs/final/external/vap_predictions.jsonl" in markdown
-    assert "runs/collections/full_duplex_bench/SCENARIO_BRIDGE.md" in markdown
+    assert "docs/references/collections/full_duplex_bench/SCENARIO_BRIDGE.md" in markdown
     assert "Registry presence alone is not evidence" in markdown
     assert "runs/final/smartturn_raw.jsonl" not in markdown
     assert "runs/final/external/smart_turn_raw.jsonl" not in markdown
@@ -53,8 +53,8 @@ def test_turn_collections_source_manifest_maps_collection_work() -> None:
     assert manifest["collection_type"] == "turn"
     smart_turn = next(source for source in manifest["sources"] if source["reference_id"] == "smart_turn")
     assert smart_turn["policy"] == "link_or_command_adapter_until_reviewed"
-    assert smart_turn["license_review_target"] == "runs/collections/smart_turn/LICENSE_REVIEW.md"
-    assert smart_turn["evidence_target"] == "runs/final/external/smartturn_raw.jsonl"
+    assert smart_turn["license_review_target"] == "docs/references/collections/smart_turn/LICENSE_REVIEW.md"
+    assert smart_turn["evidence_target"] == "docs/references/collections/smart_turn/PREDICTION_EXPORT.md"
     full_duplex_bench = next(source for source in manifest["sources"] if source["reference_id"] == "full_duplex_bench")
     assert full_duplex_bench["acquisition_track"] == "scenario benchmark bridge"
 

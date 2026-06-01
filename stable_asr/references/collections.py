@@ -837,7 +837,7 @@ def _license_policy(license_name: str) -> str:
 
 
 def _license_review_target(entry: dict[str, Any]) -> str:
-    return f"runs/collections/{entry.get('id', 'unknown')}/LICENSE_REVIEW.md"
+    return f"docs/references/collections/{entry.get('id', 'unknown')}/LICENSE_REVIEW.md"
 
 
 def _parse_review_date(value: str) -> date | None:
@@ -882,12 +882,12 @@ def _acquisition_track(entry: dict[str, Any]) -> str:
 def _acquisition_evidence_target(entry: dict[str, Any], track: str) -> str:
     reference_id = str(entry.get("id", "unknown"))
     if track == "data bridge":
-        return f"runs/collections/{reference_id}/DATA_BRIDGE.md"
+        return f"docs/references/collections/{reference_id}/DATA_BRIDGE.md"
     if track == "recipe bridge":
-        return f"runs/collections/{reference_id}/RECIPE_BRIDGE.md"
+        return f"docs/references/collections/{reference_id}/RECIPE_BRIDGE.md"
     if track == "timestamp converter":
-        return f"runs/collections/{reference_id}/TIMESTAMP_CONVERTER.md"
-    return f"runs/final/asr_commands/raw/{reference_id}_raw.jsonl"
+        return f"docs/references/collections/{reference_id}/TIMESTAMP_CONVERTER.md"
+    return f"docs/references/collections/{reference_id}/COMMAND_ADAPTER.md"
 
 
 def _review_year(registry: dict[str, Any]) -> str:

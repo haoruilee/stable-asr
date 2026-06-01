@@ -401,14 +401,14 @@ def _acquisition_track(entry: dict[str, Any]) -> str:
 def _acquisition_evidence_target(entry: dict[str, Any], track: str) -> str:
     reference_id = str(entry.get("id", "unknown"))
     if track == "scenario benchmark bridge":
-        return f"runs/collections/{reference_id}/SCENARIO_BRIDGE.md"
+        return f"docs/references/collections/{reference_id}/SCENARIO_BRIDGE.md"
     if track == "voice-agent integration bridge":
-        return f"runs/collections/{reference_id}/PIPELINE_BRIDGE.md"
+        return f"docs/references/collections/{reference_id}/PIPELINE_BRIDGE.md"
     if track == "VAD endpointing adapter":
-        return f"runs/collections/{reference_id}/VAD_ADAPTER.md"
+        return f"docs/references/collections/{reference_id}/VAD_ADAPTER.md"
     if track == "turn prediction objective bridge":
-        return f"runs/collections/{reference_id}/PREDICTION_OBJECTIVE.md"
-    return f"runs/final/external/{_final_prediction_stem(reference_id)}_raw.jsonl"
+        return f"docs/references/collections/{reference_id}/PREDICTION_OBJECTIVE.md"
+    return f"docs/references/collections/{reference_id}/PREDICTION_EXPORT.md"
 
 
 def _final_prediction_stem(reference_id: str) -> str:
@@ -434,4 +434,4 @@ def _license_policy(license_name: str) -> str:
 
 
 def _license_review_target(entry: dict[str, Any]) -> str:
-    return f"runs/collections/{entry.get('id', 'unknown')}/LICENSE_REVIEW.md"
+    return f"docs/references/collections/{entry.get('id', 'unknown')}/LICENSE_REVIEW.md"

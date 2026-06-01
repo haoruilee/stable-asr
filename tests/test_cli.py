@@ -814,7 +814,7 @@ def test_asr_collections_cli_writes_acquisition_markdown(tmp_path, capsys) -> No
     assert code == 0
     assert "Stable-ASR ASR Collection Acquisition Plan" in captured.out
     assert output.exists()
-    assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in output.read_text(encoding="utf-8")
+    assert "docs/references/collections/funasr/COMMAND_ADAPTER.md" in output.read_text(encoding="utf-8")
 
 
 def test_asr_collections_cli_writes_source_manifest(tmp_path, capsys) -> None:
@@ -977,14 +977,15 @@ def test_reference_workqueue_cli_writes_license_review_templates(tmp_path, capsy
     captured = capsys.readouterr()
     assert code == 0
     assert "Stable-ASR Reference License Review Templates" in captured.out
-    assert "runs/collections/funasr/LICENSE_REVIEW.md" in captured.out
+    assert "docs/references/collections/funasr/LICENSE_REVIEW.md" in captured.out
     assert output.exists()
     assert "Shared Review Rules" in output.read_text(encoding="utf-8")
 
 
 def test_reference_workqueue_cli_audits_evidence_targets(tmp_path, capsys) -> None:
     output = tmp_path / "REFERENCE_EVIDENCE_AUDIT.md"
-    code = main(["reference-workqueue", "--audit-evidence", "--output", str(output)])
+    missing_root = tmp_path / "missing-root"
+    code = main(["reference-workqueue", "--audit-evidence", "--repo-root", str(missing_root), "--output", str(output)])
 
     captured = capsys.readouterr()
     assert code == 1
@@ -995,7 +996,7 @@ def test_reference_workqueue_cli_audits_evidence_targets(tmp_path, capsys) -> No
 
 
 def test_reference_workqueue_cli_audits_evidence_content(capsys) -> None:
-    code = main(["reference-workqueue", "--audit-evidence", "--require-content", "--json", "--require-priority", "p0"])
+    code = main(["reference-workqueue", "--audit-evidence", "--require-content", "--json", "--require-priority", "p2"])
 
     captured = capsys.readouterr()
     assert code == 1

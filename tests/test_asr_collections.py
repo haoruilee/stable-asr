@@ -55,8 +55,8 @@ def test_asr_collections_acquisition_markdown_renders_collection_plan() -> None:
 
     assert "# Stable-ASR ASR Collection Acquisition Plan" in markdown
     assert "P0 Acquisition Order" in markdown
-    assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in markdown
-    assert "runs/collections/lhotse/DATA_BRIDGE.md" in markdown
+    assert "docs/references/collections/funasr/COMMAND_ADAPTER.md" in markdown
+    assert "docs/references/collections/lhotse/DATA_BRIDGE.md" in markdown
     assert "license_review" in markdown
     assert "--audit-licenses" in markdown
 
@@ -68,8 +68,8 @@ def test_asr_collections_source_manifest_maps_collection_work() -> None:
     assert manifest["collection_type"] == "asr"
     funasr = next(source for source in manifest["sources"] if source["reference_id"] == "funasr")
     assert funasr["policy"] == "link_or_command_adapter_until_reviewed"
-    assert funasr["license_review_target"] == "runs/collections/funasr/LICENSE_REVIEW.md"
-    assert funasr["evidence_target"] == "runs/final/asr_commands/raw/funasr_raw.jsonl"
+    assert funasr["license_review_target"] == "docs/references/collections/funasr/LICENSE_REVIEW.md"
+    assert funasr["evidence_target"] == "docs/references/collections/funasr/COMMAND_ADAPTER.md"
     lhotse = next(source for source in manifest["sources"] if source["reference_id"] == "lhotse")
     assert lhotse["acquisition_track"] == "data bridge"
 
@@ -83,7 +83,7 @@ def test_asr_collection_license_report_marks_review_needed_projects() -> None:
     assert "link_or_command_adapter_until_reviewed" in markdown
     assert any(row.reference_id == "funasr" and row.review_required for row in report.rows)
     assert any(row.reference_id == "whisper" and not row.review_required for row in report.rows)
-    assert "runs/collections/funasr/LICENSE_REVIEW.md" in report.to_text()
+    assert "docs/references/collections/funasr/LICENSE_REVIEW.md" in report.to_text()
 
 
 def test_asr_collection_license_report_can_require_resolved_reviews() -> None:

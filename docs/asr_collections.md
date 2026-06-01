@@ -110,4 +110,4 @@ without accidentally implying that Stable-ASR vendors or relicenses them.
 
 `asr-collections --audit-licenses` is narrower: it records whether each entry is
 currently permissive-with-notice or link/command-adapter-only until a human
-license review is staged at `runs/collections/<reference>/LICENSE_REVIEW.md`.
+license review is staged at `docs/references/collections/<reference>/LICENSE_REVIEW.md`.
