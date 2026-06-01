@@ -644,6 +644,66 @@
       }
     },
     {
+      "id": "stable_asr.reference_evidence_audit.v0",
+      "version": "0.1.0",
+      "title": "Reference Evidence Audit",
+      "description": "Filesystem readiness audit for Stable-ASR ASR and turn reference workqueue evidence targets.",
+      "format": "json",
+      "file_patterns": ["reference_evidence_audit.json", "*REFERENCE_EVIDENCE_AUDIT*.json"],
+      "producer_commands": [
+        "stable-asr reference-workqueue --audit-evidence --json"
+      ],
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://stable-asr.dev/schemas/reference_evidence_audit.v0.json",
+        "title": "Stable-ASR ReferenceEvidenceAudit v0",
+        "type": "object",
+        "required": ["ok", "repo_root", "rows", "missing_evidence", "missing_license_reviews"],
+        "properties": {
+          "ok": {"type": "boolean"},
+          "repo_root": {"type": "string"},
+          "rows": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"$ref": "#/$defs/row"}
+          },
+          "missing_evidence": {"type": "array", "items": {"type": "string"}},
+          "missing_license_reviews": {"type": "array", "items": {"type": "string"}}
+        },
+        "$defs": {
+          "row": {
+            "type": "object",
+            "required": [
+              "task_id",
+              "collection_type",
+              "reference_id",
+              "priority",
+              "evidence_target",
+              "evidence_present",
+              "license_review_required",
+              "license_review_target",
+              "license_review_present",
+              "ok"
+            ],
+            "properties": {
+              "task_id": {"type": "string", "minLength": 1},
+              "collection_type": {"type": "string", "enum": ["asr", "turn"]},
+              "reference_id": {"type": "string", "minLength": 1},
+              "priority": {"type": "string", "enum": ["p0", "p1", "p2"]},
+              "evidence_target": {"type": "string", "minLength": 1},
+              "evidence_present": {"type": "boolean"},
+              "license_review_required": {"type": "boolean"},
+              "license_review_target": {"type": "string", "minLength": 1},
+              "license_review_present": {"type": "boolean"},
+              "ok": {"type": "boolean"}
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    {
       "id": "stable_asr.final_handoff.v0",
       "version": "0.1.0",
       "title": "Final Input Handoff",

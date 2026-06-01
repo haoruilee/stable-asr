@@ -887,6 +887,28 @@ def test_reference_workqueue_cli_writes_json(tmp_path, capsys) -> None:
     assert any(task["task_id"] == "turn:smart_turn" for task in payload["tasks"])
 
 
+def test_reference_workqueue_cli_audits_evidence_targets(tmp_path, capsys) -> None:
+    output = tmp_path / "REFERENCE_EVIDENCE_AUDIT.md"
+    code = main(["reference-workqueue", "--audit-evidence", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "Stable-ASR Reference Evidence Audit" in captured.out
+    assert "missing_evidence" in captured.out
+    assert output.exists()
+    assert "asr:funasr" in output.read_text(encoding="utf-8")
+
+
+def test_reference_workqueue_cli_audits_evidence_json(capsys) -> None:
+    code = main(["reference-workqueue", "--audit-evidence", "--json", "--require-priority", "p2"])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    payload = json.loads(captured.out)
+    assert not payload["ok"]
+    assert payload["rows"][0]["task_id"] == "asr:whisperkit"
+
+
 def test_reference_workqueue_cli_writes_assignment_tracker(tmp_path, capsys) -> None:
     output = tmp_path / "reference_assignments.tsv"
     code = main(["reference-workqueue", "--format", "assignments-tsv", "--output", str(output)])

@@ -17,6 +17,7 @@ stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READIN
 stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE_REVIEW.md
 stable-asr asr-collections --audit-licenses --require-license-reviewed
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
+stable-asr reference-workqueue --audit-evidence --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
 The registry is not a vendoring list. It records what each upstream project is
@@ -44,6 +45,11 @@ Use `--format assignments-tsv` or `--format assignments-markdown` to create an
 owner-fillable tracker for collection, evidence, and license-review work. Run
 `reference-assignment-audit` on the generated JSON tracker before treating a
 reference collection plan as ready for release work.
+
+`reference-workqueue --audit-evidence` checks the generated queue directly
+against the filesystem. It fails until every included task has a real evidence
+target and every license-review-required task has its review file, making the
+difference between collection plans and release evidence explicit.
 
 `--audit-licenses` renders the reuse policy for each reference and names the
 manual review file to fill before copying upstream code, weights, fixtures, or

@@ -4,6 +4,7 @@ import pytest
 
 from stable_asr.paper.handoff import final_handoff_template
 from stable_asr.references import (
+    audit_reference_workqueue_evidence,
     asr_collections_source_manifest,
     load_asr_collections,
     reference_workqueue_assignments,
@@ -42,6 +43,7 @@ def test_schema_registry_exposes_core_contracts() -> None:
         "stable_asr.reference_source_manifest.v0",
         "stable_asr.reference_workqueue.v0",
         "stable_asr.reference_assignments.v0",
+        "stable_asr.reference_evidence_audit.v0",
         "stable_asr.final_handoff.v0",
     }
 
@@ -102,6 +104,24 @@ def test_schema_registry_validates_reference_assignments(tmp_path) -> None:
     )
 
     report = validate_schema_file(assignments, schema_id="stable_asr.reference_assignments.v0")
+
+    assert report.ok
+    assert report.records == 1
+
+
+def test_schema_registry_validates_reference_evidence_audit(tmp_path) -> None:
+    evidence = tmp_path / "reference_evidence_audit.json"
+    evidence.write_text(
+        json.dumps(
+            audit_reference_workqueue_evidence(reference_workqueue_from_registries()).to_dict(),
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    report = validate_schema_file(evidence, schema_id="stable_asr.reference_evidence_audit.v0")
 
     assert report.ok
     assert report.records == 1

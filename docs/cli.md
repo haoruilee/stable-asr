@@ -139,9 +139,11 @@ stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --
 stable-asr schema-registry --output runs/SCHEMAS.md
 stable-asr schema-registry --schema-id stable_asr.streaming_asr_record.v0 --json
 stable-asr schema-registry --schema-id stable_asr.nanoturn_train_config.v0 --json
+stable-asr schema-registry --schema-id stable_asr.reference_evidence_audit.v0 --json
 stable-asr schema-registry --schema-id stable_asr.final_handoff.v0 --json
 stable-asr validate-schema-file --input examples/data/turn_demo.jsonl --schema-id stable_asr.turn_manifest_record.v0
 stable-asr validate-schema-file --input configs/nanoturn_nano.json --schema-id stable_asr.nanoturn_train_config.v0
+stable-asr validate-schema-file --input runs/reference_evidence_audit.json --schema-id stable_asr.reference_evidence_audit.v0
 stable-asr validate-schema-file --input tests/fixtures/streaming_asr_sample.jsonl --schema-id stable_asr.streaming_asr_record.v0 --output runs/STREAMING_SCHEMA_VALIDATION.md
 stable-asr asr-collections --registry configs/references/asr_collections.json --validate-only
 stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
@@ -159,6 +161,8 @@ stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COL
 stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format json --output runs/reference_workqueue.json
+stable-asr reference-workqueue --audit-evidence --output runs/REFERENCE_EVIDENCE_AUDIT.md
+stable-asr reference-workqueue --audit-evidence --json --output runs/reference_evidence_audit.json
 stable-asr reference-workqueue --format assignments-json --output runs/reference_assignments.json
 stable-asr reference-workqueue --format assignments-tsv --output runs/reference_assignments.tsv
 stable-asr reference-assignment-audit --input runs/reference_assignments.json --output runs/REFERENCE_ASSIGNMENT_AUDIT.md

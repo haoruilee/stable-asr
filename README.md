@@ -268,6 +268,7 @@ is provided in `mkdocs.yaml`.
 - `model-registry --audit-configs` for checking trainable NanoTurn config files before release use
 - machine-readable JSON Schema registry in `configs/schemas/stable_asr_schemas.json`
 - `schema-registry` for validating and rendering public data, prediction, streaming, leaderboard, model, final-input, and final-handoff contracts
+- `stable_asr.reference_evidence_audit.v0` schema for reference collection evidence-readiness audit JSON
 - `stable_asr.nanoturn_train_config.v0` schema for `train-turn --config` files
 - `validate-schema-file` for checking JSON/JSONL files against those public contracts before publishing or submitting artifacts
 - machine-readable upstream ASR reference collection in `configs/references/asr_collections.json`
@@ -281,6 +282,7 @@ is provided in `mkdocs.yaml`.
 - machine-readable turn/full-duplex reference collection in `configs/references/turn_collections.json`
 - `turn-collections` for validating Smart Turn, Easy Turn, VAP, Full-Duplex-Bench, VAD, and voice-agent framework references, including source-manifest export for adapter and VoiceWorld bridge collection
 - `reference-workqueue` for merging ASR and turn source manifests into one contributor-facing P0/P1 adapter, license-review, evidence-staging, and assignment-tracking queue
+- `reference-workqueue --audit-evidence` for checking that collection workqueue evidence targets and required license-review files actually exist before treating references as release evidence
 - `reference-assignment-audit` for checking reference assignment owners, due dates, release blockers, evidence targets, and license-review targets
 - machine-readable VoiceWorld scenario suite in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - `scenario-suite` for validating and rendering scenario suite definitions

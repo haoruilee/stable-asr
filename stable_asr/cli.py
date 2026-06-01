@@ -144,6 +144,7 @@ from stable_asr.references import (
     asr_collections_reference_markdown,
     asr_collections_source_manifest,
     audit_reference_assignments,
+    audit_reference_workqueue_evidence,
     audit_asr_collection_coverage,
     audit_asr_collection_licenses,
     audit_asr_collection_readiness,
@@ -676,6 +677,7 @@ def build_parser() -> argparse.ArgumentParser:
     reference_workqueue_parser.add_argument("--asr-registry", type=Path, help="Optional ASR collections JSON path.")
     reference_workqueue_parser.add_argument("--turn-registry", type=Path, help="Optional turn collections JSON path.")
     reference_workqueue_parser.add_argument("--output", type=Path, help="Optional output path.")
+    reference_workqueue_parser.add_argument("--json", action="store_true", help="Print the work queue or evidence audit as JSON.")
     reference_workqueue_parser.add_argument(
         "--format",
         choices=["markdown", "json", "jsonl", "assignments-json", "assignments-tsv", "assignments-markdown"],
@@ -689,6 +691,12 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["p0", "p1", "p2"],
         help="Reference priorities to include. Defaults to p0 and p1.",
     )
+    reference_workqueue_parser.add_argument(
+        "--audit-evidence",
+        action="store_true",
+        help="Audit whether workqueue evidence targets and required license-review files exist.",
+    )
+    reference_workqueue_parser.add_argument("--repo-root", type=Path, default=Path("."))
 
     reference_assignment_audit_parser = subparsers.add_parser(
         "reference-assignment-audit",
@@ -2212,7 +2220,19 @@ def main(argv: list[str] | None = None) -> int:
                 turn_registry=load_turn_collections(args.turn_registry),
                 required_priorities=tuple(args.require_priority or ["p0", "p1"]),
             )
-            if args.format == "json":
+            if args.audit_evidence:
+                report = audit_reference_workqueue_evidence(workqueue, repo_root=args.repo_root)
+                text = (
+                    json.dumps(report.to_dict(), ensure_ascii=False, indent=2)
+                    if args.json or args.format == "json"
+                    else report.to_markdown()
+                )
+                if args.output:
+                    args.output.parent.mkdir(parents=True, exist_ok=True)
+                    args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+                print(text)
+                return 0 if report.ok else 1
+            if args.json or args.format == "json":
                 text = json.dumps(workqueue, ensure_ascii=False, indent=2)
             elif args.format == "jsonl":
                 text = reference_workqueue_jsonl(workqueue)

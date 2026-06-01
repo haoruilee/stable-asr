@@ -11,6 +11,7 @@ stable-asr turn-collections --audit-coverage --require-priority p0 --require-pri
 stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
 stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
+stable-asr reference-workqueue --audit-evidence --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
 The registry is not a vendoring list. It records which upstream projects should
@@ -56,3 +57,8 @@ one release plan. Use `--format assignments-tsv` or
 release-blocker status, then run `reference-assignment-audit` to surface
 unassigned owners, missing due dates, missing evidence, and unresolved license
 reviews.
+
+Run `reference-workqueue --audit-evidence` when you need a direct readiness
+answer from the generated queue. It checks evidence targets and license-review
+files on disk, so registry entries and source manifests cannot be mistaken for
+completed collection work.

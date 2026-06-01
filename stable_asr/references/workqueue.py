@@ -91,6 +91,113 @@ class ReferenceAssignmentAuditReport:
         return "\n".join(lines) + "\n"
 
 
+@dataclass(frozen=True)
+class ReferenceEvidenceAuditRow:
+    task_id: str
+    collection_type: str
+    reference_id: str
+    priority: str
+    evidence_target: str
+    evidence_present: bool
+    license_review_required: bool
+    license_review_target: str
+    license_review_present: bool
+    ok: bool
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "task_id": self.task_id,
+            "collection_type": self.collection_type,
+            "reference_id": self.reference_id,
+            "priority": self.priority,
+            "evidence_target": self.evidence_target,
+            "evidence_present": self.evidence_present,
+            "license_review_required": self.license_review_required,
+            "license_review_target": self.license_review_target,
+            "license_review_present": self.license_review_present,
+            "ok": self.ok,
+        }
+
+
+@dataclass(frozen=True)
+class ReferenceEvidenceAuditReport:
+    ok: bool
+    repo_root: str
+    rows: list[ReferenceEvidenceAuditRow]
+    missing_evidence: list[str]
+    missing_license_reviews: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "repo_root": self.repo_root,
+            "rows": [row.to_dict() for row in self.rows],
+            "missing_evidence": self.missing_evidence,
+            "missing_license_reviews": self.missing_license_reviews,
+        }
+
+    def to_markdown(self) -> str:
+        table_rows = [
+            {
+                "task": row.task_id,
+                "priority": row.priority,
+                "evidence": "yes" if row.evidence_present else "no",
+                "license_review": (
+                    "yes"
+                    if row.license_review_required and row.license_review_present
+                    else "missing"
+                    if row.license_review_required
+                    else "n/a"
+                ),
+                "status": "READY" if row.ok else "MISSING",
+                "target": row.evidence_target,
+            }
+            for row in self.rows
+        ]
+        lines = [
+            "# Stable-ASR Reference Evidence Audit",
+            "",
+            f"- status: `{'READY' if self.ok else 'NOT_READY'}`",
+            f"- repo_root: `{self.repo_root}`",
+            f"- tasks: `{len(self.rows)}`",
+            f"- missing_evidence: `{len(self.missing_evidence)}`",
+            f"- missing_license_reviews: `{len(self.missing_license_reviews)}`",
+            "",
+            dict_table(table_rows),
+            "",
+            "## Missing Evidence",
+            "",
+        ]
+        lines.extend(f"- `{item}`" for item in self.missing_evidence) if self.missing_evidence else lines.append("- none")
+        lines.extend(["", "## Missing License Reviews", ""])
+        lines.extend(f"- `{item}`" for item in self.missing_license_reviews) if self.missing_license_reviews else lines.append("- none")
+        lines.extend(
+            [
+                "",
+                "## Evidence Rule",
+                "",
+                (
+                    "Collection registry entries are plans. A task becomes release evidence only after its "
+                    "`evidence_target` exists and any required license review target is present."
+                ),
+            ]
+        )
+        return "\n".join(lines) + "\n"
+
+    def to_text(self) -> str:
+        lines = [
+            f"reference_evidence_audit: {'READY' if self.ok else 'NOT_READY'}",
+            f"repo_root: {self.repo_root}",
+            f"tasks: {len(self.rows)}",
+            f"missing_evidence: {len(self.missing_evidence)}",
+            f"missing_license_reviews: {len(self.missing_license_reviews)}",
+        ]
+        for row in self.rows:
+            marker = "OK" if row.ok else "MISSING"
+            lines.append(f"- {marker} {row.task_id}: {row.evidence_target}")
+        return "\n".join(lines)
+
+
 def reference_workqueue_from_registries(
     *,
     asr_registry: dict[str, Any] | None = None,
@@ -261,6 +368,54 @@ def reference_workqueue_jsonl(workqueue: dict[str, Any]) -> str:
     if not validation.ok:
         raise ValueError(validation.to_text())
     return "\n".join(json.dumps(task, ensure_ascii=False, sort_keys=True) for task in workqueue["tasks"]) + "\n"
+
+
+def audit_reference_workqueue_evidence(
+    workqueue: dict[str, Any],
+    *,
+    repo_root: str | Path = ".",
+) -> ReferenceEvidenceAuditReport:
+    """Check whether reference workqueue evidence and license-review targets exist."""
+
+    validation = validate_reference_workqueue(workqueue)
+    if not validation.ok:
+        raise ValueError(validation.to_text())
+    root = Path(repo_root)
+    rows: list[ReferenceEvidenceAuditRow] = []
+    missing_evidence: list[str] = []
+    missing_license_reviews: list[str] = []
+    for task in workqueue["tasks"]:
+        evidence_target = str(task["evidence_target"])
+        evidence_present = _target_exists(evidence_target, repo_root=root)
+        license_review_required = bool(task["license_review_required"])
+        license_review_target = str(task["license_review_target"])
+        license_review_present = (not license_review_required) or _target_exists(license_review_target, repo_root=root)
+        task_id = str(task["task_id"])
+        if not evidence_present:
+            missing_evidence.append(f"{task_id}:{evidence_target}")
+        if license_review_required and not license_review_present:
+            missing_license_reviews.append(f"{task_id}:{license_review_target}")
+        rows.append(
+            ReferenceEvidenceAuditRow(
+                task_id=task_id,
+                collection_type=str(task["collection_type"]),
+                reference_id=str(task["reference_id"]),
+                priority=str(task["priority"]),
+                evidence_target=evidence_target,
+                evidence_present=evidence_present,
+                license_review_required=license_review_required,
+                license_review_target=license_review_target,
+                license_review_present=license_review_present,
+                ok=evidence_present and license_review_present,
+            )
+        )
+    return ReferenceEvidenceAuditReport(
+        ok=all(row.ok for row in rows),
+        repo_root=str(root),
+        rows=rows,
+        missing_evidence=missing_evidence,
+        missing_license_reviews=missing_license_reviews,
+    )
 
 
 def reference_workqueue_assignments(workqueue: dict[str, Any]) -> dict[str, object]:
