@@ -154,6 +154,7 @@ from stable_asr.references import (
     reference_workqueue_assignments,
     reference_workqueue_assignments_markdown,
     reference_workqueue_assignments_tsv,
+    reference_workqueue_evidence_markdown,
     reference_workqueue_from_registries,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
@@ -680,7 +681,15 @@ def build_parser() -> argparse.ArgumentParser:
     reference_workqueue_parser.add_argument("--json", action="store_true", help="Print the work queue or evidence audit as JSON.")
     reference_workqueue_parser.add_argument(
         "--format",
-        choices=["markdown", "json", "jsonl", "assignments-json", "assignments-tsv", "assignments-markdown"],
+        choices=[
+            "markdown",
+            "json",
+            "jsonl",
+            "assignments-json",
+            "assignments-tsv",
+            "assignments-markdown",
+            "evidence-markdown",
+        ],
         default="markdown",
         help="Output format for the unified reference work queue.",
     )
@@ -2242,6 +2251,8 @@ def main(argv: list[str] | None = None) -> int:
                 text = reference_workqueue_assignments_tsv(reference_workqueue_assignments(workqueue))
             elif args.format == "assignments-markdown":
                 text = reference_workqueue_assignments_markdown(reference_workqueue_assignments(workqueue))
+            elif args.format == "evidence-markdown":
+                text = reference_workqueue_evidence_markdown(workqueue)
             else:
                 text = reference_workqueue_markdown(workqueue)
             if args.output:

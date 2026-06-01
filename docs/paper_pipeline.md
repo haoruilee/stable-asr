@@ -57,6 +57,7 @@ stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --art
 stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --output runs/paper/smoke/artifacts/PLATFORM_PARITY.md
 stable-asr reference-workqueue --output runs/paper/smoke/artifacts/REFERENCE_WORKQUEUE.md
+stable-asr reference-workqueue --format evidence-markdown --output runs/paper/smoke/artifacts/REFERENCE_EVIDENCE_TEMPLATES.md
 stable-asr final-experiments --registry configs/paper/final_experiments.json --output runs/paper/smoke/artifacts/FINAL_EXPERIMENTS.md
 stable-asr final-config --config configs/final/paper_final.json --output runs/paper/smoke/artifacts/FINAL_RUN_CONFIG.md
 stable-asr final-config --config configs/final/paper_final.json --scaffold
@@ -111,7 +112,7 @@ integrity manifests, provenance manifests for git/config/result traceability,
 machine-readable benchmark suite definition, a data source registry, a
 baseline/adapter registry, ASR and turn/full-duplex reference collections,
 paper-reference notes, BibTeX, source manifests, a unified reference work
-queue, reference evidence audit, reference assignment tracker, coverage artifacts, readiness artifacts,
+queue, reference evidence templates, reference evidence audit, reference assignment tracker, coverage artifacts, readiness artifacts,
 acquisition plans, a VoiceWorld scenario suite definition, and
 case-study JSON/Markdown artifacts that link failure examples back to source
 records, a paper parity audit that separates smoke-level structural evidence

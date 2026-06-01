@@ -11,6 +11,7 @@ stable-asr turn-collections --audit-coverage --require-priority p0 --require-pri
 stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
 stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
+stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
 stable-asr reference-workqueue --audit-evidence --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
@@ -57,6 +58,10 @@ one release plan. Use `--format assignments-tsv` or
 release-blocker status, then run `reference-assignment-audit` to surface
 unassigned owners, missing due dates, missing evidence, and unresolved license
 reviews.
+
+`reference-workqueue --format evidence-markdown` renders per-reference evidence
+templates for the same queue, including required version, input, command,
+output, metric, failure-note, and license-decision sections.
 
 Run `reference-workqueue --audit-evidence` when you need a direct readiness
 answer from the generated queue. It checks evidence targets and license-review

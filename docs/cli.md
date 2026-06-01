@@ -114,9 +114,9 @@ bash commands.sh
 
 The contributor pack gathers benchmark, adapter, VoiceWorld, final-run, and
 final acquisition starter packs into one workspace, adds the unified reference
-work queue plus its evidence audit under `references/`, then copies the GitHub
-issue and pull request templates so contributors can choose the right track
-before opening a PR.
+work queue plus evidence templates and the evidence audit under `references/`,
+then copies the GitHub issue and pull request templates so contributors can
+choose the right track before opening a PR.
 
 ## Streaming ASR
 
@@ -162,6 +162,7 @@ stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COL
 stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format json --output runs/reference_workqueue.json
+stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
 stable-asr reference-workqueue --audit-evidence --output runs/REFERENCE_EVIDENCE_AUDIT.md
 stable-asr reference-workqueue --audit-evidence --json --output runs/reference_evidence_audit.json
 stable-asr reference-workqueue --format assignments-json --output runs/reference_assignments.json

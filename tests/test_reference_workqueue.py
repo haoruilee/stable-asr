@@ -6,6 +6,7 @@ from stable_asr.references import (
     reference_workqueue_assignments,
     reference_workqueue_assignments_markdown,
     reference_workqueue_assignments_tsv,
+    reference_workqueue_evidence_markdown,
     reference_workqueue_from_registries,
     reference_workqueue_jsonl,
     reference_workqueue_markdown,
@@ -38,11 +39,16 @@ def test_reference_workqueue_can_filter_to_p0_only() -> None:
 def test_reference_workqueue_markdown_and_jsonl_render() -> None:
     workqueue = reference_workqueue_from_registries()
     markdown = reference_workqueue_markdown(workqueue)
+    evidence_templates = reference_workqueue_evidence_markdown(workqueue)
     jsonl = reference_workqueue_jsonl(workqueue)
 
     assert "# Stable-ASR Reference Work Queue" in markdown
     assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in markdown
     assert "license_review" in markdown
+    assert "Stable-ASR Reference Evidence Templates" in evidence_templates
+    assert "Acceptance Rule" in evidence_templates
+    assert "asr:funasr" in evidence_templates
+    assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in evidence_templates
     rows = [json.loads(line) for line in jsonl.splitlines()]
     assert len(rows) == len(workqueue["tasks"])
     assert rows[0]["task_id"]

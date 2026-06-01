@@ -39,6 +39,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "contributor_pack:tracks" in bundle.starter_packs
     assert "contributor_pack:reference_workqueue_markdown" in bundle.starter_packs
     assert "contributor_pack:reference_evidence_audit_markdown" in bundle.starter_packs
+    assert "contributor_pack:reference_evidence_templates_markdown" in bundle.starter_packs
     assert "contributor_pack:reference_assignments_markdown" in bundle.starter_packs
     assert set(bundle.data_sources) == {"json", "markdown"}
     assert set(bundle.adapter_registry) == {"json", "markdown"}
@@ -71,6 +72,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         "json",
         "jsonl",
         "markdown",
+        "evidence_templates_markdown",
         "evidence_audit_json",
         "evidence_audit_markdown",
         "assignments_json",
@@ -165,6 +167,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Reference Evidence Audit" in Path(bundle.reference_workqueue["evidence_audit_markdown"]).read_text(
         encoding="utf-8"
     )
+    assert "Stable-ASR Reference Evidence Templates" in Path(
+        bundle.reference_workqueue["evidence_templates_markdown"]
+    ).read_text(encoding="utf-8")
     assert '"ok": false' in Path(bundle.reference_workqueue["evidence_audit_json"]).read_text(encoding="utf-8")
     assert "Stable-ASR Reference Assignments" in Path(bundle.reference_workqueue["assignments_markdown"]).read_text(
         encoding="utf-8"

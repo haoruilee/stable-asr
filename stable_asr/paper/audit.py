@@ -1338,6 +1338,12 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     )
     checks.append(
         _exists_check(
+            "starter_pack:contributor_reference_evidence_templates",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_EVIDENCE_TEMPLATES.md",
+        )
+    )
+    checks.append(
+        _exists_check(
             "starter_pack:contributor_reference_assignments",
             artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_ASSIGNMENTS.md",
         )
@@ -1347,6 +1353,13 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
             "starter_pack:contributor_reference_evidence_audit_command",
             artifacts_dir / "starter_packs" / "contributor_pack" / "COMMANDS.md",
             contains="--audit-evidence",
+        )
+    )
+    checks.append(
+        _contains_check(
+            "starter_pack:contributor_reference_evidence_template_command",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "COMMANDS.md",
+            contains="evidence-markdown",
         )
     )
     checks.append(
@@ -1404,6 +1417,13 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("reference_workqueue:jsonl", artifacts_dir / "reference_workqueue.jsonl"))
     checks.append(_exists_check("reference_workqueue:markdown", artifacts_dir / "REFERENCE_WORKQUEUE.md"))
     checks.append(_reference_workqueue_content_check(artifacts_dir / "reference_workqueue.json"))
+    checks.append(
+        _contains_check(
+            "reference_evidence_templates:markdown",
+            artifacts_dir / "REFERENCE_EVIDENCE_TEMPLATES.md",
+            contains="Acceptance Rule",
+        )
+    )
     checks.append(_exists_check("reference_evidence_audit:json", artifacts_dir / "reference_evidence_audit.json"))
     checks.append(_exists_check("reference_evidence_audit:markdown", artifacts_dir / "REFERENCE_EVIDENCE_AUDIT.md"))
     checks.append(_reference_evidence_audit_content_check(artifacts_dir / "reference_evidence_audit.json"))

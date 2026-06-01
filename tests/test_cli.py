@@ -887,6 +887,28 @@ def test_reference_workqueue_cli_writes_json(tmp_path, capsys) -> None:
     assert any(task["task_id"] == "turn:smart_turn" for task in payload["tasks"])
 
 
+def test_reference_workqueue_cli_writes_evidence_templates(tmp_path, capsys) -> None:
+    output = tmp_path / "REFERENCE_EVIDENCE_TEMPLATES.md"
+    code = main(
+        [
+            "reference-workqueue",
+            "--format",
+            "evidence-markdown",
+            "--require-priority",
+            "p0",
+            "--output",
+            str(output),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Reference Evidence Templates" in captured.out
+    assert "Acceptance Rule" in captured.out
+    assert output.exists()
+    assert "asr:funasr" in output.read_text(encoding="utf-8")
+
+
 def test_reference_workqueue_cli_audits_evidence_targets(tmp_path, capsys) -> None:
     output = tmp_path / "REFERENCE_EVIDENCE_AUDIT.md"
     code = main(["reference-workqueue", "--audit-evidence", "--output", str(output)])

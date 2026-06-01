@@ -363,6 +363,89 @@ def reference_workqueue_markdown(workqueue: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def reference_workqueue_evidence_markdown(workqueue: dict[str, Any]) -> str:
+    """Render contributor-facing evidence templates for each reference task."""
+
+    validation = validate_reference_workqueue(workqueue)
+    if not validation.ok:
+        raise ValueError(validation.to_text())
+    tasks = workqueue["tasks"]
+    rows = [
+        {
+            "task": task["task_id"],
+            "priority": task["priority"],
+            "track": task["acquisition_track"],
+            "evidence": task["evidence_target"],
+            "license_review": task["license_review_target"] if task["license_review_required"] else "not required",
+        }
+        for task in tasks
+    ]
+    lines = [
+        "# Stable-ASR Reference Evidence Templates",
+        "",
+        (
+            "These templates describe the minimum evidence expected for each ASR or turn reference task. "
+            "They are not evidence by themselves; copy the relevant section into the target file only after "
+            "running the external system, writing the bridge note, or completing the license review."
+        ),
+        "",
+        f"- source_workqueue_id: `{workqueue.get('id', '')}`",
+        f"- tasks: `{len(tasks)}`",
+        "",
+        dict_table(rows),
+        "",
+        "## Acceptance Rule",
+        "",
+        "A task is complete only when:",
+        "",
+        "- its `evidence_target` exists and contains concrete commands, versions, inputs, outputs, and validation results",
+        "- any required `license_review_target` exists before vendoring code, weights, fixtures, or long snippets",
+        "- `stable-asr reference-workqueue --audit-evidence --repo-root .` reports the task as present",
+        "",
+    ]
+    for task in tasks:
+        blocked_by = task.get("blocked_by", [])
+        blocked = ", ".join(str(item) for item in blocked_by) if isinstance(blocked_by, list) and blocked_by else "none"
+        actions = task.get("stable_asr_actions", [])
+        action_text = ", ".join(str(item) for item in actions) if isinstance(actions, list) else ""
+        lines.extend(
+            [
+                f"## {task['task_id']}",
+                "",
+                f"- name: `{task['name']}`",
+                f"- priority: `{task['priority']}`",
+                f"- collection_type: `{task['collection_type']}`",
+                f"- category: `{task['category']}`",
+                f"- acquisition_track: `{task['acquisition_track']}`",
+                f"- evidence_target: `{task['evidence_target']}`",
+                f"- license: `{task['license']}`",
+                f"- license_review_required: `{task['license_review_required']}`",
+                f"- license_review_target: `{task['license_review_target']}`",
+                f"- blocked_by: `{blocked}`",
+                f"- source_url: `{task['source_url']}`",
+                f"- docs_url: `{task['docs_url']}`",
+                f"- stable_asr_actions: `{action_text}`",
+                "",
+                "Required evidence sections:",
+                "",
+                "1. Upstream version and source",
+                "2. Inputs used",
+                "3. Command, script, or bridge implementation notes",
+                "4. Output paths and schema or validation commands",
+                "5. Metrics, examples, or failure notes relevant to Stable-ASR",
+                "6. License and redistribution decision",
+                "",
+                "Validation commands:",
+                "",
+                "```bash",
+                "stable-asr reference-workqueue --audit-evidence --repo-root . --output runs/REFERENCE_EVIDENCE_AUDIT.md",
+                "```",
+                "",
+            ]
+        )
+    return "\n".join(lines)
+
+
 def reference_workqueue_jsonl(workqueue: dict[str, Any]) -> str:
     validation = validate_reference_workqueue(workqueue)
     if not validation.ok:

@@ -17,6 +17,7 @@ stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READIN
 stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE_REVIEW.md
 stable-asr asr-collections --audit-licenses --require-license-reviewed
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
+stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
 stable-asr reference-workqueue --audit-evidence --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
@@ -45,6 +46,11 @@ Use `--format assignments-tsv` or `--format assignments-markdown` to create an
 owner-fillable tracker for collection, evidence, and license-review work. Run
 `reference-assignment-audit` on the generated JSON tracker before treating a
 reference collection plan as ready for release work.
+
+`reference-workqueue --format evidence-markdown` renders per-reference
+templates so contributors collect upstream versions, input manifests, commands,
+output paths, metrics, failure notes, and license decisions consistently before
+marking an upstream reference as evidence.
 
 `reference-workqueue --audit-evidence` checks the generated queue directly
 against the filesystem. It fails until every included task has a real evidence
