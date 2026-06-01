@@ -359,7 +359,7 @@ is provided in `mkdocs.yaml`.
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
 - `paper-claim-audit` for mapping platform-paper claims to concrete files, result keys, commands, and artifacts
 - `paper-status` for a single-page summary of smoke, structural, final-input, final assignment, final handoff, final-paper readiness, and next-action commands
-- `completion-audit` for mapping the top-level Stable-ASR objective to roadmap, platform parity, paper bundle, reference evidence, final inputs, assignment, handoff, and final-release gates
+- `completion-audit` for mapping the top-level Stable-ASR objective to roadmap, platform parity, paper bundle, reference evidence, final inputs, assignment, handoff, and final-release gates, with next-action commands for closing paper parity, reference evidence, final-input, assignment, handoff, and release blockers
 - `paper-evidence-matrix` for mapping final experiments to blockers, commands, expected artifacts, and success criteria
 - machine-readable stable-worldmodel-style paper parity checklist in `configs/paper/paper_parity_checklist.json`
 - `paper-parity-audit` for separating smoke-level structural evidence from final-scale paper gaps

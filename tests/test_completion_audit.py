@@ -29,5 +29,10 @@ def test_completion_audit_maps_goal_to_real_gates(tmp_path: Path) -> None:
     }.issubset(requirements)
     assert "Stable-ASR Completion Audit" in markdown
     assert "Prompt-To-Artifact Checklist" in markdown
+    assert "Next Actions" in markdown
+    assert "close_paper_parity_gaps" in markdown
+    assert "collect_external_reference_evidence" in markdown
+    assert "reference-workqueue --format issues-markdown" in markdown
+    assert "final-acquisition-pack" in markdown
     assert "data/librispeech/LibriSpeech/dev-clean" in markdown
     assert "reference-workqueue --audit-evidence" in markdown

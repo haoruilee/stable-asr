@@ -38,11 +38,32 @@ class CompletionAuditItem:
 
 
 @dataclass(frozen=True)
+class CompletionNextAction:
+    id: str
+    title: str
+    status: str
+    reason: str
+    commands: list[str]
+    artifacts: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "status": self.status,
+            "reason": self.reason,
+            "commands": self.commands,
+            "artifacts": self.artifacts,
+        }
+
+
+@dataclass(frozen=True)
 class CompletionAuditReport:
     ok: bool
     objective: str
     repo_root: str
     items: list[CompletionAuditItem]
+    next_actions: list[CompletionNextAction]
 
     @property
     def blockers(self) -> list[str]:
@@ -58,6 +79,7 @@ class CompletionAuditReport:
             "repo_root": self.repo_root,
             "items": [item.to_dict() for item in self.items],
             "blockers": self.blockers,
+            "next_actions": [action.to_dict() for action in self.next_actions],
         }
 
     def to_text(self) -> str:
@@ -71,6 +93,9 @@ class CompletionAuditReport:
         for item in self.items:
             status = "OK" if item.ok else "MISSING"
             lines.append(f"- {status} {item.requirement}: {item.detail}")
+        lines.append(f"next_actions: {len(self.next_actions)}")
+        for action in self.next_actions:
+            lines.append(f"- {action.status} {action.id}: {action.reason}")
         return "\n".join(lines)
 
     def to_markdown(self) -> str:
@@ -117,6 +142,40 @@ class CompletionAuditReport:
             else:
                 lines.append("- none")
             lines.append("")
+        lines.extend(["## Next Actions", ""])
+        if self.next_actions:
+            lines.append(
+                dict_table(
+                    [
+                        {
+                            "id": action.id,
+                            "status": action.status,
+                            "title": action.title,
+                            "artifacts": len(action.artifacts),
+                        }
+                        for action in self.next_actions
+                    ]
+                )
+            )
+            for action in self.next_actions:
+                lines.extend(
+                    [
+                        "",
+                        f"### {action.id}",
+                        "",
+                        f"- status: `{action.status}`",
+                        f"- reason: {action.reason}",
+                        "",
+                        "Commands:",
+                        "",
+                    ]
+                )
+                _extend_markdown_list(lines, action.commands)
+                lines.extend(["", "Artifacts:", ""])
+                _extend_markdown_list(lines, action.artifacts)
+        else:
+            lines.append("- none")
+        lines.append("")
         lines.extend(
             [
                 "## Completion Rule",
@@ -268,6 +327,13 @@ def completion_audit(
         objective=OBJECTIVE_STATEMENT,
         repo_root=str(root),
         items=items,
+        next_actions=_completion_next_actions(
+            items=items,
+            status=status,
+            reference=reference,
+            results_path=results_path,
+            artifacts_dir=artifacts_dir,
+        ),
     )
 
 
@@ -313,3 +379,88 @@ def _paper_bundle_evidence(results_path: str | Path | None, artifacts_dir: str |
     results = str(results_path) if results_path is not None else "missing results path"
     artifacts = str(artifacts_dir) if artifacts_dir is not None else "missing artifacts dir"
     return f"{results} + {artifacts}"
+
+
+def _completion_next_actions(
+    *,
+    items: list[CompletionAuditItem],
+    status: object,
+    reference: object,
+    results_path: str | Path | None,
+    artifacts_dir: str | Path | None,
+) -> list[CompletionNextAction]:
+    item_by_requirement = {item.requirement: item for item in items}
+    actions = [
+        _paper_parity_action(item_by_requirement["paper_structural_parity"], results_path, artifacts_dir),
+        _reference_evidence_action(item_by_requirement["external_reference_evidence"], reference),
+    ]
+    for action in getattr(status, "next_actions", []):
+        actions.append(
+            CompletionNextAction(
+                id=str(action.id),
+                title=str(action.title),
+                status=str(action.status),
+                reason=str(action.reason),
+                commands=[str(command) for command in action.commands],
+                artifacts=[str(artifact) for artifact in action.artifacts],
+            )
+        )
+    return actions
+
+
+def _paper_parity_action(
+    item: CompletionAuditItem,
+    results_path: str | Path | None,
+    artifacts_dir: str | Path | None,
+) -> CompletionNextAction:
+    results = str(results_path or "runs/final/paper_results.json")
+    artifacts = str(artifacts_dir or "runs/final/artifacts")
+    return CompletionNextAction(
+        id="close_paper_parity_gaps",
+        title="Close final-scale platform-paper parity gaps",
+        status="done" if item.ok else "needed",
+        reason=item.detail if item.ok else f"{len(item.blockers)} final-scale paper parity blocker(s)",
+        commands=[
+            f"stable-asr paper-parity-audit --results {results} --artifacts-dir {artifacts} --require-final",
+            "stable-asr paper-draft --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --output runs/final/PAPER_DRAFT.md",
+            "stable-asr paper-release-audit --repo-root . --results runs/final/paper_results.json --artifacts-dir runs/final/artifacts --require-final-ready",
+        ],
+        artifacts=[
+            "runs/final/PAPER_DRAFT.md",
+            "runs/final/artifacts/PAPER_PARITY.md",
+            "runs/final/artifacts/FINAL_EXPERIMENTS.md",
+        ],
+    )
+
+
+def _reference_evidence_action(item: CompletionAuditItem, reference: object) -> CompletionNextAction:
+    blockers = len(item.blockers)
+    return CompletionNextAction(
+        id="collect_external_reference_evidence",
+        title="Collect external ASR, turn, full-duplex, and license-review evidence",
+        status="done" if item.ok else "needed",
+        reason=item.detail if item.ok else f"{blockers} reference evidence or license-review blocker(s)",
+        commands=[
+            "stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md",
+            "stable-asr reference-workqueue --format issues-markdown --output runs/REFERENCE_COLLECTION_ISSUES.md",
+            "stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md",
+            "stable-asr reference-workqueue --format license-review-markdown --output runs/REFERENCE_LICENSE_REVIEW_TEMPLATES.md",
+            "stable-asr reference-workqueue --audit-evidence --require-content --repo-root . --output runs/REFERENCE_EVIDENCE_AUDIT.md",
+        ],
+        artifacts=[
+            "runs/REFERENCE_WORKQUEUE.md",
+            "runs/REFERENCE_COLLECTION_ISSUES.md",
+            "runs/REFERENCE_EVIDENCE_TEMPLATES.md",
+            "runs/REFERENCE_LICENSE_REVIEW_TEMPLATES.md",
+            "runs/REFERENCE_EVIDENCE_AUDIT.md",
+            *getattr(reference, "missing_evidence", [])[:10],
+            *getattr(reference, "missing_license_reviews", [])[:10],
+        ],
+    )
+
+
+def _extend_markdown_list(lines: list[str], values: list[str]) -> None:
+    if values:
+        lines.extend(f"- `{value}`" for value in values)
+    else:
+        lines.append("- none")

@@ -164,4 +164,7 @@ use `--strict` when the environment has optional Lance dependencies and
 final-scale inputs installed and a NOT_READY audit should fail the command.
 `completion-audit` is the strictest summary: it maps the user-level objective
 to concrete roadmap, platform parity, paper bundle, reference evidence, final
-input, assignment, handoff, and final-release gates.
+input, assignment, handoff, and final-release gates. It also emits next-action
+commands for closing paper parity gaps, collecting external reference evidence,
+filling final inputs, assignment, handoff metadata, and assembling the final
+release bundle.

@@ -217,6 +217,7 @@ stable-asr paper-release-smoke --require-final-ready
 stable-asr paper-status --release-dir runs/paper/release_smoke
 stable-asr paper-status --repo-root . --output runs/final/PAPER_STATUS.md
 stable-asr completion-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --allow-incomplete --output runs/COMPLETION_AUDIT.md
+# The completion audit output includes a Next Actions section with concrete commands for unresolved final gates.
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 stable-asr paper-release-audit --repo-root . --require-final-ready
 ```

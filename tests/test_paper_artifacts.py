@@ -229,4 +229,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR Platform Roadmap" in Path(bundle.roadmap_status["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Completion Audit" in Path(bundle.completion_audit["markdown"]).read_text(encoding="utf-8")
     assert "Prompt-To-Artifact Checklist" in Path(bundle.completion_audit["markdown"]).read_text(encoding="utf-8")
+    assert "Next Actions" in Path(bundle.completion_audit["markdown"]).read_text(encoding="utf-8")
+    assert "collect_external_reference_evidence" in Path(bundle.completion_audit["markdown"]).read_text(
+        encoding="utf-8"
+    )
     assert "Stable-ASR Claim Evidence Matrix" in Path(bundle.claims["markdown"]).read_text(encoding="utf-8")

@@ -106,8 +106,13 @@ def test_completion_audit_cli_reports_incomplete_goal(tmp_path, capsys) -> None:
     assert code == 0
     assert "Stable-ASR Completion Audit" in captured.out
     assert "final_inputs" in captured.out
+    assert "Next Actions" in captured.out
+    assert "collect_external_reference_evidence" in captured.out
+    assert "final-acquisition-pack" in captured.out
     assert output.exists()
-    assert "Prompt-To-Artifact Checklist" in output.read_text(encoding="utf-8")
+    output_text = output.read_text(encoding="utf-8")
+    assert "Prompt-To-Artifact Checklist" in output_text
+    assert "close_paper_parity_gaps" in output_text
 
     code = main(["completion-audit", "--json"])
     captured = capsys.readouterr()
@@ -115,6 +120,7 @@ def test_completion_audit_cli_reports_incomplete_goal(tmp_path, capsys) -> None:
     payload = json.loads(captured.out)
     assert payload["ok"] is False
     assert any(item["requirement"] == "final_release_ready" for item in payload["items"])
+    assert any(action["id"] == "collect_external_reference_evidence" for action in payload["next_actions"])
 
 
 def test_paper_evidence_matrix_cli_writes_markdown(tmp_path, capsys) -> None:
