@@ -33,6 +33,8 @@ Generated on 2026-06-01 in the local final run tree.
 - `runs/final/reports/asr_command_compare.md`
 - `runs/final/reports/asr_transcript_conversions.json`
 - `runs/final/reports/whisper_sweep.json`
+- `runs/final/reports/data_benchmark.json`
+- `runs/final/reports/audio_window_benchmark.json`
 
 ## Source Notes
 
@@ -49,4 +51,3 @@ The final input gate is complete. The release and paper-scale gates still requir
 - `runs/final/nanoturn/metrics.json`
 - `runs/final/paper_results.json`
 - `runs/final/artifacts`
-

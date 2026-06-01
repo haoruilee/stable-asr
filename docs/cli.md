@@ -31,6 +31,7 @@ stable-asr prepare-voiceworld --input examples/data/voiceworld_metadata.tsv --ou
 stable-asr split-turn-data --input examples/data/turn_demo.jsonl --output-dir runs/splits
 stable-asr audit-turn-splits --train runs/splits/turn_train.jsonl --dev runs/splits/turn_dev.jsonl --test runs/splits/turn_test.jsonl
 stable-asr benchmark-data --dataset examples/data/turn_demo.jsonl --output-dir runs/data_bench --formats jsonl parquet lance
+stable-asr benchmark-audio-windows --dataset runs/final/voiceworld_real.jsonl --output-dir runs/final/audio_window_bench --formats source_wav parquet lance --sample-count 5000
 ```
 
 ## Baselines And NanoTurn

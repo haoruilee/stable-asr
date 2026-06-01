@@ -14,6 +14,7 @@ from stable_asr.data.audio_audit import audit_audio_records
 from stable_asr.data.bootstrap import BootstrapTurnDataConfig, bootstrap_turn_data
 from stable_asr.data.manifest import load_manifest, validate_manifest
 from stable_asr.data.profile import profile_turn_records
+from stable_asr.data.audio_window_cache import WINDOW_CACHE_FORMATS, benchmark_audio_window_formats
 from stable_asr.data.benchmark import benchmark_data_formats
 from stable_asr.data.split_audit import DEFAULT_LEAKAGE_FIELDS, audit_turn_splits
 from stable_asr.data.converters import (
@@ -546,6 +547,26 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark_parser.add_argument("--seed", type=int, default=0, help="Random seed for sampling benchmark.")
     benchmark_parser.add_argument("--json", action="store_true")
     benchmark_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
+
+    audio_window_benchmark_parser = subparsers.add_parser(
+        "benchmark-audio-windows",
+        help="Benchmark source WAV windows against materialized Parquet/Lance audio-window caches.",
+    )
+    audio_window_benchmark_parser.add_argument("--dataset", type=Path, required=True)
+    audio_window_benchmark_parser.add_argument("--format", choices=TURN_FORMATS.names())
+    audio_window_benchmark_parser.add_argument("--output-dir", type=Path, required=True)
+    audio_window_benchmark_parser.add_argument(
+        "--formats",
+        nargs="+",
+        choices=WINDOW_CACHE_FORMATS,
+        default=list(WINDOW_CACHE_FORMATS),
+    )
+    audio_window_benchmark_parser.add_argument("--sample-count", type=int, default=1000)
+    audio_window_benchmark_parser.add_argument("--seed", type=int, default=0)
+    audio_window_benchmark_parser.add_argument("--max-records", type=int)
+    audio_window_benchmark_parser.add_argument("--audio-root", type=Path)
+    audio_window_benchmark_parser.add_argument("--json", action="store_true")
+    audio_window_benchmark_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
     data_sources_parser = subparsers.add_parser(
         "data-sources",
@@ -2012,6 +2033,44 @@ def main(argv: list[str] | None = None) -> int:
                             f"sample_count={row.sample_count}",
                             f"sample_seconds={row.sample_seconds:.6f}",
                             f"samples_per_second={row.samples_per_second:.2f}",
+                            f"sample_strategy={row.sample_strategy}",
+                            f"path={row.output_path}",
+                        ]
+                    )
+                )
+        return 0
+
+    if args.command == "benchmark-audio-windows":
+        try:
+            rows = benchmark_audio_window_formats(
+                load_turn_records(args.dataset, format=args.format),
+                output_dir=args.output_dir,
+                formats=args.formats,
+                sample_count=args.sample_count,
+                seed=args.seed,
+                max_records=args.max_records,
+                audio_root=args.audio_root,
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        payload = [row.to_dict() for row in rows]
+        _write_json_output(args.json_output, payload)
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            for row in rows:
+                print(
+                    " ".join(
+                        [
+                            f"format={row.format}",
+                            f"records={row.records}",
+                            f"write_seconds={row.write_seconds:.6f}",
+                            f"sample_count={row.sample_count}",
+                            f"sample_seconds={row.sample_seconds:.6f}",
+                            f"samples_per_second={row.samples_per_second:.2f}",
+                            f"speedup_vs_source_wav={row.speedup_vs_source_wav:.2f}",
+                            f"size_bytes={row.size_bytes}",
                             f"sample_strategy={row.sample_strategy}",
                             f"path={row.output_path}",
                         ]

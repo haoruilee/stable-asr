@@ -10,6 +10,11 @@ from stable_asr.data.asr_manifest import (
     write_asr_manifest,
 )
 from stable_asr.data.audio import load_wav_mono, synth_tone, write_wav_mono
+from stable_asr.data.audio_window_cache import (
+    AudioWindowBenchmarkRow,
+    benchmark_audio_window_formats,
+    materialize_audio_windows,
+)
 from stable_asr.data.benchmark import DataBenchmarkRow, benchmark_data_formats
 from stable_asr.data.converters import EXTERNAL_SCHEMAS, convert_external_jsonl, convert_rows
 from stable_asr.data.manifest import (
@@ -40,6 +45,7 @@ __all__ = [
     "ASRManifestError",
     "ASRManifestRecord",
     "ASRManifestValidationReport",
+    "AudioWindowBenchmarkRow",
     "ManifestError",
     "ManifestValidationReport",
     "TURN_FORMATS",
@@ -50,6 +56,7 @@ __all__ = [
     "TurnManifestRecord",
     "PUBLIC_ASR_CORPORA",
     "benchmark_data_formats",
+    "benchmark_audio_window_formats",
     "convert_external_jsonl",
     "convert_rows",
     "convert_turn_manifest",
@@ -60,6 +67,7 @@ __all__ = [
     "load_data_sources",
     "prepare_asr_manifest",
     "prepare_public_asr_manifest",
+    "materialize_audio_windows",
     "summarize_asr_records",
     "summarize_records",
     "synth_tone",

@@ -9,6 +9,8 @@ Core data entry points:
 - `stable_asr.data.registry.convert_turn_manifest`
 - `stable_asr.data.recipes.prepare_voiceworld_manifest`
 - `stable_asr.data.benchmark.benchmark_data_formats`
+- `stable_asr.data.audio_window_cache.materialize_audio_windows`
+- `stable_asr.data.audio_window_cache.benchmark_audio_window_formats`
 
 Supported turn manifest backends:
 
@@ -29,3 +31,21 @@ rows = benchmark_data_formats(
     formats=["jsonl", "parquet", "lance"],
 )
 ```
+
+Audio-window cache benchmark:
+
+```python
+from stable_asr.data.audio_window_cache import benchmark_audio_window_formats
+
+records = load_turn_records("runs/final/voiceworld_real.jsonl")
+rows = benchmark_audio_window_formats(
+    records,
+    output_dir="runs/final/audio_window_bench",
+    formats=["source_wav", "parquet", "lance"],
+    sample_count=5000,
+)
+```
+
+`source_wav` is the baseline that opens the original WAV file for every random
+sample. `parquet` and `lance` first materialize fixed turn windows into a
+columnar cache and then benchmark random row retrieval.

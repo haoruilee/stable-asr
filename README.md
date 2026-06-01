@@ -97,6 +97,20 @@ stable-asr benchmark-data \
   --formats jsonl parquet lance
 ```
 
+For training-time audio access, Stable-ASR also provides an audio-window cache.
+It materializes turn windows into Parquet or Lance rows so random training
+samples no longer have to reopen and decode the original WAV file on every
+sample.
+
+```bash
+stable-asr benchmark-audio-windows \
+  --dataset runs/final/voiceworld_real.jsonl \
+  --output-dir runs/final/audio_window_bench \
+  --formats source_wav parquet lance \
+  --sample-count 5000 \
+  --json-output runs/final/reports/audio_window_benchmark.json
+```
+
 ## VoiceWorld Scenarios
 
 VoiceWorld is the speech interaction counterpart of stable-worldmodel's
