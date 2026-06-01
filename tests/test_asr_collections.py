@@ -6,6 +6,7 @@ from stable_asr.references import (
     asr_collections_bibtex,
     asr_collections_markdown,
     asr_collections_reference_markdown,
+    asr_collections_source_manifest,
     audit_asr_collection_coverage,
     audit_asr_collection_licenses,
     audit_asr_collection_readiness,
@@ -58,6 +59,19 @@ def test_asr_collections_acquisition_markdown_renders_collection_plan() -> None:
     assert "runs/collections/lhotse/DATA_BRIDGE.md" in markdown
     assert "license_review" in markdown
     assert "--audit-licenses" in markdown
+
+
+def test_asr_collections_source_manifest_maps_collection_work() -> None:
+    manifest = asr_collections_source_manifest(load_asr_collections())
+
+    assert manifest["id"] == "stable_asr_asr_reference_source_manifest_v0"
+    assert manifest["collection_type"] == "asr"
+    funasr = next(source for source in manifest["sources"] if source["reference_id"] == "funasr")
+    assert funasr["policy"] == "link_or_command_adapter_until_reviewed"
+    assert funasr["license_review_target"] == "runs/collections/funasr/LICENSE_REVIEW.md"
+    assert funasr["evidence_target"] == "runs/final/asr_commands/raw/funasr_raw.jsonl"
+    lhotse = next(source for source in manifest["sources"] if source["reference_id"] == "lhotse")
+    assert lhotse["acquisition_track"] == "data bridge"
 
 
 def test_asr_collection_license_report_marks_review_needed_projects() -> None:

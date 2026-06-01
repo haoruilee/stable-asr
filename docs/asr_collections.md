@@ -10,6 +10,7 @@ stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
 stable-asr asr-collections --format paper-markdown --output runs/ASR_REFERENCES.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
+stable-asr asr-collections --format source-manifest --output runs/ASR_COLLECTION_SOURCE_MANIFEST.json
 stable-asr asr-collections --audit-coverage --output runs/ASR_COLLECTION_COVERAGE.md
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
@@ -28,6 +29,11 @@ without maintaining a separate manual reference list.
 `--format acquisition-markdown` turns the registry into a concrete collection
 plan: P0 acquisition order, adapter or bridge track, license-review flag, and
 the expected evidence artifact for each upstream reference.
+
+`--format source-manifest` writes a machine-readable source manifest with
+source/docs URLs, license policy, license review targets, acquisition tracks,
+evidence targets, citation keys, and Stable-ASR action queues. Use it as the
+work queue for adapter, transcript export, and collection-review tasks.
 
 `--audit-licenses` renders the reuse policy for each reference and names the
 manual review file to fill before copying upstream code, weights, fixtures, or

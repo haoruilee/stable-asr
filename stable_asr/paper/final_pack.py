@@ -38,9 +38,11 @@ from stable_asr.paper.final_inputs import (
 )
 from stable_asr.references import (
     asr_collections_markdown,
+    asr_collections_source_manifest,
     load_asr_collections,
     load_turn_collections,
     turn_collections_markdown,
+    turn_collections_source_manifest,
     write_asr_collections_json,
     write_turn_collections_json,
 )
@@ -218,6 +220,10 @@ def build_final_pack(
         output_dir / "reports" / "ASR_COLLECTIONS.md",
         asr_collections_markdown(collections),
     )
+    files["asr_collections_source_manifest"] = _write_json(
+        output_dir / "reports" / "asr_collection_source_manifest.json",
+        asr_collections_source_manifest(collections),
+    )
     turn_collections = load_turn_collections()
     files["turn_collections_json"] = write_turn_collections_json(
         output_dir / PACK_TURN_COLLECTIONS_PATH,
@@ -226,6 +232,10 @@ def build_final_pack(
     files["turn_collections_markdown"] = _write_text(
         output_dir / "reports" / "TURN_COLLECTIONS.md",
         turn_collections_markdown(turn_collections),
+    )
+    files["turn_collections_source_manifest"] = _write_json(
+        output_dir / "reports" / "turn_collection_source_manifest.json",
+        turn_collections_source_manifest(turn_collections),
     )
 
     file_audit = audit_final_run_files(config, repo_root=output_dir)

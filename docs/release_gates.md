@@ -52,7 +52,7 @@ ready.
 - ASR reference collection readiness checks review freshness, Stable-ASR action plans, adapter evidence, and license-review warnings
 - ASR reference license review records link/command-adapter-only projects and the manual review files required before vendoring or redistribution
 - ASR reference collection exports paper Markdown notes and BibTeX attribution artifacts
-- ASR reference collection exports an acquisition plan that maps upstream projects to evidence targets
+- ASR reference collection exports an acquisition plan and source manifest that map upstream projects to license policy, review targets, acquisition tracks, and evidence targets
 - turn/full-duplex reference collection JSON exists in `configs/references/turn_collections.json`
 - required P0 turn/full-duplex references have data-source or adapter coverage evidence
 - VoiceWorld scenario suite JSON exists in `configs/scenarios/stable_asr_voiceworld_v0.json`
@@ -85,7 +85,7 @@ ready.
 - adapter registry JSON/Markdown files are included in the artifact bundle
 - model registry JSON/Markdown and NanoTurn model card JSON/Markdown files are included in the artifact bundle
 - ASR reference collection JSON/Markdown, paper reference, BibTeX, coverage audit, and readiness audit files are included in the artifact bundle
-- turn/full-duplex reference collection JSON/Markdown, acquisition plan, and coverage audit files are included in the artifact bundle
+- turn/full-duplex reference collection JSON/Markdown, source manifest, acquisition plan, and coverage audit files are included in the artifact bundle
 - scenario suite JSON/Markdown files are included in the artifact bundle
 - case-study JSON/Markdown files are included in the artifact bundle
 - paper parity JSON/Markdown files are included in the artifact bundle

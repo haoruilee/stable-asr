@@ -140,6 +140,7 @@ stable-asr asr-collections --output runs/ASR_COLLECTIONS.md
 stable-asr asr-collections --format paper-markdown --output runs/ASR_REFERENCES.md
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
+stable-asr asr-collections --format source-manifest --output runs/ASR_COLLECTION_SOURCE_MANIFEST.json
 stable-asr asr-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr asr-collections --audit-readiness --output runs/ASR_COLLECTION_READINESS.md
 stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE_REVIEW.md
@@ -147,6 +148,7 @@ stable-asr turn-collections --registry configs/references/turn_collections.json 
 stable-asr turn-collections --output runs/TURN_COLLECTIONS.md
 stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1 --output runs/TURN_COLLECTION_COVERAGE.md
 stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
+stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 ```
 
 ## Paper Artifacts

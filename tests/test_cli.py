@@ -769,6 +769,17 @@ def test_asr_collections_cli_writes_acquisition_markdown(tmp_path, capsys) -> No
     assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in output.read_text(encoding="utf-8")
 
 
+def test_asr_collections_cli_writes_source_manifest(tmp_path, capsys) -> None:
+    output = tmp_path / "asr_collection_source_manifest.json"
+    code = main(["asr-collections", "--format", "source-manifest", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "stable_asr_asr_reference_source_manifest_v0" in captured.out
+    assert output.exists()
+    assert '"reference_id": "funasr"' in output.read_text(encoding="utf-8")
+
+
 def test_asr_collections_cli_audits_p0_coverage(tmp_path, capsys) -> None:
     output = tmp_path / "ASR_COLLECTION_COVERAGE.md"
     code = main(["asr-collections", "--audit-coverage", "--output", str(output)])
@@ -820,6 +831,17 @@ def test_turn_collections_cli_writes_acquisition_markdown(tmp_path, capsys) -> N
     assert "Stable-ASR Turn Collection Acquisition Plan" in captured.out
     assert output.exists()
     assert "runs/final/external/smartturn_raw.jsonl" in output.read_text(encoding="utf-8")
+
+
+def test_turn_collections_cli_writes_source_manifest(tmp_path, capsys) -> None:
+    output = tmp_path / "turn_collection_source_manifest.json"
+    code = main(["turn-collections", "--format", "source-manifest", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "stable_asr_turn_reference_source_manifest_v0" in captured.out
+    assert output.exists()
+    assert '"reference_id": "smart_turn"' in output.read_text(encoding="utf-8")
 
 
 def test_audit_audio_cli_with_generated_turn_wavs(tmp_path, capsys) -> None:

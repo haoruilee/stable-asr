@@ -24,6 +24,8 @@ def test_build_final_pack_writes_runbook_without_fake_evidence(tmp_path: Path) -
     assert (output_dir / "configs" / "paper" / "final_experiments.json").exists()
     assert (output_dir / "configs" / "references" / "turn_collections.json").exists()
     assert (output_dir / "reports" / "TURN_COLLECTIONS.md").exists()
+    assert (output_dir / "reports" / "asr_collection_source_manifest.json").exists()
+    assert (output_dir / "reports" / "turn_collection_source_manifest.json").exists()
     assert (output_dir / "reports" / "FINAL_RUN_ACTION_PLAN.md").exists()
     assert (output_dir / "reports" / "FINAL_RUN_FILE_AUDIT.md").exists()
     assert (output_dir / "reports" / "FINAL_EVIDENCE_MATRIX.md").exists()

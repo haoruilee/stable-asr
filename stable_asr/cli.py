@@ -140,6 +140,7 @@ from stable_asr.references import (
     asr_collections_bibtex,
     asr_collections_markdown,
     asr_collections_reference_markdown,
+    asr_collections_source_manifest,
     audit_asr_collection_coverage,
     audit_asr_collection_licenses,
     audit_asr_collection_readiness,
@@ -148,6 +149,7 @@ from stable_asr.references import (
     load_turn_collections,
     turn_collections_acquisition_markdown,
     turn_collections_markdown,
+    turn_collections_source_manifest,
     validate_asr_collections,
     validate_turn_collections,
 )
@@ -577,11 +579,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Print or validate the curated upstream ASR reference collection.",
     )
     asr_collections_parser.add_argument("--registry", type=Path, help="Optional ASR collections JSON path.")
-    asr_collections_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    asr_collections_parser.add_argument("--output", type=Path, help="Optional output path.")
     asr_collections_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     asr_collections_parser.add_argument(
         "--format",
-        choices=["registry-markdown", "paper-markdown", "bibtex", "acquisition-markdown", "license-markdown"],
+        choices=[
+            "registry-markdown",
+            "paper-markdown",
+            "bibtex",
+            "acquisition-markdown",
+            "license-markdown",
+            "source-manifest",
+        ],
         default="registry-markdown",
         help="Output format when not using --json or audit flags.",
     )
@@ -618,11 +627,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Print or validate the curated turn-taking and full-duplex reference collection.",
     )
     turn_collections_parser.add_argument("--registry", type=Path, help="Optional turn collections JSON path.")
-    turn_collections_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    turn_collections_parser.add_argument("--output", type=Path, help="Optional output path.")
     turn_collections_parser.add_argument("--json", action="store_true", help="Print registry as JSON.")
     turn_collections_parser.add_argument(
         "--format",
-        choices=["registry-markdown", "acquisition-markdown"],
+        choices=["registry-markdown", "acquisition-markdown", "source-manifest"],
         default="registry-markdown",
         help="Output format when not using --json or audit flags.",
     )
@@ -2066,6 +2075,8 @@ def main(argv: list[str] | None = None) -> int:
                     required_priorities=tuple(args.require_priority or ["p0", "p1"]),
                     require_resolved=args.require_license_reviewed,
                 ).to_markdown()
+            elif args.format == "source-manifest":
+                text = json.dumps(asr_collections_source_manifest(registry), ensure_ascii=False, indent=2)
             else:
                 text = asr_collections_markdown(registry)
             if args.output:
@@ -2104,6 +2115,8 @@ def main(argv: list[str] | None = None) -> int:
                 text = json.dumps(registry, ensure_ascii=False, indent=2)
             elif args.format == "acquisition-markdown":
                 text = turn_collections_acquisition_markdown(registry)
+            elif args.format == "source-manifest":
+                text = json.dumps(turn_collections_source_manifest(registry), ensure_ascii=False, indent=2)
             else:
                 text = turn_collections_markdown(registry)
             if args.output:

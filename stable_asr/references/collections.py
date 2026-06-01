@@ -584,6 +584,48 @@ def audit_asr_collection_licenses(
     )
 
 
+def asr_collections_source_manifest(registry: dict[str, Any]) -> dict[str, object]:
+    """Render a machine-readable source manifest for ASR reference collection work."""
+
+    validation = validate_asr_collections(registry)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    sources: list[dict[str, object]] = []
+    for entry in sorted(registry["entries"], key=lambda item: (item["priority"], item["category"], item["id"])):
+        track = _acquisition_track(entry)
+        license_name = str(entry.get("license", ""))
+        sources.append(
+            {
+                "reference_id": entry["id"],
+                "name": entry["name"],
+                "collection_type": "asr",
+                "category": entry["category"],
+                "priority": entry["priority"],
+                "source_url": entry["source_url"],
+                "docs_url": entry["docs_url"],
+                "license": license_name,
+                "policy": _license_policy(license_name),
+                "license_review_required": _license_review_required(license_name),
+                "license_review_target": _license_review_target(entry),
+                "citation_key": _citation_key(entry),
+                "acquisition_track": track,
+                "evidence_target": _acquisition_evidence_target(entry, track),
+                "stable_asr_actions": list(entry["stable_asr_actions"]),
+                "reference_use": entry["reference_use"],
+            }
+        )
+    return {
+        "id": "stable_asr_asr_reference_source_manifest_v0",
+        "version": "0.1.0",
+        "collection_type": "asr",
+        "registry_id": registry["id"],
+        "reviewed_at": registry["reviewed_at"],
+        "generated_by": "stable-asr asr-collections --format source-manifest",
+        "sources": sources,
+    }
+
+
 def asr_collections_markdown(registry: dict[str, Any]) -> str:
     rows = []
     entries = registry.get("entries", [])

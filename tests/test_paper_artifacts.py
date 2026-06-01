@@ -48,6 +48,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         "paper_markdown",
         "bibtex",
         "acquisition_markdown",
+        "source_manifest_json",
         "license_json",
         "license_markdown",
         "coverage_json",
@@ -59,6 +60,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         "json",
         "markdown",
         "acquisition_markdown",
+        "source_manifest_json",
         "coverage_json",
         "coverage_markdown",
     }
@@ -116,6 +118,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "ASR Collection Acquisition Plan" in Path(bundle.asr_collections["acquisition_markdown"]).read_text(
         encoding="utf-8"
     )
+    assert "stable_asr_asr_reference_source_manifest_v0" in Path(bundle.asr_collections["source_manifest_json"]).read_text(
+        encoding="utf-8"
+    )
     assert "ASR Collection License Review" in Path(bundle.asr_collections["license_markdown"]).read_text(
         encoding="utf-8"
     )
@@ -130,6 +135,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Turn Collection Acquisition Plan" in Path(bundle.turn_collections["acquisition_markdown"]).read_text(
         encoding="utf-8"
     )
+    assert "stable_asr_turn_reference_source_manifest_v0" in Path(
+        bundle.turn_collections["source_manifest_json"]
+    ).read_text(encoding="utf-8")
     assert "missing_required: `0`" in Path(bundle.turn_collections["coverage_markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR VoiceWorld v0 Scenario Suite" in Path(bundle.scenario_suite["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Case Studies" in Path(bundle.case_studies["markdown"]).read_text(encoding="utf-8")

@@ -9,6 +9,7 @@ stable-asr turn-collections --registry configs/references/turn_collections.json 
 stable-asr turn-collections --output runs/TURN_COLLECTIONS.md
 stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1 --output runs/TURN_COLLECTION_COVERAGE.md
 stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
+stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 ```
 
 The registry is not a vendoring list. It records which upstream projects should
@@ -40,3 +41,8 @@ bridge, runtime bridge, or endpointing template.
 collection plan with P0 acquisition order, evidence targets, and license-review
 flags. It is useful for final-scale work because it distinguishes real external
 predictions and scenario bridges from registry-only intent.
+
+`turn-collections --format source-manifest` writes the same source/docs URLs,
+license policy, license review targets, acquisition tracks, evidence targets,
+and Stable-ASR action queues as JSON, so turn adapters and VoiceWorld bridges
+can be collected without relying on a manually copied checklist.

@@ -3,6 +3,7 @@ import json
 import pytest
 
 from stable_asr.paper.handoff import final_handoff_template
+from stable_asr.references import asr_collections_source_manifest, load_asr_collections
 from stable_asr.schema_validation import validate_schema_file
 from stable_asr.schemas import (
     get_schema_entry,
@@ -32,6 +33,7 @@ def test_schema_registry_exposes_core_contracts() -> None:
         "stable_asr.leaderboard_row.v0",
         "stable_asr.model_registry.v0",
         "stable_asr.final_input_collection.v0",
+        "stable_asr.reference_source_manifest.v0",
         "stable_asr.final_handoff.v0",
     }
 
@@ -48,6 +50,19 @@ def test_schema_registry_validates_final_handoff_template(tmp_path) -> None:
     handoff.write_text(json.dumps(final_handoff_template(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     report = validate_schema_file(handoff, schema_id="stable_asr.final_handoff.v0")
+
+    assert report.ok
+    assert report.records == 1
+
+
+def test_schema_registry_validates_reference_source_manifest(tmp_path) -> None:
+    manifest = tmp_path / "asr_collection_source_manifest.json"
+    manifest.write_text(
+        json.dumps(asr_collections_source_manifest(load_asr_collections()), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    report = validate_schema_file(manifest, schema_id="stable_asr.reference_source_manifest.v0")
 
     assert report.ok
     assert report.records == 1

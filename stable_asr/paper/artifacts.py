@@ -59,6 +59,7 @@ from stable_asr.references import (
     asr_collections_bibtex,
     asr_collections_markdown,
     asr_collections_reference_markdown,
+    asr_collections_source_manifest,
     audit_asr_collection_coverage,
     audit_asr_collection_licenses,
     audit_asr_collection_readiness,
@@ -67,6 +68,7 @@ from stable_asr.references import (
     load_turn_collections,
     turn_collections_acquisition_markdown,
     turn_collections_markdown,
+    turn_collections_source_manifest,
     write_asr_collections_json,
     write_turn_collections_json,
 )
@@ -278,6 +280,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "paper_markdown": str(output_dir / "ASR_REFERENCES.md"),
         "bibtex": str(output_dir / "ASR_REFERENCES.bib"),
         "acquisition_markdown": str(output_dir / "ASR_COLLECTION_ACQUISITION.md"),
+        "source_manifest_json": str(output_dir / "asr_collection_source_manifest.json"),
         "license_json": str(output_dir / "asr_collection_license_review.json"),
         "license_markdown": str(output_dir / "ASR_COLLECTION_LICENSE_REVIEW.md"),
         "coverage_json": str(output_dir / "asr_collection_coverage.json"),
@@ -293,6 +296,10 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     Path(asr_collections["bibtex"]).write_text(asr_collections_bibtex(asr_reference_registry), encoding="utf-8")
     Path(asr_collections["acquisition_markdown"]).write_text(
         asr_collections_acquisition_markdown(asr_reference_registry),
+        encoding="utf-8",
+    )
+    Path(asr_collections["source_manifest_json"]).write_text(
+        json.dumps(asr_collections_source_manifest(asr_reference_registry), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     Path(asr_collections["license_json"]).write_text(
@@ -324,12 +331,17 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "json": write_turn_collections_json(output_dir / "turn_collections.json", turn_reference_registry),
         "markdown": str(output_dir / "TURN_COLLECTIONS.md"),
         "acquisition_markdown": str(output_dir / "TURN_COLLECTION_ACQUISITION.md"),
+        "source_manifest_json": str(output_dir / "turn_collection_source_manifest.json"),
         "coverage_json": str(output_dir / "turn_collection_coverage.json"),
         "coverage_markdown": str(output_dir / "TURN_COLLECTION_COVERAGE.md"),
     }
     Path(turn_collections["markdown"]).write_text(turn_collections_markdown(turn_reference_registry), encoding="utf-8")
     Path(turn_collections["acquisition_markdown"]).write_text(
         turn_collections_acquisition_markdown(turn_reference_registry),
+        encoding="utf-8",
+    )
+    Path(turn_collections["source_manifest_json"]).write_text(
+        json.dumps(turn_collections_source_manifest(turn_reference_registry), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     Path(turn_collections["coverage_json"]).write_text(

@@ -65,10 +65,12 @@ stable-asr asr-collections --audit-coverage
 stable-asr asr-collections --audit-readiness
 stable-asr asr-collections --audit-licenses
 stable-asr asr-collections --format acquisition-markdown --output runs/ASR_COLLECTION_ACQUISITION.md
+stable-asr asr-collections --format source-manifest --output runs/ASR_COLLECTION_SOURCE_MANIFEST.json
 stable-asr asr-collections --format bibtex --output runs/ASR_REFERENCES.bib
 stable-asr turn-collections --registry configs/references/turn_collections.json --validate-only
 stable-asr turn-collections --audit-coverage --require-priority p0 --require-priority p1
 stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COLLECTION_ACQUISITION.md
+stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 stable-asr adapter-pack --output-dir runs/adapter_pack
 stable-asr scenario-pack --output-dir runs/scenario_pack
 stable-asr final-pack --output-dir runs/final_pack

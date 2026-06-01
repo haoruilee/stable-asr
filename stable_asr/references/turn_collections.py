@@ -299,6 +299,47 @@ def turn_collections_acquisition_markdown(registry: dict[str, Any]) -> str:
     )
 
 
+def turn_collections_source_manifest(registry: dict[str, Any]) -> dict[str, object]:
+    """Render a machine-readable source manifest for turn/full-duplex references."""
+
+    validation = validate_turn_collections(registry)
+    if not validation.ok:
+        raise ValueError("; ".join(validation.errors))
+
+    sources: list[dict[str, object]] = []
+    for entry in sorted(registry["entries"], key=lambda item: (item["priority"], item["category"], item["id"])):
+        track = _acquisition_track(entry)
+        license_name = str(entry.get("license", ""))
+        sources.append(
+            {
+                "reference_id": entry["id"],
+                "name": entry["name"],
+                "collection_type": "turn",
+                "category": entry["category"],
+                "priority": entry["priority"],
+                "source_url": entry["source_url"],
+                "docs_url": entry["docs_url"],
+                "license": license_name,
+                "policy": _license_policy(license_name),
+                "license_review_required": _license_review_required(license_name),
+                "license_review_target": _license_review_target(entry),
+                "acquisition_track": track,
+                "evidence_target": _acquisition_evidence_target(entry, track),
+                "stable_asr_actions": list(entry["stable_asr_actions"]),
+                "reference_use": entry["reference_use"],
+            }
+        )
+    return {
+        "id": "stable_asr_turn_reference_source_manifest_v0",
+        "version": "0.1.0",
+        "collection_type": "turn",
+        "registry_id": registry["id"],
+        "reviewed_at": registry["reviewed_at"],
+        "generated_by": "stable-asr turn-collections --format source-manifest",
+        "sources": sources,
+    }
+
+
 def _coverage_evidence(entry: dict[str, Any], *, sources: list[Any], adapters: list[Any]) -> list[str]:
     variants = _reference_variants(entry)
     evidence: list[str] = []
@@ -376,3 +417,21 @@ def _final_prediction_stem(reference_id: str) -> str:
         "easy_turn": "easyturn",
     }
     return stems.get(reference_id, reference_id)
+
+
+def _license_review_required(license_name: str) -> bool:
+    return license_name not in {"Apache-2.0", "MIT", "BSD-4-Clause", "BSD-3-Clause", "BSD-2-Clause"}
+
+
+def _license_policy(license_name: str) -> str:
+    if license_name in {"Apache-2.0", "MIT", "BSD-4-Clause", "BSD-3-Clause", "BSD-2-Clause"}:
+        return "permissive_with_notice"
+    if license_name == "see_upstream":
+        return "link_or_command_adapter_until_reviewed"
+    if not license_name:
+        return "manual_review_before_use"
+    return "manual_review_before_copy_or_distribution"
+
+
+def _license_review_target(entry: dict[str, Any]) -> str:
+    return f"runs/collections/{entry.get('id', 'unknown')}/LICENSE_REVIEW.md"

@@ -5,6 +5,7 @@ from stable_asr.references import (
     load_turn_collections,
     turn_collections_acquisition_markdown,
     turn_collections_markdown,
+    turn_collections_source_manifest,
     validate_turn_collections,
 )
 
@@ -43,6 +44,19 @@ def test_turn_collections_acquisition_markdown_maps_evidence_targets() -> None:
     assert "Registry presence alone is not evidence" in markdown
     assert "runs/final/smartturn_raw.jsonl" not in markdown
     assert "runs/final/external/smart_turn_raw.jsonl" not in markdown
+
+
+def test_turn_collections_source_manifest_maps_collection_work() -> None:
+    manifest = turn_collections_source_manifest(load_turn_collections())
+
+    assert manifest["id"] == "stable_asr_turn_reference_source_manifest_v0"
+    assert manifest["collection_type"] == "turn"
+    smart_turn = next(source for source in manifest["sources"] if source["reference_id"] == "smart_turn")
+    assert smart_turn["policy"] == "link_or_command_adapter_until_reviewed"
+    assert smart_turn["license_review_target"] == "runs/collections/smart_turn/LICENSE_REVIEW.md"
+    assert smart_turn["evidence_target"] == "runs/final/external/smartturn_raw.jsonl"
+    full_duplex_bench = next(source for source in manifest["sources"] if source["reference_id"] == "full_duplex_bench")
+    assert full_duplex_bench["acquisition_track"] == "scenario benchmark bridge"
 
 
 def test_turn_collection_coverage_requires_p0_references() -> None:

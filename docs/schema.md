@@ -13,6 +13,7 @@ exports, model cards, final input collection plans, and final handoff evidence.
 stable-asr schema-registry --registry configs/schemas/stable_asr_schemas.json --validate-only
 stable-asr schema-registry --output runs/SCHEMAS.md
 stable-asr schema-registry --schema-id stable_asr.turn_manifest_record.v0 --json
+stable-asr schema-registry --schema-id stable_asr.reference_source_manifest.v0 --json
 stable-asr schema-registry --schema-id stable_asr.final_handoff.v0 --json
 stable-asr validate-schema-file \
   --input examples/data/turn_demo.jsonl \
@@ -21,14 +22,18 @@ stable-asr validate-schema-file \
 stable-asr validate-schema-file \
   --input runs/final/FINAL_INPUT_HANDOFF.json \
   --schema-id stable_asr.final_handoff.v0
+stable-asr asr-collections --format source-manifest --output runs/ASR_COLLECTION_SOURCE_MANIFEST.json
+stable-asr validate-schema-file \
+  --input runs/ASR_COLLECTION_SOURCE_MANIFEST.json \
+  --schema-id stable_asr.reference_source_manifest.v0
 ```
 
 The default registry is `configs/schemas/stable_asr_schemas.json`. Paper bundles
 also copy it to `schema_registry.json` and render `SCHEMAS.md`, so released
 artifacts carry the same machine-readable contracts as the repository.
 Use `validate-schema-file` before publishing converted datasets, external turn
-predictions, streaming ASR traces, model registries, final handoff evidence, or
-leaderboard submissions.
+predictions, streaming ASR traces, model registries, reference source manifests,
+final handoff evidence, or leaderboard submissions.
 
 ## Required Fields
 
