@@ -49,6 +49,8 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "turn_collection_coverage:markdown" in report.to_text()
     assert "reference_workqueue:json" in report.to_text()
     assert "reference_workqueue:content" in report.to_text()
+    assert "reference_evidence_audit:json" in report.to_text()
+    assert "reference_evidence_audit:content" in report.to_text()
     assert "reference_assignments:json" in report.to_text()
     assert "reference_assignments:content" in report.to_text()
     assert report.to_dict()["ok"] is True
@@ -100,6 +102,21 @@ def test_paper_audit_rejects_tampered_reference_assignments(tmp_path: Path) -> N
     assert not report.ok
     assert "reference_assignments:content" in report.to_text()
     assert "all P0 rows must default to blocking_release=true" in report.to_text()
+
+
+def test_paper_audit_rejects_tampered_reference_evidence_audit(tmp_path: Path) -> None:
+    result = run_paper_smoke(tmp_path / "paper", episodes=9, seed=6, train_model=False)
+    bundle = paper_artifact_bundle(result.results_path, tmp_path / "artifacts")
+    evidence = Path(bundle.reference_workqueue["evidence_audit_json"])
+    payload = json.loads(evidence.read_text(encoding="utf-8"))
+    payload["rows"] = [row for row in payload["rows"] if row.get("collection_type") != "turn"]
+    evidence.write_text(json.dumps(payload), encoding="utf-8")
+
+    report = audit_paper_artifacts(result.results_path, bundle.output_dir)
+
+    assert not report.ok
+    assert "reference_evidence_audit:content" in report.to_text()
+    assert "requires both asr and turn evidence rows" in report.to_text()
 
 
 def test_paper_audit_rejects_tampered_platform_catalog(tmp_path: Path) -> None:

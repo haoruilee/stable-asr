@@ -186,7 +186,7 @@ stable-asr paper-release-audit --repo-root . --require-final-ready
 
 `paper-release-smoke` writes `paper_results.json`, tables, figures, starter packs, registry
 artifacts, a copied `paper_results.json`, artifact hash manifests, provenance
-manifests, case studies, paper/platform parity audits, a platform catalog, final-run audits/action plans, final input collection
+manifests, case studies, paper/platform parity audits, a platform catalog, reference evidence audits, final-run audits/action plans, final input collection
 status, final handoff templates/audits, final evidence matrix, claim evidence, roadmap status, `PAPER_DRAFT.md`, `paper.tex`,
 dataset/experiment/model cards, `artifacts.tar.gz`, and
 `RELEASE_AUDIT.md`.
@@ -333,6 +333,7 @@ is provided in `mkdocs.yaml`.
 - contributor benchmark, adapter, VoiceWorld scenario, final-run, final-input acquisition, and unified contributor starter packs in `paper-bundle`
 - schema registry JSON/Markdown artifacts in `paper-bundle`
 - ASR and turn/full-duplex reference collection artifacts in `paper-bundle`
+- reference workqueue evidence audit artifacts in `paper-bundle`
 - ASR license/reuse review artifacts in `paper-bundle`
 - paper bundle sha256 integrity manifests and `paper-artifact-integrity` verification
 - paper bundle provenance manifests that record Stable-ASR version, git commit, input result hashes, and config hashes

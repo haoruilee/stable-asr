@@ -60,6 +60,7 @@ from stable_asr.references import (
     asr_collections_markdown,
     asr_collections_reference_markdown,
     asr_collections_source_manifest,
+    audit_reference_workqueue_evidence,
     audit_asr_collection_coverage,
     audit_asr_collection_licenses,
     audit_asr_collection_readiness,
@@ -368,11 +369,14 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "json": str(output_dir / "reference_workqueue.json"),
         "jsonl": str(output_dir / "reference_workqueue.jsonl"),
         "markdown": str(output_dir / "REFERENCE_WORKQUEUE.md"),
+        "evidence_audit_json": str(output_dir / "reference_evidence_audit.json"),
+        "evidence_audit_markdown": str(output_dir / "REFERENCE_EVIDENCE_AUDIT.md"),
         "assignments_json": str(output_dir / "reference_assignments.json"),
         "assignments_tsv": str(output_dir / "reference_assignments.tsv"),
         "assignments_markdown": str(output_dir / "REFERENCE_ASSIGNMENTS.md"),
     }
     reference_assignments = reference_workqueue_assignments(reference_workqueue_report)
+    reference_evidence_report = audit_reference_workqueue_evidence(reference_workqueue_report, repo_root=Path("."))
     Path(reference_workqueue["json"]).write_text(
         json.dumps(reference_workqueue_report, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -383,6 +387,14 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
     )
     Path(reference_workqueue["markdown"]).write_text(
         reference_workqueue_markdown(reference_workqueue_report),
+        encoding="utf-8",
+    )
+    Path(reference_workqueue["evidence_audit_json"]).write_text(
+        json.dumps(reference_evidence_report.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    Path(reference_workqueue["evidence_audit_markdown"]).write_text(
+        reference_evidence_report.to_markdown(),
         encoding="utf-8",
     )
     Path(reference_workqueue["assignments_json"]).write_text(

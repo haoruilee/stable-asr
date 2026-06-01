@@ -111,7 +111,7 @@ integrity manifests, provenance manifests for git/config/result traceability,
 machine-readable benchmark suite definition, a data source registry, a
 baseline/adapter registry, ASR and turn/full-duplex reference collections,
 paper-reference notes, BibTeX, source manifests, a unified reference work
-queue, reference assignment tracker, coverage artifacts, readiness artifacts,
+queue, reference evidence audit, reference assignment tracker, coverage artifacts, readiness artifacts,
 acquisition plans, a VoiceWorld scenario suite definition, and
 case-study JSON/Markdown artifacts that link failure examples back to source
 records, a paper parity audit that separates smoke-level structural evidence

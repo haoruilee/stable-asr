@@ -1391,6 +1391,9 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("reference_workqueue:jsonl", artifacts_dir / "reference_workqueue.jsonl"))
     checks.append(_exists_check("reference_workqueue:markdown", artifacts_dir / "REFERENCE_WORKQUEUE.md"))
     checks.append(_reference_workqueue_content_check(artifacts_dir / "reference_workqueue.json"))
+    checks.append(_exists_check("reference_evidence_audit:json", artifacts_dir / "reference_evidence_audit.json"))
+    checks.append(_exists_check("reference_evidence_audit:markdown", artifacts_dir / "REFERENCE_EVIDENCE_AUDIT.md"))
+    checks.append(_reference_evidence_audit_content_check(artifacts_dir / "reference_evidence_audit.json"))
     checks.append(_exists_check("reference_assignments:json", artifacts_dir / "reference_assignments.json"))
     checks.append(_exists_check("reference_assignments:tsv", artifacts_dir / "reference_assignments.tsv"))
     checks.append(_exists_check("reference_assignments:markdown", artifacts_dir / "REFERENCE_ASSIGNMENTS.md"))
@@ -1578,6 +1581,31 @@ def _reference_assignments_content_check(path: Path) -> PaperAuditCheck:
     if len(blocking_p0) != len(p0_rows):
         return PaperAuditCheck(name, False, "all P0 rows must default to blocking_release=true")
     return PaperAuditCheck(name, True, f"{len(rows)} reference assignment row(s)")
+
+
+def _reference_evidence_audit_content_check(path: Path) -> PaperAuditCheck:
+    name = "reference_evidence_audit:content"
+    if not path.exists():
+        return PaperAuditCheck(name, False, f"missing: {path}")
+    try:
+        schema_report = validate_schema_file(path, schema_id="stable_asr.reference_evidence_audit.v0")
+        if not schema_report.ok:
+            issues = "; ".join(f"{issue.path}: {issue.detail}" for issue in schema_report.issues[:5])
+            return PaperAuditCheck(name, False, issues)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return PaperAuditCheck(name, False, str(exc))
+
+    rows = payload.get("rows", [])
+    if not isinstance(rows, list) or not rows:
+        return PaperAuditCheck(name, False, "rows must be a non-empty list")
+    collection_types = {str(row.get("collection_type", "")) for row in rows if isinstance(row, dict)}
+    missing_evidence = payload.get("missing_evidence", [])
+    if not {"asr", "turn"}.issubset(collection_types):
+        return PaperAuditCheck(name, False, "requires both asr and turn evidence rows")
+    if not isinstance(missing_evidence, list):
+        return PaperAuditCheck(name, False, "missing_evidence must be a list")
+    return PaperAuditCheck(name, True, f"{len(rows)} evidence row(s), {len(missing_evidence)} missing")
 
 
 def _platform_catalog_content_check(path: Path) -> PaperAuditCheck:

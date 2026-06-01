@@ -70,6 +70,8 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
         "json",
         "jsonl",
         "markdown",
+        "evidence_audit_json",
+        "evidence_audit_markdown",
         "assignments_json",
         "assignments_tsv",
         "assignments_markdown",
@@ -159,6 +161,10 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "Stable-ASR Reference Work Queue" in Path(bundle.reference_workqueue["markdown"]).read_text(encoding="utf-8")
     assert "stable_asr_reference_workqueue_v0" in Path(bundle.reference_workqueue["json"]).read_text(encoding="utf-8")
     assert '"task_id": "asr:funasr"' in Path(bundle.reference_workqueue["jsonl"]).read_text(encoding="utf-8")
+    assert "Reference Evidence Audit" in Path(bundle.reference_workqueue["evidence_audit_markdown"]).read_text(
+        encoding="utf-8"
+    )
+    assert '"ok": false' in Path(bundle.reference_workqueue["evidence_audit_json"]).read_text(encoding="utf-8")
     assert "Stable-ASR Reference Assignments" in Path(bundle.reference_workqueue["assignments_markdown"]).read_text(
         encoding="utf-8"
     )
