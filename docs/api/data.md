@@ -67,3 +67,6 @@ rows = benchmark_train_feature_cache(
 
 This cache stores the 32-dimensional NanoTurn log-mel vector by record id, so
 subsequent training runs can skip audio open, decode, slicing, and STFT work.
+Benchmark rows also include a cached-feature correctness check:
+`correctness_sample_count`, `max_abs_error_vs_source`, and
+`allclose_to_source`.

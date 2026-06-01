@@ -69,6 +69,11 @@ def test_benchmark_train_feature_cache_reports_speedups(tmp_path: Path) -> None:
     assert [row.format for row in rows] == formats
     assert all(row.samples_per_second > 0 for row in rows)
     assert rows[0].speedup_vs_source_audio == pytest.approx(1.0)
+    cached_rows = [row for row in rows if row.format in {"parquet", "lance"}]
+    assert cached_rows
+    assert all(row.correctness_sample_count == 8 for row in cached_rows)
+    assert all(row.allclose_to_source for row in cached_rows)
+    assert all(row.max_abs_error_vs_source <= row.correctness_tolerance for row in cached_rows)
 
 
 def _has_pylance() -> bool:
@@ -78,4 +83,3 @@ def _has_pylance() -> bool:
     import lance
 
     return hasattr(lance, "dataset") and hasattr(lance, "write_dataset")
-

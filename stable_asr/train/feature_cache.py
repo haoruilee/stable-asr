@@ -34,6 +34,11 @@ class TrainFeatureBenchmarkRow:
     output_path: str
     size_bytes: int
     sample_strategy: str
+    correctness_sample_count: int = 0
+    max_abs_error_vs_source: float = 0.0
+    mean_abs_error_vs_source: float = 0.0
+    allclose_to_source: bool = True
+    correctness_tolerance: float = 1e-6
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -47,6 +52,11 @@ class TrainFeatureBenchmarkRow:
             "output_path": self.output_path,
             "size_bytes": self.size_bytes,
             "sample_strategy": self.sample_strategy,
+            "correctness_sample_count": self.correctness_sample_count,
+            "max_abs_error_vs_source": self.max_abs_error_vs_source,
+            "mean_abs_error_vs_source": self.mean_abs_error_vs_source,
+            "allclose_to_source": self.allclose_to_source,
+            "correctness_tolerance": self.correctness_tolerance,
         }
 
 
@@ -136,12 +146,18 @@ def benchmark_train_feature_cache(
     seed: int = 0,
     max_records: int | None = None,
     audio_root: str | Path | None = None,
+    correctness_sample_count: int = 32,
+    correctness_tolerance: float = 1e-6,
 ) -> list[TrainFeatureBenchmarkRow]:
     require_torch()
     if not records:
         raise ValueError("records must not be empty")
     if sample_count <= 0:
         raise ValueError("sample_count must be positive")
+    if correctness_sample_count < 0:
+        raise ValueError("correctness_sample_count must be non-negative")
+    if correctness_tolerance < 0:
+        raise ValueError("correctness_tolerance must be non-negative")
     unknown = sorted(set(formats) - set(TRAIN_FEATURE_BENCHMARK_FORMATS))
     if unknown:
         raise ValueError(f"unknown training feature benchmark format(s): {', '.join(unknown)}")
@@ -171,6 +187,8 @@ def benchmark_train_feature_cache(
                     output_dir=output_dir,
                     audio_root=audio_root,
                     source_samples_per_second=source_sps,
+                    correctness_sample_count=correctness_sample_count,
+                    correctness_tolerance=correctness_tolerance,
                 )
             )
     if source_sps <= 0.0:
@@ -189,6 +207,11 @@ def benchmark_train_feature_cache(
                 output_path=row.output_path,
                 size_bytes=row.size_bytes,
                 sample_strategy=row.sample_strategy,
+                correctness_sample_count=row.correctness_sample_count,
+                max_abs_error_vs_source=row.max_abs_error_vs_source,
+                mean_abs_error_vs_source=row.mean_abs_error_vs_source,
+                allclose_to_source=row.allclose_to_source,
+                correctness_tolerance=row.correctness_tolerance,
             )
             for row in rows
         ]
@@ -235,6 +258,8 @@ def _benchmark_cached_features(
     output_dir: Path,
     audio_root: str | Path | None,
     source_samples_per_second: float,
+    correctness_sample_count: int,
+    correctness_tolerance: float,
 ) -> TrainFeatureBenchmarkRow:
     output_path = output_dir / f"logmel_features.{name}"
     write_start = time.perf_counter()
@@ -251,6 +276,14 @@ def _benchmark_cached_features(
     sample_seconds = time.perf_counter() - sample_start
     if tensor.shape[0] != len(indices):
         raise RuntimeError(f"{name} cache benchmark produced the wrong number of samples")
+    correctness = _validate_cached_features(
+        name,
+        records,
+        output_path,
+        indices[: min(len(indices), correctness_sample_count)],
+        audio_root=audio_root,
+        tolerance=correctness_tolerance,
+    )
     samples_per_second = len(indices) / sample_seconds if sample_seconds > 0 else float("inf")
     return TrainFeatureBenchmarkRow(
         format=name,
@@ -265,6 +298,11 @@ def _benchmark_cached_features(
         output_path=str(output_path),
         size_bytes=_path_size_bytes(output_path),
         sample_strategy=sample_strategy,
+        correctness_sample_count=correctness["sample_count"],
+        max_abs_error_vs_source=correctness["max_abs_error"],
+        mean_abs_error_vs_source=correctness["mean_abs_error"],
+        allclose_to_source=correctness["allclose"],
+        correctness_tolerance=correctness_tolerance,
     )
 
 
@@ -295,6 +333,46 @@ def _table_to_feature_tensor(table: Any, *, record_ids: list[str] | None = None)
             raise RuntimeError(f"feature cache is missing {len(missing)} record id(s): {missing[:3]}")
         features = features[np.asarray([by_id[record_id] for record_id in record_ids], dtype=np.int64)]
     return torch.from_numpy(np.array(features, dtype=np.float32, copy=True))
+
+
+def _validate_cached_features(
+    name: str,
+    records: list[TurnManifestRecord],
+    cache_path: Path,
+    indices: list[int],
+    *,
+    audio_root: str | Path | None,
+    tolerance: float,
+) -> dict[str, float | int | bool]:
+    if not indices:
+        return {
+            "sample_count": 0,
+            "max_abs_error": 0.0,
+            "mean_abs_error": 0.0,
+            "allclose": True,
+        }
+    audio_cache: dict[Path, tuple[list[float], int]] = {}
+    direct = torch.stack(
+        [record_to_logmel_features(records[index], audio_root=audio_root, audio_cache=audio_cache) for index in indices]
+    )
+    cached = load_logmel_feature_cache_by_indices(cache_path, format=name, indices=indices)
+    if cached.shape != direct.shape:
+        raise RuntimeError(f"{name} cache correctness check shape mismatch: cached={cached.shape} source={direct.shape}")
+    diff = (cached - direct).abs()
+    max_abs_error = float(diff.max().item()) if diff.numel() else 0.0
+    mean_abs_error = float(diff.mean().item()) if diff.numel() else 0.0
+    allclose = bool(torch.allclose(cached, direct, atol=tolerance, rtol=tolerance))
+    if not allclose:
+        raise RuntimeError(
+            f"{name} cache correctness check failed: max_abs_error={max_abs_error:.8g} "
+            f"mean_abs_error={mean_abs_error:.8g} tolerance={tolerance:.8g}"
+        )
+    return {
+        "sample_count": len(indices),
+        "max_abs_error": max_abs_error,
+        "mean_abs_error": mean_abs_error,
+        "allclose": allclose,
+    }
 
 
 def _write_feature_parquet(path: str | Path, rows: list[dict[str, Any]]) -> None:

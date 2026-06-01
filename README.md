@@ -115,12 +115,15 @@ stable-asr benchmark-train-features \
   --output-dir runs/final/train_feature_bench \
   --formats source_audio source_audio_file_cache parquet lance \
   --sample-count 10000 \
+  --correctness-sample-count 10000 \
   --json-output runs/final/reports/train_feature_benchmark.json
 ```
 
-The local 10k training-window benchmark reached `3883.5x` speedup for the Lance
+The local 10k training-window benchmark reached `3913.2x` speedup for the Lance
 log-mel cache over repeated source-audio open/decode/feature extraction after
-the cached Arrow table-to-tensor path was vectorized through NumPy. See
+the cached Arrow table-to-tensor path was vectorized through NumPy. The same
+run recomputed all 10k sampled windows from source audio and reported
+`max_abs_error_vs_source=0.0` for both Parquet and Lance. See
 `docs/data_layer_benchmark.md` for the exact command and cached-only 100k
 stress result.
 

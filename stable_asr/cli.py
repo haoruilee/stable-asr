@@ -1094,6 +1094,18 @@ def build_parser() -> argparse.ArgumentParser:
     train_feature_benchmark_parser.add_argument("--seed", type=int, default=0)
     train_feature_benchmark_parser.add_argument("--max-records", type=int)
     train_feature_benchmark_parser.add_argument("--audio-root", type=Path)
+    train_feature_benchmark_parser.add_argument(
+        "--correctness-sample-count",
+        type=int,
+        default=32,
+        help="Number of cached random samples to recompute from source audio for allclose validation.",
+    )
+    train_feature_benchmark_parser.add_argument(
+        "--correctness-tolerance",
+        type=float,
+        default=1e-6,
+        help="Absolute/relative tolerance for cached feature correctness checks.",
+    )
     train_feature_benchmark_parser.add_argument("--json", action="store_true")
     train_feature_benchmark_parser.add_argument("--json-output", type=Path, help="Optional JSON report output path.")
 
@@ -2996,6 +3008,8 @@ def main(argv: list[str] | None = None) -> int:
                 seed=args.seed,
                 max_records=args.max_records,
                 audio_root=args.audio_root or args.dataset.parent,
+                correctness_sample_count=args.correctness_sample_count,
+                correctness_tolerance=args.correctness_tolerance,
             )
         except (OSError, ValueError, RuntimeError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
@@ -3018,6 +3032,9 @@ def main(argv: list[str] | None = None) -> int:
                             f"speedup_vs_source_audio={row.speedup_vs_source_audio:.2f}",
                             f"size_bytes={row.size_bytes}",
                             f"sample_strategy={row.sample_strategy}",
+                            f"correctness_sample_count={row.correctness_sample_count}",
+                            f"max_abs_error_vs_source={row.max_abs_error_vs_source:.8g}",
+                            f"allclose_to_source={row.allclose_to_source}",
                             f"path={row.output_path}",
                         ]
                     )
