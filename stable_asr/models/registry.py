@@ -9,6 +9,7 @@ from typing import Any
 
 from stable_asr.eval.report import dict_table
 from stable_asr.resources import resolve_platform_path
+from stable_asr.schema_validation import validate_schema_file
 from stable_asr.turn.labels import ACTION_LABELS, TURN_LABELS
 
 
@@ -423,6 +424,17 @@ def _audit_model_config(model_id: str, config_path: str, *, repo_root: Path) -> 
             detail=f"missing: {config_path}",
         )
     try:
+        schema_report = validate_schema_file(path, schema_id="stable_asr.nanoturn_train_config.v0")
+        if not schema_report.ok:
+            issues = "; ".join(f"{issue.path}: {issue.detail}" for issue in schema_report.issues[:3])
+            return ModelConfigAuditRow(
+                model_id=model_id,
+                config_path=config_path,
+                expected=True,
+                exists=True,
+                ok=False,
+                detail=issues,
+            )
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         return ModelConfigAuditRow(

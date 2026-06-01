@@ -268,6 +268,7 @@ is provided in `mkdocs.yaml`.
 - `model-registry --audit-configs` for checking trainable NanoTurn config files before release use
 - machine-readable JSON Schema registry in `configs/schemas/stable_asr_schemas.json`
 - `schema-registry` for validating and rendering public data, prediction, streaming, leaderboard, model, final-input, and final-handoff contracts
+- `stable_asr.nanoturn_train_config.v0` schema for `train-turn --config` files
 - `validate-schema-file` for checking JSON/JSONL files against those public contracts before publishing or submitting artifacts
 - machine-readable upstream ASR reference collection in `configs/references/asr_collections.json`
 - `asr-collections` for validating and rendering top ASR project references

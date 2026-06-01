@@ -51,3 +51,28 @@ def test_model_registry_config_audit_rejects_mismatched_model_type(tmp_path: Pat
 
     assert not report.ok
     assert "expected 'nanoturn_nano'" in report.errors[0]
+
+
+def test_model_registry_config_audit_rejects_schema_error(tmp_path: Path) -> None:
+    config = tmp_path / "bad_nano.json"
+    config.write_text(
+        json.dumps(
+            {
+                "model_type": "nanoturn_nano",
+                "epochs": 1,
+                "lr": 0.01,
+                "seed": 0,
+                "feature_source": "unknown_features",
+            }
+        ),
+        encoding="utf-8",
+    )
+    registry = load_model_registry()
+    for model in registry["models"]:
+        if model["id"] == "nanoturn_nano":
+            model["config_path"] = str(config)
+
+    report = audit_model_registry_configs(registry, repo_root=tmp_path)
+
+    assert not report.ok
+    assert "$.feature_source" in report.errors[0]

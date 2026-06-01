@@ -312,6 +312,44 @@
       }
     },
     {
+      "id": "stable_asr.nanoturn_train_config.v0",
+      "version": "0.1.0",
+      "title": "NanoTurn Training Config",
+      "description": "Trainable NanoTurn configuration consumed by train-turn --config.",
+      "format": "json",
+      "file_patterns": ["configs/nanoturn_*.json", "nanoturn_*.json"],
+      "producer_commands": [
+        "stable-asr train-turn --config <config.json>",
+        "stable-asr model-registry --audit-configs"
+      ],
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://stable-asr.dev/schemas/nanoturn_train_config.v0.json",
+        "title": "Stable-ASR NanoTurnTrainConfig v0",
+        "type": "object",
+        "required": ["model_type", "epochs", "lr", "seed", "feature_source"],
+        "properties": {
+          "model_type": {"type": "string", "enum": ["nanoturn_pico", "nanoturn_nano"]},
+          "epochs": {"type": "integer", "minimum": 1},
+          "lr": {"type": "number", "exclusiveMinimum": 0},
+          "seed": {"type": "integer"},
+          "feature_source": {
+            "type": "string",
+            "enum": [
+              "metadata",
+              "audio",
+              "manifest_metadata_v0",
+              "metadata_v0",
+              "logmel_v0",
+              "audio_logmel_v0"
+            ]
+          },
+          "notes": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
+    {
       "id": "stable_asr.final_input_collection.v0",
       "version": "0.1.0",
       "title": "Final Input Collection Registry",

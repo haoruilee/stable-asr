@@ -37,6 +37,7 @@ def test_schema_registry_exposes_core_contracts() -> None:
         "stable_asr.turn_prediction_record.v0",
         "stable_asr.leaderboard_row.v0",
         "stable_asr.model_registry.v0",
+        "stable_asr.nanoturn_train_config.v0",
         "stable_asr.final_input_collection.v0",
         "stable_asr.reference_source_manifest.v0",
         "stable_asr.reference_workqueue.v0",
@@ -104,6 +105,14 @@ def test_schema_registry_validates_reference_assignments(tmp_path) -> None:
 
     assert report.ok
     assert report.records == 1
+
+
+def test_schema_registry_validates_nanoturn_configs() -> None:
+    for path in ("configs/nanoturn_pico.json", "configs/nanoturn_nano.json"):
+        report = validate_schema_file(path, schema_id="stable_asr.nanoturn_train_config.v0")
+
+        assert report.ok
+        assert report.records == 1
 
 
 def test_schema_registry_markdown_rendering() -> None:

@@ -47,6 +47,7 @@ ready.
 - benchmark suite task/system/metric coverage is verified against leaderboard rows
 - benchmark suite required artifacts are verified against the generated bundle
 - trainable NanoTurn model configs exist and pass `model-registry --audit-configs`
+- NanoTurn training configs validate against `stable_asr.nanoturn_train_config.v0`
 - data source registry JSON exists in `configs/datasets/stable_asr_sources.json`
 - adapter registry JSON exists in `configs/adapters/stable_asr_adapters.json`
 - ASR reference collection JSON exists in `configs/references/asr_collections.json`

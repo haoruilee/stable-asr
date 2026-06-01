@@ -42,6 +42,17 @@ def test_validate_schema_file_accepts_json_registry() -> None:
     assert report.records == 1
 
 
+def test_validate_schema_file_accepts_nanoturn_training_config() -> None:
+    report = validate_schema_file(
+        "configs/nanoturn_nano.json",
+        schema_id="stable_asr.nanoturn_train_config.v0",
+    )
+
+    assert report.ok
+    assert report.format == "json"
+    assert report.records == 1
+
+
 def test_validate_schema_file_reports_record_errors(tmp_path: Path) -> None:
     path = tmp_path / "bad_turn.jsonl"
     path.write_text(
