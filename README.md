@@ -56,6 +56,11 @@ python -m pip install -e ".[lance,train]"  # paper-release-smoke READY path
 ## Quick Start
 
 ```bash
+# 0. Any-machine quickstart with checked-in fixtures and synthetic audio
+bash scripts/run_quickstart.sh setup
+bash scripts/run_quickstart.sh smoke
+bash scripts/run_quickstart.sh data
+
 # 1. Inspect data and compare turn-taking baselines
 stable-asr doctor
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only

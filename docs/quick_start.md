@@ -15,6 +15,26 @@ python -m pip install -e ".[lance]"   # optional Parquet/Lance data backends
 python -m pip install -e ".[lance,train]"  # paper-release-smoke READY path
 ```
 
+## Any-Machine Script
+
+The fastest path for a new user is the fixture-backed quickstart script. It
+does not require external corpora or model outputs.
+
+```bash
+bash scripts/run_quickstart.sh setup
+bash scripts/run_quickstart.sh smoke
+bash scripts/run_quickstart.sh data
+```
+
+With optional dependencies:
+
+```bash
+bash scripts/run_quickstart.sh setup-all
+bash scripts/run_quickstart.sh all
+```
+
+Outputs go to `runs/quickstart` unless `RUN_DIR` is set.
+
 ## Three-Step Platform Flow
 
 ```bash

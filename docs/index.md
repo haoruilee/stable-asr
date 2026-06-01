@@ -160,6 +160,13 @@ bash scripts/run_final_machine.sh data-layer
 bash scripts/run_final_machine.sh train
 ```
 
+For local zero-external-data onboarding, use:
+
+```bash
+bash scripts/run_quickstart.sh setup
+bash scripts/run_quickstart.sh all
+```
+
 ## Documents
 
 - [Quick start](quick_start.md)
@@ -175,4 +182,4 @@ bash scripts/run_final_machine.sh train
 - [ASR reference collections](asr_collections.md)
 - [Turn and full-duplex reference collections](turn_collections.md)
 - API: [Data](api/data.md), [Turn](api/turn.md), [Scenarios](api/scenarios.md), [Paper](api/paper.md)
-- Guides: [External ASR adapters](guides/adapters.md), [Cloud machine runbook](guides/cloud_machine_runbook.md), [Release smoke](guides/release_smoke.md)
+- Guides: [External ASR adapters](guides/adapters.md), [Local quickstart](guides/local_quickstart_runbook.md), [Cloud machine runbook](guides/cloud_machine_runbook.md), [Release smoke](guides/release_smoke.md)
