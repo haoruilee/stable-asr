@@ -37,9 +37,10 @@ bash commands.sh
 ```
 
 The generated pack includes an ASR manifest fixture, normalized streaming ASR
-fixtures, adapter/reference registries, a command-comparison config, and
-`scripts/export_streaming_template.py`. Replace the fixture copy in that script
-with the upstream ASR call, then keep the same `--input-manifest` and
+fixtures, adapter/reference registries, a source manifest work queue, a
+command-comparison config, and `scripts/export_streaming_template.py`. Replace
+the fixture copy in that script with the upstream ASR call, then keep the same
+`--input-manifest` and
 `--output` contract.
 
 ## Vendor Transcript Normalizer

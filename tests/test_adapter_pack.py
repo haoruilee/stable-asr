@@ -16,6 +16,7 @@ def test_build_adapter_pack_writes_external_asr_starter_files(tmp_path: Path) ->
     assert report.command_config_ok
     assert report.reference_coverage_ok
     assert report.license_review_ok
+    assert report.source_manifest_ok
 
     output_dir = Path(report.output_dir)
     assert (output_dir / "README.md").exists()
@@ -23,6 +24,7 @@ def test_build_adapter_pack_writes_external_asr_starter_files(tmp_path: Path) ->
     assert (output_dir / "commands.sh").exists()
     assert (output_dir / "configs" / "adapter_registry.json").exists()
     assert (output_dir / "configs" / "asr_collections.json").exists()
+    assert (output_dir / "configs" / "asr_collection_source_manifest.json").exists()
     assert (output_dir / "configs" / "ASR_COLLECTION_LICENSE_REVIEW.md").exists()
     assert (output_dir / "configs" / "asr_collection_license_review.json").exists()
     assert (output_dir / "collections" / "LICENSE_REVIEW_INDEX.md").exists()
@@ -31,6 +33,7 @@ def test_build_adapter_pack_writes_external_asr_starter_files(tmp_path: Path) ->
     assert (output_dir / "data" / "asr_eval_manifest.jsonl").exists()
     assert (output_dir / "scripts" / "export_streaming_template.py").exists()
     assert "stable-asr compare-asr-commands" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
+    assert "source-manifest" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "--audit-licenses" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "find collections -name LICENSE_REVIEW.md" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "link_or_command_adapter_until_reviewed" in (
@@ -41,6 +44,9 @@ def test_build_adapter_pack_writes_external_asr_starter_files(tmp_path: Path) ->
     ).read_text(encoding="utf-8")
     assert "collections/funasr/LICENSE_REVIEW.md" in (
         output_dir / "collections" / "LICENSE_REVIEW_INDEX.md"
+    ).read_text(encoding="utf-8")
+    assert "stable_asr_asr_reference_source_manifest_v0" in (
+        output_dir / "configs" / "asr_collection_source_manifest.json"
     ).read_text(encoding="utf-8")
 
 
