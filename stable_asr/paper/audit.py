@@ -1649,11 +1649,18 @@ def _reference_evidence_audit_content_check(path: Path) -> PaperAuditCheck:
         return PaperAuditCheck(name, False, "rows must be a non-empty list")
     collection_types = {str(row.get("collection_type", "")) for row in rows if isinstance(row, dict)}
     missing_evidence = payload.get("missing_evidence", [])
+    incomplete_evidence = payload.get("incomplete_evidence", [])
     if not {"asr", "turn"}.issubset(collection_types):
         return PaperAuditCheck(name, False, "requires both asr and turn evidence rows")
     if not isinstance(missing_evidence, list):
         return PaperAuditCheck(name, False, "missing_evidence must be a list")
-    return PaperAuditCheck(name, True, f"{len(rows)} evidence row(s), {len(missing_evidence)} missing")
+    if not isinstance(incomplete_evidence, list):
+        return PaperAuditCheck(name, False, "incomplete_evidence must be a list")
+    return PaperAuditCheck(
+        name,
+        True,
+        f"{len(rows)} evidence row(s), {len(missing_evidence)} missing, {len(incomplete_evidence)} incomplete",
+    )
 
 
 def _platform_catalog_content_check(path: Path) -> PaperAuditCheck:

@@ -381,7 +381,11 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         "assignments_markdown": str(output_dir / "REFERENCE_ASSIGNMENTS.md"),
     }
     reference_assignments = reference_workqueue_assignments(reference_workqueue_report)
-    reference_evidence_report = audit_reference_workqueue_evidence(reference_workqueue_report, repo_root=Path("."))
+    reference_evidence_report = audit_reference_workqueue_evidence(
+        reference_workqueue_report,
+        repo_root=Path("."),
+        require_content=True,
+    )
     Path(reference_workqueue["json"]).write_text(
         json.dumps(reference_workqueue_report, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",

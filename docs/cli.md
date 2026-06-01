@@ -165,8 +165,8 @@ stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTI
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format json --output runs/reference_workqueue.json
 stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
-stable-asr reference-workqueue --audit-evidence --output runs/REFERENCE_EVIDENCE_AUDIT.md
-stable-asr reference-workqueue --audit-evidence --json --output runs/reference_evidence_audit.json
+stable-asr reference-workqueue --audit-evidence --require-content --output runs/REFERENCE_EVIDENCE_AUDIT.md
+stable-asr reference-workqueue --audit-evidence --require-content --json --output runs/reference_evidence_audit.json
 stable-asr reference-workqueue --format assignments-json --output runs/reference_assignments.json
 stable-asr reference-workqueue --format assignments-tsv --output runs/reference_assignments.tsv
 stable-asr reference-assignment-audit --input runs/reference_assignments.json --output runs/REFERENCE_ASSIGNMENT_AUDIT.md

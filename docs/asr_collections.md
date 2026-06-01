@@ -18,7 +18,7 @@ stable-asr asr-collections --audit-licenses --output runs/ASR_COLLECTION_LICENSE
 stable-asr asr-collections --audit-licenses --require-license-reviewed
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
-stable-asr reference-workqueue --audit-evidence --output runs/REFERENCE_EVIDENCE_AUDIT.md
+stable-asr reference-workqueue --audit-evidence --require-content --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
 The registry is not a vendoring list. It records what each upstream project is
@@ -52,10 +52,11 @@ templates so contributors collect upstream versions, input manifests, commands,
 output paths, metrics, failure notes, and license decisions consistently before
 marking an upstream reference as evidence.
 
-`reference-workqueue --audit-evidence` checks the generated queue directly
-against the filesystem. It fails until every included task has a real evidence
-target and every license-review-required task has its review file, making the
-difference between collection plans and release evidence explicit.
+`reference-workqueue --audit-evidence --require-content` checks the generated
+queue directly against the filesystem for release gates. It rejects
+empty evidence directories, blank JSONL/CSV/TSV files, placeholder Markdown
+templates, and pending license-review files, making the difference between
+collection plans and release evidence explicit.
 
 `--audit-licenses` renders the reuse policy for each reference and names the
 manual review file to fill before copying upstream code, weights, fixtures, or

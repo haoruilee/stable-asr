@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,22 @@ from stable_asr.references.turn_collections import turn_collections_source_manif
 
 
 DEFAULT_REFERENCE_WORKQUEUE_PRIORITIES = ("p0", "p1")
+EVIDENCE_MARKDOWN_REQUIRED_SECTIONS = (
+    "Upstream version and source",
+    "Inputs used",
+    "Command, script, or bridge implementation notes",
+    "Output paths and schema or validation commands",
+    "Metrics, examples, or failure notes relevant to Stable-ASR",
+    "License and redistribution decision",
+)
+LICENSE_REVIEW_REQUIRED_SECTIONS = (
+    "## Decision",
+    "status:",
+    "reviewer:",
+    "approved_uses:",
+    "prohibited_uses:",
+    "required_notices:",
+)
 
 
 @dataclass(frozen=True)
@@ -102,6 +119,12 @@ class ReferenceEvidenceAuditRow:
     license_review_required: bool
     license_review_target: str
     license_review_present: bool
+    evidence_content_checked: bool
+    evidence_content_ok: bool
+    evidence_content_errors: list[str]
+    license_review_content_checked: bool
+    license_review_content_ok: bool
+    license_review_content_errors: list[str]
     ok: bool
 
     def to_dict(self) -> dict[str, object]:
@@ -115,6 +138,12 @@ class ReferenceEvidenceAuditRow:
             "license_review_required": self.license_review_required,
             "license_review_target": self.license_review_target,
             "license_review_present": self.license_review_present,
+            "evidence_content_checked": self.evidence_content_checked,
+            "evidence_content_ok": self.evidence_content_ok,
+            "evidence_content_errors": self.evidence_content_errors,
+            "license_review_content_checked": self.license_review_content_checked,
+            "license_review_content_ok": self.license_review_content_ok,
+            "license_review_content_errors": self.license_review_content_errors,
             "ok": self.ok,
         }
 
@@ -123,17 +152,23 @@ class ReferenceEvidenceAuditRow:
 class ReferenceEvidenceAuditReport:
     ok: bool
     repo_root: str
+    require_content: bool
     rows: list[ReferenceEvidenceAuditRow]
     missing_evidence: list[str]
     missing_license_reviews: list[str]
+    incomplete_evidence: list[str]
+    incomplete_license_reviews: list[str]
 
     def to_dict(self) -> dict[str, object]:
         return {
             "ok": self.ok,
             "repo_root": self.repo_root,
+            "require_content": self.require_content,
             "rows": [row.to_dict() for row in self.rows],
             "missing_evidence": self.missing_evidence,
             "missing_license_reviews": self.missing_license_reviews,
+            "incomplete_evidence": self.incomplete_evidence,
+            "incomplete_license_reviews": self.incomplete_license_reviews,
         }
 
     def to_markdown(self) -> str:
@@ -159,9 +194,12 @@ class ReferenceEvidenceAuditReport:
             "",
             f"- status: `{'READY' if self.ok else 'NOT_READY'}`",
             f"- repo_root: `{self.repo_root}`",
+            f"- require_content: `{self.require_content}`",
             f"- tasks: `{len(self.rows)}`",
             f"- missing_evidence: `{len(self.missing_evidence)}`",
             f"- missing_license_reviews: `{len(self.missing_license_reviews)}`",
+            f"- incomplete_evidence: `{len(self.incomplete_evidence)}`",
+            f"- incomplete_license_reviews: `{len(self.incomplete_license_reviews)}`",
             "",
             dict_table(table_rows),
             "",
@@ -171,6 +209,10 @@ class ReferenceEvidenceAuditReport:
         lines.extend(f"- `{item}`" for item in self.missing_evidence) if self.missing_evidence else lines.append("- none")
         lines.extend(["", "## Missing License Reviews", ""])
         lines.extend(f"- `{item}`" for item in self.missing_license_reviews) if self.missing_license_reviews else lines.append("- none")
+        lines.extend(["", "## Incomplete Evidence", ""])
+        lines.extend(f"- `{item}`" for item in self.incomplete_evidence) if self.incomplete_evidence else lines.append("- none")
+        lines.extend(["", "## Incomplete License Reviews", ""])
+        lines.extend(f"- `{item}`" for item in self.incomplete_license_reviews) if self.incomplete_license_reviews else lines.append("- none")
         lines.extend(
             [
                 "",
@@ -188,9 +230,12 @@ class ReferenceEvidenceAuditReport:
         lines = [
             f"reference_evidence_audit: {'READY' if self.ok else 'NOT_READY'}",
             f"repo_root: {self.repo_root}",
+            f"require_content: {self.require_content}",
             f"tasks: {len(self.rows)}",
             f"missing_evidence: {len(self.missing_evidence)}",
             f"missing_license_reviews: {len(self.missing_license_reviews)}",
+            f"incomplete_evidence: {len(self.incomplete_evidence)}",
+            f"incomplete_license_reviews: {len(self.incomplete_license_reviews)}",
         ]
         for row in self.rows:
             marker = "OK" if row.ok else "MISSING"
@@ -400,7 +445,7 @@ def reference_workqueue_evidence_markdown(workqueue: dict[str, Any]) -> str:
         "",
         "- its `evidence_target` exists and contains concrete commands, versions, inputs, outputs, and validation results",
         "- any required `license_review_target` exists before vendoring code, weights, fixtures, or long snippets",
-        "- `stable-asr reference-workqueue --audit-evidence --repo-root .` reports the task as present",
+        "- `stable-asr reference-workqueue --audit-evidence --require-content --repo-root .` reports the task as present",
         "",
     ]
     for task in tasks:
@@ -438,7 +483,7 @@ def reference_workqueue_evidence_markdown(workqueue: dict[str, Any]) -> str:
                 "Validation commands:",
                 "",
                 "```bash",
-                "stable-asr reference-workqueue --audit-evidence --repo-root . --output runs/REFERENCE_EVIDENCE_AUDIT.md",
+                "stable-asr reference-workqueue --audit-evidence --require-content --repo-root . --output runs/REFERENCE_EVIDENCE_AUDIT.md",
                 "```",
                 "",
             ]
@@ -457,6 +502,7 @@ def audit_reference_workqueue_evidence(
     workqueue: dict[str, Any],
     *,
     repo_root: str | Path = ".",
+    require_content: bool = False,
 ) -> ReferenceEvidenceAuditReport:
     """Check whether reference workqueue evidence and license-review targets exist."""
 
@@ -467,17 +513,39 @@ def audit_reference_workqueue_evidence(
     rows: list[ReferenceEvidenceAuditRow] = []
     missing_evidence: list[str] = []
     missing_license_reviews: list[str] = []
+    incomplete_evidence: list[str] = []
+    incomplete_license_reviews: list[str] = []
     for task in workqueue["tasks"]:
         evidence_target = str(task["evidence_target"])
         evidence_present = _target_exists(evidence_target, repo_root=root)
+        evidence_content_errors = (
+            _evidence_content_errors(evidence_target, repo_root=root)
+            if require_content and evidence_present
+            else []
+        )
+        evidence_content_checked = require_content and evidence_present
+        evidence_content_ok = not evidence_content_errors
         license_review_required = bool(task["license_review_required"])
         license_review_target = str(task["license_review_target"])
         license_review_present = (not license_review_required) or _target_exists(license_review_target, repo_root=root)
+        license_review_content_errors = (
+            _license_review_content_errors(license_review_target, repo_root=root)
+            if require_content and license_review_required and license_review_present
+            else []
+        )
+        license_review_content_checked = require_content and license_review_required and license_review_present
+        license_review_content_ok = not license_review_content_errors
         task_id = str(task["task_id"])
         if not evidence_present:
             missing_evidence.append(f"{task_id}:{evidence_target}")
         if license_review_required and not license_review_present:
             missing_license_reviews.append(f"{task_id}:{license_review_target}")
+        if evidence_content_errors:
+            incomplete_evidence.append(f"{task_id}:{evidence_target}:{'; '.join(evidence_content_errors)}")
+        if license_review_content_errors:
+            incomplete_license_reviews.append(
+                f"{task_id}:{license_review_target}:{'; '.join(license_review_content_errors)}"
+            )
         rows.append(
             ReferenceEvidenceAuditRow(
                 task_id=task_id,
@@ -489,15 +557,24 @@ def audit_reference_workqueue_evidence(
                 license_review_required=license_review_required,
                 license_review_target=license_review_target,
                 license_review_present=license_review_present,
-                ok=evidence_present and license_review_present,
+                evidence_content_checked=evidence_content_checked,
+                evidence_content_ok=evidence_content_ok,
+                evidence_content_errors=evidence_content_errors,
+                license_review_content_checked=license_review_content_checked,
+                license_review_content_ok=license_review_content_ok,
+                license_review_content_errors=license_review_content_errors,
+                ok=evidence_present and license_review_present and evidence_content_ok and license_review_content_ok,
             )
         )
     return ReferenceEvidenceAuditReport(
         ok=all(row.ok for row in rows),
         repo_root=str(root),
+        require_content=require_content,
         rows=rows,
         missing_evidence=missing_evidence,
         missing_license_reviews=missing_license_reviews,
+        incomplete_evidence=incomplete_evidence,
+        incomplete_license_reviews=incomplete_license_reviews,
     )
 
 
@@ -808,10 +885,153 @@ def _audit_reference_assignment_row(
 
 
 def _target_exists(path: str, *, repo_root: Path) -> bool:
+    return _target_path(path, repo_root=repo_root).exists()
+
+
+def _target_path(path: str, *, repo_root: Path) -> Path:
     target = Path(path)
     if not target.is_absolute():
         target = repo_root / target
-    return target.exists()
+    return target
+
+
+def _evidence_content_errors(path: str, *, repo_root: Path) -> list[str]:
+    target = _target_path(path, repo_root=repo_root)
+    if target.is_dir():
+        return [] if any(target.iterdir()) else ["directory is empty"]
+    suffix = target.suffix.lower()
+    if suffix == ".jsonl":
+        return _jsonl_content_errors(target)
+    if suffix == ".json":
+        return _json_content_errors(target)
+    if suffix in {".tsv", ".csv"}:
+        return _delimited_content_errors(target)
+    return _markdown_section_errors(target, required_sections=EVIDENCE_MARKDOWN_REQUIRED_SECTIONS)
+
+
+def _license_review_content_errors(path: str, *, repo_root: Path) -> list[str]:
+    target = _target_path(path, repo_root=repo_root)
+    errors = _markdown_section_errors(target, required_sections=LICENSE_REVIEW_REQUIRED_SECTIONS)
+    try:
+        text = target.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return errors
+    lowered = text.lower()
+    if re.search(r"^\s*-\s*status:\s*pending\s*$", lowered, flags=re.MULTILINE):
+        errors.append("decision status is still pending")
+    if re.search(r"^\s*-\s*reviewer:\s*$", text, flags=re.MULTILINE):
+        errors.append("reviewer is blank")
+    return errors
+
+
+def _jsonl_content_errors(path: Path) -> list[str]:
+    try:
+        lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    except UnicodeDecodeError:
+        return ["file is not utf-8 text"]
+    if not lines:
+        return ["jsonl has no records"]
+    errors: list[str] = []
+    for index, line in enumerate(lines, start=1):
+        try:
+            json.loads(line)
+        except json.JSONDecodeError as exc:
+            errors.append(f"line {index} is not valid JSON: {exc.msg}")
+            break
+    return errors
+
+
+def _json_content_errors(path: Path) -> list[str]:
+    try:
+        json.loads(path.read_text(encoding="utf-8"))
+    except UnicodeDecodeError:
+        return ["file is not utf-8 text"]
+    except json.JSONDecodeError as exc:
+        return [f"file is not valid JSON: {exc.msg}"]
+    return []
+
+
+def _delimited_content_errors(path: Path) -> list[str]:
+    try:
+        lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    except UnicodeDecodeError:
+        return ["file is not utf-8 text"]
+    return [] if len(lines) >= 2 else ["file needs a header and at least one data row"]
+
+
+def _markdown_section_errors(path: Path, *, required_sections: tuple[str, ...]) -> list[str]:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except UnicodeDecodeError:
+        return ["file is not utf-8 text"]
+    errors: list[str] = []
+    markers = {section: _find_markdown_marker(lines, section) for section in required_sections}
+    missing = [section for section, marker in markers.items() if marker is None]
+    if missing:
+        errors.append("missing section(s): " + ", ".join(missing))
+    for section, marker in markers.items():
+        if marker is None:
+            continue
+        if section.endswith(":"):
+            if not _has_filled_markdown_content(marker[1]):
+                errors.append(f"field `{section}` is blank")
+        elif not section.startswith("#"):
+            content_lines = [marker[1], *_markdown_section_body(lines, marker[0], required_sections)]
+            if not _has_filled_markdown_content("\n".join(content_lines)):
+                errors.append(f"section `{section}` has no filled content")
+    return errors
+
+
+def _find_markdown_marker(lines: list[str], marker: str) -> tuple[int, str] | None:
+    normalized_marker = marker.strip().lower()
+    if marker.startswith("#"):
+        for index, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped.lower().startswith(normalized_marker):
+                return index, stripped[len(marker) :].strip()
+        return None
+
+    marker_name = marker.rstrip(":").strip()
+    marker_requires_colon = marker.endswith(":")
+    pattern = re.compile(
+        rf"^\s*(?:#+\s*|\d+\.\s+|[-*]\s+)?{re.escape(marker_name)}"
+        rf"{':' if marker_requires_colon else ':?'}\s*(?P<inline>.*)$",
+        flags=re.IGNORECASE,
+    )
+    for index, line in enumerate(lines):
+        match = pattern.match(line)
+        if match:
+            return index, match.group("inline").strip()
+    return None
+
+
+def _markdown_section_body(lines: list[str], start_index: int, required_sections: tuple[str, ...]) -> list[str]:
+    body: list[str] = []
+    for line in lines[start_index + 1 :]:
+        stripped = line.strip()
+        if not stripped:
+            body.append(line)
+            continue
+        if stripped.lower() in {"validation commands:", "required evidence sections:"}:
+            break
+        if stripped.startswith("#"):
+            break
+        if any(_find_markdown_marker([line], section) is not None for section in required_sections):
+            break
+        body.append(line)
+    return body
+
+
+def _has_filled_markdown_content(text: str) -> bool:
+    placeholder_pattern = re.compile(r"^(?:tbd|todo|placeholder|fill me|\.\.\.)$", flags=re.IGNORECASE)
+    for line in text.splitlines():
+        stripped = line.strip().strip("`*_ ")
+        if not stripped or stripped in {"-", ":", "```"}:
+            continue
+        if placeholder_pattern.match(stripped):
+            continue
+        return True
+    return False
 
 
 def _tsv_cell(value: object) -> str:

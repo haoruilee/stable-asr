@@ -651,7 +651,7 @@
       "format": "json",
       "file_patterns": ["reference_evidence_audit.json", "*REFERENCE_EVIDENCE_AUDIT*.json"],
       "producer_commands": [
-        "stable-asr reference-workqueue --audit-evidence --json"
+        "stable-asr reference-workqueue --audit-evidence --require-content --json"
       ],
       "schema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -662,13 +662,16 @@
         "properties": {
           "ok": {"type": "boolean"},
           "repo_root": {"type": "string"},
+          "require_content": {"type": "boolean"},
           "rows": {
             "type": "array",
             "minItems": 1,
             "items": {"$ref": "#/$defs/row"}
           },
           "missing_evidence": {"type": "array", "items": {"type": "string"}},
-          "missing_license_reviews": {"type": "array", "items": {"type": "string"}}
+          "missing_license_reviews": {"type": "array", "items": {"type": "string"}},
+          "incomplete_evidence": {"type": "array", "items": {"type": "string"}},
+          "incomplete_license_reviews": {"type": "array", "items": {"type": "string"}}
         },
         "$defs": {
           "row": {
@@ -695,6 +698,12 @@
               "license_review_required": {"type": "boolean"},
               "license_review_target": {"type": "string", "minLength": 1},
               "license_review_present": {"type": "boolean"},
+              "evidence_content_checked": {"type": "boolean"},
+              "evidence_content_ok": {"type": "boolean"},
+              "evidence_content_errors": {"type": "array", "items": {"type": "string"}},
+              "license_review_content_checked": {"type": "boolean"},
+              "license_review_content_ok": {"type": "boolean"},
+              "license_review_content_errors": {"type": "array", "items": {"type": "string"}},
               "ok": {"type": "boolean"}
             },
             "additionalProperties": true

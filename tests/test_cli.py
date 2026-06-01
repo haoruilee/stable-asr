@@ -942,6 +942,17 @@ def test_reference_workqueue_cli_audits_evidence_targets(tmp_path, capsys) -> No
     assert "asr:funasr" in output.read_text(encoding="utf-8")
 
 
+def test_reference_workqueue_cli_audits_evidence_content(capsys) -> None:
+    code = main(["reference-workqueue", "--audit-evidence", "--require-content", "--json", "--require-priority", "p0"])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    payload = json.loads(captured.out)
+    assert payload["require_content"] is True
+    assert "incomplete_evidence" in payload
+    assert "incomplete_license_reviews" in payload
+
+
 def test_reference_workqueue_cli_audits_evidence_json(capsys) -> None:
     code = main(["reference-workqueue", "--audit-evidence", "--json", "--require-priority", "p2"])
 

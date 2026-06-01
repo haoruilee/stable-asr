@@ -706,6 +706,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Audit whether workqueue evidence targets and required license-review files exist.",
     )
+    reference_workqueue_parser.add_argument(
+        "--require-content",
+        action="store_true",
+        help="With --audit-evidence, require present evidence and license-review files to contain usable content.",
+    )
     reference_workqueue_parser.add_argument("--repo-root", type=Path, default=Path("."))
 
     reference_assignment_audit_parser = subparsers.add_parser(
@@ -2251,7 +2256,11 @@ def main(argv: list[str] | None = None) -> int:
                 required_priorities=tuple(args.require_priority or ["p0", "p1"]),
             )
             if args.audit_evidence:
-                report = audit_reference_workqueue_evidence(workqueue, repo_root=args.repo_root)
+                report = audit_reference_workqueue_evidence(
+                    workqueue,
+                    repo_root=args.repo_root,
+                    require_content=args.require_content,
+                )
                 text = (
                     json.dumps(report.to_dict(), ensure_ascii=False, indent=2)
                     if args.json or args.format == "json"

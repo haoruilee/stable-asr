@@ -47,6 +47,7 @@ def test_reference_workqueue_markdown_and_jsonl_render() -> None:
     assert "license_review" in markdown
     assert "Stable-ASR Reference Evidence Templates" in evidence_templates
     assert "Acceptance Rule" in evidence_templates
+    assert "--require-content" in evidence_templates
     assert "asr:funasr" in evidence_templates
     assert "runs/final/asr_commands/raw/funasr_raw.jsonl" in evidence_templates
     rows = [json.loads(line) for line in jsonl.splitlines()]
@@ -60,6 +61,7 @@ def test_reference_workqueue_evidence_audit_reports_missing_targets() -> None:
     report = audit_reference_workqueue_evidence(workqueue)
 
     assert not report.ok
+    assert report.require_content is False
     assert any(item.startswith("asr:funasr:") for item in report.missing_evidence)
     assert any(item.startswith("turn:smart_turn:") for item in report.missing_evidence)
     assert any(item.startswith("asr:funasr:") for item in report.missing_license_reviews)
@@ -105,6 +107,121 @@ def test_reference_workqueue_evidence_audit_accepts_ready_targets(tmp_path) -> N
     assert report.ok
     assert not report.missing_evidence
     assert not report.missing_license_reviews
+
+
+def test_reference_workqueue_evidence_audit_strict_content_rejects_empty_templates(tmp_path) -> None:
+    workqueue = {
+        "id": "stable_asr_reference_workqueue_v0",
+        "version": "0.1.0",
+        "generated_by": "unit",
+        "required_priorities": ["p0"],
+        "tasks": [
+            {
+                "task_id": "asr:unit",
+                "collection_type": "asr",
+                "reference_id": "unit",
+                "name": "Unit ASR",
+                "category": "unit",
+                "priority": "p0",
+                "acquisition_track": "ASR command adapter",
+                "evidence_target": "runs/collections/unit/EVIDENCE.md",
+                "license": "see_upstream",
+                "license_review_required": True,
+                "license_review_target": "runs/collections/unit/LICENSE_REVIEW.md",
+                "policy": "link_or_command_adapter_until_reviewed",
+                "status": "link_or_command_adapter_until_license_review",
+                "next_action": "write_evidence",
+                "blocked_by": ["license_review_before_vendoring"],
+                "source_url": "https://example.com/unit",
+                "docs_url": "https://example.com/unit/docs",
+                "stable_asr_actions": ["write_evidence"],
+                "reference_use": "unit test",
+            }
+        ],
+    }
+    root = tmp_path / "runs" / "collections" / "unit"
+    root.mkdir(parents=True)
+    (root / "EVIDENCE.md").write_text(
+        "\n".join(
+            [
+                "# Evidence",
+                "",
+                "## Upstream version and source",
+                "",
+                "## Inputs used",
+                "",
+                "## Command, script, or bridge implementation notes",
+                "",
+                "## Output paths and schema or validation commands",
+                "",
+                "## Metrics, examples, or failure notes relevant to Stable-ASR",
+                "",
+                "## License and redistribution decision",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (root / "LICENSE_REVIEW.md").write_text(
+        "# License Review: Unit\n\n## Decision\n\n- status: pending\n- reviewer:\n- approved_uses:\n- prohibited_uses:\n- required_notices:\n",
+        encoding="utf-8",
+    )
+
+    report = audit_reference_workqueue_evidence(workqueue, repo_root=tmp_path, require_content=True)
+
+    assert not report.ok
+    assert report.require_content is True
+    assert report.incomplete_evidence
+    assert report.incomplete_license_reviews
+    assert "has no filled content" in report.incomplete_evidence[0]
+    assert "decision status is still pending" in report.incomplete_license_reviews[0]
+
+
+def test_reference_workqueue_evidence_audit_strict_content_accepts_jsonl_and_review(tmp_path) -> None:
+    workqueue = {
+        "id": "stable_asr_reference_workqueue_v0",
+        "version": "0.1.0",
+        "generated_by": "unit",
+        "required_priorities": ["p0"],
+        "tasks": [
+            {
+                "task_id": "asr:unit",
+                "collection_type": "asr",
+                "reference_id": "unit",
+                "name": "Unit ASR",
+                "category": "unit",
+                "priority": "p0",
+                "acquisition_track": "ASR command adapter",
+                "evidence_target": "runs/collections/unit/raw.jsonl",
+                "license": "see_upstream",
+                "license_review_required": True,
+                "license_review_target": "runs/collections/unit/LICENSE_REVIEW.md",
+                "policy": "link_or_command_adapter_until_reviewed",
+                "status": "link_or_command_adapter_until_license_review",
+                "next_action": "write_evidence",
+                "blocked_by": ["license_review_before_vendoring"],
+                "source_url": "https://example.com/unit",
+                "docs_url": "https://example.com/unit/docs",
+                "stable_asr_actions": ["write_evidence"],
+                "reference_use": "unit test",
+            }
+        ],
+    }
+    root = tmp_path / "runs" / "collections" / "unit"
+    root.mkdir(parents=True)
+    (root / "raw.jsonl").write_text('{"id":"utt1","text":"hello"}\n', encoding="utf-8")
+    (root / "LICENSE_REVIEW.md").write_text(
+        "# License Review: Unit\n\n## Decision\n\n- status: approved\n- reviewer: reviewer\n- approved_uses: command adapter outputs\n- prohibited_uses: vendored weights\n- required_notices: cite upstream\n",
+        encoding="utf-8",
+    )
+
+    report = audit_reference_workqueue_evidence(workqueue, repo_root=tmp_path, require_content=True)
+
+    assert report.ok
+    assert not report.incomplete_evidence
+    assert not report.incomplete_license_reviews
+    assert report.rows[0].evidence_content_checked
+    assert report.rows[0].license_review_content_checked
 
 
 def test_reference_workqueue_assignment_templates_render() -> None:

@@ -12,7 +12,7 @@ stable-asr turn-collections --format acquisition-markdown --output runs/TURN_COL
 stable-asr turn-collections --format source-manifest --output runs/TURN_COLLECTION_SOURCE_MANIFEST.json
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
 stable-asr reference-workqueue --format evidence-markdown --output runs/REFERENCE_EVIDENCE_TEMPLATES.md
-stable-asr reference-workqueue --audit-evidence --output runs/REFERENCE_EVIDENCE_AUDIT.md
+stable-asr reference-workqueue --audit-evidence --require-content --output runs/REFERENCE_EVIDENCE_AUDIT.md
 ```
 
 The registry is not a vendoring list. It records which upstream projects should
@@ -63,7 +63,8 @@ reviews.
 templates for the same queue, including required version, input, command,
 output, metric, failure-note, and license-decision sections.
 
-Run `reference-workqueue --audit-evidence` when you need a direct readiness
-answer from the generated queue. It checks evidence targets and license-review
-files on disk, so registry entries and source manifests cannot be mistaken for
-completed collection work.
+Run `reference-workqueue --audit-evidence --require-content` when you need a
+direct release-readiness answer from the generated queue. It checks evidence
+targets and license-review files on disk and rejects placeholder content, so
+registry entries and source manifests cannot be mistaken for completed
+collection work.

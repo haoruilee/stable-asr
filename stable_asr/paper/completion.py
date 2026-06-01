@@ -157,7 +157,11 @@ def completion_audit(
     roadmap = roadmap_status(load_roadmap(root / "configs" / "roadmap" / "stable_asr_roadmap.json"), repo_root=root)
     platform = audit_platform_parity(repo_root=root)
     parity = audit_paper_parity(repo_root=root, results_path=results_path, artifacts_dir=artifacts_dir)
-    reference = audit_reference_workqueue_evidence(reference_workqueue_from_registries(), repo_root=root)
+    reference = audit_reference_workqueue_evidence(
+        reference_workqueue_from_registries(),
+        repo_root=root,
+        require_content=True,
+    )
 
     items = [
         CompletionAuditItem(
@@ -206,13 +210,20 @@ def completion_audit(
         CompletionAuditItem(
             requirement="external_reference_evidence",
             evidence="configs/references/asr_collections.json + configs/references/turn_collections.json",
-            command="stable-asr reference-workqueue --audit-evidence --repo-root .",
+            command="stable-asr reference-workqueue --audit-evidence --require-content --repo-root .",
             ok=reference.ok,
             detail=(
                 f"missing_evidence={len(reference.missing_evidence)}; "
-                f"missing_license_reviews={len(reference.missing_license_reviews)}"
+                f"missing_license_reviews={len(reference.missing_license_reviews)}; "
+                f"incomplete_evidence={len(reference.incomplete_evidence)}; "
+                f"incomplete_license_reviews={len(reference.incomplete_license_reviews)}"
             ),
-            blockers=[*reference.missing_evidence, *reference.missing_license_reviews],
+            blockers=[
+                *reference.missing_evidence,
+                *reference.missing_license_reviews,
+                *reference.incomplete_evidence,
+                *reference.incomplete_license_reviews,
+            ],
         ),
         CompletionAuditItem(
             requirement="final_assignment",

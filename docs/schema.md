@@ -41,7 +41,7 @@ stable-asr reference-workqueue --format assignments-json --output runs/reference
 stable-asr validate-schema-file \
   --input runs/reference_assignments.json \
   --schema-id stable_asr.reference_assignments.v0
-stable-asr reference-workqueue --audit-evidence --json --output runs/reference_evidence_audit.json
+stable-asr reference-workqueue --audit-evidence --require-content --json --output runs/reference_evidence_audit.json
 stable-asr validate-schema-file \
   --input runs/reference_evidence_audit.json \
   --schema-id stable_asr.reference_evidence_audit.v0
