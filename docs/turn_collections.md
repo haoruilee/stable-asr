@@ -53,4 +53,6 @@ manifest into a single contributor queue. It is useful when collecting external
 turn predictions, scenario bridges, command ASR exports, and license reviews in
 one release plan. Use `--format assignments-tsv` or
 `--format assignments-markdown` when the queue needs owners, due dates, and
-release-blocker status.
+release-blocker status, then run `reference-assignment-audit` to surface
+unassigned owners, missing due dates, missing evidence, and unresolved license
+reviews.

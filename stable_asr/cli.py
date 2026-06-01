@@ -141,6 +141,7 @@ from stable_asr.references import (
     asr_collections_markdown,
     asr_collections_reference_markdown,
     asr_collections_source_manifest,
+    audit_reference_assignments,
     audit_asr_collection_coverage,
     audit_asr_collection_licenses,
     audit_asr_collection_readiness,
@@ -673,6 +674,18 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["p0", "p1", "p2"],
         help="Reference priorities to include. Defaults to p0 and p1.",
     )
+
+    reference_assignment_audit_parser = subparsers.add_parser(
+        "reference-assignment-audit",
+        help="Audit a filled reference assignment tracker for owners, due dates, blockers, evidence, and license reviews.",
+    )
+    reference_assignment_audit_parser.add_argument("--input", type=Path, required=True)
+    reference_assignment_audit_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    reference_assignment_audit_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    reference_assignment_audit_parser.add_argument("--require-owner", action="store_true")
+    reference_assignment_audit_parser.add_argument("--require-due-date", action="store_true")
+    reference_assignment_audit_parser.add_argument("--require-ready", action="store_true")
+    reference_assignment_audit_parser.add_argument("--json", action="store_true")
 
     roadmap_parser = subparsers.add_parser(
         "roadmap-status",
@@ -2182,6 +2195,21 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         return 0
+
+    if args.command == "reference-assignment-audit":
+        report = audit_reference_assignments(
+            args.input,
+            repo_root=args.repo_root,
+            require_owner=args.require_owner,
+            require_due_date=args.require_due_date,
+            require_ready=args.require_ready,
+        )
+        text = json.dumps(report.to_dict(), ensure_ascii=False, indent=2) if args.json else report.to_markdown()
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(text + ("\n" if not text.endswith("\n") else ""), encoding="utf-8")
+        print(text)
+        return 0 if report.ok else 1
 
     if args.command == "roadmap-status":
         try:

@@ -50,7 +50,9 @@ stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
 stable-asr contributor-pack --output-dir runs/contributor_pack
 stable-asr reference-workqueue --output runs/REFERENCE_WORKQUEUE.md
+stable-asr reference-workqueue --format assignments-json --output runs/reference_assignments.json
 stable-asr reference-workqueue --format assignments-markdown --output runs/REFERENCE_ASSIGNMENTS.md
+stable-asr reference-assignment-audit --input runs/reference_assignments.json --output runs/REFERENCE_ASSIGNMENT_AUDIT.md
 stable-asr final-config --config configs/final/paper_final.json --plan-missing
 stable-asr paper-status --repo-root . --require-checksums
 ```
@@ -68,7 +70,8 @@ plan. It writes a TSV/JSON staging checklist, owner assignment tracker, license
 and consent templates, VoiceWorld recording checklist, plus a handoff template.
 Use `reference-workqueue` alongside it to assign upstream ASR/turn adapter,
 evidence, and license-review work without treating registry entries as finished
-evidence; `--format assignments-markdown` creates the owner-fillable tracker.
+evidence; `--format assignments-markdown` creates the owner-fillable tracker,
+and `reference-assignment-audit` checks that tracker before release work.
 Use `final-assignment-audit` before handoff, then use
 `final-handoff-checksums`,
 `validate-schema-file --schema-id stable_asr.final_handoff.v0`, and

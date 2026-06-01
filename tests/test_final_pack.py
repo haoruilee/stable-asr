@@ -43,6 +43,7 @@ def test_build_final_pack_writes_runbook_without_fake_evidence(tmp_path: Path) -
     assert "NOT_READY" in (output_dir / "README.md").read_text(encoding="utf-8")
     assert "--check-files" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "reference-workqueue" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
+    assert "reference-assignment-audit" in (output_dir / "COMMANDS.md").read_text(encoding="utf-8")
     assert "turn:smart_turn" in (output_dir / "reports" / "REFERENCE_WORKQUEUE.md").read_text(encoding="utf-8")
     assert "blocked_license_review" in (output_dir / "reports" / "reference_assignments.tsv").read_text(encoding="utf-8")
     assert "stable-asr final-results" in (output_dir / "NEXT_COMMANDS.md").read_text(encoding="utf-8")

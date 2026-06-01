@@ -1,6 +1,7 @@
 import json
 
 from stable_asr.references import (
+    audit_reference_assignments,
     reference_workqueue_assignments,
     reference_workqueue_assignments_markdown,
     reference_workqueue_assignments_tsv,
@@ -59,3 +60,30 @@ def test_reference_workqueue_assignment_templates_render() -> None:
     assert "Owner Workflow" in markdown
     assert "task_id\tcollection_type\treference_id" in tsv
     assert "blocked_license_review" in tsv
+
+
+def test_reference_assignment_audit_flags_coordination_gaps(tmp_path) -> None:
+    workqueue = reference_workqueue_from_registries()
+    assignments = tmp_path / "reference_assignments.json"
+    assignments.write_text(json.dumps(reference_workqueue_assignments(workqueue), ensure_ascii=False, indent=2) + "\n")
+
+    report = audit_reference_assignments(assignments, repo_root=tmp_path)
+    strict = audit_reference_assignments(
+        assignments,
+        repo_root=tmp_path,
+        require_owner=True,
+        require_due_date=True,
+        require_ready=True,
+    )
+
+    assert report.ok
+    assert "asr:funasr" in report.unassigned
+    assert "asr:funasr" in report.missing_due_dates
+    assert "asr:funasr" in report.blocking_release
+    assert "asr:funasr" in report.missing_evidence
+    assert "asr:funasr" in report.missing_license_reviews
+    assert "Stable-ASR Reference Assignment Audit" in report.to_markdown()
+    assert not strict.ok
+    assert "asr:funasr:owner:unassigned" in strict.errors
+    assert "asr:funasr:due_date:missing" in strict.errors
+    assert "asr:funasr:blocking_release" in strict.errors

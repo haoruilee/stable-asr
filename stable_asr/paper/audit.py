@@ -1323,6 +1323,13 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
             artifacts_dir / "starter_packs" / "contributor_pack" / "references" / "REFERENCE_ASSIGNMENTS.md",
         )
     )
+    checks.append(
+        _contains_check(
+            "starter_pack:contributor_reference_assignment_audit_command",
+            artifacts_dir / "starter_packs" / "contributor_pack" / "COMMANDS.md",
+            contains="reference-assignment-audit",
+        )
+    )
     checks.append(_exists_check("data_sources:json", artifacts_dir / "data_sources.json"))
     checks.append(_exists_check("data_sources:markdown", artifacts_dir / "DATA_SOURCES.md"))
     checks.append(_exists_check("adapter_registry:json", artifacts_dir / "adapter_registry.json"))

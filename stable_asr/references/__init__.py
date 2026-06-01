@@ -26,7 +26,9 @@ from stable_asr.references.turn_collections import (
     write_turn_collections_json,
 )
 from stable_asr.references.workqueue import (
+    ReferenceAssignmentAuditReport,
     ReferenceWorkQueueValidation,
+    audit_reference_assignments,
     reference_workqueue_assignments,
     reference_workqueue_assignments_markdown,
     reference_workqueue_assignments_tsv,
@@ -42,6 +44,8 @@ __all__ = [
     "ASRCollectionLicenseReport",
     "TurnCollectionCoverageReport",
     "ReferenceWorkQueueValidation",
+    "ReferenceAssignmentAuditReport",
+    "audit_reference_assignments",
     "reference_workqueue_assignments",
     "reference_workqueue_assignments_markdown",
     "reference_workqueue_assignments_tsv",

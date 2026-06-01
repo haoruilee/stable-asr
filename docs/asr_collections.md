@@ -41,7 +41,9 @@ source manifest into one P0/P1 contributor queue. The generated JSON/Markdown
 names the next action, evidence target, and license-review blocker for each
 upstream reference without claiming that the collection work is already done.
 Use `--format assignments-tsv` or `--format assignments-markdown` to create an
-owner-fillable tracker for collection, evidence, and license-review work.
+owner-fillable tracker for collection, evidence, and license-review work. Run
+`reference-assignment-audit` on the generated JSON tracker before treating a
+reference collection plan as ready for release work.
 
 `--audit-licenses` renders the reuse policy for each reference and names the
 manual review file to fill before copying upstream code, weights, fixtures, or

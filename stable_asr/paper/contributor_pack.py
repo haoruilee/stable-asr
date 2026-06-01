@@ -167,6 +167,7 @@ def _starter_commands() -> list[str]:
         "(cd packs/final_acquisition_pack && bash commands.sh)",
         "stable-asr reference-workqueue --output references/REFERENCE_WORKQUEUE_CURRENT.md",
         "stable-asr reference-workqueue --format assignments-markdown --output references/REFERENCE_ASSIGNMENTS_CURRENT.md",
+        "stable-asr reference-assignment-audit --input references/reference_assignments.json --repo-root . --output references/REFERENCE_ASSIGNMENT_AUDIT.md || true",
     ]
 
 

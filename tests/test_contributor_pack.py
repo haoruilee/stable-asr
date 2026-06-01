@@ -45,5 +45,6 @@ def test_build_contributor_pack_writes_all_starter_tracks(tmp_path: Path) -> Non
     assert "packs/benchmark_pack" in commands
     assert "packs/final_acquisition_pack" in commands
     assert "reference-workqueue" in commands
+    assert "reference-assignment-audit" in commands
     assert "asr:funasr" in (output_dir / "references" / "REFERENCE_WORKQUEUE.md").read_text(encoding="utf-8")
     assert "Owner Workflow" in (output_dir / "references" / "REFERENCE_ASSIGNMENTS.md").read_text(encoding="utf-8")

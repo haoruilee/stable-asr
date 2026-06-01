@@ -56,6 +56,7 @@ ready.
 - turn/full-duplex reference collection JSON exists in `configs/references/turn_collections.json`
 - required P0 turn/full-duplex references have data-source or adapter coverage evidence
 - `reference-workqueue` can merge ASR and turn source manifests into a contributor-facing P0/P1 queue with evidence targets, license-review blockers, and owner-fillable assignment trackers
+- `reference-assignment-audit` can check reference assignment owner, due-date, release-blocker, evidence-target, and license-review readiness
 - VoiceWorld scenario suite JSON exists in `configs/scenarios/stable_asr_voiceworld_v0.json`
 - ASR manifest schema and metadata-table recipe exist
 - data benchmark sections exist

@@ -374,6 +374,7 @@ def _starter_commands() -> list[str]:
             "--turn-registry configs/references/turn_collections.json "
             "--output reports/REFERENCE_ASSIGNMENTS_CURRENT.md"
         ),
+        "stable-asr reference-assignment-audit --input reports/reference_assignments.json --repo-root . --output reports/REFERENCE_ASSIGNMENT_AUDIT.md || true",
         (
             f"stable-asr final-config --config {PACK_FINAL_CONFIG_PATH} --repo-root . "
             "--plan-missing --output reports/FINAL_RUN_ACTION_PLAN_CURRENT.md"

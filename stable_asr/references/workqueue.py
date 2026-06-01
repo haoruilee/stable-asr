@@ -26,6 +26,71 @@ class ReferenceWorkQueueValidation:
         return "reference_workqueue: FAILED\n" + "\n".join(f"- {error}" for error in self.errors)
 
 
+@dataclass(frozen=True)
+class ReferenceAssignmentAuditReport:
+    ok: bool
+    path: str
+    rows: int
+    blocking_release: list[str]
+    unassigned: list[str]
+    missing_due_dates: list[str]
+    missing_evidence: list[str]
+    missing_license_reviews: list[str]
+    errors: list[str]
+    warnings: list[str]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "ok": self.ok,
+            "path": self.path,
+            "rows": self.rows,
+            "blocking_release": self.blocking_release,
+            "unassigned": self.unassigned,
+            "missing_due_dates": self.missing_due_dates,
+            "missing_evidence": self.missing_evidence,
+            "missing_license_reviews": self.missing_license_reviews,
+            "errors": self.errors,
+            "warnings": self.warnings,
+        }
+
+    def to_markdown(self) -> str:
+        rows = [
+            {"check": "rows", "value": self.rows},
+            {"check": "blocking_release", "value": len(self.blocking_release)},
+            {"check": "unassigned", "value": len(self.unassigned)},
+            {"check": "missing_due_dates", "value": len(self.missing_due_dates)},
+            {"check": "missing_evidence", "value": len(self.missing_evidence)},
+            {"check": "missing_license_reviews", "value": len(self.missing_license_reviews)},
+            {"check": "errors", "value": len(self.errors)},
+            {"check": "warnings", "value": len(self.warnings)},
+        ]
+        lines = [
+            "# Stable-ASR Reference Assignment Audit",
+            "",
+            f"- status: `{'OK' if self.ok else 'FAILED'}`",
+            f"- assignments: `{self.path}`",
+            "",
+            dict_table(rows),
+            "",
+            "## Blocking Release",
+            "",
+        ]
+        lines.extend(f"- `{item}`" for item in self.blocking_release) if self.blocking_release else lines.append("- none")
+        lines.extend(["", "## Unassigned", ""])
+        lines.extend(f"- `{item}`" for item in self.unassigned) if self.unassigned else lines.append("- none")
+        lines.extend(["", "## Missing Due Dates", ""])
+        lines.extend(f"- `{item}`" for item in self.missing_due_dates) if self.missing_due_dates else lines.append("- none")
+        lines.extend(["", "## Missing Evidence", ""])
+        lines.extend(f"- `{item}`" for item in self.missing_evidence) if self.missing_evidence else lines.append("- none")
+        lines.extend(["", "## Missing License Reviews", ""])
+        lines.extend(f"- `{item}`" for item in self.missing_license_reviews) if self.missing_license_reviews else lines.append("- none")
+        lines.extend(["", "## Errors", ""])
+        lines.extend(f"- `{item}`" for item in self.errors) if self.errors else lines.append("- none")
+        lines.extend(["", "## Warnings", ""])
+        lines.extend(f"- `{item}`" for item in self.warnings) if self.warnings else lines.append("- none")
+        return "\n".join(lines) + "\n"
+
+
 def reference_workqueue_from_registries(
     *,
     asr_registry: dict[str, Any] | None = None,
@@ -308,6 +373,83 @@ def reference_workqueue_assignments_markdown(assignments: dict[str, Any]) -> str
     )
 
 
+def audit_reference_assignments(
+    path: str | Path,
+    *,
+    repo_root: str | Path = ".",
+    require_owner: bool = False,
+    require_due_date: bool = False,
+    require_ready: bool = False,
+) -> ReferenceAssignmentAuditReport:
+    """Audit a filled reference assignment tracker."""
+
+    assignment_path = Path(path)
+    repo_root = Path(repo_root)
+    errors: list[str] = []
+    warnings: list[str] = []
+    blocking_release: list[str] = []
+    unassigned: list[str] = []
+    missing_due_dates: list[str] = []
+    missing_evidence: list[str] = []
+    missing_license_reviews: list[str] = []
+
+    try:
+        payload = json.loads(assignment_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return ReferenceAssignmentAuditReport(
+            ok=False,
+            path=str(assignment_path),
+            rows=0,
+            blocking_release=[],
+            unassigned=[],
+            missing_due_dates=[],
+            missing_evidence=[],
+            missing_license_reviews=[],
+            errors=[str(exc)],
+            warnings=[],
+        )
+
+    rows = payload.get("rows") if isinstance(payload, dict) else None
+    if not isinstance(rows, list) or not rows:
+        errors.append("rows must be a non-empty list")
+        rows = []
+
+    seen: set[str] = set()
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            errors.append(f"row {index}: must be an object")
+            continue
+        _audit_reference_assignment_row(
+            index,
+            row,
+            repo_root=repo_root,
+            seen=seen,
+            require_owner=require_owner,
+            require_due_date=require_due_date,
+            require_ready=require_ready,
+            blocking_release=blocking_release,
+            unassigned=unassigned,
+            missing_due_dates=missing_due_dates,
+            missing_evidence=missing_evidence,
+            missing_license_reviews=missing_license_reviews,
+            errors=errors,
+            warnings=warnings,
+        )
+
+    return ReferenceAssignmentAuditReport(
+        ok=not errors,
+        path=str(assignment_path),
+        rows=len(rows),
+        blocking_release=blocking_release,
+        unassigned=unassigned,
+        missing_due_dates=missing_due_dates,
+        missing_evidence=missing_evidence,
+        missing_license_reviews=missing_license_reviews,
+        errors=errors,
+        warnings=warnings,
+    )
+
+
 def write_reference_workqueue_json(path: str | Path, workqueue: dict[str, Any]) -> str:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -338,6 +480,100 @@ def _assignment_status(task: dict[str, Any]) -> str:
     if task.get("license_review_required"):
         return "blocked_license_review"
     return "needs_evidence"
+
+
+def _audit_reference_assignment_row(
+    index: int,
+    row: dict[str, Any],
+    *,
+    repo_root: Path,
+    seen: set[str],
+    require_owner: bool,
+    require_due_date: bool,
+    require_ready: bool,
+    blocking_release: list[str],
+    unassigned: list[str],
+    missing_due_dates: list[str],
+    missing_evidence: list[str],
+    missing_license_reviews: list[str],
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    task_id = row.get("task_id")
+    if not isinstance(task_id, str) or not task_id.strip():
+        errors.append(f"row {index}:task_id:missing")
+        task_id = f"row_{index}"
+    label = str(task_id)
+    if label in seen:
+        errors.append(f"{label}:duplicate")
+    seen.add(label)
+
+    for field in ("collection_type", "reference_id", "priority", "status", "evidence_target"):
+        if not isinstance(row.get(field), str) or not str(row.get(field)).strip():
+            errors.append(f"{label}:{field}:missing")
+    if row.get("collection_type") not in {"asr", "turn"}:
+        errors.append(f"{label}:collection_type:invalid")
+    if row.get("priority") not in {"p0", "p1", "p2"}:
+        errors.append(f"{label}:priority:invalid")
+    if not isinstance(row.get("blocking_release"), bool):
+        errors.append(f"{label}:blocking_release:invalid")
+    if not isinstance(row.get("license_review_required"), bool):
+        errors.append(f"{label}:license_review_required:invalid")
+    blocked_by = row.get("blocked_by", [])
+    if not isinstance(blocked_by, list) or not all(isinstance(item, str) for item in blocked_by):
+        errors.append(f"{label}:blocked_by:invalid")
+
+    owner = str(row.get("owner", "")).strip()
+    if not owner or owner == "unassigned":
+        unassigned.append(label)
+        message = f"{label}:owner:unassigned"
+        if require_owner:
+            errors.append(message)
+        else:
+            warnings.append(message)
+
+    due_date = str(row.get("due_date", "")).strip()
+    if not due_date:
+        missing_due_dates.append(label)
+        message = f"{label}:due_date:missing"
+        if require_due_date:
+            errors.append(message)
+        else:
+            warnings.append(message)
+
+    if row.get("blocking_release") is True:
+        blocking_release.append(label)
+        message = f"{label}:blocking_release"
+        if require_ready:
+            errors.append(message)
+        else:
+            warnings.append(message)
+
+    evidence_target = str(row.get("evidence_target", "")).strip()
+    if evidence_target and not _target_exists(evidence_target, repo_root=repo_root):
+        missing_evidence.append(label)
+        message = f"{label}:evidence:missing:{evidence_target}"
+        if require_ready or str(row.get("status", "")) in {"ready_for_review", "complete"}:
+            errors.append(message)
+        else:
+            warnings.append(message)
+
+    license_review_target = str(row.get("license_review_target", "")).strip()
+    if row.get("license_review_required") is True and license_review_target:
+        if not _target_exists(license_review_target, repo_root=repo_root):
+            missing_license_reviews.append(label)
+            message = f"{label}:license_review:missing:{license_review_target}"
+            if require_ready or str(row.get("status", "")) in {"ready_for_review", "complete"}:
+                errors.append(message)
+            else:
+                warnings.append(message)
+
+
+def _target_exists(path: str, *, repo_root: Path) -> bool:
+    target = Path(path)
+    if not target.is_absolute():
+        target = repo_root / target
+    return target.exists()
 
 
 def _tsv_cell(value: object) -> str:

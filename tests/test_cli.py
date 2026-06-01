@@ -879,6 +879,35 @@ def test_reference_workqueue_cli_writes_assignment_tracker(tmp_path, capsys) -> 
     assert "blocked_license_review" in output.read_text(encoding="utf-8")
 
 
+def test_reference_assignment_audit_cli_reports_tracker_gaps(tmp_path, capsys) -> None:
+    assignments = tmp_path / "reference_assignments.json"
+    assert main(["reference-workqueue", "--format", "assignments-json", "--output", str(assignments)]) == 0
+    capsys.readouterr()
+
+    audit_output = tmp_path / "REFERENCE_ASSIGNMENT_AUDIT.md"
+    code = main(["reference-assignment-audit", "--input", str(assignments), "--output", str(audit_output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Reference Assignment Audit" in captured.out
+    assert "missing_evidence" in captured.out
+    assert audit_output.exists()
+
+    code = main(
+        [
+            "reference-assignment-audit",
+            "--input",
+            str(assignments),
+            "--require-owner",
+            "--require-due-date",
+            "--require-ready",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "owner:unassigned" in captured.out
+
+
 def test_audit_audio_cli_with_generated_turn_wavs(tmp_path, capsys) -> None:
     manifest = tmp_path / "turn.jsonl"
     code = main(["make-synthetic-turn-data", "--output", str(manifest), "--episodes", "2", "--write-audio"])
