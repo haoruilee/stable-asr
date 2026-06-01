@@ -287,6 +287,26 @@ def test_paper_release_audit_infers_release_smoke_outputs(tmp_path: Path) -> Non
     assert "OK model/model_card" in text
 
 
+def test_paper_release_audit_rejects_weak_markdown_draft(tmp_path: Path) -> None:
+    result = run_paper_smoke(tmp_path / "paper", episodes=9, seed=6, train_model=False)
+    bundle = paper_artifact_bundle(result.results_path, tmp_path / "artifacts")
+    weak_draft = tmp_path / "PAPER_DRAFT.md"
+    weak_draft.write_text("# Stable-ASR\n\n## Abstract\n\nMissing structure.\n", encoding="utf-8")
+
+    report = audit_paper_release(
+        repo_root=Path("."),
+        results_path=result.results_path,
+        artifacts_dir=bundle.output_dir,
+        markdown_draft=weak_draft,
+    )
+
+    text = report.to_text()
+    assert not report.ok
+    assert "MISSING paper/markdown_draft" in text
+    assert "Related Work And Positioning" in text
+    assert "Limitations" in text
+
+
 def test_paper_release_audit_resolves_platform_assets_from_empty_repo_root(tmp_path: Path, monkeypatch) -> None:
     empty_root = tmp_path / "empty"
     empty_root.mkdir()

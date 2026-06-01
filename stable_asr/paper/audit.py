@@ -472,7 +472,7 @@ def audit_paper_release(
             )
         )
 
-    checks.append(_optional_path_check("paper", "markdown_draft", markdown_draft))
+    checks.append(_markdown_draft_check(markdown_draft))
     checks.append(_optional_path_check("paper", "latex_draft", latex_draft))
     checks.append(_optional_path_check("data", "dataset_card", dataset_card))
     checks.append(_optional_path_check("paper", "experiment_card", experiment_card))
@@ -1770,6 +1770,25 @@ def _optional_path_check(gate: str, name: str, path: str | Path | None) -> Paper
         return _release_check(gate, name, False, "not provided")
     path = Path(path)
     return _release_check(gate, name, path.exists(), str(path))
+
+
+def _markdown_draft_check(path: str | Path | None) -> PaperReleaseAuditCheck:
+    if path is None:
+        return _release_check("paper", "markdown_draft", False, "not provided")
+    path = Path(path)
+    if not path.exists():
+        return _release_check("paper", "markdown_draft", False, str(path))
+    text = path.read_text(encoding="utf-8")
+    required = (
+        "## Abstract",
+        "## Related Work And Positioning",
+        "## 10. Limitations",
+        "## 11. Reproducibility",
+    )
+    missing = [section for section in required if section not in text]
+    if missing:
+        return _release_check("paper", "markdown_draft", False, "missing: " + ", ".join(missing))
+    return _release_check("paper", "markdown_draft", True, f"{path}; required sections present")
 
 
 def _infer_release_dir(artifacts_dir: Path) -> Path:
