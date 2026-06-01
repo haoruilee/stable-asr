@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from stable_asr.doctor import DoctorReport, run_doctor
 from stable_asr.paper.archive import (
     PaperArchiveVerificationReport,
     paper_artifact_archive,
@@ -41,6 +42,7 @@ class PaperReleaseSmokeResult:
     audit: PaperReleaseAuditReport
     paper_status_markdown: str
     paper_status: PaperStatusReport
+    release_environment: DoctorReport
 
     @property
     def ok(self) -> bool:
@@ -82,6 +84,7 @@ class PaperReleaseSmokeResult:
             "audit": self.audit.to_dict(),
             "paper_status_markdown": self.paper_status_markdown,
             "paper_status": self.paper_status.to_dict(),
+            "release_environment": self.release_environment.to_dict(),
         }
 
     def to_text(self) -> str:
@@ -104,11 +107,19 @@ class PaperReleaseSmokeResult:
             f"release_audit_json: {self.release_audit_json}",
             f"release_audit_markdown: {self.release_audit_markdown}",
             f"paper_status_markdown: {self.paper_status_markdown}",
+            f"release_environment_ready: {'YES' if self.release_environment.release_environment_ready else 'NO'}",
             f"final_inputs_ready: {'YES' if self.paper_status.final_inputs_ready else 'NO'}",
             f"final_assignment_ready: {'YES' if self.final_assignment_ready else 'NO'}",
             f"final_handoff_ready: {'YES' if self.final_handoff_ready else 'NO'}",
             f"missing_gates: {len(missing)}",
         ]
+        if not self.release_environment.release_environment_ready:
+            lines.append("release_environment_hint: python -m pip install -e \".[lance,train]\"")
+            lines.extend(
+                f"- release_env/{check.category}/{check.name}: {check.detail}"
+                for check in self.release_environment.checks
+                if check.required and not check.ok
+            )
         lines.extend(f"- archive_verification/{error}" for error in self.archive_verification.errors)
         lines.extend(f"- {check.gate}/{check.name}: {check.detail}" for check in missing)
         return "\n".join(lines)
@@ -166,6 +177,7 @@ def run_paper_release_smoke(
         encoding="utf-8",
     )
     archive_verification_markdown.write_text(archive_verification.to_text() + "\n", encoding="utf-8")
+    release_environment = run_doctor(repo_root=repo_root, check_release_env=True)
 
     return PaperReleaseSmokeResult(
         output_dir=str(output_dir),
@@ -186,4 +198,5 @@ def run_paper_release_smoke(
         audit=audit,
         paper_status_markdown=bundle.paper_status["markdown"],
         paper_status=status,
+        release_environment=release_environment,
     )

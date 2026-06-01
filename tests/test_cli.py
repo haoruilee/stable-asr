@@ -3528,6 +3528,7 @@ def test_paper_release_smoke_cli(tmp_path, capsys) -> None:
     assert code == 0
     assert "paper_release_smoke: NOT_READY" in captured.out
     assert "final_scale_ready: NO" in captured.out
+    assert "release_environment_ready:" in captured.out
     assert "final_inputs_ready: NO" in captured.out
     assert "final_assignment_ready: NO" in captured.out
     assert "final_handoff_ready: NO" in captured.out
@@ -3582,6 +3583,7 @@ def test_paper_release_smoke_default_trains_nanoturn_when_torch_available(tmp_pa
     expected_status = "READY" if _has_working_lance() else "NOT_READY"
     assert f"paper_release_smoke: {expected_status}" in captured.out
     assert "final_scale_ready: NO" in captured.out
+    assert "release_environment_ready:" in captured.out
     assert "final_assignment_ready: NO" in captured.out
     assert "final_handoff_ready: NO" in captured.out
     audit = json.loads((tmp_path / "release_smoke_train" / "release_audit.json").read_text(encoding="utf-8"))
@@ -3589,8 +3591,11 @@ def test_paper_release_smoke_default_trains_nanoturn_when_torch_available(tmp_pa
     assert "baseline/nanoturn_release_baseline" not in failed
     if _has_working_lance():
         assert "data/lance_data_layer" not in failed
+        assert "release_environment_ready: YES" in captured.out
     else:
         assert "data/lance_data_layer" in failed
+        assert "release_environment_ready: NO" in captured.out
+        assert 'python -m pip install -e ".[lance,train]"' in captured.out
 
 
 def test_paper_release_smoke_require_final_ready_requires_release_audit(monkeypatch, capsys) -> None:
