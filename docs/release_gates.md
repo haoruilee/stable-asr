@@ -25,6 +25,7 @@ ready.
 - GitHub issue templates exist for final data acquisition, ASR adapters, VoiceWorld scenarios, and benchmark submissions
 - paper config and reproduction script exist
 - roadmap registry exists and `roadmap-status` separates current milestone evidence from final-scale readiness; `roadmap-status --require-final-ready` must fail until real paper-scale inputs and artifacts exist
+- `completion-audit` maps the top-level Stable-ASR objective to roadmap, platform parity, paper bundle, reference evidence, final inputs, assignment, handoff, and final-release gates
 - `catalog` exists as a one-page platform asset index for checked-in data, model, adapter, scenario, benchmark, schema, reference, roadmap, and parity registries
 - platform parity registry exists and `platform-parity` can audit stable-worldmodel-style repository shape
 - `stable-asr doctor` reports required config schemas as OK
@@ -108,6 +109,7 @@ ready.
 - final-run action plan JSON/Markdown files are included in the artifact bundle
 - final evidence matrix JSON/Markdown files are included in the artifact bundle
 - roadmap status JSON/Markdown files are included in the artifact bundle
+- completion audit JSON/Markdown files are included in the artifact bundle
 - claim evidence JSON/Markdown files are included in the artifact bundle
 - `CITATION.cff` exists
 - `docs/` exists

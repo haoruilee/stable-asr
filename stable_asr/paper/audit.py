@@ -1472,6 +1472,8 @@ def _artifact_checks(artifacts_dir: Path, *, results_path: Path) -> list[PaperAu
     checks.append(_exists_check("paper_status:markdown", artifacts_dir / "PAPER_STATUS.md"))
     checks.append(_exists_check("roadmap_status:json", artifacts_dir / "roadmap_status.json"))
     checks.append(_exists_check("roadmap_status:markdown", artifacts_dir / "ROADMAP_STATUS.md"))
+    checks.append(_exists_check("completion_audit:json", artifacts_dir / "completion_audit.json"))
+    checks.append(_contains_check("completion_audit:markdown", artifacts_dir / "COMPLETION_AUDIT.md", contains="Prompt-To-Artifact Checklist"))
     checks.append(_exists_check("claims:json", artifacts_dir / "claims.json"))
     checks.append(_exists_check("claims:markdown", artifacts_dir / "CLAIMS.md"))
     return checks

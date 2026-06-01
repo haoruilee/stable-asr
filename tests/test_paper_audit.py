@@ -60,6 +60,8 @@ def test_paper_audit_accepts_results_and_bundle(tmp_path: Path) -> None:
     assert "reference_evidence_audit:content" in report.to_text()
     assert "reference_assignments:json" in report.to_text()
     assert "reference_assignments:content" in report.to_text()
+    assert "completion_audit:json" in report.to_text()
+    assert "completion_audit:markdown" in report.to_text()
     assert report.to_dict()["ok"] is True
 
 

@@ -15,6 +15,7 @@ from stable_asr.paper.final_pack import build_final_pack
 from stable_asr.paper.scenario_pack import build_scenario_pack
 from stable_asr.paper.case_studies import paper_case_studies
 from stable_asr.paper.claims import paper_claims
+from stable_asr.paper.completion import completion_audit, write_completion_audit_json, write_completion_audit_markdown
 from stable_asr.paper.evidence import final_evidence_matrix
 from stable_asr.paper.final_experiments import (
     final_experiments_markdown,
@@ -122,6 +123,7 @@ class PaperArtifactBundle:
     final_evidence_matrix: dict[str, str]
     paper_status: dict[str, str]
     roadmap_status: dict[str, str]
+    completion_audit: dict[str, str]
     claims: dict[str, str]
 
     def to_dict(self) -> dict[str, object]:
@@ -160,6 +162,7 @@ class PaperArtifactBundle:
             "final_evidence_matrix": self.final_evidence_matrix,
             "paper_status": self.paper_status,
             "roadmap_status": self.roadmap_status,
+            "completion_audit": self.completion_audit,
             "claims": self.claims,
         }
 
@@ -583,6 +586,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         final_evidence_matrix=final_evidence,
         paper_status=paper_status_artifacts,
         roadmap_status=roadmap_status_artifacts,
+        completion_audit={},
         claims={},
     )
     manifest_path.write_text(json.dumps(provisional.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -592,6 +596,12 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
 
     claim_artifacts = paper_claims(results_path, output_dir)
     claims = claim_artifacts.to_dict()
+    _write_completion_audit_placeholder(output_dir)
+    completion_report = completion_audit(repo_root=Path("."), results_path=results_path, artifacts_dir=output_dir)
+    completion_artifacts = {
+        "json": write_completion_audit_json(completion_report, output_dir / "completion_audit.json"),
+        "markdown": write_completion_audit_markdown(completion_report, output_dir / "COMPLETION_AUDIT.md"),
+    }
     bundle = PaperArtifactBundle(
         output_dir=str(output_dir),
         index_path=str(index_path),
@@ -627,6 +637,7 @@ def paper_artifact_bundle(results_path: str | Path, output_dir: str | Path) -> P
         final_evidence_matrix=final_evidence,
         paper_status=paper_status_artifacts,
         roadmap_status=roadmap_status_artifacts,
+        completion_audit=completion_artifacts,
         claims=claims,
     )
     manifest_path.write_text(json.dumps(bundle.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -737,6 +748,9 @@ def _artifact_index(results_path: Path, bundle: PaperArtifactBundle) -> str:
     lines.extend(["", "## Roadmap Status", ""])
     for name, path in bundle.roadmap_status.items():
         lines.append(f"- `{name}`: `{path}`")
+    lines.extend(["", "## Completion Audit", ""])
+    for name, path in bundle.completion_audit.items():
+        lines.append(f"- `{name}`: `{path}`")
     lines.extend(["", "## Claims", ""])
     for name, path in bundle.claims.items():
         lines.append(f"- `{name}`: `{path}`")
@@ -786,6 +800,16 @@ def _write_platform_catalog(output_dir: Path) -> dict[str, str]:
     return artifacts
 
 
+def _write_completion_audit_placeholder(output_dir: Path) -> None:
+    """Break the self-reference between paper-audit and the completion artifact."""
+
+    (output_dir / "completion_audit.json").write_text("{}\n", encoding="utf-8")
+    (output_dir / "COMPLETION_AUDIT.md").write_text(
+        "# Stable-ASR Completion Audit\n\n## Prompt-To-Artifact Checklist\n\nPending final render.\n",
+        encoding="utf-8",
+    )
+
+
 def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
     paths = [bundle.index_path, bundle.manifest_path]
     sections = (
@@ -819,6 +843,7 @@ def _bundle_artifact_paths(bundle: PaperArtifactBundle) -> list[str]:
         bundle.final_evidence_matrix,
         bundle.paper_status,
         bundle.roadmap_status,
+        bundle.completion_audit,
         bundle.claims,
     )
     for section in sections:

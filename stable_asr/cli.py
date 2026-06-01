@@ -67,6 +67,7 @@ from stable_asr.paper.audit import audit_paper_artifacts, audit_paper_release
 from stable_asr.paper.cards import dataset_card, experiment_card, model_card
 from stable_asr.paper.case_studies import paper_case_studies
 from stable_asr.paper.claims import audit_claims, paper_claims
+from stable_asr.paper.completion import completion_audit, write_completion_audit_markdown
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.evidence import final_evidence_matrix
 from stable_asr.paper.experiments import run_paper_smoke
@@ -1101,6 +1102,26 @@ def build_parser() -> argparse.ArgumentParser:
     paper_status_parser.add_argument("--artifacts-dir", type=Path)
     paper_status_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
     paper_status_parser.add_argument("--json", action="store_true")
+
+    completion_audit_parser = subparsers.add_parser(
+        "completion-audit",
+        help="Map the Stable-ASR objective to concrete roadmap, platform, paper, reference, and final-scale evidence.",
+    )
+    completion_audit_parser.add_argument("--repo-root", type=Path, default=Path("."))
+    completion_audit_parser.add_argument(
+        "--release-dir",
+        type=Path,
+        help="Paper release-smoke output directory; infers paper/paper_results.json and artifacts/.",
+    )
+    completion_audit_parser.add_argument("--results", type=Path)
+    completion_audit_parser.add_argument("--artifacts-dir", type=Path)
+    completion_audit_parser.add_argument("--output", type=Path, help="Optional Markdown output path.")
+    completion_audit_parser.add_argument("--json", action="store_true")
+    completion_audit_parser.add_argument(
+        "--allow-incomplete",
+        action="store_true",
+        help="Return exit code 0 even when the objective is not complete.",
+    )
 
     evidence_parser = subparsers.add_parser(
         "paper-evidence-matrix",
@@ -2882,6 +2903,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"final_evidence_matrix: {len(bundle.final_evidence_matrix)}")
             print(f"paper_status: {len(bundle.paper_status)}")
             print(f"roadmap_status: {len(bundle.roadmap_status)}")
+            print(f"completion_audit: {len(bundle.completion_audit)}")
             print(f"claims: {len(bundle.claims)}")
             print(f"artifact_integrity: {len(bundle.artifact_integrity)}")
         return 0
@@ -2937,6 +2959,27 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         return 0 if report.ok else 1
+
+    if args.command == "completion-audit":
+        try:
+            report = completion_audit(
+                repo_root=args.repo_root,
+                release_dir=args.release_dir,
+                results_path=args.results,
+                artifacts_dir=args.artifacts_dir,
+            )
+            if args.output:
+                write_completion_audit_markdown(report, args.output)
+            if args.json:
+                print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            else:
+                print(report.to_markdown())
+                if args.output:
+                    print(f"completion_audit_markdown: {args.output}")
+        except (OSError, ValueError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0 if report.ok or args.allow_incomplete else 1
 
     if args.command == "paper-evidence-matrix":
         try:

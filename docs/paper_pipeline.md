@@ -52,6 +52,7 @@ stable-asr final-pack --output-dir runs/final_pack
 stable-asr final-acquisition-pack --output-dir runs/final_acquisition_pack
 stable-asr contributor-pack --output-dir runs/contributor_pack
 stable-asr paper-status --release-dir runs/paper/smoke --output runs/paper/smoke/artifacts/PAPER_STATUS.md
+stable-asr completion-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --allow-incomplete --output runs/paper/smoke/artifacts/COMPLETION_AUDIT.md
 stable-asr paper-case-studies --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output-dir runs/paper/smoke/artifacts
 stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
@@ -157,3 +158,6 @@ and writes `release_audit.json` plus `RELEASE_AUDIT.md` in one command. Use
 `--skip-train` for a faster structural check that does not train NanoTurn, and
 use `--strict` when the environment has optional Lance dependencies and
 final-scale inputs installed and a NOT_READY audit should fail the command.
+`completion-audit` is the strictest summary: it maps the user-level objective
+to concrete roadmap, platform parity, paper bundle, reference evidence, final
+input, assignment, handoff, and final-release gates.

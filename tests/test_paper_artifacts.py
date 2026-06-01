@@ -94,6 +94,7 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert set(bundle.final_evidence_matrix) == {"json", "markdown"}
     assert set(bundle.paper_status) == {"json", "markdown"}
     assert set(bundle.roadmap_status) == {"json", "markdown"}
+    assert set(bundle.completion_audit) == {"json", "markdown"}
     assert set(bundle.claims) == {"json", "markdown"}
     assert "Stable-ASR Paper Artifact Index" in Path(bundle.index_path).read_text(encoding="utf-8")
     assert Path(bundle.results["json"]).read_text(encoding="utf-8") == Path(result.results_path).read_text(encoding="utf-8")
@@ -215,6 +216,9 @@ def test_paper_artifact_bundle_generates_tables_figures_and_index(tmp_path: Path
     assert "starter_packs" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "artifact_integrity" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "provenance" in Path(bundle.manifest_path).read_text(encoding="utf-8")
+    assert "completion_audit" in Path(bundle.manifest_path).read_text(encoding="utf-8")
     assert "Stable-ASR Paper Status" in Path(bundle.paper_status["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Platform Roadmap" in Path(bundle.roadmap_status["markdown"]).read_text(encoding="utf-8")
+    assert "Stable-ASR Completion Audit" in Path(bundle.completion_audit["markdown"]).read_text(encoding="utf-8")
+    assert "Prompt-To-Artifact Checklist" in Path(bundle.completion_audit["markdown"]).read_text(encoding="utf-8")
     assert "Stable-ASR Claim Evidence Matrix" in Path(bundle.claims["markdown"]).read_text(encoding="utf-8")

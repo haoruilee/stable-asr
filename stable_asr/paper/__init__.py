@@ -26,6 +26,13 @@ from stable_asr.paper.acquisition_pack import (
 from stable_asr.paper.adapter_pack import AdapterPackReport, build_adapter_pack
 from stable_asr.paper.benchmark_pack import BenchmarkPackReport, build_benchmark_pack
 from stable_asr.paper.cards import dataset_card, experiment_card, model_card, model_card_payload, write_model_card_json
+from stable_asr.paper.completion import (
+    CompletionAuditItem,
+    CompletionAuditReport,
+    completion_audit,
+    write_completion_audit_json,
+    write_completion_audit_markdown,
+)
 from stable_asr.paper.contributor_pack import ContributorPackReport, build_contributor_pack
 from stable_asr.paper.draft import paper_draft
 from stable_asr.paper.evidence import FinalEvidenceMatrixReport, final_evidence_matrix
@@ -105,6 +112,8 @@ __all__ = [
     "BenchmarkSuiteValidation",
     "AdapterPackReport",
     "BenchmarkPackReport",
+    "CompletionAuditItem",
+    "CompletionAuditReport",
     "ContributorPackReport",
     "PaperArtifactBundle",
     "PaperArchiveReport",
@@ -158,6 +167,7 @@ __all__ = [
     "audit_benchmark_required_artifacts",
     "audit_benchmark_suite_coverage",
     "benchmark_suite_markdown",
+    "completion_audit",
     "load_benchmark_suite",
     "load_artifact_integrity",
     "load_paper_archive_report",
@@ -185,6 +195,8 @@ __all__ = [
     "verify_paper_artifact_archive",
     "write_artifact_integrity",
     "write_benchmark_suite_json",
+    "write_completion_audit_json",
+    "write_completion_audit_markdown",
     "write_model_card_json",
     "write_paper_archive_report",
     "write_paper_provenance",

@@ -96,6 +96,25 @@ def test_paper_status_cli_accepts_release_dir(tmp_path, capsys) -> None:
     assert "READY" in captured.out
 
 
+def test_completion_audit_cli_reports_incomplete_goal(tmp_path, capsys) -> None:
+    output = tmp_path / "COMPLETION_AUDIT.md"
+    code = main(["completion-audit", "--allow-incomplete", "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Stable-ASR Completion Audit" in captured.out
+    assert "final_inputs" in captured.out
+    assert output.exists()
+    assert "Prompt-To-Artifact Checklist" in output.read_text(encoding="utf-8")
+
+    code = main(["completion-audit", "--json"])
+    captured = capsys.readouterr()
+    assert code == 1
+    payload = json.loads(captured.out)
+    assert payload["ok"] is False
+    assert any(item["requirement"] == "final_release_ready" for item in payload["items"])
+
+
 def test_paper_evidence_matrix_cli_writes_markdown(tmp_path, capsys) -> None:
     output = tmp_path / "FINAL_EVIDENCE_MATRIX.md"
     code = main(["paper-evidence-matrix", "--output", str(output)])

@@ -177,6 +177,7 @@ stable-asr paper-release-audit \
   --results runs/paper/smoke/paper_results.json \
   --artifacts-dir runs/paper/smoke/artifacts
 stable-asr paper-status --release-dir runs/paper/release_smoke
+stable-asr completion-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --allow-incomplete --output runs/COMPLETION_AUDIT.md
 stable-asr final-handoff-template --output runs/final/FINAL_INPUT_HANDOFF.json
 stable-asr final-assignment-audit --input runs/final_acquisition_pack/acquisition/assignments.json --require-owner --require-due-date --require-ready --output runs/final/FINAL_ASSIGNMENT_AUDIT.md
 stable-asr final-handoff-checksums --input runs/final/FINAL_INPUT_HANDOFF.json --repo-root . --output runs/final/FINAL_INPUT_HANDOFF.json
@@ -351,6 +352,7 @@ is provided in `mkdocs.yaml`.
 - `paper-case-studies` for JSON/Markdown failure case studies linked to manifest and transcript records
 - `paper-claim-audit` for mapping platform-paper claims to concrete files, result keys, commands, and artifacts
 - `paper-status` for a single-page summary of smoke, structural, final-input, final assignment, final handoff, and final-paper readiness
+- `completion-audit` for mapping the top-level Stable-ASR objective to roadmap, platform parity, paper bundle, reference evidence, final inputs, assignment, handoff, and final-release gates
 - `paper-evidence-matrix` for mapping final experiments to blockers, commands, expected artifacts, and success criteria
 - machine-readable stable-worldmodel-style paper parity checklist in `configs/paper/paper_parity_checklist.json`
 - `paper-parity-audit` for separating smoke-level structural evidence from final-scale paper gaps

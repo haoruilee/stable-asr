@@ -12,6 +12,7 @@ stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
 stable-asr roadmap-status --require-final-ready
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only
 stable-asr platform-parity --output runs/PLATFORM_PARITY.md
+stable-asr completion-audit --allow-incomplete --output runs/COMPLETION_AUDIT.md
 ```
 
 `doctor` reports final input readiness as `NOT_CHECKED` unless
@@ -212,6 +213,7 @@ stable-asr paper-archive-verify --archive runs/paper/smoke/artifacts.tar.gz
 stable-asr paper-release-smoke --output-dir runs/paper/release_smoke
 stable-asr paper-release-smoke --require-final-ready
 stable-asr paper-status --release-dir runs/paper/release_smoke
+stable-asr completion-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --allow-incomplete --output runs/COMPLETION_AUDIT.md
 stable-asr paper-release-audit --repo-root . --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
 stable-asr paper-release-audit --repo-root . --require-final-ready
 ```

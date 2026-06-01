@@ -56,6 +56,7 @@ stable-asr roadmap-status --roadmap configs/roadmap/stable_asr_roadmap.json
 stable-asr roadmap-status --require-final-ready
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only
 stable-asr platform-parity --output runs/PLATFORM_PARITY.md
+stable-asr completion-audit --allow-incomplete --output runs/COMPLETION_AUDIT.md
 stable-asr validate-manifest examples/data/turn_demo.jsonl
 stable-asr convert examples/data/turn_demo.jsonl runs/turn_demo.lance
 stable-asr profile-turn-data --dataset examples/data/turn_demo.jsonl --report runs/turn_profile.md
@@ -123,6 +124,7 @@ stable-asr paper-artifact-integrity --manifest runs/paper/smoke/artifacts/artifa
 stable-asr paper-archive --artifacts-dir runs/paper/smoke/artifacts --output runs/paper/smoke/artifacts.tar.gz
 stable-asr paper-archive-verify --archive runs/paper/smoke/artifacts.tar.gz
 stable-asr paper-status --release-dir runs/paper/smoke
+stable-asr completion-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --allow-incomplete
 stable-asr paper-case-studies --results runs/paper/smoke/paper_results.json --output-dir runs/paper/smoke/artifacts
 stable-asr paper-claim-audit --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts --output-dir runs/paper/smoke/artifacts
 stable-asr paper-parity-audit --checklist configs/paper/paper_parity_checklist.json --results runs/paper/smoke/paper_results.json --artifacts-dir runs/paper/smoke/artifacts
