@@ -29,6 +29,55 @@ def load_jsonl(path: str | Path) -> list:
             for l in Path(path).read_text().splitlines() if l.strip()]
 
 
+def _micro_budget(train_records, dev_records, target_cache_sec: float = 120.0):
+    """Return (train, dev) subsets sized for a meaningful but fast micro benchmark.
+
+    Constraints (applied in order, most restrictive wins):
+      1. Time: cache build should finish in ~target_cache_sec.
+         At ~2s audio per record decoded at ~500rec/s on CPU → 500*120 = 60k.
+      2. VRAM: each logmel tensor in a training batch must fit.
+         With batch_size=64, T~100, 80 mel, float32 → ~2MB/batch, safe up to
+         60% of VRAM (model + gradients take the rest).
+      3. Actual available records.
+
+    Result is always at least 5k records to give meaningful timing.
+    """
+    import psutil, torch
+
+    # Time-based cap: ~60 records/sec flac→logmel (measured on local AMI data)
+    time_budget = int(60 * target_cache_sec)
+
+    # VRAM-based cap (parquet cache is CPU-side, but GPU batches must fit)
+    vram_total = torch.cuda.get_device_properties(0).total_memory if torch.cuda.is_available() else 0
+    bytes_per_record = 40_000  # T_avg=125 frames × 80 mel × 4 bytes
+    vram_budget = int(vram_total * 0.6 / bytes_per_record) if vram_total else time_budget
+
+    max_train = max(5_000, min(time_budget, vram_budget, len(train_records)))
+    max_dev   = max(500,   min(max_train // 5, len(dev_records)))
+
+    if max_train < len(train_records) or max_dev < len(dev_records):
+        import random
+        rng = random.Random(42)
+        train_sub = rng.sample(train_records, max_train)
+        dev_sub   = dev_records[:max_dev]
+        print(f"    Auto-capped micro: {len(train_records)}→{max_train} train, "
+              f"{len(dev_records)}→{max_dev} dev "
+              f"(time budget {target_cache_sec:.0f}s, VRAM {vram_total/1e9:.1f}GB)")
+        return _filter_valid_audio(train_sub), _filter_valid_audio(dev_sub)
+
+    return _filter_valid_audio(train_records), _filter_valid_audio(dev_records)
+
+
+def _filter_valid_audio(records, min_size_bytes: int = 1000) -> list:
+    """Drop records whose audio file is missing or suspiciously small (corrupt)."""
+    valid = [r for r in records
+             if r.audio and Path(r.audio).exists() and Path(r.audio).stat().st_size >= min_size_bytes]
+    dropped = len(records) - len(valid)
+    if dropped:
+        print(f"    Filtered {dropped} records with missing/corrupt audio ({len(valid)} remain)")
+    return valid
+
+
 def export_onnx(ckpt: Path) -> Path | None:
     """Export checkpoint to ONNX via CLI; return path or None on failure."""
     onnx_path = ckpt.parent / "model.onnx"
@@ -104,7 +153,12 @@ def bench_micro_training(out: Path, train_records, dev_records, epochs: int) -> 
     Strategy: first pass writes a feature cache (logmel pre-compute),
     subsequent passes read from cache — eliminating flac IO so the
     benchmark measures pure GPU compute time.
+
+    Data volume is auto-capped to fit in available RAM/VRAM.
     """
+    # Auto-cap to available memory before doing anything
+    train_records, dev_records = _micro_budget(train_records, dev_records)
+
     print("\n" + "="*60)
     print("TRACK 2: micro (audio TCN, cached features) — AMP training speedup")
     print(f"  {len(train_records)} train / {len(dev_records)} dev records, {epochs} max epochs")
