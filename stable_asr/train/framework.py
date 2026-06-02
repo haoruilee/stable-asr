@@ -21,6 +21,8 @@ from stable_asr.data.manifest import TurnManifestRecord
 from stable_asr.train.features import feature_names, normalize_feature_source, records_to_features
 from stable_asr.turn.nanoturn import DEFAULT_LABELS, NanoTurnConfig, build_nanoturn_model, require_torch, torch
 
+_SEQUENCE_MODEL_TYPES = frozenset({"nanoturn_micro"})
+
 
 @dataclass(frozen=True)
 class NanoTurnRunConfig:
@@ -88,12 +90,26 @@ class NanoTurnTensorDataset:
     def __init__(self, features, targets) -> None:
         self.features = features
         self.targets = targets
+        # features is either a 2D tensor (MLP) or a list of (T, n_mels) tensors (TCN)
+        self.is_sequence = isinstance(features, list)
 
     def __len__(self) -> int:
         return int(self.targets.shape[0])
 
     def __getitem__(self, index: int):
         return self.features[index], self.targets[index]
+
+
+def _sequence_collate_fn(batch):
+    """Pad variable-length (T, n_mels) sequences to the max T in the batch."""
+    import torch as _torch
+    seqs, targets = zip(*batch)
+    max_t = max(s.shape[0] for s in seqs)
+    n_mels = seqs[0].shape[1]
+    padded = _torch.zeros(len(seqs), max_t, n_mels, dtype=_torch.float32)
+    for i, seq in enumerate(seqs):
+        padded[i, : seq.shape[0], :] = seq
+    return padded, _torch.stack(targets)
 
 
 class NanoTurnDataModule:
@@ -132,21 +148,25 @@ class NanoTurnDataModule:
         if self.train_dataset is None:
             raise RuntimeError("NanoTurnDataModule.setup() must be called before train_dataloader()")
         generator = torch.Generator().manual_seed(_epoch_seed(self.config.seed, epoch))
+        collate_fn = _sequence_collate_fn if self.train_dataset.is_sequence else None
         return torch.utils.data.DataLoader(
             self.train_dataset,
             batch_size=self.config.batch_size,
             shuffle=True,
             generator=generator,
+            collate_fn=collate_fn,
         )
 
     def val_dataloader(self):
         require_torch()
         if self.val_dataset is None:
             return None
+        collate_fn = _sequence_collate_fn if self.val_dataset.is_sequence else None
         return torch.utils.data.DataLoader(
             self.val_dataset,
             batch_size=self.config.batch_size,
             shuffle=False,
+            collate_fn=collate_fn,
         )
 
     def _make_dataset(
@@ -170,7 +190,6 @@ class NanoTurnDataModule:
         targets = torch.tensor([self.labels.index(record.turn_label) for record in records], dtype=torch.long)
         return NanoTurnTensorDataset(features, targets)
 
-
 class NanoTurnTrainer:
     def __init__(self, config: NanoTurnRunConfig, *, labels: tuple[str, ...] = DEFAULT_LABELS) -> None:
         require_torch()
@@ -180,16 +199,41 @@ class NanoTurnTrainer:
         self.device = _resolve_device(config.device)
         names = feature_names(config.feature_source)
         self.feature_names = tuple(names)
-        self.model = build_nanoturn_model(config.model_type, labels=labels, input_dim=len(names)).to(self.device)
-        self.model.config = NanoTurnConfig(
-            input_dim=len(names),
-            hidden_dim=self.model.config.hidden_dim,
-            depth=self.model.config.depth,
-            dropout=self.model.config.dropout,
-            labels=self.model.config.labels,
-            model_type=self.model.config.model_type,
-            feature_source=normalize_feature_source(config.feature_source),
-        )
+        self.is_sequence_model = config.model_type in _SEQUENCE_MODEL_TYPES
+        if self.is_sequence_model:
+            from stable_asr.turn.nanoturn_micro import NanoTurnMicroConfig, build_nanoturn_micro
+            micro_cfg = NanoTurnMicroConfig(
+                n_mels=len(names),
+                hidden_dim=64,
+                n_blocks=4,
+                kernel_size=3,
+                dropout=0.1,
+                labels=labels,
+                model_type="nanoturn_micro",
+                feature_source=normalize_feature_source(config.feature_source),
+            )
+            self.model = build_nanoturn_micro(
+                labels=labels,
+                n_mels=micro_cfg.n_mels,
+                hidden_dim=micro_cfg.hidden_dim,
+                n_blocks=micro_cfg.n_blocks,
+                kernel_size=micro_cfg.kernel_size,
+                dropout=micro_cfg.dropout,
+            ).to(self.device)
+            # Store micro config for checkpoint serialisation
+            self._micro_config = micro_cfg
+        else:
+            self.model = build_nanoturn_model(config.model_type, labels=labels, input_dim=len(names)).to(self.device)
+            self.model.config = NanoTurnConfig(
+                input_dim=len(names),
+                hidden_dim=self.model.config.hidden_dim,
+                depth=self.model.config.depth,
+                dropout=self.model.config.dropout,
+                labels=self.model.config.labels,
+                model_type=self.model.config.model_type,
+                feature_source=normalize_feature_source(config.feature_source),
+            )
+            self._micro_config = None
         self.optimizer = _build_optimizer(config, self.model.parameters())
         self.criterion = torch.nn.CrossEntropyLoss()
 
@@ -346,9 +390,13 @@ class NanoTurnTrainer:
             "best_epoch": best_epoch,
             "history": history,
         }
+        if self.is_sequence_model:
+            model_config_dict = self._micro_config.to_dict()
+        else:
+            model_config_dict = self.model.config.to_dict()
         torch.save(
             {
-                "config": self.model.config.to_dict(),
+                "config": model_config_dict,
                 "state_dict": self.model.state_dict(),
                 "optimizer_state_dict": self.optimizer.state_dict(),
                 "epoch": epoch,
@@ -371,10 +419,14 @@ class NanoTurnTrainer:
         return epoch + 1, history, best_score, best_epoch
 
     def _run_config_payload(self, data: NanoTurnDataModule) -> dict[str, object]:
+        if self.is_sequence_model:
+            model_info = self._micro_config.to_dict()
+        else:
+            model_info = self.model.config.to_dict()
         return {
             "framework": "stable_asr.nanoturn_trainer.v1",
             "config": self.config.to_dict(),
-            "model": self.model.config.to_dict(),
+            "model": model_info,
             "data": {
                 "records": len(data.train_records) + len(data.val_records),
                 "train_records": len(data.train_records),

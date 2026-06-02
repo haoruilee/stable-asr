@@ -1042,9 +1042,9 @@ def build_parser() -> argparse.ArgumentParser:
     train_parser.add_argument("--config", type=Path, help="Optional NanoTurn training config JSON.")
     train_parser.add_argument(
         "--model",
-        choices=["nanoturn_pico", "nanoturn_nano"],
+        choices=["nanoturn_pico", "nanoturn_nano", "nanoturn_pico_v1", "nanoturn_nano_v1", "nanoturn_micro"],
         default=None,
-        help="NanoTurn model size.",
+        help="NanoTurn model size. v1 variants use logmel_v1 160-dim features. nanoturn_micro is a TCN sequence model.",
     )
     train_parser.add_argument("--epochs", type=int)
     train_parser.add_argument("--lr", type=float)
@@ -1076,9 +1076,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     train_parser.add_argument(
         "--feature-source",
-        choices=["metadata", "audio", "manifest_metadata_v0", "metadata_v0", "logmel_v0", "audio_logmel_v0"],
+        choices=["metadata", "audio", "manifest_metadata_v0", "metadata_v0", "logmel_v0", "audio_logmel_v0", "logmel_v1", "audio_logmel_v1", "audio_v1", "audio_seq", "logmel_seq", "audio_logmel_seq"],
         default=None,
-        help="Feature source used by NanoTurn v0.",
+        help="Feature source for NanoTurn. Use logmel_v1 for the 160-dim torchaudio MelSpectrogram frontend.",
     )
     train_parser.add_argument(
         "--audio-root",
@@ -1142,6 +1142,39 @@ def build_parser() -> argparse.ArgumentParser:
     export_parser.add_argument("--checkpoint", type=Path, required=True)
     export_parser.add_argument("--output", type=Path, required=True)
     export_parser.add_argument("--opset", type=int, default=18)
+
+    upload_dataset_parser = subparsers.add_parser(
+        "upload-dataset",
+        help="Upload a turn manifest (JSONL/Parquet) to a HuggingFace dataset repo.",
+    )
+    upload_dataset_parser.add_argument("--manifest", type=Path, required=True, help="Path to JSONL or Parquet manifest.")
+    upload_dataset_parser.add_argument("--repo-id", required=True, help="HuggingFace repo id, e.g. myuser/my-dataset.")
+    upload_dataset_parser.add_argument("--split", default="train", help="Dataset split name (default: train).")
+    upload_dataset_parser.add_argument("--private", action="store_true", help="Create a private repo.")
+    upload_dataset_parser.add_argument("--token", help="HuggingFace API token (defaults to HF_TOKEN env var).")
+    upload_dataset_parser.add_argument("--message", help="Commit message.")
+
+    upload_model_parser = subparsers.add_parser(
+        "upload-model",
+        help="Upload a NanoTurn checkpoint to a HuggingFace model repo.",
+    )
+    upload_model_parser.add_argument("--checkpoint", type=Path, required=True, help="Path to .pt checkpoint.")
+    upload_model_parser.add_argument("--repo-id", required=True, help="HuggingFace repo id, e.g. myuser/nanoturn.")
+    upload_model_parser.add_argument("--onnx", type=Path, help="Optional ONNX export to also upload.")
+    upload_model_parser.add_argument("--metrics", type=Path, help="Optional metrics.json to include in model card.")
+    upload_model_parser.add_argument("--private", action="store_true", help="Create a private repo.")
+    upload_model_parser.add_argument("--token", help="HuggingFace API token (defaults to HF_TOKEN env var).")
+    upload_model_parser.add_argument("--message", help="Commit message.")
+
+    upload_experiment_parser = subparsers.add_parser(
+        "upload-experiment",
+        help="Upload an entire experiment output directory to a HuggingFace model repo.",
+    )
+    upload_experiment_parser.add_argument("--dir", type=Path, required=True, help="Experiment output directory.")
+    upload_experiment_parser.add_argument("--repo-id", required=True, help="HuggingFace repo id.")
+    upload_experiment_parser.add_argument("--private", action="store_true")
+    upload_experiment_parser.add_argument("--token", help="HuggingFace API token.")
+    upload_experiment_parser.add_argument("--message", help="Commit message.")
 
     paper_parser = subparsers.add_parser(
         "reproduce-paper",
@@ -3089,7 +3122,57 @@ def main(argv: list[str] | None = None) -> int:
         print(f"onnx: {output}")
         return 0
 
-    if args.command == "reproduce-paper":
+    if args.command == "upload-dataset":
+        import os
+        from stable_asr.hub.upload import upload_dataset
+        token = args.token or os.environ.get("HF_TOKEN")
+        url = upload_dataset(
+            args.manifest,
+            args.repo_id,
+            split=args.split,
+            private=args.private,
+            token=token,
+            commit_message=args.message,
+        )
+        print(f"dataset: {url}")
+        return 0
+
+    if args.command == "upload-model":
+        import json as _json
+        import os
+        from stable_asr.hub.upload import upload_model
+        token = args.token or os.environ.get("HF_TOKEN")
+        metrics = None
+        if args.metrics and Path(args.metrics).exists():
+            with open(args.metrics, encoding="utf-8") as fh:
+                metrics = _json.load(fh)
+        url = upload_model(
+            args.checkpoint,
+            args.repo_id,
+            private=args.private,
+            token=token,
+            commit_message=args.message,
+            onnx_path=args.onnx,
+            metrics=metrics,
+        )
+        print(f"model: {url}")
+        return 0
+
+    if args.command == "upload-experiment":
+        import os
+        from stable_asr.hub.upload import upload_experiment_dir
+        token = args.token or os.environ.get("HF_TOKEN")
+        url = upload_experiment_dir(
+            args.dir,
+            args.repo_id,
+            private=args.private,
+            token=token,
+            commit_message=args.message,
+        )
+        print(f"experiment: {url}")
+        return 0
+
+
         paper_config = _load_paper_config(args.config)
         output_dir = args.output_dir or _required_config_path(paper_config, "output_dir")
         episodes = args.episodes if args.episodes is not None else int(paper_config.get("episodes", 25))

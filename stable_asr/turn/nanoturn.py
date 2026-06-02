@@ -102,9 +102,41 @@ def NanoTurnNano(labels: tuple[str, ...] = DEFAULT_LABELS, input_dim: int = 8) -
     return NanoTurnMLP(config)
 
 
+def NanoTurnPicoV1(labels: tuple[str, ...] = DEFAULT_LABELS, input_dim: int = 160) -> NanoTurnMLP:
+    """NanoTurnPico trained on logmel_v1 160-dim features."""
+    config = NanoTurnConfig(
+        input_dim=input_dim,
+        hidden_dim=64,
+        depth=2,
+        dropout=0.05,
+        labels=labels,
+        model_type="nanoturn_pico_v1",
+        feature_source="audio_v1",
+    )
+    return NanoTurnMLP(config)
+
+
+def NanoTurnNanoV1(labels: tuple[str, ...] = DEFAULT_LABELS, input_dim: int = 160) -> NanoTurnMLP:
+    """NanoTurnNano trained on logmel_v1 160-dim features."""
+    config = NanoTurnConfig(
+        input_dim=input_dim,
+        hidden_dim=256,
+        depth=3,
+        dropout=0.1,
+        labels=labels,
+        model_type="nanoturn_nano_v1",
+        feature_source="audio_v1",
+    )
+    return NanoTurnMLP(config)
+
+
 def build_nanoturn_model(model_type: str, *, labels: tuple[str, ...] = DEFAULT_LABELS, input_dim: int = 8) -> NanoTurnMLP:
     if model_type == "nanoturn_pico":
         return NanoTurnPico(labels=labels, input_dim=input_dim)
     if model_type == "nanoturn_nano":
         return NanoTurnNano(labels=labels, input_dim=input_dim)
+    if model_type == "nanoturn_pico_v1":
+        return NanoTurnPicoV1(labels=labels, input_dim=input_dim)
+    if model_type == "nanoturn_nano_v1":
+        return NanoTurnNanoV1(labels=labels, input_dim=input_dim)
     raise ValueError(f"unknown NanoTurn model type: {model_type}")

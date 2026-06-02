@@ -33,6 +33,7 @@ class NanoTurnCheckpointPredictor:
         self.config = config
         self.audio_root = audio_root
         self.model.eval()
+        self.is_sequence = getattr(config, "model_type", "") == "nanoturn_micro"
 
     def predict(self, record: TurnManifestRecord) -> TurnPrediction:
         require_torch()
@@ -41,8 +42,17 @@ class NanoTurnCheckpointPredictor:
                 [record],
                 feature_source=self.config.feature_source,
                 audio_root=self.audio_root,
-            ).to(next(self.model.parameters()).device)
-            logits = self.model(features)
+            )
+            if self.is_sequence:
+                # features is a list of (T, n_mels) tensors; stack with batch dim
+                from stable_asr.train.framework import _sequence_collate_fn
+                import torch as _t
+                batch, _ = _sequence_collate_fn([(features[0], _t.tensor(0))])
+                batch = batch.to(next(self.model.parameters()).device)
+                logits = self.model(batch)
+            else:
+                batch = features.to(next(self.model.parameters()).device)
+                logits = self.model(batch)
             probs = torch.softmax(logits, dim=-1)[0].cpu().tolist()
         return TurnPrediction(
             probs={label: float(probs[index]) for index, label in enumerate(self.config.labels)},
@@ -110,9 +120,26 @@ def train_nanoturn(
 
 
 def load_nanoturn_checkpoint(checkpoint_path: str | Path):
+    """Load a NanoTurn checkpoint (MLP or Micro) and return (model, config)."""
     require_torch()
     payload = torch.load(checkpoint_path, map_location="cpu")
-    config = NanoTurnConfig.from_dict(payload["config"])
+    cfg_dict = payload["config"]
+    model_type = str(cfg_dict.get("model_type", "nanoturn_pico"))
+    if model_type == "nanoturn_micro":
+        from stable_asr.turn.nanoturn_micro import NanoTurnMicroConfig, NanoTurnMicro
+        config = NanoTurnMicroConfig.from_dict(cfg_dict)
+        from stable_asr.turn.nanoturn_micro import build_nanoturn_micro
+        model = build_nanoturn_micro(
+            labels=config.labels,
+            n_mels=config.n_mels,
+            hidden_dim=config.hidden_dim,
+            n_blocks=config.n_blocks,
+            kernel_size=config.kernel_size,
+            dropout=config.dropout,
+        )
+        model.load_state_dict(payload["state_dict"])
+        return model, config
+    config = NanoTurnConfig.from_dict(cfg_dict)
     model = build_nanoturn_model(
         config.model_type,
         labels=config.labels,

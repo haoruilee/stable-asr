@@ -36,6 +36,7 @@ dependencies = []
 [project.optional-dependencies]
 train = [
   "torch>=2.0",
+  "torchaudio>=0.13",
   "tensorboard>=2.14",
 ]
 data = [
@@ -49,12 +50,19 @@ export = [
   "torch>=2.0",
   "onnx>=1.15",
 ]
+hub = [
+  "huggingface_hub>=0.20",
+  "datasets>=2.16",
+]
 all = [
   "torch>=2.0",
+  "torchaudio>=0.13",
   "tensorboard>=2.14",
   "onnx>=1.15",
   "pyarrow>=14",
   "pylance>=0.39.0",
+  "huggingface_hub>=0.20",
+  "datasets>=2.16",
 ]
 
 [project.urls]

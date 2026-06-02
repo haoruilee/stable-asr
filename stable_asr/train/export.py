@@ -21,13 +21,26 @@ def export_nanoturn_onnx(
     model.eval()
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    dummy = torch.zeros(1, config.input_dim, dtype=torch.float32)
+
+    model_type = getattr(config, "model_type", "nanoturn_pico")
+    if model_type == "nanoturn_micro":
+        # TCN: input is (B, T, n_mels); use a fixed T=32 for export
+        n_mels = getattr(config, "n_mels", 80)
+        dummy = torch.zeros(1, 32, n_mels, dtype=torch.float32)
+        input_names = ["mel_frames"]
+        dynamic_axes = {"mel_frames": {0: "batch", 1: "time"}, "logits": {0: "batch"}}
+    else:
+        dummy = torch.zeros(1, config.input_dim, dtype=torch.float32)
+        input_names = ["features"]
+        dynamic_axes = {"features": {0: "batch"}, "logits": {0: "batch"}}
+
     torch.onnx.export(
         model,
         dummy,
         output_path,
-        input_names=["features"],
+        input_names=input_names,
         output_names=["logits"],
+        dynamic_axes=dynamic_axes,
         opset_version=opset_version,
     )
     return str(output_path)
