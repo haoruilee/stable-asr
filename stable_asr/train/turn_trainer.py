@@ -215,6 +215,7 @@ def train_nanoturn(
     lr_schedule: str | None = None,
     lr_min: float = 1e-6,
     early_stopping_patience: int | None = None,
+    depthwise: bool = False,
 ) -> TrainTurnResult:
     require_torch()
     if not records:
@@ -247,6 +248,7 @@ def train_nanoturn(
         lr_schedule=lr_schedule,
         lr_min=lr_min,
         early_stopping_patience=early_stopping_patience,
+        depthwise=depthwise,
     )
     result = fit_nanoturn(records, output_dir=output_dir, config=config, val_records=val_records)
     return TrainTurnResult(

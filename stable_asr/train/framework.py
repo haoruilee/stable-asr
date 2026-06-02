@@ -63,6 +63,9 @@ class NanoTurnRunConfig:
     # Early stopping: halt if val accuracy does not improve for this many epochs.
     # None = disabled (original behaviour).
     early_stopping_patience: int | None = None
+    # Depthwise separable convolution for nanoturn_micro (reduces FLOPs ~kernel_size×).
+    # Has no effect on MLP models.
+    depthwise: bool = False
 
     def validate(self) -> None:
         if self.epochs < 1:
@@ -252,6 +255,7 @@ class NanoTurnTrainer:
                 n_blocks=micro_cfg.n_blocks,
                 kernel_size=micro_cfg.kernel_size,
                 dropout=micro_cfg.dropout,
+                depthwise=config.depthwise,
             ).to(self.device)
             # Store micro config for checkpoint serialisation
             self._micro_config = micro_cfg
