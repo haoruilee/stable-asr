@@ -61,6 +61,11 @@ bash scripts/run_quickstart.sh setup
 bash scripts/run_quickstart.sh smoke
 bash scripts/run_quickstart.sh data
 
+# 0b. CPU-first large-data preparation for any later training platform
+bash scripts/prepare_large_scale_data.sh status
+bash scripts/prepare_large_scale_data.sh manifests
+bash scripts/prepare_large_scale_data.sh turn
+
 # 1. Inspect data and compare turn-taking baselines
 stable-asr doctor
 stable-asr platform-parity --registry configs/platform/stable_worldmodel_parity.json --validate-only
@@ -410,7 +415,7 @@ is provided in `mkdocs.yaml`.
 - final run configuration template in `configs/final/paper_final.json`
 - `final-config` for validating final paper run directories, corpora, splits, adapter config, and artifact paths
 - `final-config --scaffold` for creating final-run directories and README hints without fabricating data
-- `final-config --check-files` for reporting which final paper inputs are still missing before expensive runs
+- `final-config --check-files` for reporting which final paper inputs are still missing before long-running experiments
 - `final-config --prepare-inputs` for running final corpus, ASR eval manifest, weak split, prediction, VoiceWorld, ASR-command, and file-audit preparation in sequence
 - `final-config --prepare-corpora` for preparing configured public ASR manifests from local corpus directories
 - `final-config --prepare-asr-eval-manifest` for combining prepared ASR corpus manifests into the shared final streaming-ASR evaluation manifest
@@ -421,7 +426,8 @@ is provided in `mkdocs.yaml`.
 - `final-config --audit-asr-commands` for checking final command-backed ASR comparison inputs without executing the adapters
 - `final-config --prepare-asr-transcript-conversions` for turning configured ASR adapter outputs into the final transcript-conversion result input
 - `final-config --plan-missing` for turning the final-run file audit into an actionable data-staging and experiment runbook
-- `scripts/run_final_machine.sh` and `docs/guides/cloud_machine_runbook.md` for phase-based execution on a rented GPU machine
+- `scripts/run_final_machine.sh` and `docs/guides/cloud_machine_runbook.md` for phase-based execution on local, remote, or accelerated training environments
+- `scripts/prepare_large_scale_data.sh` and `docs/guides/large_scale_data_runbook.md` for CPU-first large-corpus manifests, weak turn splits, conversion, audits, and data-layer preparation before moving to a training environment
 - `final-inputs` for validating and rendering the final-scale input collection plan in `configs/final/input_collections.json`
 - `final-assignment-audit`, `final-handoff-template`, `final-handoff-checksums`, `validate-schema-file --schema-id stable_asr.final_handoff.v0`, and `final-handoff-audit` for turning real final-scale staged inputs into auditable owner, due-date, release-blocker, license/consent, verification, path, and checksum evidence
 - `final-results` for assembling audited final-scale JSON outputs into `runs/final/paper_results.json`

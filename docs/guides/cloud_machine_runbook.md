@@ -1,20 +1,20 @@
-# Cloud Machine Runbook
+# Training Environment Runbook
 
-This is the shortest path from a fresh rented GPU machine to a Stable-ASR final
-run. The script is intentionally phase-based so missing corpora, external
-prediction exports, or upstream ASR weights are reported before expensive jobs
-start.
+This is the shortest path from a fresh local, remote, or accelerated training
+environment to a Stable-ASR final run. The script is intentionally phase-based
+so missing corpora, external prediction exports, or upstream ASR weights are
+reported before long-running jobs start.
 
-## Machine
+## Environment
 
-Recommended first run:
+Recommended first full run profile:
 
 ```text
-1 x RTX 4090 24GB or RTX A6000 48GB
+Linux workstation or remote training environment
+Python 3.10+
+Optional accelerator-capable PyTorch environment
 128GB RAM
 2TB-4TB NVMe
-Ubuntu 22.04/24.04
-CUDA-capable PyTorch environment
 ```
 
 ## Setup

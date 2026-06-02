@@ -35,6 +35,22 @@ bash scripts/run_quickstart.sh all
 
 Outputs go to `runs/quickstart` unless `RUN_DIR` is set.
 
+## Large-Data Preparation
+
+Before moving to a training environment, prepare corpus manifests, weak turn
+splits, audits, and data-layer artifacts on any CPU-capable machine:
+
+```bash
+bash scripts/prepare_large_scale_data.sh status
+bash scripts/prepare_large_scale_data.sh manifests
+bash scripts/prepare_large_scale_data.sh turn
+bash scripts/prepare_large_scale_data.sh data-layer
+```
+
+See [Large-scale data](guides/large_scale_data_runbook.md) for corpus path
+overrides, external turn dataset conversion, VoiceWorld data, and optional
+feature-cache preparation.
+
 ## Three-Step Platform Flow
 
 ```bash

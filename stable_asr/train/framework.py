@@ -41,6 +41,7 @@ class NanoTurnRunConfig:
     feature_cache_mode: str = "auto"
     audio_root: str | None = None
     resume_from: str | None = None
+    validation_group_by: str | None = "auto"
 
     def validate(self) -> None:
         if self.epochs < 1:
@@ -264,6 +265,7 @@ class NanoTurnTrainer:
             "feature_cache": self.config.feature_cache,
             "feature_cache_format": self.config.feature_cache_format,
             "feature_cache_mode": self.config.feature_cache_mode if self.config.feature_cache else None,
+            "validation_group_by": self.config.validation_group_by,
             "feature_names": list(self.feature_names),
             "labels": list(self.labels),
             "batch_size": self.config.batch_size,
@@ -401,16 +403,61 @@ def _split_validation(
         return list(records), []
     if len(records) < 2:
         raise ValueError("validation_split requires at least two records")
-    indices = list(range(len(records)))
+    units = _validation_units(records, group_by=config.validation_group_by)
+    if len(units) < 2:
+        raise ValueError("validation_split requires at least two validation groups")
     rng = random.Random(config.seed)
-    rng.shuffle(indices)
-    val_count = max(1, int(round(len(records) * config.validation_split)))
-    val_indices = set(indices[:val_count])
-    train = [record for index, record in enumerate(records) if index not in val_indices]
-    val = [record for index, record in enumerate(records) if index in val_indices]
+    rng.shuffle(units)
+    target_val_records = max(1, int(round(len(records) * config.validation_split)))
+    val_units: list[list[TurnManifestRecord]] = []
+    val_count = 0
+    for unit in units[:-1]:
+        if val_units and val_count >= target_val_records:
+            break
+        val_units.append(unit)
+        val_count += len(unit)
+    val_unit_ids = {id(unit) for unit in val_units}
+    train = [record for unit in units if id(unit) not in val_unit_ids for record in unit]
+    val = [record for unit in val_units for record in unit]
     if not train:
         raise ValueError("validation_split leaves no training records")
     return train, val
+
+
+def _validation_units(
+    records: list[TurnManifestRecord],
+    *,
+    group_by: str | None,
+) -> list[list[TurnManifestRecord]]:
+    if not group_by:
+        return [[record] for record in records]
+    if group_by == "auto":
+        group_by = _auto_validation_group_field(records)
+    grouped: dict[str, list[TurnManifestRecord]] = {}
+    for record in records:
+        key = _validation_field_value(record, group_by)
+        grouped.setdefault(key, []).append(record)
+    return list(grouped.values())
+
+
+def _auto_validation_group_field(records: list[TurnManifestRecord]) -> str:
+    for field in ("metadata.asr_record_id", "metadata.conversation_id", "audio"):
+        values = [_validation_field_value(record, field) for record in records]
+        if any(value for value in values) and len(set(values)) < len(records):
+            return field
+    return "id"
+
+
+def _validation_field_value(record: TurnManifestRecord, field: str) -> str:
+    if field.startswith("metadata."):
+        value = record.metadata.get(field.removeprefix("metadata."))
+    else:
+        value = getattr(record, field, None)
+    if value is None:
+        return record.id
+    if isinstance(value, (str, int, float, bool)):
+        return str(value)
+    return repr(value)
 
 
 def _build_optimizer(config: NanoTurnRunConfig, parameters):

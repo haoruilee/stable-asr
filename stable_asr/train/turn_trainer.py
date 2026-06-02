@@ -72,6 +72,7 @@ def train_nanoturn(
     checkpoint_interval: int = 1,
     resume_from: str | Path | None = None,
     device: str = "auto",
+    validation_group_by: str | None = "auto",
 ) -> TrainTurnResult:
     require_torch()
     if not records:
@@ -96,6 +97,7 @@ def train_nanoturn(
         feature_cache_mode=feature_cache_mode,
         audio_root=str(audio_root) if audio_root else None,
         resume_from=str(resume_from) if resume_from else None,
+        validation_group_by=validation_group_by,
     )
     result = fit_nanoturn(records, output_dir=output_dir, config=config, val_records=val_records)
     return TrainTurnResult(

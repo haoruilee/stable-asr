@@ -1051,6 +1051,15 @@ def build_parser() -> argparse.ArgumentParser:
     train_parser.add_argument("--seed", type=int)
     train_parser.add_argument("--batch-size", type=int)
     train_parser.add_argument("--validation-split", type=float)
+    train_parser.add_argument(
+        "--validation-group-by",
+        default=None,
+        help=(
+            "Field kept together for internal validation_split. Defaults to auto, "
+            "which uses metadata.asr_record_id, metadata.conversation_id, or audio when duplicated. "
+            "Use 'none' to disable grouping."
+        ),
+    )
     train_parser.add_argument("--optimizer", choices=["adam", "adamw", "sgd"])
     train_parser.add_argument("--weight-decay", type=float)
     train_parser.add_argument("--gradient-clip-norm", type=float)
@@ -2961,6 +2970,11 @@ def main(argv: list[str] | None = None) -> int:
             if args.validation_split is not None
             else float(train_config.get("validation_split", 0.0))
         )
+        validation_group_by = _validation_group_by_arg(
+            args.validation_group_by
+            if args.validation_group_by is not None
+            else train_config.get("validation_group_by", "auto")
+        )
         optimizer = args.optimizer or str(train_config.get("optimizer", "adam"))
         weight_decay = (
             args.weight_decay if args.weight_decay is not None else float(train_config.get("weight_decay", 0.0))
@@ -3005,6 +3019,7 @@ def main(argv: list[str] | None = None) -> int:
             checkpoint_interval=checkpoint_interval,
             resume_from=resume_from,
             device=device,
+            validation_group_by=validation_group_by,
         )
         if args.json:
             print(json.dumps(result.metrics, ensure_ascii=False, indent=2))
@@ -4003,6 +4018,13 @@ def _optional_str(value: object) -> str | None:
         return None
     text = str(value)
     return text or None
+
+
+def _validation_group_by_arg(value: object) -> str | None:
+    text = str(value or "auto").strip()
+    if not text or text.lower() in {"none", "off", "false"}:
+        return None
+    return text
 
 
 def _benchmark_turn_name(args: argparse.Namespace) -> str:

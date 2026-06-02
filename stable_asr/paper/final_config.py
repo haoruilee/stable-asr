@@ -31,7 +31,7 @@ DEFAULT_FINAL_RUN_CONFIG: dict[str, Any] = {
     "description": (
         "Template configuration for a final-scale Stable-ASR platform paper run. "
         "Paths are intentionally explicit so the final benchmark can be audited "
-        "before expensive jobs are launched."
+        "before long-running jobs are launched."
     ),
     "output_dir": "runs/final",
     "seed": 0,

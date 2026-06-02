@@ -151,13 +151,22 @@ stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --valid
 stable-asr benchmark-suite --suite configs/benchmarks/stable_asr_v0.json --results runs/paper/smoke/paper_results.json --validate-only
 ```
 
-For rented GPU machines, use the phase-based runner:
+For local, remote, or accelerated training environments, use the phase-based runner:
 
 ```bash
 bash scripts/run_final_machine.sh setup
 bash scripts/run_final_machine.sh status
 bash scripts/run_final_machine.sh data-layer
 bash scripts/run_final_machine.sh train
+```
+
+For CPU-first large-data preparation before moving to a training environment, use:
+
+```bash
+bash scripts/prepare_large_scale_data.sh status
+bash scripts/prepare_large_scale_data.sh manifests
+bash scripts/prepare_large_scale_data.sh turn
+bash scripts/prepare_large_scale_data.sh data-layer
 ```
 
 For local zero-external-data onboarding, use:
@@ -182,4 +191,4 @@ bash scripts/run_quickstart.sh all
 - [ASR reference collections](asr_collections.md)
 - [Turn and full-duplex reference collections](turn_collections.md)
 - API: [Data](api/data.md), [Turn](api/turn.md), [Scenarios](api/scenarios.md), [Paper](api/paper.md)
-- Guides: [External ASR adapters](guides/adapters.md), [Local quickstart](guides/local_quickstart_runbook.md), [Cloud machine runbook](guides/cloud_machine_runbook.md), [Release smoke](guides/release_smoke.md)
+- Guides: [External ASR adapters](guides/adapters.md), [Local quickstart](guides/local_quickstart_runbook.md), [Large-scale data](guides/large_scale_data_runbook.md), [Training environment](guides/cloud_machine_runbook.md), [Release smoke](guides/release_smoke.md)
