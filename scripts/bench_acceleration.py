@@ -99,20 +99,67 @@ def bench_nano_training(out: Path, train_records, dev_records, epochs: int) -> l
 
 
 def bench_micro_training(out: Path, train_records, dev_records, epochs: int) -> list[dict]:
-    """micro audio TCN — compute-heavy, AMP gives real speedup here."""
+    """micro audio TCN — compute-heavy, AMP gives real speedup here.
+
+    Strategy: first pass writes a feature cache (logmel pre-compute),
+    subsequent passes read from cache — eliminating flac IO so the
+    benchmark measures pure GPU compute time.
+    """
     print("\n" + "="*60)
-    print("TRACK 2: micro (audio TCN) — AMP training speedup")
+    print("TRACK 2: micro (audio TCN, cached features) — AMP training speedup")
     print(f"  {len(train_records)} train / {len(dev_records)} dev records, {epochs} max epochs")
 
+    cache_path = str(out / "micro_feature_cache" / "logmel.parquet")
+    Path(cache_path).parent.mkdir(parents=True, exist_ok=True)
+
+    # ---- Step 0: build feature cache (write once, reuse by all configs) ----
+    print("\n  [micro] Building feature cache (logmel pre-compute, write-once)...")
+    t_cache = time.perf_counter()
+    _build_feature_cache(out, train_records, dev_records, cache_path)
+    cache_elapsed = time.perf_counter() - t_cache
+    print(f"    Cache built in {cache_elapsed:.1f}s → {cache_path}")
+
+    # ---- Step 1: baseline without cache (to show IO cost) ----
+    # ---- Step 2: all accelerated configs with cache --------------------------------
     configs = [
-        ("micro_baseline",    dict(device="cuda", amp=False, num_workers=0, pin_memory=False, lr_schedule=None)),
-        ("micro_amp",         dict(device="cuda", amp=True,  num_workers=2, pin_memory=True,  lr_schedule=None)),
-        ("micro_amp_cosine",  dict(device="cuda", amp=True,  num_workers=2, pin_memory=True,  lr_schedule="cosine", lr_min=1e-5)),
-        ("micro_amp_dw",      dict(device="cuda", amp=True,  num_workers=2, pin_memory=True,  lr_schedule="cosine", lr_min=1e-5,
-                                    depthwise=True)),
+        # name,                 extra kwargs
+        ("micro_no_cache",      dict(device="cuda", amp=False, num_workers=0, pin_memory=False,
+                                     feature_cache=None, feature_cache_mode=None)),
+        ("micro_cached",        dict(device="cuda", amp=False, num_workers=0, pin_memory=False,
+                                     feature_cache=cache_path, feature_cache_mode="read")),
+        ("micro_cached_amp",    dict(device="cuda", amp=True,  num_workers=2, pin_memory=True,
+                                     feature_cache=cache_path, feature_cache_mode="read")),
+        ("micro_cached_amp_dw", dict(device="cuda", amp=True,  num_workers=2, pin_memory=True,
+                                     feature_cache=cache_path, feature_cache_mode="read",
+                                     depthwise=True)),
+        ("micro_cached_amp_es", dict(device="cuda", amp=True,  num_workers=2, pin_memory=True,
+                                     feature_cache=cache_path, feature_cache_mode="read",
+                                     lr_schedule="cosine", lr_min=1e-5, early_stopping_patience=5)),
     ]
     return _run_configs("micro", out, train_records, dev_records, epochs, configs,
                         model_type="nanoturn_micro", feature_source="audio_seq", batch_size=64)
+
+
+def _build_feature_cache(out: Path, train_records, dev_records, cache_path: str) -> None:
+    """Run one short training pass with cache_mode=write to pre-compute features."""
+    from stable_asr.train.turn_trainer import train_nanoturn
+    train_nanoturn(
+        train_records,
+        val_records=dev_records,
+        output_dir=str(out / "micro_cache_build"),
+        model_type="nanoturn_micro",
+        epochs=1,
+        lr=1e-2,
+        seed=42,
+        feature_source="audio_seq",
+        batch_size=64,
+        validation_split=0.0,
+        optimizer="adam",
+        checkpoint_interval=1,
+        device="cuda",
+        feature_cache=cache_path,
+        feature_cache_mode="write",
+    )
 
 
 def _run_configs(track: str, out: Path, train_records, dev_records, epochs: int,
@@ -233,6 +280,8 @@ def main() -> None:
                         help="Skip training, only run inference benchmark on existing checkpoints")
     parser.add_argument("--no-micro", action="store_true",
                         help="Skip micro TCN training benchmark")
+    parser.add_argument("--no-nano", action="store_true",
+                        help="Skip nano MLP training benchmark")
     args = parser.parse_args()
 
     out = Path(args.output)
@@ -245,7 +294,8 @@ def main() -> None:
     all_results: dict[str, list[dict]] = {}
 
     if not args.inference_only:
-        all_results["nano"] = bench_nano_training(out, train_records, dev_records, args.epochs)
+        if not args.no_nano:
+            all_results["nano"] = bench_nano_training(out, train_records, dev_records, args.epochs)
 
         if not args.no_micro:
             # Filter to records that have audio files (micro needs audio_seq)

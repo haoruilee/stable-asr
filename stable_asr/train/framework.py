@@ -318,7 +318,7 @@ class NanoTurnTrainer:
                 history.append(row)
                 write_jsonl(artifacts.history_path, history)
                 score = float(val_metrics.get("accuracy", train_metrics["accuracy"]))
-                is_best = score >= best_score
+                is_best = score > best_score
                 if is_best:
                     best_score = score
                     best_epoch = epoch
