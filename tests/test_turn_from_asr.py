@@ -23,7 +23,7 @@ def test_asr_records_to_turn_records_can_emit_incomplete_negatives(tmp_path: Pat
 
     result = asr_records_to_turn_records(
         asr_records,
-        config=ASRToTurnConfig(include_incomplete=True, incomplete_ratio=0.5),
+        config=ASRToTurnConfig(include_incomplete=True, incomplete_ratio_min=0.5, incomplete_ratio_max=0.5),
     )
 
     labels = [record.turn_label for record in result.records]
@@ -35,6 +35,22 @@ def test_asr_records_to_turn_records_can_emit_incomplete_negatives(tmp_path: Pat
     assert incomplete.text is None
     assert incomplete.metadata["label_strategy"] == "asr_truncated_incomplete"
     assert incomplete.metadata["truncation_ratio"] == 0.5
+
+
+def test_asr_records_to_turn_records_randomises_truncation_ratio(tmp_path: Path) -> None:
+    """Randomised truncation range must produce varied ratios, preventing duration shortcut."""
+    asr_records = _example_asr_records(tmp_path)
+
+    result = asr_records_to_turn_records(
+        asr_records,
+        config=ASRToTurnConfig(include_incomplete=True, incomplete_ratio_min=0.40, incomplete_ratio_max=0.85),
+    )
+
+    incomplete = [r for r in result.records if r.turn_label == "incomplete"]
+    assert incomplete, "expected at least one incomplete record"
+    for rec in incomplete:
+        ratio = rec.metadata["truncation_ratio"]
+        assert 0.40 <= ratio <= 0.85, f"truncation_ratio {ratio} out of [0.40, 0.85]"
 
 
 def _example_asr_records(tmp_path: Path):

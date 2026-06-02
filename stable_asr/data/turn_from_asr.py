@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random as _random
 from dataclasses import dataclass
 
 from stable_asr.data.asr_manifest import ASRManifestRecord
@@ -14,20 +15,29 @@ class ASRToTurnConfig:
     window_sec: float = 2.0
     include_complete: bool = True
     include_incomplete: bool = False
+    # Randomised truncation range — each incomplete sample gets a ratio drawn
+    # uniformly from [incomplete_ratio_min, incomplete_ratio_max].  Using a
+    # range instead of a fixed value prevents the model from learning to
+    # classify by duration alone (the "duration shortcut" bias).
+    incomplete_ratio_min: float = 0.40
+    incomplete_ratio_max: float = 0.85
+    # Deprecated single-value shorthand kept for backwards compat — ignored
+    # when incomplete_ratio_min/max are set to their non-0.65 defaults.
     incomplete_ratio: float = 0.65
     min_incomplete_sec: float = 0.4
     complete_pause_ms: int = 900
     incomplete_pause_ms: int = 250
     source: str = "asr_weak_turn_v0"
     drop_incomplete_text: bool = True
+    seed: int = 42
 
     def validate(self) -> None:
         if self.window_sec <= 0:
             raise ValueError("window_sec must be positive")
         if not self.include_complete and not self.include_incomplete:
             raise ValueError("at least one of include_complete or include_incomplete must be enabled")
-        if not 0.0 < self.incomplete_ratio < 1.0:
-            raise ValueError("incomplete_ratio must be between 0 and 1")
+        if not (0.0 < self.incomplete_ratio_min <= self.incomplete_ratio_max < 1.0):
+            raise ValueError("incomplete_ratio_min/max must satisfy 0 < min <= max < 1")
         if self.min_incomplete_sec <= 0:
             raise ValueError("min_incomplete_sec must be positive")
         if self.complete_pause_ms < 0 or self.incomplete_pause_ms < 0:
@@ -48,7 +58,8 @@ class ASRToTurnResult:
                 "window_sec": self.config.window_sec,
                 "include_complete": self.config.include_complete,
                 "include_incomplete": self.config.include_incomplete,
-                "incomplete_ratio": self.config.incomplete_ratio,
+                "incomplete_ratio_min": self.config.incomplete_ratio_min,
+                "incomplete_ratio_max": self.config.incomplete_ratio_max,
                 "min_incomplete_sec": self.config.min_incomplete_sec,
                 "complete_pause_ms": self.config.complete_pause_ms,
                 "incomplete_pause_ms": self.config.incomplete_pause_ms,
@@ -79,6 +90,7 @@ def asr_records_to_turn_records(
 ) -> ASRToTurnResult:
     config = config or ASRToTurnConfig()
     config.validate()
+    rng = _random.Random(config.seed)
 
     output: list[TurnManifestRecord] = []
     for record in records:
@@ -86,7 +98,8 @@ def asr_records_to_turn_records(
         if config.include_complete:
             output.append(_complete_record(record, duration=duration, config=config))
         if config.include_incomplete:
-            incomplete_end = min(duration - 0.05, max(config.min_incomplete_sec, duration * config.incomplete_ratio))
+            ratio = rng.uniform(config.incomplete_ratio_min, config.incomplete_ratio_max)
+            incomplete_end = min(duration - 0.05, max(config.min_incomplete_sec, duration * ratio))
             if incomplete_end <= 0:
                 continue
             output.append(_incomplete_record(record, end=incomplete_end, duration=duration, config=config))
