@@ -76,43 +76,118 @@ data_layer() {
 }
 
 train_nanoturn() {
+  # Train all 5 NanoTurn variants; export ONNX for each.
+  local base="runs/final"
+
+  # pico: MLP 1-layer, metadata 8-dim
   run stable-asr train-turn \
-    --dataset runs/final/turn_train.jsonl \
-    --output-dir runs/final/nanoturn \
+    --dataset "${base}/turn_train.jsonl" \
+    --dev-dataset "${base}/turn_dev.jsonl" \
+    --output-dir "${base}/nanoturn_pico" \
     --model nanoturn_pico \
-    --feature-source audio \
-    --feature-cache runs/final/nanoturn/logmel_features.lance \
-    --feature-cache-format lance
+    --feature-source metadata \
+    --json
   run stable-asr export-turn-onnx \
-    --checkpoint runs/final/nanoturn/checkpoint.pt \
-    --output runs/final/nanoturn/nanoturn.onnx
+    --checkpoint "${base}/nanoturn_pico/checkpoint.pt" \
+    --output "${base}/nanoturn_pico/nanoturn_pico.onnx"
+
+  # nano: MLP 2-layer, metadata 8-dim
+  run stable-asr train-turn \
+    --dataset "${base}/turn_train.jsonl" \
+    --dev-dataset "${base}/turn_dev.jsonl" \
+    --output-dir "${base}/nanoturn_nano" \
+    --model nanoturn_nano \
+    --feature-source metadata \
+    --json
+  run stable-asr export-turn-onnx \
+    --checkpoint "${base}/nanoturn_nano/checkpoint.pt" \
+    --output "${base}/nanoturn_nano/nanoturn_nano.onnx"
+
+  # pico_v1: MLP 2-layer, logmel_v1 160-dim
+  run stable-asr train-turn \
+    --dataset "${base}/turn_train.jsonl" \
+    --dev-dataset "${base}/turn_dev.jsonl" \
+    --output-dir "${base}/nanoturn_pico_v1" \
+    --model nanoturn_pico_v1 \
+    --feature-source logmel_v1 \
+    --json
+  run stable-asr export-turn-onnx \
+    --checkpoint "${base}/nanoturn_pico_v1/checkpoint.pt" \
+    --output "${base}/nanoturn_pico_v1/nanoturn_pico_v1.onnx"
+
+  # nano_v1: MLP 3-layer, logmel_v1 160-dim
+  run stable-asr train-turn \
+    --dataset "${base}/turn_train.jsonl" \
+    --dev-dataset "${base}/turn_dev.jsonl" \
+    --output-dir "${base}/nanoturn_nano_v1" \
+    --model nanoturn_nano_v1 \
+    --feature-source logmel_v1 \
+    --json
+  run stable-asr export-turn-onnx \
+    --checkpoint "${base}/nanoturn_nano_v1/checkpoint.pt" \
+    --output "${base}/nanoturn_nano_v1/nanoturn_nano_v1.onnx"
+
+  # micro: TCN 4-block dilated causal, audio_seq (T, 80)
+  run stable-asr train-turn \
+    --dataset "${base}/turn_train.jsonl" \
+    --dev-dataset "${base}/turn_dev.jsonl" \
+    --output-dir "${base}/nanoturn_micro" \
+    --model nanoturn_micro \
+    --feature-source audio_seq \
+    --json
+  run stable-asr export-turn-onnx \
+    --checkpoint "${base}/nanoturn_micro/checkpoint.pt" \
+    --output "${base}/nanoturn_micro/nanoturn_micro.onnx"
 }
 
 evaluate_core() {
+  local base="runs/final"
+
+  # Build checkpoint args for all trained models
+  local ckpt_args=()
+  for model in nanoturn_pico nanoturn_nano nanoturn_pico_v1 nanoturn_nano_v1 nanoturn_micro; do
+    local ckpt="${base}/${model}/checkpoint.pt"
+    [[ -f "${ckpt}" ]] && ckpt_args+=(--checkpoint "${model}=${ckpt}")
+  done
+
   run stable-asr compare-turn \
-    --dataset runs/final/turn_test.jsonl \
+    --dataset "${base}/turn_test.jsonl" \
     --baseline rule_endpoint \
     --baseline vad_pause \
     --baseline text_turn \
-    --predictions smart_turn=runs/final/external/smartturn_predictions.jsonl \
-    --predictions easy_turn=runs/final/external/easyturn_predictions.jsonl \
-    --predictions vap=runs/final/external/vap_predictions.jsonl \
-    --checkpoint nanoturn=runs/final/nanoturn/checkpoint.pt \
-    --report runs/final/reports/baselines.md \
-    --json-output runs/final/reports/baselines.json
-  run stable-asr benchmark-turn \
-    --dataset runs/final/turn_test.jsonl \
-    --checkpoint runs/final/nanoturn/checkpoint.pt \
-    --artifact runs/final/nanoturn/checkpoint.pt \
-    --artifact runs/final/nanoturn/metrics.json \
-    --report runs/final/reports/turn_benchmarks.md \
-    --json-output runs/final/reports/turn_benchmarks.json
-  run stable-asr eval-scenario \
-    --dataset runs/final/voiceworld_real.jsonl \
-    --checkpoint runs/final/nanoturn/checkpoint.pt \
-    --seed 0 \
-    --report runs/final/reports/scenarios.md \
-    --json-output runs/final/reports/scenarios.json
+    --predictions smart_turn="${base}/external/smartturn_predictions.jsonl" \
+    --predictions easy_turn="${base}/external/easyturn_predictions.jsonl" \
+    --predictions vap="${base}/external/vap_predictions.jsonl" \
+    "${ckpt_args[@]}" \
+    --report "${base}/reports/baselines.md" \
+    --json-output "${base}/reports/baselines.json"
+
+  # Benchmark and scenario eval for the primary model (nanoturn_nano)
+  local primary_ckpt="${base}/nanoturn_nano/checkpoint.pt"
+  if [[ -f "${primary_ckpt}" ]]; then
+    run stable-asr benchmark-turn \
+      --dataset "${base}/turn_test.jsonl" \
+      --checkpoint "${primary_ckpt}" \
+      --artifact "${primary_ckpt}" \
+      --report "${base}/reports/turn_benchmarks.md" \
+      --json-output "${base}/reports/turn_benchmarks.json"
+    run stable-asr eval-scenario \
+      --dataset "${base}/voiceworld_real.jsonl" \
+      --checkpoint "${primary_ckpt}" \
+      --seed 0 \
+      --report "${base}/reports/scenarios.md" \
+      --json-output "${base}/reports/scenarios.json"
+  fi
+}
+
+ablations() {
+  bash scripts/run_ablations.sh all \
+    2>&1 | tee runs/ablations/run.log
+}
+
+full_eval() {
+  bash scripts/run_eval.sh all \
+    2>&1 | tee runs/eval/run.log
 }
 
 asr_adapters() {
@@ -128,8 +203,8 @@ bundle() {
   run stable-asr final-results --config "${CONFIG}" --output runs/final/paper_results.json
   run stable-asr make-card model \
     --input configs/models/stable_asr_models.json \
-    --model-id nanoturn_pico \
-    --metrics runs/final/nanoturn/metrics.json \
+    --model-id nanoturn_nano \
+    --metrics runs/final/nanoturn_nano/metrics.json \
     --output runs/final/MODEL_CARD.md
   run stable-asr paper-bundle --results runs/final/paper_results.json --output-dir runs/final/artifacts
   run stable-asr paper-archive --artifacts-dir runs/final/artifacts --output runs/final/artifacts.tar.gz
@@ -153,6 +228,8 @@ case "${PHASE}" in
   data-layer) data_layer ;;
   train) train_nanoturn ;;
   evaluate) evaluate_core ;;
+  ablations) ablations ;;
+  full-eval) full_eval ;;
   asr-adapters) asr_adapters ;;
   bundle) bundle ;;
   final)
@@ -161,6 +238,8 @@ case "${PHASE}" in
     data_layer
     train_nanoturn
     evaluate_core
+    ablations
+    full_eval
     asr_adapters
     bundle
     ;;
@@ -173,8 +252,10 @@ Phases:
   status          run doctor, check final files, and write missing-input plan
   prepare-inputs  scaffold and prepare configured final inputs that exist
   data-layer      run JSONL/Parquet/Lance and correctness-checked cache benchmarks
-  train           train NanoTurn and export ONNX
+  train           train all 5 NanoTurn variants and export ONNX
   evaluate        run turn, latency, and VoiceWorld evaluations
+  ablations       run feature/arch/scale/seed ablation experiments
+  full-eval       run consolidated eval across all trained checkpoints
   asr-adapters    run configured command-backed ASR adapter comparisons
   bundle          assemble final results, cards, archive, and release audit
   final           run the full sequence after inputs are staged

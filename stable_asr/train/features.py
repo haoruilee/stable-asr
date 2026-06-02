@@ -34,6 +34,19 @@ FEATURE_SOURCE_ALIASES = {
     "audio_logmel_seq": "audio_seq",
 }
 
+# Indices of features to zero out for each ablation variant.
+# Indices correspond to FEATURE_NAMES order.
+_ABLATION_MASKS: dict[str, tuple[int, ...]] = {
+    # ablate duration_ms (index 2) — removes utterance-length shortcut
+    "metadata_no_duration": (2,),
+    # ablate pause_ms + vad_pause_ms (indices 0,1)
+    "metadata_no_pause": (0, 1),
+    # ablate both duration and pause signals
+    "metadata_no_duration_no_pause": (0, 1, 2),
+    # keep only spectral/prosodic features — zero out metadata timing features
+    "metadata_content_only": (0, 1, 2, 7),  # remove pause, duration, jitter
+}
+
 
 def records_to_features(
     records: list[TurnManifestRecord],
@@ -46,6 +59,13 @@ def records_to_features(
 ):
     require_torch()
     feature_source = normalize_feature_source(feature_source)
+    # Metadata ablation variants: compute full metadata then zero-mask some indices
+    if feature_source in _ABLATION_MASKS:
+        mask_indices = _ABLATION_MASKS[feature_source]
+        tensor = torch.tensor([record_to_features(record) for record in records], dtype=torch.float32)
+        for idx in mask_indices:
+            tensor[:, idx] = 0.0
+        return tensor
     if feature_source == "metadata":
         return torch.tensor([record_to_features(record) for record in records], dtype=torch.float32)
     if feature_source == "audio":
@@ -84,7 +104,7 @@ def records_to_features(
 
 def feature_names(feature_source: str) -> tuple[str, ...]:
     feature_source = normalize_feature_source(feature_source)
-    if feature_source == "metadata":
+    if feature_source == "metadata" or feature_source in _ABLATION_MASKS:
         return FEATURE_NAMES
     if feature_source == "audio":
         return AUDIO_FEATURE_NAMES

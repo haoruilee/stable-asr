@@ -1076,9 +1076,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     train_parser.add_argument(
         "--feature-source",
-        choices=["metadata", "audio", "manifest_metadata_v0", "metadata_v0", "logmel_v0", "audio_logmel_v0", "logmel_v1", "audio_logmel_v1", "audio_v1", "audio_seq", "logmel_seq", "audio_logmel_seq"],
+        choices=["metadata", "audio", "manifest_metadata_v0", "metadata_v0", "logmel_v0", "audio_logmel_v0", "logmel_v1", "audio_logmel_v1", "audio_v1", "audio_seq", "logmel_seq", "audio_logmel_seq", "metadata_no_duration", "metadata_no_pause", "metadata_no_duration_no_pause", "metadata_content_only"],
         default=None,
-        help="Feature source for NanoTurn. Use logmel_v1 for the 160-dim torchaudio MelSpectrogram frontend.",
+        help="Feature source for NanoTurn. Ablation variants: metadata_no_duration, metadata_no_pause, metadata_no_duration_no_pause, metadata_content_only.",
     )
     train_parser.add_argument(
         "--audio-root",
