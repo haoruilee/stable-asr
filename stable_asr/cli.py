@@ -855,7 +855,10 @@ def build_parser() -> argparse.ArgumentParser:
     asr_to_turn_parser.add_argument("--window-sec", type=float, default=2.0)
     asr_to_turn_parser.add_argument("--no-complete", action="store_true", help="Do not emit complete windows.")
     asr_to_turn_parser.add_argument("--include-incomplete", action="store_true", help="Also emit truncated incomplete windows.")
-    asr_to_turn_parser.add_argument("--incomplete-ratio", type=float, default=0.65)
+    asr_to_turn_parser.add_argument("--incomplete-ratio", type=float, default=None,
+                                    help="Deprecated: use --incomplete-ratio-min/max instead.")
+    asr_to_turn_parser.add_argument("--incomplete-ratio-min", type=float, default=0.40)
+    asr_to_turn_parser.add_argument("--incomplete-ratio-max", type=float, default=0.85)
     asr_to_turn_parser.add_argument("--min-incomplete-sec", type=float, default=0.4)
     asr_to_turn_parser.add_argument("--complete-pause-ms", type=int, default=900)
     asr_to_turn_parser.add_argument("--incomplete-pause-ms", type=int, default=250)
@@ -886,7 +889,10 @@ def build_parser() -> argparse.ArgumentParser:
     bootstrap_turn_parser.add_argument("--turn-format", choices=TURN_FORMATS.names(), default="jsonl")
     bootstrap_turn_parser.add_argument("--window-sec", type=float, default=2.0)
     bootstrap_turn_parser.add_argument("--include-incomplete", action="store_true")
-    bootstrap_turn_parser.add_argument("--incomplete-ratio", type=float, default=0.65)
+    bootstrap_turn_parser.add_argument("--incomplete-ratio", type=float, default=None,
+                                       help="Deprecated: use --incomplete-ratio-min/max instead.")
+    bootstrap_turn_parser.add_argument("--incomplete-ratio-min", type=float, default=0.40)
+    bootstrap_turn_parser.add_argument("--incomplete-ratio-max", type=float, default=0.85)
     bootstrap_turn_parser.add_argument("--train-ratio", type=float, default=0.8)
     bootstrap_turn_parser.add_argument("--dev-ratio", type=float, default=0.1)
     bootstrap_turn_parser.add_argument("--test-ratio", type=float, default=0.1)
@@ -2701,7 +2707,8 @@ def main(argv: list[str] | None = None) -> int:
                     window_sec=args.window_sec,
                     include_complete=not args.no_complete,
                     include_incomplete=args.include_incomplete,
-                    incomplete_ratio=args.incomplete_ratio,
+                    incomplete_ratio_min=args.incomplete_ratio if args.incomplete_ratio is not None else args.incomplete_ratio_min,
+                    incomplete_ratio_max=args.incomplete_ratio if args.incomplete_ratio is not None else args.incomplete_ratio_max,
                     min_incomplete_sec=args.min_incomplete_sec,
                     complete_pause_ms=args.complete_pause_ms,
                     incomplete_pause_ms=args.incomplete_pause_ms,
@@ -2744,7 +2751,8 @@ def main(argv: list[str] | None = None) -> int:
                 asr_to_turn_config=ASRToTurnConfig(
                     window_sec=args.window_sec,
                     include_incomplete=args.include_incomplete,
-                    incomplete_ratio=args.incomplete_ratio,
+                    incomplete_ratio_min=args.incomplete_ratio if args.incomplete_ratio is not None else args.incomplete_ratio_min,
+                    incomplete_ratio_max=args.incomplete_ratio if args.incomplete_ratio is not None else args.incomplete_ratio_max,
                 ),
                 split_config=TurnSplitConfig(
                     train_ratio=args.train_ratio,

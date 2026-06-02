@@ -86,7 +86,7 @@ download_ami() {
   # HuggingFace path is the most reliable and includes auto-segmented splits.
   need python3
 
-  log "AMI: downloading via HuggingFace datasets (IHM headset mix)"
+  log "AMI: building manifests from HF parquet cache (no torchcodec needed)"
   python3 - "${dest}" <<'PYEOF'
 import sys, pathlib
 
@@ -94,65 +94,87 @@ dest = pathlib.Path(sys.argv[1])
 dest.mkdir(parents=True, exist_ok=True)
 
 try:
-    from datasets import load_dataset, DownloadConfig
+    import pyarrow.parquet as pq
+    import soundfile as sf
 except ImportError:
     import subprocess
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "datasets", "soundfile", "librosa"])
-    from datasets import load_dataset
-
-print("Loading AMI (IHM) train split — this will download ~14GB ...")
-ds_train = load_dataset(
-    "edinburghcstr/ami",
-    "ihm",            # Individual HeadSet Microphone mix
-    split="train",
-    trust_remote_code=True,
-)
-print(f"  train: {len(ds_train)} segments")
-
-print("Loading AMI (IHM) validation split ...")
-ds_val = load_dataset("edinburghcstr/ami", "ihm", split="validation", trust_remote_code=True)
-print(f"  validation: {len(ds_val)} segments")
-
-print("Loading AMI (IHM) test split ...")
-ds_test = load_dataset("edinburghcstr/ami", "ihm", split="test", trust_remote_code=True)
-print(f"  test: {len(ds_test)} segments")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "--break-system-packages", "-q", "pyarrow", "soundfile"])
+    import pyarrow.parquet as pq
+    import soundfile as sf
 
 # Save as JSONL manifests compatible with stable-asr
-import json
+# Read directly from parquet blobs to avoid torchcodec decode issues.
+import glob, io, json, os, pathlib, struct
+import pyarrow.parquet as pq
+import soundfile as sf
 
-def save_manifest(ds, path):
-    records = []
-    for i, ex in enumerate(ds):
-        records.append({
-            "id": ex.get("meeting_id", f"ami_{i:06d}") + f"__{i:06d}",
-            "text": ex.get("text", ""),
-            "audio": ex["audio"]["path"] if isinstance(ex["audio"], dict) else "",
-            "sample_rate": ex["audio"]["sampling_rate"] if isinstance(ex["audio"], dict) else 16000,
+HF_CACHE = pathlib.Path.home() / ".cache/huggingface/hub/datasets--edinburghcstr--ami"
+parquet_files = sorted(HF_CACHE.rglob("*.parquet"))
+print(f"  Found {len(parquet_files)} parquet shards in HF cache")
+
+# Split mapping from filename
+def split_from_path(p):
+    s = str(p)
+    if "validation" in s: return "validation"
+    if "test" in s: return "test"
+    return "train"
+
+audio_dir = dest / "audio"
+audio_dir.mkdir(parents=True, exist_ok=True)
+
+records_by_split = {"train": [], "validation": [], "test": []}
+
+for pf in parquet_files:
+    split = split_from_path(pf)
+    table = pq.read_table(pf)
+    rows = table.to_pydict()
+    n = len(rows["meeting_id"])
+    for i in range(n):
+        audio_bytes = rows["audio"][i]["bytes"]
+        meeting_id  = rows["meeting_id"][i]
+        speaker_id  = rows["speaker_id"][i]
+        audio_id    = rows["audio_id"][i]
+        begin_time  = float(rows["begin_time"][i])
+        end_time    = float(rows["end_time"][i])
+        text        = rows["text"][i] or ""
+
+        # Write audio bytes to flac file
+        safe_id = f"{meeting_id}__{audio_id}".replace("/", "_")
+        flac_path = audio_dir / f"{safe_id}.flac"
+        if not flac_path.exists():
+            buf = io.BytesIO(audio_bytes)
+            data, sr = sf.read(buf)
+            sf.write(str(flac_path), data, sr, format="flac")
+        else:
+            sr = sf.info(str(flac_path)).samplerate
+
+        records_by_split[split].append({
+            "id": safe_id,
+            "text": text,
+            "audio": str(flac_path),
+            "sample_rate": sr,
             "start": 0.0,
-            "end": ex["audio"]["array"].shape[0] / ex["audio"]["sampling_rate"]
-                   if isinstance(ex["audio"], dict) else 0.0,
+            "end": round(end_time - begin_time, 6),
             "language": "en",
             "source": "ami_ihm",
             "metadata": {
-                "meeting_id": ex.get("meeting_id", ""),
-                "speaker_id": ex.get("speaker_id", ""),
-                "microphone_id": ex.get("microphone_id", ""),
-                "segment_id": str(i),
+                "meeting_id": meeting_id,
+                "speaker_id": speaker_id,
+                "audio_id": audio_id,
+                "begin_time": begin_time,
+                "end_time": end_time,
             },
         })
-    path = pathlib.Path(path)
-    path.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in records) + "\n")
-    print(f"  Wrote {len(records)} records → {path}")
 
-save_manifest(ds_train, dest / "ami_train.jsonl")
-save_manifest(ds_val,   dest / "ami_dev.jsonl")
-save_manifest(ds_test,  dest / "ami_test.jsonl")
+name_map = {"train": "ami_train.jsonl", "validation": "ami_dev.jsonl", "test": "ami_test.jsonl"}
+for split, recs in records_by_split.items():
+    if not recs:
+        continue
+    out_path = dest / name_map[split]
+    out_path.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in recs) + "\n")
+    print(f"  Wrote {len(recs)} records → {out_path}")
 
-# Also save HuggingFace dataset to disk for fast reloading
-ds_train.save_to_disk(str(dest / "hf_cache" / "train"))
-ds_val.save_to_disk(str(dest  / "hf_cache" / "validation"))
-ds_test.save_to_disk(str(dest / "hf_cache" / "test"))
-print("Done. AMI dataset saved.")
+print("Done. AMI manifests saved.")
 PYEOF
 
   ok "AMI download complete → ${dest}"
