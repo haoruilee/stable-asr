@@ -1143,7 +1143,26 @@ def build_parser() -> argparse.ArgumentParser:
     export_parser.add_argument("--output", type=Path, required=True)
     export_parser.add_argument("--opset", type=int, default=18)
 
-    upload_dataset_parser = subparsers.add_parser(
+    vap_inference_parser = subparsers.add_parser(
+        "run-vap-inference",
+        help="Run VAP model inference on a turn manifest and save predictions to JSONL.",
+    )
+    vap_inference_parser.add_argument("--dataset", type=Path, required=True, help="Turn manifest JSONL.")
+    vap_inference_parser.add_argument("--output", type=Path, required=True, help="Output predictions JSONL.")
+    vap_inference_parser.add_argument(
+        "--checkpoint",
+        default="ErikEkstedt/VAP",
+        help="VAP checkpoint: HuggingFace model ID or local path (default: ErikEkstedt/VAP).",
+    )
+    vap_inference_parser.add_argument("--device", help="Torch device (default: auto).")
+    vap_inference_parser.add_argument(
+        "--context-sec",
+        type=float,
+        default=10.0,
+        help="Seconds of audio context to feed VAP (default: 10.0).",
+    )
+    vap_inference_parser.add_argument("--audio-root", type=Path, help="Base dir for relative audio paths.")
+
         "upload-dataset",
         help="Upload a turn manifest (JSONL/Parquet) to a HuggingFace dataset repo.",
     )
@@ -3122,7 +3141,21 @@ def main(argv: list[str] | None = None) -> int:
         print(f"onnx: {output}")
         return 0
 
-    if args.command == "upload-dataset":
+    if args.command == "run-vap-inference":
+        from stable_asr.models.baselines.vap import run_vap_inference
+        dataset_parent = args.dataset.parent
+        output = run_vap_inference(
+            args.dataset,
+            args.output,
+            checkpoint=args.checkpoint,
+            device=getattr(args, "device", None),
+            context_sec=args.context_sec,
+            audio_root=getattr(args, "audio_root", None) or dataset_parent,
+        )
+        print(f"vap_predictions: {output}")
+        return 0
+
+
         import os
         from stable_asr.hub.upload import upload_dataset
         token = args.token or os.environ.get("HF_TOKEN")
@@ -4013,6 +4046,9 @@ def _build_baseline(name: str, *, complete_pause_ms: int):
         return VADPauseBaseline(complete_pause_ms=complete_pause_ms)
     if name == "text_turn":
         return TextTurnBaseline()
+    if name == "vap":
+        from stable_asr.models.baselines.vap import VAPPredictor
+        return VAPPredictor()
     raise ValueError(f"unknown baseline: {name}")
 
 
