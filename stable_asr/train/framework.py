@@ -126,11 +126,11 @@ class NanoTurnDataModule:
                 feature_cache_mode="off",
             )
 
-    def train_dataloader(self):
+    def train_dataloader(self, *, epoch: int | None = None):
         require_torch()
         if self.train_dataset is None:
             raise RuntimeError("NanoTurnDataModule.setup() must be called before train_dataloader()")
-        generator = torch.Generator().manual_seed(self.config.seed)
+        generator = torch.Generator().manual_seed(_epoch_seed(self.config.seed, epoch))
         return torch.utils.data.DataLoader(
             self.train_dataset,
             batch_size=self.config.batch_size,
@@ -205,7 +205,6 @@ class NanoTurnTrainer:
         _write_json(artifacts.config_path, self._run_config_payload(data))
 
         data.setup()
-        train_loader = data.train_dataloader()
         val_loader = data.val_dataloader()
 
         start_epoch = 1
@@ -217,6 +216,7 @@ class NanoTurnTrainer:
 
         started_at = time.time()
         for epoch in range(start_epoch, self.config.epochs + 1):
+            train_loader = data.train_dataloader(epoch=epoch)
             train_metrics = self._run_epoch(train_loader, train=True)
             val_metrics = self._run_epoch(val_loader, train=False) if val_loader is not None else {}
             row = {"epoch": float(epoch), **_prefixed("train", train_metrics), **_prefixed("val", val_metrics)}
@@ -468,6 +468,12 @@ def _build_optimizer(config: NanoTurnRunConfig, parameters):
     if config.optimizer == "sgd":
         return torch.optim.SGD(parameters, lr=config.lr, weight_decay=config.weight_decay)
     raise ValueError(f"unknown optimizer: {config.optimizer}")
+
+
+def _epoch_seed(seed: int, epoch: int | None) -> int:
+    if epoch is None:
+        return int(seed)
+    return int(seed) + int(epoch)
 
 
 def _resolve_device(device: str):

@@ -8,7 +8,7 @@ from stable_asr.data.manifest import TurnManifestRecord
 from stable_asr.train.framework import NanoTurnRunConfig, _split_validation, fit_nanoturn
 from stable_asr.train.turn_trainer import train_nanoturn
 
-pytest.importorskip("torch")
+torch = pytest.importorskip("torch")
 
 
 def test_fit_nanoturn_writes_run_artifacts(tmp_path: Path) -> None:
@@ -114,3 +114,44 @@ def test_train_nanoturn_resume_from_checkpoint(tmp_path: Path) -> None:
     assert resumed.metrics["epochs"] == 3
     assert resumed.metrics["history"][-1]["epoch"] == 3.0
     assert (tmp_path / "checkpoints" / "weights_epoch_3.pt").exists()
+
+
+def test_train_nanoturn_resume_matches_uninterrupted_epoch_run(tmp_path: Path) -> None:
+    records = load_manifest("examples/data/turn_demo.jsonl")
+    uninterrupted_dir = tmp_path / "uninterrupted"
+    resumed_dir = tmp_path / "resumed"
+
+    uninterrupted = train_nanoturn(
+        records,
+        output_dir=uninterrupted_dir,
+        epochs=3,
+        seed=11,
+        batch_size=2,
+        checkpoint_interval=1,
+        optimizer="adamw",
+    )
+    first = train_nanoturn(
+        records,
+        output_dir=resumed_dir,
+        epochs=1,
+        seed=11,
+        batch_size=2,
+        checkpoint_interval=1,
+        optimizer="adamw",
+    )
+    resumed = train_nanoturn(
+        records,
+        output_dir=resumed_dir,
+        epochs=3,
+        seed=11,
+        batch_size=2,
+        checkpoint_interval=1,
+        optimizer="adamw",
+        resume_from=first.checkpoint_path,
+    )
+
+    uninterrupted_state = torch.load(uninterrupted.checkpoint_path, map_location="cpu")["state_dict"]
+    resumed_state = torch.load(resumed.checkpoint_path, map_location="cpu")["state_dict"]
+    assert uninterrupted.metrics["history"] == resumed.metrics["history"]
+    for key, tensor in uninterrupted_state.items():
+        assert torch.equal(tensor, resumed_state[key])
