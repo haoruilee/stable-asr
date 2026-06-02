@@ -1066,6 +1066,11 @@ def build_parser() -> argparse.ArgumentParser:
     train_parser.add_argument("--checkpoint-interval", type=int)
     train_parser.add_argument("--resume-from", type=Path)
     train_parser.add_argument(
+        "--tensorboard-log-dir",
+        type=Path,
+        help="Optional TensorBoard log directory. Relative paths are resolved inside --output-dir.",
+    )
+    train_parser.add_argument(
         "--device",
         help="Torch device for training. Defaults to auto, which uses CUDA when available.",
     )
@@ -2995,6 +3000,7 @@ def main(argv: list[str] | None = None) -> int:
         feature_cache_format = args.feature_cache_format or _optional_str(train_config.get("feature_cache_format"))
         feature_cache_mode = args.feature_cache_mode or str(train_config.get("feature_cache_mode", "auto"))
         resume_from = args.resume_from or _optional_path(train_config.get("resume_from"))
+        tensorboard_log_dir = args.tensorboard_log_dir or _optional_path(train_config.get("tensorboard_log_dir"))
         device = args.device or str(train_config.get("device", "auto"))
         train_records = load_manifest(args.dataset)
         val_records = load_manifest(args.dev_dataset) if args.dev_dataset else None
@@ -3020,6 +3026,7 @@ def main(argv: list[str] | None = None) -> int:
             resume_from=resume_from,
             device=device,
             validation_group_by=validation_group_by,
+            tensorboard_log_dir=tensorboard_log_dir,
         )
         if args.json:
             print(json.dumps(result.metrics, ensure_ascii=False, indent=2))

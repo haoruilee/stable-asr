@@ -73,6 +73,7 @@ def train_nanoturn(
     resume_from: str | Path | None = None,
     device: str = "auto",
     validation_group_by: str | None = "auto",
+    tensorboard_log_dir: str | Path | None = None,
 ) -> TrainTurnResult:
     require_torch()
     if not records:
@@ -98,6 +99,7 @@ def train_nanoturn(
         audio_root=str(audio_root) if audio_root else None,
         resume_from=str(resume_from) if resume_from else None,
         validation_group_by=validation_group_by,
+        tensorboard_log_dir=str(tensorboard_log_dir) if tensorboard_log_dir else None,
     )
     result = fit_nanoturn(records, output_dir=output_dir, config=config, val_records=val_records)
     return TrainTurnResult(

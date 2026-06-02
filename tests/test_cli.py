@@ -2313,9 +2313,20 @@ def test_train_turn_cli_uses_config_file_and_overrides(tmp_path, capsys) -> None
     assert (output_dir / "checkpoint.pt").exists()
 
 
-def test_train_turn_cli_framework_options(tmp_path, capsys) -> None:
+def test_train_turn_cli_framework_options(tmp_path, capsys, monkeypatch) -> None:
     pytest.importorskip("torch")
 
+    class DummyWriter:
+        def add_scalar(self, tag, value, step):
+            pass
+
+        def add_text(self, tag, text, global_step=0):
+            pass
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr("stable_asr.train.framework._make_tensorboard_writer", lambda log_dir: DummyWriter())
     output_dir = tmp_path / "nanoturn_framework"
     code = main(
         [
@@ -2338,6 +2349,8 @@ def test_train_turn_cli_framework_options(tmp_path, capsys) -> None:
             "1.0",
             "--checkpoint-interval",
             "1",
+            "--tensorboard-log-dir",
+            "tensorboard",
             "--json",
         ]
     )
@@ -2349,6 +2362,7 @@ def test_train_turn_cli_framework_options(tmp_path, capsys) -> None:
     assert payload["batch_size"] == 2
     assert payload["train_records"] == 3
     assert payload["val_records"] == 1
+    assert payload["tensorboard_log_dir"] == str(output_dir / "tensorboard")
     assert (output_dir / "run_config.json").exists()
     assert (output_dir / "history.jsonl").exists()
     assert (output_dir / "best.pt").exists()

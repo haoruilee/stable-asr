@@ -43,14 +43,15 @@ stable-asr compare-turn --dataset examples/data/turn_demo.jsonl --baseline vad_p
 stable-asr turn-submission --dataset examples/data/turn_demo.jsonl --predictions tests/fixtures/turn_predictions_sample.jsonl --system oracle_fixture --output-dir runs/submissions/oracle_fixture
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn --validation-split 0.25 --batch-size 2
 stable-asr train-turn --dataset examples/data/turn_demo.jsonl --output-dir runs/nanoturn_nano --config configs/nanoturn_nano.json --epochs 5
-stable-asr train-turn --dataset runs/final/turn_train.jsonl --dev-dataset runs/final/turn_dev.jsonl --output-dir runs/final/nanoturn --feature-source audio --feature-cache runs/final/nanoturn/logmel_features.lance --feature-cache-format lance --optimizer adamw --gradient-clip-norm 1.0
+stable-asr train-turn --dataset runs/final/turn_train.jsonl --dev-dataset runs/final/turn_dev.jsonl --output-dir runs/final/nanoturn --feature-source audio --feature-cache runs/final/nanoturn/logmel_features.lance --feature-cache-format lance --optimizer adamw --gradient-clip-norm 1.0 --tensorboard-log-dir tensorboard
 stable-asr eval-turn --dataset examples/data/turn_demo.jsonl --checkpoint runs/nanoturn/checkpoint.pt
 stable-asr export-turn-onnx --checkpoint runs/nanoturn/checkpoint.pt --output runs/nanoturn/nanoturn.onnx
 ```
 
 `train-turn` writes a complete run directory: `run_config.json`,
 `history.jsonl`, `checkpoint.pt`, `best.pt`, `metrics.json`,
-`TRAINING_SUMMARY.md`, and `checkpoints/weights_epoch_*.pt`. The options mirror
+`TRAINING_SUMMARY.md`, optional TensorBoard events, and
+`checkpoints/weights_epoch_*.pt`. The options mirror
 the stable-worldmodel training pattern without adding Hydra or Lightning as
 hard dependencies: config file, data split/dev manifest, DataLoader batch size,
 optimizer, gradient clipping, checkpoint cadence, resume, and cached features.

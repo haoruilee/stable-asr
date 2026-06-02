@@ -42,6 +42,7 @@ class NanoTurnRunConfig:
     audio_root: str | None = None
     resume_from: str | None = None
     validation_group_by: str | None = "auto"
+    tensorboard_log_dir: str | None = None
 
     def validate(self) -> None:
         if self.epochs < 1:
@@ -215,35 +216,44 @@ class NanoTurnTrainer:
             start_epoch, history, best_score, best_epoch = self._load_resume(self.config.resume_from)
 
         started_at = time.time()
-        for epoch in range(start_epoch, self.config.epochs + 1):
-            train_loader = data.train_dataloader(epoch=epoch)
-            train_metrics = self._run_epoch(train_loader, train=True)
-            val_metrics = self._run_epoch(val_loader, train=False) if val_loader is not None else {}
-            row = {"epoch": float(epoch), **_prefixed("train", train_metrics), **_prefixed("val", val_metrics)}
-            history.append(row)
-            write_jsonl(artifacts.history_path, history)
-            score = float(val_metrics.get("accuracy", train_metrics["accuracy"]))
-            is_best = score >= best_score
-            if is_best:
-                best_score = score
-                best_epoch = epoch
-            if epoch % self.config.checkpoint_interval == 0 or epoch == self.config.epochs:
-                epoch_path = output_dir / "checkpoints" / f"weights_epoch_{epoch}.pt"
-                self._save_checkpoint(
-                    epoch_path,
-                    epoch=epoch,
-                    history=history,
-                    best_score=best_score,
-                    best_epoch=best_epoch,
-                )
-            if is_best:
-                self._save_checkpoint(
-                    artifacts.best_checkpoint_path,
-                    epoch=epoch,
-                    history=history,
-                    best_score=best_score,
-                    best_epoch=best_epoch,
-                )
+        tensorboard_log_dir = _resolve_tensorboard_log_dir(self.config.tensorboard_log_dir, output_dir)
+        writer = _make_tensorboard_writer(tensorboard_log_dir) if tensorboard_log_dir is not None else None
+        try:
+            if writer is not None:
+                _write_tensorboard_run_config(writer, self._run_config_payload(data))
+            for epoch in range(start_epoch, self.config.epochs + 1):
+                train_loader = data.train_dataloader(epoch=epoch)
+                train_metrics = self._run_epoch(train_loader, train=True)
+                val_metrics = self._run_epoch(val_loader, train=False) if val_loader is not None else {}
+                row = {"epoch": float(epoch), **_prefixed("train", train_metrics), **_prefixed("val", val_metrics)}
+                history.append(row)
+                write_jsonl(artifacts.history_path, history)
+                score = float(val_metrics.get("accuracy", train_metrics["accuracy"]))
+                is_best = score >= best_score
+                if is_best:
+                    best_score = score
+                    best_epoch = epoch
+                _write_tensorboard_epoch(writer, epoch=epoch, row=row, best_score=best_score, optimizer=self.optimizer)
+                if epoch % self.config.checkpoint_interval == 0 or epoch == self.config.epochs:
+                    epoch_path = output_dir / "checkpoints" / f"weights_epoch_{epoch}.pt"
+                    self._save_checkpoint(
+                        epoch_path,
+                        epoch=epoch,
+                        history=history,
+                        best_score=best_score,
+                        best_epoch=best_epoch,
+                    )
+                if is_best:
+                    self._save_checkpoint(
+                        artifacts.best_checkpoint_path,
+                        epoch=epoch,
+                        history=history,
+                        best_score=best_score,
+                        best_epoch=best_epoch,
+                    )
+        finally:
+            if writer is not None:
+                writer.close()
 
         self._save_checkpoint(
             artifacts.checkpoint_path,
@@ -273,6 +283,7 @@ class NanoTurnTrainer:
             "weight_decay": self.config.weight_decay,
             "gradient_clip_norm": self.config.gradient_clip_norm,
             "device": str(self.device),
+            "tensorboard_log_dir": str(tensorboard_log_dir) if tensorboard_log_dir is not None else None,
             "best_epoch": best_epoch,
             "best_accuracy": best_score,
             "final_loss": final["train_loss"],
@@ -474,6 +485,46 @@ def _epoch_seed(seed: int, epoch: int | None) -> int:
     if epoch is None:
         return int(seed)
     return int(seed) + int(epoch)
+
+
+def _resolve_tensorboard_log_dir(log_dir: str | None, output_dir: Path) -> Path | None:
+    if log_dir is None:
+        return None
+    text = str(log_dir).strip()
+    if not text or text.lower() in {"none", "off", "false"}:
+        return None
+    path = Path(text)
+    if path.is_absolute():
+        return path
+    return output_dir / path
+
+
+def _make_tensorboard_writer(log_dir: Path):
+    try:
+        from torch.utils.tensorboard import SummaryWriter
+    except ImportError as exc:
+        raise RuntimeError(
+            "TensorBoard logging requires the tensorboard package. "
+            "Install with `pip install -e '.[train]'` or `pip install tensorboard`."
+        ) from exc
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return SummaryWriter(log_dir=str(log_dir))
+
+
+def _write_tensorboard_run_config(writer, payload: dict[str, object]) -> None:
+    writer.add_text("run/config", json.dumps(payload, ensure_ascii=False, indent=2), global_step=0)
+
+
+def _write_tensorboard_epoch(writer, *, epoch: int, row: dict[str, float], best_score: float, optimizer) -> None:
+    if writer is None:
+        return
+    for key, value in row.items():
+        if key == "epoch":
+            continue
+        writer.add_scalar(key.replace("_", "/"), float(value), epoch)
+    writer.add_scalar("best/accuracy", float(best_score), epoch)
+    if optimizer.param_groups:
+        writer.add_scalar("train/lr", float(optimizer.param_groups[0].get("lr", 0.0)), epoch)
 
 
 def _resolve_device(device: str):

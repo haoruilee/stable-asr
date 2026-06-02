@@ -358,7 +358,7 @@ is provided in `mkdocs.yaml`.
 - `benchmark-turn` for latency, throughput, RTF, and artifact-size reports
 - optional NanoTurnPico/NanoTurnNano PyTorch models
 - `train-turn` checkpoint and metrics generation
-- `train-turn` stable-worldmodel-style run artifacts: `run_config.json`, `history.jsonl`, epoch checkpoints, `best.pt`, `metrics.json`, and `TRAINING_SUMMARY.md`
+- `train-turn` stable-worldmodel-style run artifacts: `run_config.json`, `history.jsonl`, optional TensorBoard events, epoch checkpoints, `best.pt`, `metrics.json`, and `TRAINING_SUMMARY.md`
 - `train-turn --feature-source audio` for synthetic WAV manifests
 - `eval-turn --checkpoint` for NanoTurn checkpoints
 - `export-turn-onnx` for NanoTurn checkpoints

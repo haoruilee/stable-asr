@@ -5,6 +5,7 @@ import pytest
 
 from stable_asr.data.manifest import load_manifest
 from stable_asr.data.manifest import TurnManifestRecord
+from stable_asr.train import framework as train_framework
 from stable_asr.train.framework import NanoTurnRunConfig, _split_validation, fit_nanoturn
 from stable_asr.train.turn_trainer import train_nanoturn
 
@@ -40,6 +41,44 @@ def test_fit_nanoturn_writes_run_artifacts(tmp_path: Path) -> None:
     assert run_config["framework"] == "stable_asr.nanoturn_trainer.v1"
     assert run_config["config"]["optimizer"] == "adamw"
     assert run_config["config"]["validation_group_by"] == "auto"
+
+
+def test_fit_nanoturn_writes_tensorboard_scalars(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    writers = []
+
+    class DummyWriter:
+        def __init__(self) -> None:
+            self.scalars = []
+            self.text = []
+            self.closed = False
+
+        def add_scalar(self, tag: str, value: float, step: int) -> None:
+            self.scalars.append((tag, value, step))
+
+        def add_text(self, tag: str, text: str, global_step: int = 0) -> None:
+            self.text.append((tag, text, global_step))
+
+        def close(self) -> None:
+            self.closed = True
+
+    def make_writer(log_dir: Path) -> DummyWriter:
+        assert log_dir == tmp_path / "tb"
+        writer = DummyWriter()
+        writers.append(writer)
+        return writer
+
+    monkeypatch.setattr(train_framework, "_make_tensorboard_writer", make_writer)
+    records = load_manifest("examples/data/turn_demo.jsonl")
+    result = fit_nanoturn(
+        records,
+        output_dir=tmp_path,
+        config=NanoTurnRunConfig(epochs=1, batch_size=2, tensorboard_log_dir="tb"),
+    )
+
+    assert result.metrics["tensorboard_log_dir"] == str(tmp_path / "tb")
+    assert writers[0].closed
+    assert ("train/loss", result.metrics["final_train_loss"], 1) in writers[0].scalars
+    assert any(tag == "run/config" for tag, _, _ in writers[0].text)
 
 
 def test_internal_validation_split_keeps_asr_windows_grouped() -> None:
