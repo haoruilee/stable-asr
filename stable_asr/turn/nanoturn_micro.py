@@ -39,6 +39,10 @@ class NanoTurnMicroConfig:
     labels: tuple[str, ...] = DEFAULT_LABELS
     model_type: str = "nanoturn_micro"
     feature_source: str = "audio_seq"
+    # depthwise separable convolution: ~kernel_size× fewer FLOPs per block,
+    # same receptive field. Reduces model size and speeds inference on CPU.
+    # Does NOT change the output shape or interface. Safe for ablation.
+    depthwise: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -58,15 +62,38 @@ class NanoTurnMicroConfig:
 
 
 class _CausalConv1d(nn.Module if nn is not None else object):
-    """Causal convolution: pads left so output[t] depends only on input[:t+1]."""
+    """Causal convolution: pads left so output[t] depends only on input[:t+1].
 
-    def __init__(self, in_channels: int, out_channels: int, kernel_size: int, dilation: int) -> None:
+    depthwise=True uses depthwise-separable convolution (depthwise + pointwise),
+    which reduces FLOPs by ~kernel_size× at the same receptive field.
+    Numerically equivalent in terms of what can be learned; slightly different
+    weight count. Safe to use for speed experiments.
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        dilation: int,
+        depthwise: bool = False,
+    ) -> None:
         super().__init__()
         self.padding = (kernel_size - 1) * dilation
-        self.conv = nn.Conv1d(
-            in_channels, out_channels, kernel_size,
-            dilation=dilation, padding=0,
-        )
+        if depthwise and in_channels == out_channels:
+            # Depthwise separable: depthwise conv + pointwise 1×1
+            self.conv = nn.Sequential(
+                nn.Conv1d(
+                    in_channels, in_channels, kernel_size,
+                    dilation=dilation, padding=0, groups=in_channels,
+                ),
+                nn.Conv1d(in_channels, out_channels, kernel_size=1),
+            )
+        else:
+            self.conv = nn.Conv1d(
+                in_channels, out_channels, kernel_size,
+                dilation=dilation, padding=0,
+            )
 
     def forward(self, x):
         # x: (B, C, T)
@@ -77,10 +104,17 @@ class _CausalConv1d(nn.Module if nn is not None else object):
 class _TCNBlock(nn.Module if nn is not None else object):
     """Residual TCN block with two dilated causal convolutions."""
 
-    def __init__(self, hidden_dim: int, kernel_size: int, dilation: int, dropout: float) -> None:
+    def __init__(
+        self,
+        hidden_dim: int,
+        kernel_size: int,
+        dilation: int,
+        dropout: float,
+        depthwise: bool = False,
+    ) -> None:
         super().__init__()
-        self.conv1 = _CausalConv1d(hidden_dim, hidden_dim, kernel_size, dilation)
-        self.conv2 = _CausalConv1d(hidden_dim, hidden_dim, kernel_size, dilation)
+        self.conv1 = _CausalConv1d(hidden_dim, hidden_dim, kernel_size, dilation, depthwise=depthwise)
+        self.conv2 = _CausalConv1d(hidden_dim, hidden_dim, kernel_size, dilation, depthwise=depthwise)
         self.norm1 = nn.LayerNorm(hidden_dim)
         self.norm2 = nn.LayerNorm(hidden_dim)
         self.drop = nn.Dropout(dropout)
@@ -121,6 +155,7 @@ class NanoTurnMicro(nn.Module if nn is not None else object):
                 kernel_size=config.kernel_size,
                 dilation=2 ** i,
                 dropout=config.dropout,
+                depthwise=config.depthwise,
             )
             for i in range(config.n_blocks)
         ])
@@ -147,6 +182,7 @@ def build_nanoturn_micro(
     n_blocks: int = 4,
     kernel_size: int = 3,
     dropout: float = 0.1,
+    depthwise: bool = False,
 ) -> NanoTurnMicro:
     config = NanoTurnMicroConfig(
         n_mels=n_mels,
@@ -157,5 +193,6 @@ def build_nanoturn_micro(
         labels=labels,
         model_type="nanoturn_micro",
         feature_source="audio_seq",
+        depthwise=depthwise,
     )
     return NanoTurnMicro(config)

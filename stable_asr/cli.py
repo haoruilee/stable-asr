@@ -1101,6 +1101,46 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="auto builds a missing cache and reuses an existing one.",
     )
+    # ── acceleration flags ────────────────────────────────────────────────
+    train_parser.add_argument(
+        "--amp",
+        action="store_true",
+        default=False,
+        help="Enable mixed-precision training (torch.autocast + GradScaler). "
+             "Zero precision loss on modern GPUs; falls back silently on CPU.",
+    )
+    train_parser.add_argument(
+        "--num-workers",
+        type=int,
+        default=0,
+        help="DataLoader worker processes (default 0 = main process). "
+             "Recommended: 2-4 for audio feature sources, 0 for cached/metadata.",
+    )
+    train_parser.add_argument(
+        "--pin-memory",
+        action="store_true",
+        default=False,
+        help="Pin DataLoader tensors to page-locked memory (faster GPU transfer). "
+             "Only effective when --num-workers > 0 and CUDA is used.",
+    )
+    train_parser.add_argument(
+        "--lr-schedule",
+        choices=["cosine"],
+        default=None,
+        help="LR schedule. 'cosine' = CosineAnnealingLR from lr to lr-min over epochs.",
+    )
+    train_parser.add_argument(
+        "--lr-min",
+        type=float,
+        default=1e-6,
+        help="Minimum LR for cosine schedule (default 1e-6).",
+    )
+    train_parser.add_argument(
+        "--early-stopping-patience",
+        type=int,
+        default=None,
+        help="Stop training if val accuracy does not improve for N epochs. Default: disabled.",
+    )
     train_parser.add_argument("--json", action="store_true", help="Print metrics as JSON.")
 
     train_feature_benchmark_parser = subparsers.add_parser(
@@ -1163,6 +1203,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     vap_inference_parser.add_argument("--audio-root", type=Path, help="Base dir for relative audio paths.")
 
+    upload_dataset_parser = subparsers.add_parser(
         "upload-dataset",
         help="Upload a turn manifest (JSONL/Parquet) to a HuggingFace dataset repo.",
     )
@@ -3054,6 +3095,16 @@ def main(argv: list[str] | None = None) -> int:
         resume_from = args.resume_from or _optional_path(train_config.get("resume_from"))
         tensorboard_log_dir = args.tensorboard_log_dir or _optional_path(train_config.get("tensorboard_log_dir"))
         device = args.device or str(train_config.get("device", "auto"))
+        # acceleration flags (CLI overrides config file)
+        amp = getattr(args, "amp", False) or bool(train_config.get("amp", False))
+        num_workers = getattr(args, "num_workers", 0) or int(train_config.get("num_workers", 0))
+        pin_memory = getattr(args, "pin_memory", False) or bool(train_config.get("pin_memory", False))
+        lr_schedule = getattr(args, "lr_schedule", None) or _optional_str(train_config.get("lr_schedule"))
+        lr_min = getattr(args, "lr_min", 1e-6) or float(train_config.get("lr_min", 1e-6))
+        early_stopping_patience = (
+            getattr(args, "early_stopping_patience", None)
+            or _optional_int(train_config.get("early_stopping_patience"))
+        )
         train_records = load_manifest(args.dataset)
         val_records = load_manifest(args.dev_dataset) if args.dev_dataset else None
         result = train_nanoturn(
@@ -3079,6 +3130,12 @@ def main(argv: list[str] | None = None) -> int:
             device=device,
             validation_group_by=validation_group_by,
             tensorboard_log_dir=tensorboard_log_dir,
+            amp=amp,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            lr_schedule=lr_schedule,
+            lr_min=lr_min,
+            early_stopping_patience=early_stopping_patience,
         )
         if args.json:
             print(json.dumps(result.metrics, ensure_ascii=False, indent=2))
@@ -4137,6 +4194,12 @@ def _optional_float(value: object) -> float | None:
     if value is None:
         return None
     return float(value)
+
+
+def _optional_int(value: object) -> int | None:
+    if value is None:
+        return None
+    return int(value)
 
 
 def _optional_str(value: object) -> str | None:

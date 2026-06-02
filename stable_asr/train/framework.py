@@ -45,6 +45,24 @@ class NanoTurnRunConfig:
     resume_from: str | None = None
     validation_group_by: str | None = "auto"
     tensorboard_log_dir: str | None = None
+    # ── acceleration flags ──────────────────────────────────────────────────
+    # Mixed-precision training (torch.autocast + GradScaler). Safe for all
+    # NanoTurn variants. Falls back to FP32 silently on CPU.
+    amp: bool = False
+    # DataLoader worker processes. 0 = main-process loading (original behaviour).
+    # Recommended: 2-4 for audio feature sources, 0 for cached/metadata.
+    num_workers: int = 0
+    # Pin DataLoader output tensors to page-locked memory for faster GPU transfer.
+    # Only effective when num_workers > 0 and device is CUDA.
+    pin_memory: bool = False
+    # Cosine annealing LR schedule. None = constant LR (original behaviour).
+    # "cosine" decays LR from lr to lr_min over epochs.
+    lr_schedule: str | None = None
+    # Minimum LR for cosine schedule (absolute value, not relative).
+    lr_min: float = 1e-6
+    # Early stopping: halt if val accuracy does not improve for this many epochs.
+    # None = disabled (original behaviour).
+    early_stopping_patience: int | None = None
 
     def validate(self) -> None:
         if self.epochs < 1:
@@ -61,6 +79,12 @@ class NanoTurnRunConfig:
             raise ValueError("checkpoint_interval must be at least 1")
         if self.gradient_clip_norm is not None and self.gradient_clip_norm <= 0:
             raise ValueError("gradient_clip_norm must be positive when set")
+        if self.lr_schedule is not None and self.lr_schedule not in {"cosine"}:
+            raise ValueError("lr_schedule must be 'cosine' or None")
+        if self.early_stopping_patience is not None and self.early_stopping_patience < 1:
+            raise ValueError("early_stopping_patience must be at least 1 when set")
+        if self.num_workers < 0:
+            raise ValueError("num_workers must be >= 0")
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -136,11 +160,14 @@ class NanoTurnDataModule:
             feature_cache_mode=self.config.feature_cache_mode,
         )
         if self.val_records:
+            # Val set uses the same cache in read-only mode when a cache exists.
+            # This avoids decoding audio twice (train cache was built above).
+            val_cache_mode = "read" if self.config.feature_cache else "off"
             self.val_dataset = self._make_dataset(
                 self.val_records,
-                feature_cache=None,
-                feature_cache_format=None,
-                feature_cache_mode="off",
+                feature_cache=self.config.feature_cache,
+                feature_cache_format=self.config.feature_cache_format,
+                feature_cache_mode=val_cache_mode,
             )
 
     def train_dataloader(self, *, epoch: int | None = None):
@@ -155,6 +182,9 @@ class NanoTurnDataModule:
             shuffle=True,
             generator=generator,
             collate_fn=collate_fn,
+            num_workers=self.config.num_workers,
+            pin_memory=self.config.pin_memory and self.config.num_workers > 0,
+            persistent_workers=self.config.num_workers > 0,
         )
 
     def val_dataloader(self):
@@ -167,6 +197,9 @@ class NanoTurnDataModule:
             batch_size=self.config.batch_size,
             shuffle=False,
             collate_fn=collate_fn,
+            num_workers=self.config.num_workers,
+            pin_memory=self.config.pin_memory and self.config.num_workers > 0,
+            persistent_workers=self.config.num_workers > 0,
         )
 
     def _make_dataset(
@@ -236,6 +269,11 @@ class NanoTurnTrainer:
             self._micro_config = None
         self.optimizer = _build_optimizer(config, self.model.parameters())
         self.criterion = torch.nn.CrossEntropyLoss()
+        self.scheduler = _build_scheduler(config, self.optimizer)
+        # AMP: GradScaler is a no-op on CPU (scale=1.0), so it's always safe to create.
+        # torch.autocast is only activated when config.amp=True and device is CUDA.
+        self._use_amp = config.amp and str(self.device).startswith("cuda")
+        self._scaler = torch.amp.GradScaler("cuda", enabled=self._use_amp)
 
     def fit(
         self,
@@ -262,6 +300,9 @@ class NanoTurnTrainer:
         started_at = time.time()
         tensorboard_log_dir = _resolve_tensorboard_log_dir(self.config.tensorboard_log_dir, output_dir)
         writer = _make_tensorboard_writer(tensorboard_log_dir) if tensorboard_log_dir is not None else None
+        patience = self.config.early_stopping_patience
+        epochs_no_improve = 0
+        stopped_early = False
         try:
             if writer is not None:
                 _write_tensorboard_run_config(writer, self._run_config_payload(data))
@@ -277,6 +318,13 @@ class NanoTurnTrainer:
                 if is_best:
                     best_score = score
                     best_epoch = epoch
+                    epochs_no_improve = 0
+                else:
+                    epochs_no_improve += 1
+                # Step LR scheduler after each epoch (uses val accuracy for ReduceLROnPlateau,
+                # or just epoch count for cosine/step schedules).
+                if self.scheduler is not None:
+                    self.scheduler.step()
                 _write_tensorboard_epoch(writer, epoch=epoch, row=row, best_score=best_score, optimizer=self.optimizer)
                 if epoch % self.config.checkpoint_interval == 0 or epoch == self.config.epochs:
                     epoch_path = output_dir / "checkpoints" / f"weights_epoch_{epoch}.pt"
@@ -295,6 +343,10 @@ class NanoTurnTrainer:
                         best_score=best_score,
                         best_epoch=best_epoch,
                     )
+                # Early stopping
+                if patience is not None and epochs_no_improve >= patience:
+                    stopped_early = True
+                    break
         finally:
             if writer is not None:
                 writer.close()
@@ -337,6 +389,10 @@ class NanoTurnTrainer:
             "final_val_loss": final.get("val_loss"),
             "final_val_accuracy": final.get("val_accuracy"),
             "wall_seconds": time.time() - started_at,
+            "stopped_early": stopped_early,
+            "amp": self._use_amp,
+            "lr_schedule": self.config.lr_schedule,
+            "early_stopping_patience": self.config.early_stopping_patience,
             "artifacts": artifacts.to_dict(),
             "history": history,
         }
@@ -351,19 +407,23 @@ class NanoTurnTrainer:
         total_loss = 0.0
         total_correct = 0
         total = 0
+        device_type = "cuda" if str(self.device).startswith("cuda") else "cpu"
         for features, targets in loader:
-            features = features.to(self.device)
-            targets = targets.to(self.device)
+            features = features.to(self.device, non_blocking=True)
+            targets = targets.to(self.device, non_blocking=True)
             if train:
                 self.optimizer.zero_grad(set_to_none=True)
             with torch.set_grad_enabled(train):
-                logits = self.model(features)
-                loss = self.criterion(logits, targets)
+                with torch.autocast(device_type=device_type, enabled=self._use_amp):
+                    logits = self.model(features)
+                    loss = self.criterion(logits, targets)
                 if train:
-                    loss.backward()
+                    self._scaler.scale(loss).backward()
                     if self.config.gradient_clip_norm is not None:
+                        self._scaler.unscale_(self.optimizer)
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip_norm)
-                    self.optimizer.step()
+                    self._scaler.step(self.optimizer)
+                    self._scaler.update()
             predictions = logits.argmax(dim=-1)
             batch = int(targets.shape[0])
             total += batch
@@ -531,6 +591,26 @@ def _build_optimizer(config: NanoTurnRunConfig, parameters):
     if config.optimizer == "sgd":
         return torch.optim.SGD(parameters, lr=config.lr, weight_decay=config.weight_decay)
     raise ValueError(f"unknown optimizer: {config.optimizer}")
+
+
+def _build_scheduler(config: NanoTurnRunConfig, optimizer):
+    """Build an optional LR scheduler.
+
+    "cosine" → CosineAnnealingLR: decays LR from config.lr to config.lr_min
+               over config.epochs steps.  Safe — does not change the loss
+               landscape, only the step size.  Typically saves 10-30% of
+               training epochs to the same validation accuracy.
+    None → no scheduler (original constant-LR behaviour).
+    """
+    if config.lr_schedule is None:
+        return None
+    if config.lr_schedule == "cosine":
+        return torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=config.epochs,
+            eta_min=config.lr_min,
+        )
+    raise ValueError(f"unknown lr_schedule: {config.lr_schedule}")
 
 
 def _epoch_seed(seed: int, epoch: int | None) -> int:

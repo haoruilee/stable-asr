@@ -566,7 +566,7 @@ EOF
 # ── LDC post-processing (after manual download) ────────────────────────────
 # Run this after you have placed the LDC archives in /data/data/ldc_raw/
 ldc_convert() {
-  log "Converting LDC data to stable-asr manifests"
+  log "Converting LDC data to manifests (stable_asr format)"
   need python3
 
   for corpus in switchboard fisher callhome; do
