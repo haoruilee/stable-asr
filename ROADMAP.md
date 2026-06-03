@@ -5,17 +5,260 @@ Stable-ASR is a reproducible research platform for real-time ASR systems.
 It starts with turn-taking and endpointing: the control layer between streaming
 ASR and full-duplex voice agents. NanoTurn is the first built-in model family.
 
-Final research target:
+---
+
+## Paper Direction (locked 2026-06-03)
+
+After several rounds of self-review against stable-worldmodel's actual
+contribution shape, single-author bandwidth, and LDC license constraints, the
+v1 paper direction is locked as follows.
+
+### Final research target
 
 ```text
-Stable-ASR: A Platform for Reproducible Real-Time ASR and
-Full-Duplex Turn-Taking Research and Evaluation
+Where Streaming ASR Meets Real Conversation:
+An Empirical Study of Language, Channel, and Conversational Stress
+on LDC Multilingual Corpora.
 ```
 
-The goal is to produce a stable-worldmodel-style platform paper, not only a
-software package. The paper contribution should be a unified platform that
-standardizes data, baselines, scenarios, policies, and evaluation protocols for
-real-time ASR and voice-agent interaction research.
+(Working title; final wording deferred to draft.)
+
+### Contribution shape — empirical findings, not a benchmark
+
+The v1 paper is positioned as an **empirical-findings paper with a
+reproducible evaluation protocol as its load-bearing artifact**, not as a
+benchmark / dataset paper. Listed in submission order:
+
+1. **Empirical study** of how streaming ASR and turn-taking models behave
+   under controlled variation of language, channel, speech rate, SNR,
+   overlap ratio, and code-switching, on LDC's professionally-transcribed
+   multilingual conversational corpora.
+2. **Reproducible evaluation protocol** that decouples factor effects via
+   controlled perturbation and LDC-native annotations, requiring no new
+   gold-standard human labels.
+3. **Reference baseline matrix** — checkpoints, configs, and reproduction
+   scripts for ~6 ASR systems (Whisper / Paraformer / FunASR streaming /
+   Conformer-T / Wav2Vec2-CTC / HuBERT-CTC) and ~4 turn-taking models
+   (VAP / smart-turn / silero-VAD / NanoTurn-SSL).
+4. **Modular open-source stack** (this repository) implementing the
+   protocol, with format registry, adapter registry, scenario suite, and
+   paper-release-smoke pipeline already in place.
+
+### Why this framing — what was rejected and why
+
+The decision was reached by adversarial elimination. Each rejected framing
+had a specific failure mode that this framing does not share:
+
+| Rejected framing | Reason |
+|---|---|
+| **Stable-worldmodel-style platform paper** (original target) | Single-author bandwidth cannot match a multi-institution platform paper; reviewer "novelty + scale" bar too high. |
+| **Open reference system for full-duplex voice agents** | 2026 is red ocean: Pipecat, LiveKit, Moshi, VITA, Mini-Omni, GLM-4-Voice, Step-Audio, Freeze-Omni already occupy the space. "First open reference system" claim does not survive related work review. |
+| **Cross-lingual full-duplex benchmark (NeurIPS D&B main)** | Without ≥10k human-labeled gold subset, multi-organization annotation, and inter-annotator agreement, the benchmark track's hard reviewer bar fails. LDC license also weakens the "public benchmark" attribute. |
+| **Scaling laws of turn-taking** | Largest tractable backbone (~316M, WavLM-large) is below the scaling-laws regime; turn-taking data is small enough that the curve is more likely to show overfitting than scaling. |
+| **Pure systems / inference-acceleration paper** | The strongest current acceleration number is 10.8× from PyTorch batching — not a system contribution. Real systems papers need TensorRT / Triton / quantization measurements that require a dedicated 2-month engineering push. |
+| **Joint ASR-aware turn-taking (novelty candidate)** | Multimodal turn-taking (acoustic + linguistic) has 5+ prior works (Roddy 2018, Skantze group); not "first". Can be one finding, not the headline. |
+
+The empirical-findings framing wins on five axes simultaneously:
+
+- **Single-author tractable** — load is on experiment design and analysis,
+  not on standing up new infrastructure or new annotations.
+- **Compatible with LDC license** — the protocol and adapter code are
+  open-sourced; users bring their own LDC tarballs. This is a known and
+  accepted shape for LDC-derived findings papers.
+- **No new human annotation required** — LDC's professional transcripts,
+  word timestamps, speaker labels, and channel metadata cover the ground
+  truth needed; controlled perturbations (SNR, speech rate, code-switch
+  segments selected from existing language tags) provide the rest.
+- **Failure mode is cheap and early** — risk concentrates on "are the
+  findings interesting", which is fully visible after the Week-4 pilot
+  (see *Week-4 Go/No-Go Gate* below). Benchmark framing fails on adoption
+  after publication, which is uncontrollable.
+- **Repository fit** — six months of stable-worldmodel-style scaffolding
+  (format registry, adapter registry, scenario suite, paper-release-smoke,
+  parity checklist) is exactly what this protocol-as-artifact framing
+  needs. Prior work was not over-engineered, it was early-engineered.
+
+### Why the repository is **not** renamed
+
+Considered renaming to `stable-voice` to mirror the new framing. Rejected:
+
+- "ASR" is the precise keyword reviewers in the three target venues
+  (Interspeech / ICASSP / NeurIPS-D&B) use to locate scope. "Voice" in
+  2026 is overloaded (TTS, voice cloning, voice LLMs, voice agents) and
+  loses scope precision.
+- Top benchmark / system names in this community keep a domain-specific
+  keyword: SUPERB, ESPnet, LibriSpeech, VoxPopuli, NeMo. None is named
+  "Voice-X".
+- Rename cost is real (1–2 weeks of refactor across 100+ files, 80+ CLI
+  subcommands, HF Hub namespace, GitHub URL history) and improves zero
+  paper signal. The conversational / multilingual angle lives in the
+  paper title and inside `stable_asr/eval/factors/`, not in the repo
+  name.
+
+### Target venue
+
+**Primary:** Interspeech 2026 main conference (March 2026 deadline,
+matches the 12-week window). Interspeech main has a long history of
+accepting empirical-findings papers (cf. early Wav2Vec2, Whisper-adjacent
+work) without requiring a new annotated benchmark.
+
+**Backup:** ICASSP 2027 (September 2026 deadline) if Interspeech misses.
+
+**Not pursued:** NeurIPS D&B 2026 main (annotation-scale gap), NeurIPS
+main (ASR-only too narrow), AAAI main (single-author novelty bar).
+
+### Six controlled factors (axis of variation)
+
+| # | Factor | Ground-truth source | Variation mechanism |
+|---|---|---|---|
+| F1 | Language | LDC language metadata | corpus selection across 6 languages (en/es/zh/ja/ar/de via CallHome + Switchboard + Fisher) |
+| F2 | Channel | LDC channel metadata | corpus selection across phone / cellular / meeting / broadcast |
+| F3 | Speech rate | derived from word timestamps | controlled resampling (0.7× / 1.0× / 1.3×) |
+| F4 | SNR | physically known | controlled MUSAN/DEMAND/WHAM noise injection |
+| F5 | Overlap ratio | LDC speaker turn timestamps | speaker-mixed segments bucketed by overlap % |
+| F6 | Code-switching | LDC language-tag annotations within CallHome zh/ja | segment selection where two language codes co-occur |
+
+All six factors source their ground truth from LDC-native annotations or
+physically-known perturbation parameters. **No new human labels required.**
+
+### What new annotation we will and will not do
+
+- **Will not** build a new annotation tool or new gold benchmark.
+- **Will not** rely on bootstrap silver-standard labels for any reported
+  finding (the existing `runs/bench_accel_ami/turn_data/` bootstrap
+  manifests stay only for development / sanity-check use).
+- **May** spend 1–2 days self-labeling a 500–2000 record probe set if a
+  specific finding turns out to need turn-level gold not derivable from
+  LDC timestamps. Tools used: ELAN / Praat / Label Studio over LDC's
+  existing time-aligned segments. This is **experiment-support work**,
+  not a paper contribution.
+
+### Findings risk and the Week-4 Go/No-Go Gate
+
+This framing has one specific risk: **the findings must be
+non-obvious to be publishable**. The mitigation is a hard go/no-go gate
+in Week 4 of the 12-week plan:
+
+- **Pilot:** one ASR system (Whisper-medium) × one turn model
+  (smart-turn) × all 6 factors × a small LDC subset, run on the
+  4080 development machine.
+- **Go criterion:** at least 3 candidate findings that are
+  counter-intuitive or not predicted by current literature.
+- **No-go branch A** (1–2 candidates): adjust factor selection or
+  baseline coverage, re-pilot in Week 5.
+- **No-go branch B** (zero counter-intuitive candidates): retreat to
+  Interspeech show-and-tell / ICASSP workshop framing, or drop the v1
+  paper and pivot to a tooling demo paper.
+
+Candidate findings to look for in the pilot (these are the *kinds of
+patterns* the experiment design must be capable of revealing — they are
+not paper claims):
+
+- non-monotonic relationship between ASR model size and cross-language
+  robustness
+- streaming partial-revision-rate explosions on code-switching segments
+  that vastly exceed final-WER degradation
+- channel sensitivity rank ordering between ASR and turn-taking that
+  diverges from prior reports
+- "death zone" overlap ratio bands (5–15%) where all baselines fail
+- training-data-domain match dominating model-capacity effects
+
+If the pilot finds none of the above (and nothing else of comparable
+interest), the paper is not ready — better to know in Week 4 than in
+Week 12.
+
+### Twelve-week execution plan (Interspeech 2026 deadline)
+
+| Week | Deliverable | Gate |
+|---|---|---|
+| 1–2 | LDC schema unification: ingest Switchboard / Fisher / CallHome×6 / HUB / Mixer into existing `data/recipes/`, define `ScenarioRecord` schema layered on top of `TurnManifestRecord` and `StreamingASRRecord`. | All 6 LDC corpora discoverable via `stable-asr data-sources`. |
+| 3 | Factor encoding layer: SNR injection, speech-rate resampling, overlap binning, code-switch segment selection — all parameter-controlled. | Each factor produces a deterministic, parameterized eval split. |
+| 4 | **Pilot run + Go/No-Go.** Whisper-medium + smart-turn × all 6 factors × LDC subset. Inspect findings shape. | Hard go/no-go gate (criteria above). |
+| 5–7 | H100 large-scale evaluation matrix: ~6 ASR × ~4 turn × 6 factors. | Full result tensors stored under `runs/paper/findings/`. |
+| 8 | Optional: probe-set self-labeling (≤2000 records) if a specific finding requires turn-level gold. | Only if needed by a finding selected for the paper. |
+| 9–10 | Findings analysis + paper draft v1 (6 pages Interspeech format). | Internal reviewer pass. |
+| 11 | Reproducibility verification: cold-clone → all key tables/figures regenerate via `paper-release-smoke`. | All paper-results scripts pass on a fresh clone. |
+| 12 | Final draft, supplementary, submission to Interspeech 2026. | Paper submitted. |
+
+### What changes in the codebase under this framing
+
+Adds (small):
+
+- `stable_asr/eval/factors/` — the six factor encoders (`language.py`,
+  `channel.py`, `speech_rate.py`, `snr.py`, `overlap.py`,
+  `code_switch.py`)
+- `stable_asr/data/recipes/ldc/` — Switchboard / Fisher / CallHome /
+  HUB / Mixer recipes (registered in `configs/datasets/`)
+- `stable_asr/eval/scenario_record.py` — third-tier schema layered on
+  existing `TurnManifestRecord` + `StreamingASRRecord`
+- `configs/benchmarks/ldc_findings_v1.json` — eval matrix definition
+- `docs/paper_v1_outline.md` — paper skeleton (to be drafted)
+
+Does not change:
+
+- Existing turn-taking model code, scenarios, baselines, paper pipeline
+  scaffolding all stay. They serve the new framing without modification.
+- Repository name, package name, CLI prefix.
+
+Slim (P0 hygiene):
+
+- Consolidate the 30 `paper/` modules into ~8 (audit + integrity +
+  provenance + completion → one file; claims + evidence → one file;
+  final_* → one file). Reviewer-defense cosmetic, not functional.
+- Replace fake VAP bootstrap predictions with real VAP inference
+  (`models/baselines/vap.py:232`).
+- README license badge: MIT → Stable-ASR Research License Non-Commercial
+  (matches `pyproject.toml`).
+
+### What we explicitly stop doing
+
+- Adding more NanoTurn metadata-MLP variants. The 8-dimensional metadata
+  models stay in the repo for development tests, but do **not** appear
+  in v1 paper claims.
+- Adding more `paper/` orchestration modules.
+- Tuning `bench_acceleration.py` on the small NanoTurn models —
+  Tensor-Core utilization needs hidden_dim ≥ 128, which only the new
+  SSL-backed turn models satisfy.
+- Pursuing any "first / open reference / scaling laws" framing in the
+  paper text. These claims do not survive related-work review and
+  damage credibility.
+
+### Honest claim policy for the v1 paper
+
+Words **banned** from the paper draft until proven:
+
+- "first" anything in voice / full-duplex / cross-lingual / scaling
+- "open reference system"
+- "scaling laws" (replace with "model-capacity sweep")
+- "benchmark" used as the noun for our contribution (use "evaluation
+  protocol" or "empirical study")
+- "full-duplex" (we do not implement barge-in / interactive evaluation
+  in v1; only turn-taking + streaming ASR)
+- "cross-lingual" without specifying it is bilingual / multilingual via
+  corpus selection, not a transfer-learning claim
+
+Each banned word, if reintroduced, requires explicit experimental
+evidence cited in the same paragraph.
+
+### Reference target
+
+stable-worldmodel: https://arxiv.org/abs/2605.21800
+
+The methodology (factors of variation + protocol + findings-as-payload)
+is what we adopt; the world-model domain content is unrelated.
+
+---
+
+## Original Platform Goal (kept for context)
+
+The original v0 platform goal — a unified platform that standardizes data,
+baselines, scenarios, policies, and evaluation protocols for real-time ASR
+and voice-agent interaction research — is **not abandoned**. The platform
+infrastructure built over the past six months (format registry, adapter
+registry, scenario suite, paper-release-smoke) is precisely the substrate
+on which the v1 empirical-findings paper rests. The v1 paper is the first
+load-bearing test of that substrate; subsequent v2 / v3 papers (e.g. real
+full-duplex once barge-in evaluation is mature) can reuse the same stack.
 
 Reference target: https://arxiv.org/abs/2605.21800
 
