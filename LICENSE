@@ -1,22 +1,66 @@
-MIT License
+Stable-ASR Research License
+Version 1.0, June 2026
 
 Copyright (c) 2026 Stable-ASR Contributors
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+DEFINITIONS
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+"Software" means the source code, model weights, scripts, documentation, and
+all other files in this repository.
+
+"Non-Commercial Use" means use for personal, academic, or research purposes
+that does not generate direct or indirect commercial revenue.
+
+"Commercial Use" means any use intended for or resulting in commercial
+advantage or monetary compensation, including but not limited to use in
+commercial products, services, or research conducted on behalf of a
+commercial entity.
+
+GRANT OF RIGHTS — NON-COMMERCIAL USE
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this Software, to use, copy, modify, merge, publish, and distribute the
+Software for Non-Commercial Use, subject to ALL of the following conditions:
+
+  1. ATTRIBUTION. The above copyright notice and this license shall be
+     included in all copies or substantial portions of the Software.
+
+  2. CITATION. Any academic work (paper, thesis, report, or presentation)
+     that uses, builds upon, or references this Software must cite the
+     following publication:
+
+       @software{stable_asr_2026,
+         title   = {Stable-ASR: A Reproducible Platform for Streaming ASR
+                    and Full-Duplex Turn-Taking},
+         author  = {Stable-ASR Contributors},
+         year    = {2026},
+         url     = {https://github.com/haoruilee/stable-asr}
+       }
+
+  3. BRANDING INTEGRITY. The Stable-ASR name, logo, and visual identity
+     elements must not be removed, altered, or obscured in any distributed
+     copy, derivative work, or product that incorporates this Software.
+     You may add your own branding alongside but not in replacement of the
+     original branding.
+
+  4. DERIVATIVES. Modified versions must be clearly marked as such and must
+     not be misrepresented as the original Software.
+
+COMMERCIAL USE
+
+Commercial Use of this Software requires a separate written license agreement
+from the copyright holders. To obtain a commercial license, contact:
+
+  stable-asr@example.com
+
+Unauthorized Commercial Use of this Software is strictly prohibited.
+
+DISCLAIMER
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

@@ -8,7 +8,7 @@ version = "0.0.0"
 description = "Reproducible research platform for real-time ASR systems and full-duplex turn-taking."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = { text = "Stable-ASR Research License 1.0 (Non-Commercial)" }
 authors = [
   { name = "haoruilee", email = "haoruileee@gmail.com" }
 ]
@@ -24,7 +24,7 @@ classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
+  "License :: Other/Proprietary License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
