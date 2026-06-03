@@ -270,7 +270,7 @@ def run_vap_inference(
         ) from exc
 
     from stable_asr.data.audio import load_audio_mono
-    from stable_asr.data.manifest import load_turn_manifest
+    from stable_asr.data.manifest import load_manifest
 
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -278,7 +278,7 @@ def run_vap_inference(
     predictor = VAPPredictor(checkpoint=checkpoint, device=device, context_sec=context_sec)
     predictor._load()
 
-    records = load_turn_manifest(manifest_path)
+    records = load_manifest(manifest_path)
     output_path = P(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 

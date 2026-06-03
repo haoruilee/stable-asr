@@ -1023,6 +1023,34 @@ def build_parser() -> argparse.ArgumentParser:
     scenario_suite_parser.add_argument("--json", action="store_true", help="Print the suite as JSON.")
     scenario_suite_parser.add_argument("--validate-only", action="store_true")
 
+    apply_factor_parser = subparsers.add_parser(
+        "apply-factor",
+        help="Apply a controlled factor-of-variation perturbation to a turn manifest.",
+    )
+    apply_factor_parser.add_argument("--manifest", type=Path, required=True,
+        help="Source TurnManifestRecord JSONL.")
+    apply_factor_parser.add_argument("--output-dir", type=Path, required=True,
+        help="Where to write perturbed audio + ScenarioRecord JSONL.")
+    apply_factor_parser.add_argument("--factor", required=True,
+        choices=["speech_rate", "snr", "overlap", "channel_simulate"])
+    apply_factor_parser.add_argument("--levels", nargs="+", required=True,
+        help="Factor-specific level values. "
+             "speech_rate: floats e.g. 0.7 1.0 1.3. "
+             "snr: dB ints e.g. 20 10 0. "
+             "overlap: ratios e.g. 0.0 0.15 0.30. "
+             "channel_simulate: kinds e.g. clean narrowband telephone cellular.")
+    apply_factor_parser.add_argument("--n", type=int, default=0,
+        help="If > 0, sample N records from the manifest (random with --seed).")
+    apply_factor_parser.add_argument("--seed", type=int, default=42)
+    apply_factor_parser.add_argument("--competitor-pool", type=Path,
+        help="Audio directory for the F5 overlap competitor (required for --factor overlap).")
+    apply_factor_parser.add_argument("--noise-dir", type=Path,
+        help="Optional MUSAN/DEMAND-style noise directory for --factor snr.")
+    apply_factor_parser.add_argument("--n-overlap-windows", type=int, default=2,
+        help="Number of overlap windows for --factor overlap.")
+    apply_factor_parser.add_argument("--target-dominance-db", type=float, default=3.0,
+        help="Target speaker is N dB louder than competitor for --factor overlap.")
+
     optimize_parser = subparsers.add_parser(
         "optimize-policy",
         help="Grid-search turn policy thresholds for a baseline predictor.",
@@ -3038,6 +3066,9 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         return 0
 
+    if args.command == "apply-factor":
+        return _run_apply_factor(args)
+
     if args.command == "optimize-policy":
         records = (
             load_manifest(args.dataset)
@@ -3047,7 +3078,6 @@ def main(argv: list[str] | None = None) -> int:
                 seed=args.seed,
             )
         )
-        predictor = _build_baseline(args.baseline, complete_pause_ms=700)
         result = threshold_search(records, predictor)
         payload = result.to_dict()
         if args.output:
@@ -4115,6 +4145,98 @@ def _build_baseline(name: str, *, complete_pause_ms: int):
         from stable_asr.models.baselines.vap import VAPPredictor
         return VAPPredictor()
     raise ValueError(f"unknown baseline: {name}")
+
+
+def _run_apply_factor(args) -> int:
+    """Apply a factor-of-variation perturbation to a turn manifest."""
+    import random as _random
+
+    from stable_asr.eval.factors import (
+        ChannelSimulateConfig,
+        OverlapConfig,
+        SNRConfig,
+        SpeechRateConfig,
+        apply_channel_simulate,
+        apply_overlap,
+        apply_snr,
+        apply_speech_rate,
+    )
+    from stable_asr.eval.scenario_record import write_scenario_jsonl
+
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    audio_root = args.output_dir / "perturbed_audio"
+
+    records = load_manifest(args.manifest)
+    if args.n > 0 and len(records) > args.n:
+        rng = _random.Random(args.seed)
+        rng.shuffle(records)
+        records = records[: args.n]
+    print(f"[apply-factor] manifest={args.manifest} records={len(records)} factor={args.factor}")
+
+    # Filter to records whose audio file exists
+    records = [r for r in records if Path(r.audio).exists()]
+    if not records:
+        print("ERROR: no usable records (missing audio files).", file=sys.stderr)
+        return 2
+
+    out_records = []
+
+    if args.factor == "speech_rate":
+        rates = [float(x) for x in args.levels]
+        for rate in rates:
+            cfg = SpeechRateConfig(rate=rate, output_dir=audio_root / "speech_rate")
+            for rec in records:
+                out_records.append(apply_speech_rate(rec, cfg))
+
+    elif args.factor == "snr":
+        snrs = [float(x) for x in args.levels]
+        for snr_db in snrs:
+            cfg = SNRConfig(
+                snr_db=snr_db,
+                output_dir=audio_root / "snr",
+                noise_dir=args.noise_dir,
+                seed=args.seed,
+            )
+            for rec in records:
+                out_records.append(apply_snr(rec, cfg))
+
+    elif args.factor == "overlap":
+        if args.competitor_pool is None:
+            print("ERROR: --factor overlap requires --competitor-pool", file=sys.stderr)
+            return 2
+        ratios = [float(x) for x in args.levels]
+        for ov in ratios:
+            cfg = OverlapConfig(
+                overlap_ratio=ov,
+                output_dir=audio_root / "overlap",
+                competitor_pool=args.competitor_pool,
+                n_overlap_windows=args.n_overlap_windows,
+                target_dominance_db=args.target_dominance_db,
+                seed=args.seed,
+            )
+            for rec in records:
+                out_records.append(apply_overlap(rec, cfg))
+
+    elif args.factor == "channel_simulate":
+        kinds = list(args.levels)
+        valid = {"clean", "narrowband", "telephone", "cellular"}
+        bad = [k for k in kinds if k not in valid]
+        if bad:
+            print(f"ERROR: unknown channel kinds: {bad}; valid: {sorted(valid)}", file=sys.stderr)
+            return 2
+        for kind in kinds:
+            cfg = ChannelSimulateConfig(kind=kind, output_dir=audio_root / "channel")
+            for rec in records:
+                out_records.append(apply_channel_simulate(rec, cfg))
+
+    else:
+        print(f"ERROR: unknown factor: {args.factor}", file=sys.stderr)
+        return 2
+
+    out_jsonl = args.output_dir / "scenario_records.jsonl"
+    write_scenario_jsonl(out_jsonl, out_records)
+    print(f"[apply-factor] wrote {len(out_records)} ScenarioRecords -> {out_jsonl}")
+    return 0
 
 
 def _parse_named_path(value: str) -> tuple[str, Path]:
